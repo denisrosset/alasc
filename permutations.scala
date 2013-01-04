@@ -272,8 +272,6 @@ class PermutationGroup(G: Seq[Permutation]) {
     true
   }
 
-
-
   /** Checks that @param candidate is a base for this group.
     * 
     * scala> import PermImplicits._
@@ -361,6 +359,22 @@ class PermutationGroup(G: Seq[Permutation]) {
     immutable.TreeMap.empty[Int, Permutation] ++ m
   }
 
+  def sifting(base: Seq[Int], basicOrbits: Seq[immutable.SortedSet[Int]], transversals: Seq[Map[Int, Permutation]], g: Permutation): (Permutation, Int) = {
+    import PermImplicits._
+    var h = g
+    for (i <- base.indices) {
+      val b = base(i)
+      val orbit = basicOrbits(i)
+      val U = transversals(i)
+      val beta = b**h
+      if(!orbit(beta))
+        return (h, i - 1)
+      val u = U.find(b**_._2 == beta).get._2
+      h = h * u.inverse
+    }
+    return (h, base.length)
+  }
+
   /** Orbit of a point @param alpha.
     * 
     * Example
@@ -373,7 +387,7 @@ class PermutationGroup(G: Seq[Permutation]) {
     * scala> g.orbit(0)
     * res: List[Int] = List(0, 1, 2, 3, 4, 5)
     */
-  def orbit(alpha: Int): List[Int] = {
+  def orbit(alpha: Int): SortedSet[Int] = {
     import PermImplicits._
     val Delta = mutable.HashSet.empty[Int]
     def visit(a: Int) {
@@ -383,7 +397,7 @@ class PermutationGroup(G: Seq[Permutation]) {
       }
     }
     visit(alpha)
-    Delta.toList.sorted
+    immutable.SortedSet.empty[Int] ++ Delta
   }
 }
 
