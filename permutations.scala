@@ -255,7 +255,6 @@ object PermImplicits {
 
 class PermutationGroup(G: Seq[Permutation]) {
   val generators = immutable.TreeSet[Permutation](G:_*)
-  val generatorInverses = generators.toList.map(_.inverse)
 
   /** Degree of the group, possibly not minimal! */
   val degree = G.head.size
@@ -326,10 +325,10 @@ class PermutationGroup(G: Seq[Permutation]) {
   }
   /** Returns a transversal map for the element alpha
     * 
-    * The i-th cell of the map contains
-    *  - the permutation p such that i**p = alpha
-    *  - the identity if i = alpha
-    *  - nothing if i is not in the orbit of alpha
+    * If i is in the orbit of alpha, then the map contains
+    *  - i -> the permutation p such that i**p = alpha
+    *  - i -> the identity if i = alpha
+    * Points not in the orbit of alpha are not contained
     * 
     * Example
     * =======
@@ -345,9 +344,70 @@ class PermutationGroup(G: Seq[Permutation]) {
     * scala> G1.transversal(0)
     * res: scala.collection.Map[Int,Permutation] = Map(0 -> Permutation(5), 1 -> Cycle(0, 4, 1), 2 -> Cycle(0, 3, 1, 4, 2), 3 -> Cycle(0, 3)(2, 4), 4 -> Cycle(0, 1, 4))
     */
-  def transversal(alpha: Int): Map[Int, Permutation] = {
+  def transversal(alpha: Int): Map[Int, Permutation] = PermutationGroup.transversal(alpha, generators)
+ 
+  def schreierSims(baseseq: Seq[Int]): (List[Int], List[Permutation]) = {
+    assert(!generators.isEmpty) // this group is not the trivial group
+    val base = mutable.ArrayBuffer.empty[Int] ++ baseseq
+    if (base.isEmpty)
+      base += (0 to degree).find(orbit(_).size > 1).get
+    val stabs = PermutationGroup.distributeGeneratorsByBase(base, generators)
+    val orbits = (base, stabs).zipped.map(PermutationGroup.orbit(_,_))
+    val transversals = (base, stabs).zipped.map(PermutationGroup.transversal(_,_))
+    var j = 0
+    while (j >= 0) {
+      def iterateOrbitStab: Boolean {
+        for(beta <- orbits(j); x <- stabs(j)) {
+          val (h, k) = PermutationGroup.sifting(base, orbits, transversals, )
+
+        }
+      }
+
+    }
+
+  }
+
+  /** Orbit of a point @param alpha.
+    * 
+    * Example
+    * =======
+    * 
+    * scala> import PermImplicits._
+    * scala> val a = Cycle(0,3,4)(1,2,5)
+    * scala> val b = Cycle(1,2,0,5)
+    * scala> val g = PermutationGroup(a,b)
+    * scala> g.orbit(0)
+    * res: List[Int] = List(0, 1, 2, 3, 4, 5)
+    */
+  def orbit(alpha: Int) = PermutationGroup.orbit(alpha, generators)
+}
+
+object PermutationGroup {
+  def apply(args: Permutation*): PermutationGroup = {
+    val degree = args.map(_.size).max
+    new PermutationGroup(args.filter(!_.isIdentity).map(i => if(i.size < degree) Permutation(degree)*i else i).toList)
+  }
+
+  def distributeGeneratorsByBase(base: Seq[Int], generators: Iterable[Permutation]): Array[List[Permutation]] = {
+    val stabs = Array.fill(base.length)(List.empty[Permutation])
+    val degree = generators.head.size
+    var maxStabIndex = 0
+    for (g <- generators) {
+      val j = (0 until base.length - 1).find(i => g.image(base(i)) != base(i)) match {
+        case None => base.length - 1
+        case Some(e) => e
+      }
+      if (j > maxStabIndex)
+        maxStabIndex = j
+      (0 to j).foreach { i => stabs(i) = g :: stabs(i) }
+    }
+    stabs
+  }
+
+  def transversal(alpha: Int, generators: Iterable[Permutation]): Map[Int, Permutation] = {
     import PermImplicits._
     val m = mutable.HashMap.empty[Int, Permutation]
+    val degree = generators.head.size
     def visit(a: Int, p: Permutation) {
       if (!m.isDefinedAt(a)) {
         m(a) = p
@@ -364,10 +424,10 @@ class PermutationGroup(G: Seq[Permutation]) {
     var h = g
     for (i <- base.indices) {
       val b = base(i)
-      val orbit = basicOrbits(i)
+      val basicOrbit = basicOrbits(i)
       val U = transversals(i)
       val beta = b**h
-      if(!orbit(beta))
+      if(!basicOrbit(beta))
         return (h, i - 1)
       val u = U.find(b**_._2 == beta).get._2
       h = h * u.inverse
@@ -375,19 +435,7 @@ class PermutationGroup(G: Seq[Permutation]) {
     return (h, base.length)
   }
 
-  /** Orbit of a point @param alpha.
-    * 
-    * Example
-    * =======
-    * 
-    * scala> import PermImplicits._
-    * scala> val a = Cycle(0,3,4)(1,2,5)
-    * scala> val b = Cycle(1,2,0,5)
-    * scala> val g = PermutationGroup(a,b)
-    * scala> g.orbit(0)
-    * res: List[Int] = List(0, 1, 2, 3, 4, 5)
-    */
-  def orbit(alpha: Int): SortedSet[Int] = {
+  def orbit(alpha: Int, generators: Iterable[Permutation]): SortedSet[Int] = {
     import PermImplicits._
     val Delta = mutable.HashSet.empty[Int]
     def visit(a: Int) {
@@ -398,12 +446,5 @@ class PermutationGroup(G: Seq[Permutation]) {
     }
     visit(alpha)
     immutable.SortedSet.empty[Int] ++ Delta
-  }
-}
-
-object PermutationGroup {
-  def apply(args: Permutation*): PermutationGroup = {
-    val degree = args.map(_.size).max
-    new PermutationGroup(args.filter(!_.isIdentity).map(i => if(i.size < degree) Permutation(degree)*i else i).toList)
   }
 }
