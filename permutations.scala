@@ -1,4 +1,4 @@
-package object perm {
+package object com.faacets.perm {
   //package com.bxwrld.combinatorics
 
   // import com.bxwrld.combinatorics._
@@ -100,6 +100,18 @@ package object perm {
 
   }
 
+  trait Permutation {
+    def cycle(el: Domain): List[Domain]
+    def apply(P: Permutation): Permutation
+    def size: Int
+    def inverse: Permutation
+    def *(other: Permutation)
+    def support: List[Int]
+    def hasInSupport(el: Domain): Boolean
+    def isIdentity: Boolean
+    def cycles: List[(Domain, Int)]
+  }
+
   /** A permutation acting on integers 0...n-1. Is immutable.
     * 
     * Can be constructed in different ways:
@@ -121,8 +133,8 @@ package object perm {
     *   res: Boolean = True
     * 
     * - using a product of cycles
-    */ 
-  class Permutation(P: Seq[Domain]) {
+    */ Z
+  class ExplicitPermutation(P: Seq[Domain]) {
 
     /** Image of integers 0..n-1 under the permutation */
     val image = Vector[Domain](P:_*)
