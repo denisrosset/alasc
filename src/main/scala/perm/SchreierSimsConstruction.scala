@@ -42,6 +42,6 @@ object SchreierSimsConstruction {
     }
     val SGS = mutable.HashSet.empty[Permutation]
     for (s <- S) SGS ++= s
-    return new BSGS(B.toList, SGS.toList, U.toList, n)
+    return new BSGSGroup(B.toList, SGS.toList, U.toList, n)
   }
 }

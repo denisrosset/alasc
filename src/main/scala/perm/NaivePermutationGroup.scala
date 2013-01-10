@@ -13,9 +13,10 @@ class NaivePermutationGroup(G: Seq[Permutation]) extends PermutationGroup {
   def verify: Boolean = !G.exists(_.domainSize != degree) && !G.exists(!_.verify)
 
   override def isBase(base: Base) = G.exists(g => !base.exists(beta => beta != g.image(beta)))
-
+  override def generatingSet = G
   override def elements: Iterable[Permutation] = {
     val E = mutable.HashSet.empty[Permutation]
+    E += IdentityPermutation(degree)
     def tryToAddOne: Boolean = {
       for (e <- E.toList; g <- G) {
         if (!E.contains(g*e)) {
@@ -26,6 +27,6 @@ class NaivePermutationGroup(G: Seq[Permutation]) extends PermutationGroup {
       return false
     }
     while (tryToAddOne) { }
-    return E.toList
+    return E.toList.sorted
   }
 }

@@ -8,6 +8,7 @@ trait PermutationGroup {
   def generatingSet = elements
   def isBase(base: Base): Boolean = elements.exists(g => !base.exists(beta => beta != g.image(beta)))
   def orbit(el: Domain): Orbit = OrbitSet.fromGenerators(el, generatingSet)
+  def contains(P: Permutation): Boolean
 }
 
 object PermutationGroup {

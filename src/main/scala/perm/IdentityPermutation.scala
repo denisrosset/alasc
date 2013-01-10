@@ -2,7 +2,7 @@ package com.faacets.perm
 
 import Implicits._
 
-class IdentityPermutation(size: Int) extends Permutation {
+case class IdentityPermutation(size: Int) extends Permutation {
   override def image(el: Domain) = el
   override def cycle(el: Domain) = List(el)
   override def domainSize = size
