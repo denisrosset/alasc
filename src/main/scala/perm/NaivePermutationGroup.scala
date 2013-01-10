@@ -15,7 +15,7 @@ class NaivePermutationGroup(G: Seq[Permutation]) extends PermutationGroup {
   override def isBase(base: Base) = G.exists(g => !base.exists(beta => beta != g.image(beta)))
 
   override def elements: Iterable[Permutation] = {
-    val E = mutable.HashSet
+    val E = mutable.HashSet.empty[Permutation]
     def tryToAddOne: Boolean = {
       for (e <- E.toList; g <- G) {
         if (!E.contains(g*e)) {

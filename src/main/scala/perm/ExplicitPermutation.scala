@@ -7,6 +7,7 @@ import scala.collection.mutable
 import scala.collection.immutable
 
 class ExplicitPermutation(P: Vector[Domain]) extends Permutation {
+  override def domainSize = P.size
   override def image(el: Domain) = P(el)
   override def images = P
 }
