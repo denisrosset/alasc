@@ -3,7 +3,7 @@ package com.faacets.perm
 import Implicits._
 
 object BaseConstruction {
-    import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.ArrayBuffer
 
   def chooseBaseElement(h: Permutation, base: Seq[Domain]): Option[Int] = {
     for (beta <- 0 until h.size if !base.contains(beta))
