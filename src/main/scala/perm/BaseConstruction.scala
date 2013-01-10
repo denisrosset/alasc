@@ -6,7 +6,7 @@ object BaseConstruction {
   import scala.collection.mutable.ArrayBuffer
 
   def chooseBaseElement(h: Permutation, base: Seq[Domain]): Option[Int] = {
-    for (beta <- 0 until h.size if !base.contains(beta))
+    for (beta <- 0 until h.domainSize if !base.contains(beta))
       if (h.hasInSupport(beta))
         return Some(beta)
     return None

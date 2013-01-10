@@ -13,6 +13,7 @@ class ExplicitTransversal(explicitMap: scala.collection.immutable.TreeMap[Int, P
 object ExplicitTransversal {
   def fromGenerators(el: Domain, G: Iterable[Permutation]): Transversal = { // should be extended to other transversal types
     val m = scala.collection.mutable.HashMap.empty[Int, Permutation]
+val degree = G.head.domainSize
     def visit(a: Domain, p: Permutation) {
       if (!m.isDefinedAt(a)) {
         m(a) = p.inverse

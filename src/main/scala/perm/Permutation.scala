@@ -2,12 +2,19 @@ package com.faacets.perm
 
 import Implicits._
 
-trait Permutation extends Ordered with Hashable {
+trait Permutation extends Ordered[Permutation] {
+  def compare(that: Permutation): Int = {
+    val thisImages = images
+    val thatImages = that.images
+    import scala.math.Ordering.Implicits._
+    Ordering[Vector[Int]].compare(thisImages, thatImages)
+  }
+
   def image(el: Domain): Domain
 
   def cycle(start: Domain): Iterable[Domain] = {
-    def walk(l: List[Domain], el: Domain): List[Domain] = if (el == start) l else el :: walk(l, image(el))
-    walk(List(start), image(start))
+    def walk(el: Domain): List[Domain] = if (el == start) List.empty[Domain] else el :: walk(image(el))
+      start :: walk(image(start))
   }
   override def equals(other: Any): Boolean = other match {
     case that: Permutation => !(0 until domainSize).exists(i => this.image(i) != that.image(i))
@@ -24,27 +31,16 @@ trait Permutation extends Ordered with Hashable {
   }
 
   override def hashCode = images.hashCode
-  def apply(el: Domain*): Domain = {
-    /** Zip an iterable C with a copy of itself rotated to the left once.
-      * 
-      * Example
-      * =======
-      * 
-      * scala> wrappedPairs(List(1,2,3))
-      * res: List[(Int, Int)] = List((1,2), (2,3), (3,1))
-      */
-    def wrappedPairs[T](C: scala.collection.immutable.Iterable[T]): List[(T,T)] = {
-      val start:(List[(T,T)], T)  = (List.empty[(T,T)], C.head)
-      def itfun[T](el:T, prev:(List[(T,T)], T)): (List[(T,T)], T) =
-        ((((el, prev._2)) :: prev._1, el))
-      C.foldRight(start)((a,b) => itfun[T](a,b))._1
+  def apply(cycle: Domain*): Permutation = {
+    val P: Array[Int] = Array.tabulate[Domain](domainSize)((i:Domain) => i)
+    val list = cycle.toList
+    var el = list
+    while (!el.tail.isEmpty) {
+      P(el.head) = el.tail.head
+      el = el.tail
     }
-    val map = scala.collection.immutable.TreeMap[Domain, Domain](wrappedPairs[Int](el))
-    val vector = Vector.tabulate[Domain](domainSize) { i => map.get(i) match {
-      case None => i
-      case Some(e) => e
-    }}
-    this * (new ExplicitPermutation(vector))
+    P(el.head) = list.head
+    this*new ExplicitPermutation(Vector(P:_*))
   }
   def images: Vector[Domain] = Vector(((0 until domainSize).map((el: Domain) => image(el))):_*)
   def domainSize: Int
