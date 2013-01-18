@@ -1,0 +1,5 @@
+  def generatingSet = elements
+  def order = elements.size
+  def isBase(base: Base): Boolean = elements.exists(g => !base.exists(beta => beta != g.image(beta)))
+  def orbit(el: Domain): Orbit = OrbitSet.fromGenerators(el, generatingSet)
+  def contains(P: T): Boolean = elements.exists(_ == P)

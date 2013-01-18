@@ -6,7 +6,7 @@ package object Implicits {
 
   implicit def empowerMyDomain(alpha: Domain) = new EmpoweredDomain(alpha)
 
-  implicit def permutationOrdering: Ordering[Permutation] = {
+  implicit def permutationOrdering[P <: Permutation[P]]: Ordering[P] = {
     import scala.math.Ordering.Implicits._
     Ordering.fromLessThan(_.images < _.images)
   }

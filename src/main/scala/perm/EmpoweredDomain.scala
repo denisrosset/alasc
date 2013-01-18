@@ -21,8 +21,5 @@ class EmpoweredDomain(alpha: Domain) {
     * res: Int = 1
     * 
     */
-  def **(P: Permutation) = P.image(alpha)
-
-  /** Notation for the orbit of an element. */
-  //def **(G: PermutationGroup) = G.orbit(alpha)
+  def **[P <: Permutation[P]](perm: P) = perm.image(alpha)
 }
