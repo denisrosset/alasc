@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.immutable
 
-case class ExplicitPermutation(I: Vector[Domain]) extends RichPermutation[ExplicitPermutation] {
+case class ExplicitPermutation(I: Vector[Domain]) extends Permutation[ExplicitPermutation] {
   override def compare(that: ExplicitPermutation): Int = {
     import scala.math.Ordering.Implicits._
     Ordering[Vector[Int]].compare(I, that.I)
@@ -17,8 +17,8 @@ case class ExplicitPermutation(I: Vector[Domain]) extends RichPermutation[Explic
   // Standard scala methods
   override def toString = {
     if(ExplicitPermutation.printCycles) {
-      def cycleStr(i: (Domain, Int)): String = cycle(i._1).mkString("(", ", ", ")")
-      val cyclesStr = cycles(false).map(cycleStr(_)).mkString("","","")
+      def cycleStr(i: (Domain, Int)): String = cycle(this, i._1).mkString("(", ", ", ")")
+      val cyclesStr = cycles(this, false).map(cycleStr(_)).mkString("","","")
       this.getClass.getName + "(" + domainSize + ")" + cyclesStr
     } else
       images.mkString(this.getClass.getName + "(",", ",")")
@@ -46,12 +46,37 @@ case class ExplicitPermutation(I: Vector[Domain]) extends RichPermutation[Explic
   def resizedTo(n: Int): Option[ExplicitPermutation] = {
     if (n == domainSize) return Some(this)
     if (n > domainSize) return Some(new ExplicitPermutation(images ++ (domainSize until n)))
-    if (n < domainSize && (n until domainSize).exists(hasInSupport(_)))
+    if (n < domainSize && (n until domainSize).exists(hasInSupport(this, _)))
       return None
-    return Some(new ExplicitPermutation(images.take(n)))
+    else
+      return Some(new ExplicitPermutation(images.take(n)))
   }
+  override def toExplicit: ExplicitPermutation = this
+  def isIdentity: Boolean = (0 until domainSize).forall(!hasInSupport(this, _))
+  def identity: ExplicitPermutation = this*inverse
+  def verify: Boolean = {
+    val notInside = scala.collection.mutable.BitSet((0 until domainSize): _*)
+    (0 until domainSize).map(image(_)).foreach(i => {
+      if (!notInside(i)) return false // already inside, so duplicate element
+      notInside -= i
+    })
+    return notInside.isEmpty
+  }
+  override def equal(that: ExplicitPermutation): Boolean = (images == that.images)
 }
 
 object ExplicitPermutation {
   var printCycles = true
+  def apply(n: Int) = new ExplicitPermutation(Vector((0 until n):_*))
+  def randomInvariant(v: Vector[Int]): ExplicitPermutation = {
+    val n = v.length
+    while(true) {
+      val P = new ExplicitPermutation(Vector(scala.util.Random.shuffle(0 until v.length):_*))
+      val v1 = Vector((0 until n).map { i:Int => v(P.image(i)) }:_*)
+      if (v == v1)
+        return P
+    }
+    return new ExplicitPermutation(Vector(0 until n:_*))
+  }
+  def random(domainSize: Int): ExplicitPermutation = new ExplicitPermutation(Vector(scala.util.Random.shuffle(0 until domainSize):_*))
 }
