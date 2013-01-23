@@ -68,7 +68,7 @@ case class ExplicitPermutation(I: Vector[Domain]) extends Permutation[ExplicitPe
 object ExplicitPermutation {
   var printCycles = true
   def apply(n: Int) = new ExplicitPermutation(Vector((0 until n):_*))
-  def randomInvariant(v: Vector[Int]): ExplicitPermutation = {
+  def randomInvariant[T](v: Vector[T]): ExplicitPermutation = {
     val n = v.length
     while(true) {
       val P = new ExplicitPermutation(Vector(scala.util.Random.shuffle(0 until v.length):_*))
