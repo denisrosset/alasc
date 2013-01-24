@@ -8,7 +8,7 @@ object SchreierSimsConstruction {
 
   def chooseBaseElement[P <: Permutation[P]](h: P, base: Base): Option[Int] = {
     for (beta <- 0 until h.domainSize if !base.contains(beta))
-      if (h.hasInSupport(beta))
+      if (hasInSupport(h, beta))
         return Some(beta)
     return None
   }
@@ -24,7 +24,7 @@ object SchreierSimsConstruction {
     val nonIdentityGenerators = generators.filter(!_.isIdentity)
     // extend base so that no group element fixes all base elements
     for (g <- nonIdentityGenerators) {
-      if (!B.exists(beta => g.hasInSupport(beta))) {
+      if (!B.exists(beta => hasInSupport(g, beta))) {
         chooseBaseElement(g, B) match {
           case Some(beta) => B += beta
           case None => { }
@@ -38,7 +38,7 @@ object SchreierSimsConstruction {
       return (B, U, S)
     }
     for ((b,i) <- B.view.zipWithIndex) {
-      val Si = nonIdentityGenerators.filter(g => !(0 until i).exists(j => g.hasInSupport(B(j))))
+      val Si = nonIdentityGenerators.filter(g => !(0 until i).exists(j => hasInSupport(g, B(j))))
       U += transversalFromGenerators(b, Si)
       S += Si.toList
     }

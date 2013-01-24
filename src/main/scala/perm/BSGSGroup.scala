@@ -10,6 +10,9 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: Li
 
   override def order: Int = (transversals :\ 1)((kv:T, p: Int) => kv.size*p)
   override def generatingSet = S
+  override def verify = true
+  override def isBase(b: Base) = true // to fix
+  override def contains(perm: P) = true // to fix
   override def elements = List.empty[P] // to fix
   def sifts(g: P): Boolean = {
     val (siftee, m) = sift(g)
