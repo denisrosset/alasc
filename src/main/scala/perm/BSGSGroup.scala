@@ -1,7 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
-
 class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: List[P], U: List[T]) extends PermutationGroup[P] {
   val base: List[Domain] = B
   val strongGeneratingSet: List[P] = S

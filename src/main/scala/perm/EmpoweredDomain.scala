@@ -1,7 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
-
 class EmpoweredDomain(alpha: Domain) {
   /** Permutation acting on an element. Is left-associative as required.
     * 

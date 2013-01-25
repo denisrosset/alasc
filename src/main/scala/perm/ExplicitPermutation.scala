@@ -1,6 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
 import scala.annotation.tailrec
 
 import scala.collection.mutable
@@ -17,8 +16,8 @@ case class ExplicitPermutation(I: Vector[Domain]) extends Permutation[ExplicitPe
   // Standard scala methods
   override def toString = {
     if(ExplicitPermutation.printCycles) {
-      def cycleStr(i: (Domain, Int)): String = cycle(this, i._1).mkString("(", ", ", ")")
-      val cyclesStr = cycles(this, false).map(cycleStr(_)).mkString("","","")
+      def cycleStr(i: (Domain, Int)): String = cycle(i._1).mkString("(", ", ", ")")
+      val cyclesStr = cycles(false).map(cycleStr(_)).mkString("","","")
       this.getClass.getName + "(" + domainSize + ")" + cyclesStr
     } else
       images.mkString(this.getClass.getName + "(",", ",")")
@@ -46,13 +45,13 @@ case class ExplicitPermutation(I: Vector[Domain]) extends Permutation[ExplicitPe
   def resizedTo(n: Int): Option[ExplicitPermutation] = {
     if (n == domainSize) return Some(this)
     if (n > domainSize) return Some(new ExplicitPermutation(images ++ (domainSize until n)))
-    if (n < domainSize && (n until domainSize).exists(hasInSupport(this, _)))
+    if (n < domainSize && (n until domainSize).exists(hasInSupport(_)))
       return None
     else
       return Some(new ExplicitPermutation(images.take(n)))
   }
   override def toExplicit: ExplicitPermutation = this
-  def isIdentity: Boolean = (0 until domainSize).forall(!hasInSupport(this, _))
+  def isIdentity: Boolean = (0 until domainSize).forall(!hasInSupport(_))
   def identity: ExplicitPermutation = this*inverse
   def verify: Boolean = {
     val notInside = scala.collection.mutable.BitSet((0 until domainSize): _*)

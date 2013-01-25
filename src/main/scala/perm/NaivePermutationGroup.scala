@@ -1,6 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
 import scala.collection.mutable
 import scala.collection.immutable
 
@@ -26,7 +25,6 @@ class NaivePermutationGroup[T <: Permutation[T]](G: Seq[T]) extends PermutationG
   override def contains(perm: T) = _elements.contains(perm)
   /** Verifies that all generators have the same degree, and verify them. */
   override def verify: Boolean = !G.exists(_.domainSize != degree) && !G.exists(!_.verify)
-  override def isBase(base: Base) = G.exists(g => !base.exists(beta => beta != g.image(beta)))
   override def generatingSet = G
   override def elements: Iterable[T] = _elements
 }

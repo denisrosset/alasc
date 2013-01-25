@@ -1,7 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
-
 class ExplicitTransversal[T <: Permutation[T]](explicitMap: scala.collection.immutable.TreeMap[Int, T]) extends Transversal[T] {
   override def toString: String = (for ((key, value) <- explicitMap) yield key + " => " + value).mkString("","\n","")
   override def size = explicitMap.size
