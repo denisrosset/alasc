@@ -1,7 +1,5 @@
 package com.faacets.perm
 
-import Implicits._
-
 trait GroupElement[P] {
   def *(other: P): P
   def inverse: P
