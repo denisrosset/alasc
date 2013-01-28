@@ -14,7 +14,7 @@ object ExplicitTransversal {
 val degree = G.head.domainSize
     def visit(a: Domain, p: P) {
       if (!m.isDefinedAt(a)) {
-        m(a) = p.inverse
+        m(a) = p
         for ((g, i) <- G.view.zipWithIndex)
           visit(a**g, g.inverse*p)
       }

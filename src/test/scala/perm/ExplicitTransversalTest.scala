@@ -10,10 +10,10 @@ class ExplicitTransversalSuite extends FunSuite {
     val b = ExplicitPermutation(5)(0,3)(2,4)
     val t = ExplicitTransversal.fromGenerators(0, List(a, b))
     assert(t(0) === ExplicitPermutation(5))
-    assert(t(1).inverse === ExplicitPermutation(5)(0,4,1))
-    assert(t(2).inverse === ExplicitPermutation(5)(0,3,1,4,2))
-    assert(t(3).inverse === ExplicitPermutation(5)(0,3)(2,4))
-    assert(t(4).inverse === ExplicitPermutation(5)(0,1,4))
+    assert(t(1) === ExplicitPermutation(5)(0,4,1))
+    assert(t(2) === ExplicitPermutation(5)(0,3,1,4,2))
+    assert(t(3) === ExplicitPermutation(5)(0,3)(2,4))
+    assert(t(4) === ExplicitPermutation(5)(0,1,4))
   }
 }
 
@@ -33,7 +33,7 @@ object ExplicitTransversalSpecification extends Properties("ExplicitTransversal"
   property("apply") = Prop.forAll(genElementGenerators) {
     case ((el: Domain, gens: Iterable[_])) => {
       val t = ExplicitTransversal.fromGenerators(el, gens:Iterable[ExplicitPermutation])
-      t.iterable.forall(e => t(e).image(el) == e)
+      t.iterable.forall(e => t(e).image(e) == el)
     }
   }
 }
