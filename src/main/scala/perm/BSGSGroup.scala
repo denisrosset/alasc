@@ -15,9 +15,8 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: Li
   }
   override def order: Int = (1 /: transversals)((p:Int, kv:T) => kv.size*p)
   override def generatingSet = S
-  override def verify = true // to fix
-  override def contains(perm: P) = sifts(perm)
-  def sifts(g: P): Boolean = {
+  override def verify = true // TODO fix
+  override def contains(g: P): Boolean = {
     val (siftee, m) = sift(g)
     m == base.size && siftee.isIdentity
   }
