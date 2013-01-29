@@ -5,12 +5,18 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: Li
   val strongGeneratingSet: List[P] = S
   val transversals: List[T] = U
   val degree: Int = S.head.domainSize
-
-  override def order: Int = (transversals :\ 1)((kv:T, p: Int) => kv.size*p)
+  def iterator = {
+    def iter(tlist: List[T]): Iterator[P] = tlist match {
+      case head :: Nil => head.elementsIterator
+      case head :: tail => for(g <- head.elementsIterator; h <- iter(tail)) yield g*h
+      case Nil => List(S.head.identity).iterator
+    }
+    iter(transversals)
+  }
+  override def order: Int = (1 /: transversals)((p:Int, kv:T) => kv.size*p)
   override def generatingSet = S
   override def verify = true // to fix
   override def contains(perm: P) = sifts(perm)
-  override def elements = List.empty[P] // to fix
   def sifts(g: P): Boolean = {
     val (siftee, m) = sift(g)
     m == base.size && siftee.isIdentity

@@ -5,7 +5,8 @@ class ExplicitTransversal[T <: Permutation[T]](explicitMap: scala.collection.imm
   override def size = explicitMap.size
   override def apply(el: Int): T = explicitMap(el)
   override def contains(el: Int): Boolean = explicitMap.contains(el)
-  override def iterable = explicitMap.keys
+  override def orbitIterator = explicitMap.keysIterator
+  override def elementsIterator = explicitMap.valuesIterator
 }
 
 object ExplicitTransversal {

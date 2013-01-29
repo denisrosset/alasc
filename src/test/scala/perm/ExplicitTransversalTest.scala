@@ -26,14 +26,14 @@ object ExplicitTransversalSpecification extends Properties("ExplicitTransversal"
   property("contains") = Prop.forAll(genElementGenerators) {
     case ((el: Domain, gens: Iterable[_])) => {
       val t = ExplicitTransversal.fromGenerators(el, gens:Iterable[ExplicitPermutation])
-      t.contains(el) && (for (e <- t.iterable; g <- gens:Iterable[ExplicitPermutation]) yield t.contains(g.image(e)) && t.contains(g.inverse.image(e))).forall((b:Boolean) => b)
+      t.contains(el) && (for (e <- t.orbitIterator; g <- gens:Iterable[ExplicitPermutation]) yield t.contains(g.image(e)) && t.contains(g.inverse.image(e))).forall((b:Boolean) => b)
     }
   }
 
   property("apply") = Prop.forAll(genElementGenerators) {
     case ((el: Domain, gens: Iterable[_])) => {
       val t = ExplicitTransversal.fromGenerators(el, gens:Iterable[ExplicitPermutation])
-      t.iterable.forall(e => t(e).image(e) == el)
+      t.orbitIterator.forall(e => t(e).image(e) == el)
     }
   }
 }

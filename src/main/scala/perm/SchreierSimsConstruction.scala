@@ -57,7 +57,7 @@ object SchreierSimsConstruction {
     var j = B.size
     while (j >= 1) {
       def iterateOverBaseAndGenerators: Boolean = {
-        for(beta <- U(j-1).iterable; x <- S(j-1)) {
+        for(beta <- U(j-1).orbitIterator; x <- S(j-1)) {
           val el = (U(j-1)(beta).inverse)*x*U(j-1)(beta**x)
           // sift for S_{j+1} so use index j here
           val (h, k) = BSGSGroup.sift(el, B.drop(j), U.drop(j))

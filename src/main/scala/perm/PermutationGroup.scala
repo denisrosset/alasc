@@ -1,9 +1,8 @@
 package com.faacets.perm
 
-trait PermutationGroup[P <: Permutation[P]] {
+trait PermutationGroup[P <: Permutation[P]] extends Iterable[P] {
   def degree: Int
   def verify: Boolean
-  def elements: Iterable[P]
   def generatingSet: Iterable[P]
   def order: Int
   def contains(perm: P): Boolean

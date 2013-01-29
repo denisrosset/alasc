@@ -26,5 +26,5 @@ class NaivePermutationGroup[T <: Permutation[T]](G: Seq[T]) extends PermutationG
   /** Verifies that all generators have the same degree, and verify them. */
   override def verify: Boolean = !G.exists(_.domainSize != degree) && !G.exists(!_.verify)
   override def generatingSet = G
-  override def elements: Iterable[T] = _elements
+  def iterator: Iterator[T] = _elements.iterator
 }
