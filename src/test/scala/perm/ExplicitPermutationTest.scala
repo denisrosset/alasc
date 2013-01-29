@@ -1,3 +1,5 @@
+package com.faacets.perm
+
 import org.scalacheck._
 import com.faacets.perm._
 import com.faacets.bell._
