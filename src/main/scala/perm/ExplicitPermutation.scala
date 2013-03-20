@@ -70,12 +70,12 @@ object ExplicitPermutation {
   def randomInvariant[T](v: Vector[T]): ExplicitPermutation = {
     val n = v.length
     while(true) {
-      val P = new ExplicitPermutation(Vector(scala.util.Random.shuffle(0 until v.length):_*))
+      val P = new ExplicitPermutation(Vector(scala.util.Random.shuffle((0 until v.length).toList):_*))
       val v1 = Vector((0 until n).map { i:Int => v(P.image(i)) }:_*)
       if (v == v1)
         return P
     }
     return new ExplicitPermutation(Vector(0 until n:_*))
   }
-  def random(domainSize: Int): ExplicitPermutation = new ExplicitPermutation(Vector(scala.util.Random.shuffle(0 until domainSize):_*))
+  def random(domainSize: Int): ExplicitPermutation = new ExplicitPermutation(Vector(scala.util.Random.shuffle((0 until domainSize).toList):_*))
 }
