@@ -15,7 +15,8 @@ object SchreierSimsConstruction {
   def setup[P <: Permutation[P], T <: Transversal[P]](
     prescribedBase: Base,
     generators: Seq[P], 
-    transversalFromGenerators: (Domain, Iterable[P]) => T): (ArrayBuffer[Domain], ArrayBuffer[T], ArrayBuffer[List[P]]) = {
+    transversalFromGenerators: (Domain, Iterable[P], P) => T): (ArrayBuffer[Domain], ArrayBuffer[T], ArrayBuffer[List[P]]) = {
+    val id = generators.head.identity
     val B = ArrayBuffer.empty[Domain] ++ prescribedBase
     val U = ArrayBuffer.empty[T]
     val S = ArrayBuffer.empty[List[P]]
@@ -32,13 +33,13 @@ object SchreierSimsConstruction {
     }
     if (B.isEmpty) {
       B += 0
-      U += transversalFromGenerators(0, List(generators.head.identity))
+      U += transversalFromGenerators(0, List.empty[P], id)
       S += List.empty[P]
       return (B, U, S)
     }
     for ((b,i) <- B.view.zipWithIndex) {
       val Si = nonIdentityGenerators.filter(g => !(0 until i).exists(j => g.hasInSupport(B(j))))
-      U += transversalFromGenerators(b, Si)
+      U += transversalFromGenerators(b, Si, id)
       S += Si.toList
     }
     return (B, U, S)
@@ -47,8 +48,9 @@ object SchreierSimsConstruction {
   def construct[P <: Permutation[P], T <: Transversal[P]](
     prescribedBase: Base,
     generators: Seq[P],
-    transversalFromGenerators: (Domain, Iterable[P]) => T): BSGSGroup[P, T] = {
+    transversalFromGenerators: (Domain, Iterable[P], P) => T): BSGSGroup[P, T] = {
     val tuple = setup[P, T](prescribedBase, generators, transversalFromGenerators)
+    val id = generators.head.identity
     val B = tuple._1
     val U = tuple._2
     val S = tuple._3
@@ -69,11 +71,11 @@ object SchreierSimsConstruction {
               }
               assert(j < B.size)
               S += List.empty[P]
-              U += transversalFromGenerators(B(U.size), List(generators.head.identity))
+              U += transversalFromGenerators(B(U.size), List.empty[P], id)
             }
             S(j) = h :: S(j)
             // TODO: more efficient U(j) = U(j).orbitUpdate(j, S(j), h)
-            U(j) = transversalFromGenerators(B(j), S(j))
+            U(j) = transversalFromGenerators(B(j), S(j), id)
             j += 1
             return false
           }

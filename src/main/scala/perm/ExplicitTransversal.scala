@@ -10,9 +10,9 @@ class ExplicitTransversal[T <: Permutation[T]](explicitMap: scala.collection.imm
 }
 
 object ExplicitTransversal {
-  def fromGenerators[P <: Permutation[P]](el: Domain, G: Iterable[P]): ExplicitTransversal[P] = { // should be extended to other transversal types
+  def fromGenerators[P <: Permutation[P]](el: Domain, G: Iterable[P], id: P): ExplicitTransversal[P] = { // should be extended to other transversal types
     val m = scala.collection.mutable.HashMap.empty[Int, P]
-val degree = G.head.domainSize
+    val degree = id.domainSize
     def visit(a: Domain, p: P) {
       if (!m.isDefinedAt(a)) {
         m(a) = p
@@ -20,7 +20,7 @@ val degree = G.head.domainSize
           visit(a**g, g.inverse*p)
       }
     }
-    visit(el, G.head.identity)
+    visit(el, id)
     new ExplicitTransversal[P](scala.collection.immutable.TreeMap.empty[Int, P] ++ m)
   }
   def trivial[P <: Permutation[P]](alpha: Domain, identity: P): ExplicitTransversal[P] = {
