@@ -5,6 +5,16 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: Li
   val strongGeneratingSet: List[P] = S
   val transversals: List[T] = U
   val degree: Int = S.head.domainSize
+  def randomElement = {
+    var g = S.head.identity
+    for (u <- transversals) {
+      if (u.size > 1) {
+        val el = u.elementsIterator.toList(scala.util.Random.nextInt(u.size))
+        g = el * g
+      }
+    }
+    g
+  }
   def iterator = {
     def iter(tlist: List[T]): Iterator[P] = tlist match {
       case head :: Nil => head.elementsIterator
@@ -15,7 +25,16 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P]](B: List[Domain], S: Li
   }
   override def order: Int = (1 /: transversals)((p:Int, kv:T) => kv.size*p)
   override def generatingSet = S
-  override def verify = true // TODO fix
+  override def verify: Boolean = {
+    for (i <- 0 until base.length) {
+      val fixed = base.take(i)
+      val u = transversals(i).elementsIterator.toList.map(_.images)
+      for (g <- u; f <- fixed)
+        return false
+    }
+    // TODO: add more checks
+    true
+  }
   override def contains(g: P): Boolean = {
     val (siftee, m) = sift(g)
     m == base.size && siftee.isIdentity
