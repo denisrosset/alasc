@@ -1,14 +1,17 @@
 package com.faacets.perm
 
+/** Trait defining a generic permutation group element. The class implementing this
+  * trait has to define a lexicograpic ordering on the permutations by implementing Ordered.
+  */
 trait Permutation[P] extends GroupElement[P] with Ordered[P] {
-  def domainSize: Int
-  def image(el: Domain): Domain
-  def images: Vector[Domain]
-  def compare(that: P): Int
-  def toExplicit: ExplicitPermutation = new ExplicitPermutation(images)
+  def domainSize: Int /** Size of the domain on which P acts. */
+  def image(el: Domain): Domain /** Image of a domain element. */
+  def images: Vector[Domain] /** Images of the permutation acting on 0...domainSize-1 */
+  def compare(that: P): Int /** Compares two permutation by lexicographic order. */
+  def toExplicit: ExplicitPermutation = new ExplicitPermutation(images) /** Gives the explicit permutation corresponding to this permutation, losing the additional structure. */
 
-  def hasInSupport(el: Domain): Boolean = (image(el) != el)
-  def support: Iterable[Domain] = (0 until domainSize).filter(hasInSupport(_))
+  def hasInSupport(el: Domain): Boolean = (image(el) != el) /** Checks if this permutation moves element el of the domain. */
+  def support: Iterable[Domain] = (0 until domainSize).filter(hasInSupport(_)) /** Return all points moved by this permutation. */
   def cycle[P](start: Domain): Iterable[Domain] = {
     def walk(el: Domain): List[Domain] = if (el == start) List.empty[Domain] else el :: walk(image(el))
       start :: walk(image(start))
