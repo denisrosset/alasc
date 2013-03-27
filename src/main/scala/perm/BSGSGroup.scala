@@ -49,6 +49,9 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
     g
   }
 
+  /** Iterates through all the elements of the group, by describing any element
+    * of the group as a product of members of transversals.
+    */
   def iterator = {
     def iter(i: Int): Iterator[P] = {
       if (i == m) return List(identity).iterator
@@ -58,19 +61,33 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
     iter(0)
   }
 
-  def sift(g: P, i: Int): (P, Int) = {
+  def sift(g: P, i: Int = 0): (P, Int) = {
+    // we left the base? exit
     if (i >= m)
       return (g, i)
     val beta = g.image(base(i))
+    // is the image of the current base element in the transversal ?
     if (!transversals(i).contains(beta))
+      // if not, exit
       return (g, i - 1)
-    sift(g * transversals(i), i + 1)
+    // we fixed the current base element, on to the next one
+    sift(g * transversals(i)(beta), i + 1)
+  }
+
+  def +(g: P): BSGSGroup[P, T] = {
+    val (h, i) = sift(g, 0)
+
   }
 }
 
 object BSGSGroup {
-
-
+  def emptyBSGSWithFullBase[P <: Permutation[P]](identity: P) = {
+    import scala.collection.immutable.TreeMap
+    val strongGeneratingSet = Vector.empty[P]
+    val base = (0 until identity.domainSize).toVector
+    val transversals = (0 until identity.domainSize).map(i => new ExplicitTransversal(TreeMap((i, identity)))).toVector
+    BSGSGroup(identity, base, strongGeneratingSet, transversals)
+  }
 }
 
 /*
