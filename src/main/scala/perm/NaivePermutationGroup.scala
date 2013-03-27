@@ -24,7 +24,7 @@ class NaivePermutationGroup[T <: Permutation[T]](G: Seq[T]) extends PermutationG
   override def order = _elements.size
   override def contains(perm: T) = _elements.contains(perm)
   /** Verifies that all generators have the same degree, and verify them. */
-  override def verify: Boolean = !G.exists(_.domainSize != degree) && !G.exists(!_.verify)
+  def assertValid = assert(!G.exists(_.domainSize != degree) && !G.exists(!_.verify))
   override def generatingSet = G
   def iterator: Iterator[T] = _elements.iterator
   override def randomElement = iterator.drop(scala.util.Random.nextInt(order)).next()

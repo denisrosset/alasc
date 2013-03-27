@@ -1,5 +1,43 @@
 package com.faacets.perm
 
+/** A class describing a level of the BSGS construction.
+  * @param beta Element of the base for the current level
+  * @param X    Members of the strong generating set fixing the base
+  *             until the current level, and moving the current beta
+  * @param u    Transversal for the current level
+  */
+case class BSGSLevel[P <: Permutation[P], T <: Transversal[P]]
+  (beta: Domain, X: List[P], u: T) {
+  /** Verifies the sanity of the current level.
+    * @param prevBase Sequence of the base elements for the levels
+    *                 up to the current one (optional).
+    * @param nextS    Members of the strong generating set for all the
+    *                 next levels
+    * 
+    */
+  def assertValid(prevBase: Seq[Domain] = List.empty[Domain],
+    nextS: Seq[P]) = {
+    for(x <- X) {
+      for (b <- prevBase)
+        assert(x.image(b) == b)
+      assert(x.image(beta) != beta)
+    }
+    for(b <- u.orbitIterator; x <- X)
+      assert(u.contains(x.image(b)))
+    for(b <- u.orbitIterator; s <- nextS)
+      assert(u.contains(s.image(b)))
+    u.assertValid
+  }
+}
+
+object BSGSLevel {
+  def empty[P <: Permutation[P], T <: Transversal[P]](
+    beta: Domain,
+    id: P,
+    emptyTransversal: (Domain, P) => T) =
+    new BSGSLevel(beta, List.empty[P], emptyTransversal(beta, id))
+}
+
 /** A permutation group with its stabilizer chain described by a base, a strong generating set,
   * and transversals.
   * The underlying permutation type is parametrized by P, and the type of transversals
@@ -8,44 +46,24 @@ package com.faacets.perm
   * object directly.
   */
 case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
-  (identity: P, base: Vector[Domain], strongGeneratingSet: Vector[P], transversals: Vector[T]) extends PermutationGroup[P] {
+  (identity: P, levels: Vector[BSGSLevel[P, T]]) extends PermutationGroup[P] {
   val degree = identity.domainSize
-  val m = base.length /** Length of the stabilizer chain. */
+  val m = levels.length /** Length of the stabilizer chain. */
 
-  override def generatingSet = strongGeneratingSet
-  override def order: Int = (1 /: transversals)((p:Int, kv:T) => kv.size*p)
-  override def contains(perm: P): Boolean = ???
+  def generatingSet = levels.map(_.X).flatten
+  def order: Int = (1 /: levels)((p:Int, l:BSGSLevel[P, T]) => l.u.size*p)
+  def contains(perm: P): Boolean = ???
 
   /** Checks this BSGS construction for consistency */
-  def verify = {
-    // Verifies that the strong generating set does not contains the identity
-    // TODO: verify that the SGS is really a SGS
-    def verifyStrongGeneratingSet = strongGeneratingSet.forall(!_.isIdentity)
-    // Checks that the only element that fixes the base pointwise is the identity
-    def verifyBase = strongGeneratingSet.forall(g => base.exists(g.hasInSupport(_)))
-    // Verifies that the transversals have support in the relevant domain
-    def verifyTransversals: Boolean = {
-      for (i <- 0 until m) {
-        val u = transversals(i)
-        for (b <- u.orbitIterator) {
-          val g = u(b)
-          if (g.image(base(i)) != b)
-            return false
-          for (j <- 0 until i)
-            if (g.image(j) != j)
-              return false
-        }
-      }
-      return true
-    }
-    verifyStrongGeneratingSet && verifyBase && verifyTransversals
+  def assertValid {
+  
   }
 
   /** Produces a random element */
   def randomElement = {
     var g = identity
-    for (u <- transversals)
-      g = u.elementsIterator.drop(scala.util.Random.nextInt(u.size)).next() * g
+    for (l <- levels)
+      g = l.u.randomElement * g
     g
   }
 
@@ -55,8 +73,8 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
   def iterator = {
     def iter(i: Int): Iterator[P] = {
       if (i == m) return List(identity).iterator
-      if (i == m - 1) return transversals(i).elementsIterator
-      for(g <- transversals(i).elementsIterator; h <- iter(i+1)) yield g*h
+      if (i == m - 1) return levels(i).u.elementsIterator
+      for(g <- levels(i).u.elementsIterator; h <- iter(i+1)) yield g*h
     }
     iter(0)
   }
@@ -64,30 +82,39 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
   def sift(g: P, i: Int = 0): (P, Int) = {
     // we left the base? exit
     if (i >= m)
-      return (g, i)
-    val beta = g.image(base(i))
+      return (g, m)
+    val b = g.image(levels(i).beta)
     // is the image of the current base element in the transversal ?
-    if (!transversals(i).contains(beta))
+    if (!levels(i).u.contains(b))
       // if not, exit
-      return (g, i - 1)
+      return (g, i)
     // we fixed the current base element, on to the next one
-    sift(g * transversals(i)(beta), i + 1)
+    sift(g * levels(i).u(b), i + 1)
   }
-
+/**
   def +(g: P): BSGSGroup[P, T] = {
+    // sifts the new element
     val (h, i) = sift(g, 0)
 
-  }
+
+    if (h.isIdentity) // if the element sifts, it is already a member
+      return this
+
+    if (i == m) // if we sift through the base, and aren't left with identity
+      val newbase = base ++ Vector((0 until degree).find(i => h(i) != i).get)
+
+  }*/
 }
+import scala.collection.immutable.TreeMap
 
 object BSGSGroup {
-  def emptyBSGSWithFullBase[P <: Permutation[P]](identity: P) = {
-    import scala.collection.immutable.TreeMap
-    val strongGeneratingSet = Vector.empty[P]
-    val base = (0 until identity.domainSize).toVector
-    val transversals = (0 until identity.domainSize).map(i => new ExplicitTransversal(TreeMap((i, identity)))).toVector
-    BSGSGroup(identity, base, strongGeneratingSet, transversals)
-  }
+  def emptyFullBase[P <: Permutation[P], T <: Transversal[P]](
+    id: P,
+    emptyTransversal: (Domain, P) => T) =
+    BSGSGroup(
+      id,
+      (0 until id.domainSize).map(BSGSLevel.empty(_, id, emptyTransversal)).toVector
+    )
 }
 
 /*

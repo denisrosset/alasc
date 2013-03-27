@@ -1,29 +1,33 @@
 package com.faacets.perm
 
-class ExplicitTransversal[T <: Permutation[T]](explicitMap: scala.collection.immutable.TreeMap[Int, T]) extends Transversal[T] {
-  override def toString: String = (for ((key, value) <- explicitMap) yield key + " => " + value).mkString("","\n","")
-  override def size = explicitMap.size
-  override def apply(el: Int): T = explicitMap(el)
-  override def contains(el: Int): Boolean = explicitMap.contains(el)
-  override def orbitIterator = explicitMap.keysIterator
-  override def elementsIterator = explicitMap.valuesIterator
+import scala.collection.immutable.TreeMap
+import scala.collection.mutable.HashMap
+
+/** Transversal implementation storing the elements explicitly. */
+case class ExplicitTransversal[P <: Permutation[P]](beta: Domain, map: TreeMap[Int, P]) extends Transversal[P] {
+  def size = map.size
+  def apply(el: Int): P = map(el)
+  def contains(el: Int): Boolean = map.contains(el)
+  def orbitIterator = map.keysIterator
+  def elementsIterator = map.valuesIterator
+  def +(s: P) = {
+    val sinv = s.inverse
+    var newMap = map
+    def visit(b: Domain, ub: P) {
+      val c = s.image(b)
+      if (!newMap.contains(c)) {
+        val uc = sinv * ub
+        newMap = newMap + ((c, uc))
+        visit(c, uc)
+      }
+    }
+    for ((a, ua) <- map)
+      visit(a, ua)
+    new ExplicitTransversal(beta, newMap)
+  }
 }
 
 object ExplicitTransversal {
-  def fromGenerators[P <: Permutation[P]](el: Domain, G: Iterable[P], id: P): ExplicitTransversal[P] = { // should be extended to other transversal types
-    val m = scala.collection.mutable.HashMap.empty[Int, P]
-    val degree = id.domainSize
-    def visit(a: Domain, p: P) {
-      if (!m.isDefinedAt(a)) {
-        m(a) = p
-        for ((g, i) <- G.view.zipWithIndex)
-          visit(a**g, g.inverse*p)
-      }
-    }
-    visit(el, id)
-    new ExplicitTransversal[P](scala.collection.immutable.TreeMap.empty[Int, P] ++ m)
-  }
-  def trivial[P <: Permutation[P]](alpha: Domain, identity: P): ExplicitTransversal[P] = {
-    new ExplicitTransversal[P](scala.collection.immutable.TreeMap(List((alpha, identity)):_*))
-  }
+  def apply[P <: Permutation[P]](beta: Domain, id: P) =
+    new ExplicitTransversal(beta, TreeMap((beta, id)))
 }
