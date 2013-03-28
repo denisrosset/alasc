@@ -53,13 +53,13 @@ case class ExplicitPermutation(I: Vector[Domain]) extends Permutation[ExplicitPe
   override def toExplicit: ExplicitPermutation = this
   def isIdentity: Boolean = (0 until domainSize).forall(!hasInSupport(_))
   def identity: ExplicitPermutation = this*inverse
-  def verify: Boolean = {
+  def assertValid {
     val notInside = scala.collection.mutable.BitSet((0 until domainSize): _*)
     (0 until domainSize).map(image(_)).foreach(i => {
-      if (!notInside(i)) return false // already inside, so duplicate element
+      assert(notInside(i)) // should not be already inside, thus a duplicate element
       notInside -= i
     })
-    return notInside.isEmpty
+    assert(notInside.isEmpty)
   }
   override def equal(that: ExplicitPermutation): Boolean = (images == that.images)
 }

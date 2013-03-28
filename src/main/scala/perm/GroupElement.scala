@@ -8,5 +8,5 @@ trait GroupElement[P] {
   def isIdentity: Boolean /** Checks if this group element is the identity. */
   def identity: P /** Returns the identity group element, i.e. this * this.inverse */
   def equal(that: P): Boolean /** Check if this group element is equal to another group element. */
-  def verify: Boolean /** Check this group element for consistency. */
+  def assertValid /** Asserts that this group element is consistent. */
 }

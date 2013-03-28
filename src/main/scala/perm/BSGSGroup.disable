@@ -1,5 +1,7 @@
 package com.faacets.perm
 
+// WARNING: assumes through the code that the base is full !
+
 /** A class describing a level of the BSGS construction.
   * @param beta Element of the base for the current level
   * @param X    Members of the strong generating set fixing the base
@@ -7,7 +9,7 @@ package com.faacets.perm
   * @param u    Transversal for the current level
   */
 case class BSGSLevel[P <: Permutation[P], T <: Transversal[P]]
-  (beta: Domain, X: List[P], u: T) {
+  (X: List[P], u: T) {
   /** Verifies the sanity of the current level.
     * @param prevBase Sequence of the base elements for the levels
     *                 up to the current one (optional).
@@ -15,6 +17,7 @@ case class BSGSLevel[P <: Permutation[P], T <: Transversal[P]]
     *                 next levels
     * 
     */
+  def beta = u.beta
   def assertValid(prevBase: Seq[Domain] = List.empty[Domain],
     nextS: Seq[P]) = {
     for(x <- X) {
@@ -56,7 +59,13 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
 
   /** Checks this BSGS construction for consistency */
   def assertValid {
-  
+    assert(identity.isIdentity)
+    identity.assertValid
+    for (i <- 0 until m) {
+      val prevBase = (0 until i).map(levels(_).beta)
+      val nextS = (i+1 until m).map(levels(_).X).flatten
+      levels(i).assertValid(prevBase, nextS)
+    }
   }
 
   /** Produces a random element */
@@ -91,8 +100,45 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
     // we fixed the current base element, on to the next one
     sift(g * levels(i).u(b), i + 1)
   }
-/**
-  def +(g: P): BSGSGroup[P, T] = {
+
+  def +(s: P) = {
+    var L = this.levels // the levels of the new BSGS group under construction
+    var j = 0
+    // add the new generator at the right level
+    (0 until m).find(i => i != s.image(i)).match {
+      case Some(l) => {
+        L = L.updated(l, BSGSLevel(s :: L(i).X, L(i).u))
+        j = 
+      case None => throw Exception("Error: BSGS construction assumes that the base is valid")
+    }
+
+
+
+    }
+    // setup
+
+    def workLevel(g: P, i: Int): Boolean {
+      var changed = false
+      if (i >= m)
+        return List.empty[P]
+      val b = g.image(L.beta)
+      if (!L(i).u.contains(b)) {
+        L = L.updated(i,
+          BSGSLevel(L(i).beta, g :: L(i).X, L(i).u + g))
+        changed = true
+      }
+      changed = changed || workLevel(g * L(i).u(b), i + 1)
+
+      var hasChanged = false
+      while (changed) {
+        changed = false
+        for(j <- i until m; x <- L(i).X; b <- L(i).u.orbitIterator) {
+          val schreierGen = L(i).u(b)*x*(L(i).u(x.image(b)).inverse)
+
+    }
+
+    worklevel(s, 0)
+
     // sifts the new element
     val (h, i) = sift(g, 0)
 
@@ -103,12 +149,12 @@ case class BSGSGroup[P <: Permutation[P], T <: Transversal[P]]
     if (i == m) // if we sift through the base, and aren't left with identity
       val newbase = base ++ Vector((0 until degree).find(i => h(i) != i).get)
 
-  }*/
+  }
 }
 import scala.collection.immutable.TreeMap
 
 object BSGSGroup {
-  def emptyFullBase[P <: Permutation[P], T <: Transversal[P]](
+  def empty[P <: Permutation[P], T <: Transversal[P]](
     id: P,
     emptyTransversal: (Domain, P) => T) =
     BSGSGroup(

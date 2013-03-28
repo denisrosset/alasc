@@ -4,6 +4,7 @@ package com.faacets.perm
   * trait has to define a lexicograpic ordering on the permutations by implementing Ordered.
   */
 trait Permutation[P] extends GroupElement[P] with Ordered[P] {
+  def assertValid /** Asserts that this permutation is valid. */
   def domainSize: Int /** Size of the domain on which P acts. */
   def image(el: Domain): Domain /** Image of a domain element. */
   def images: Vector[Domain] /** Images of the permutation acting on 0...domainSize-1 */
