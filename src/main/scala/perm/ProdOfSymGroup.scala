@@ -41,11 +41,6 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
     true
   }
 
-  /* Cartesian product of traversable. */
-  def combine[A](xs: Traversable[Traversable[A]]): Seq[Seq[A]] =
-    xs.foldLeft(Seq(Seq.empty[A])){
-      (x, y) => for (a <- x.view; b <- y) yield a :+ b }
-
   /* Returns the permutation where each cell has specified images. */
   def withImages(img: Seq[Seq[Domain]]) = {
     var images = Array((0 until degree):_*)
@@ -62,4 +57,14 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
   /* Gives a random element by selecting random images for each cell in the partition. */
   def randomElement =
     withImages(part.map(scala.util.Random.shuffle(_)))
+}
+
+object ProdOfSymGroup {
+  def leaveInvariant[D](els: Seq[D]) = {
+    val part = els.toVector.zipWithIndex. // pair elements with their indices
+      groupBy(_._1).values. // group equal elements
+      map(_.map(_._2)). // retrieve only the index of elements
+      filter(_.length > 1).toVector // retrieve only groups of size > 1
+    ProdOfSymGroup(els.length, part)
+  }
 }

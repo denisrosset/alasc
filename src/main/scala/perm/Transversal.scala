@@ -6,7 +6,7 @@ package com.faacets.perm
   * element b in the orbit the product u_b = s_i1 s_i2 ... of elements of S such
   * that beta ** u_b = b.
   */
-trait Transversal[P <: Permutation[P]] {
+trait Transversal[P <: Permutation[P], T <: Transversal[P, T]] {
   override def toString: String = (for (key <- orbitIterator) yield key + " => " + apply(key)).mkString("","\n","")
   def beta: Domain /** Element for which the transversal is defined. */
   def contains(el: Domain): Boolean /** Tests if el is in the orbit of beta. */
@@ -19,5 +19,5 @@ trait Transversal[P <: Permutation[P]] {
     for (b <- orbitIterator)
       assert (apply(b).image(beta) == b)
   }
-  def +(s: P) /** Returns a new transversal extended with s added to S. */
+  def +(s: P): T /** Returns a new transversal extended with s added to S. */
 }

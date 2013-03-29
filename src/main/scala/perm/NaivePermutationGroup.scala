@@ -3,12 +3,12 @@ package com.faacets.perm
 import scala.collection.mutable
 import scala.collection.immutable
 
-class NaivePermutationGroup[T <: Permutation[T]](G: Seq[T]) extends PermutationGroup[T] {
-  val degree = G.head.domainSize
-  def identity = G.head.identity
+class NaivePermutationGroup[T <: Permutation[T]](id: T, G: Seq[T]) extends PermutationGroup[T] {
+  def degree = id.domainSize
+  def identity = id
   lazy val _elements = {
     val E = mutable.HashSet.empty[T]
-    E += G.head.identity
+    E += identity
     def tryToAddOne: Boolean = {
       for (e <- E.toList; g <- G) {
         if (!E.contains(g*e)) {

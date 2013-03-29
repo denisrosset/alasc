@@ -4,7 +4,7 @@ import scala.collection.immutable.TreeMap
 import scala.collection.mutable.HashMap
 
 /** Transversal implementation storing the elements explicitly. */
-case class ExplicitTransversal[P <: Permutation[P]](beta: Domain, map: TreeMap[Int, P]) extends Transversal[P] {
+case class ExplicitTransversal[P <: Permutation[P]](beta: Domain, map: TreeMap[Int, P]) extends Transversal[P, ExplicitTransversal[P]] {
   def size = map.size
   def apply(el: Int): P = map(el)
   def contains(el: Int): Boolean = map.contains(el)

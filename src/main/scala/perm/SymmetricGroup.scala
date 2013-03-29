@@ -1,7 +1,7 @@
 package com.faacets.perm
 
 /** Symmetric group defined on the domain 0 .. degree-1. */
-case class SymmetricGroup(degree:Int) 
+case class SymmetricGroup(val degree: Int) 
     extends PermutationGroup[ExplicitPermutation] {
   def assertValid = degree > 0
   def identity = ExplicitPermutation(degree)
