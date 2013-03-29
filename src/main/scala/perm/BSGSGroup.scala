@@ -32,12 +32,18 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P, T]]
 
   def generators = S
   def order: Int = (1 /: U)( (p:Int, u:T) => u.size*p)
-  def contains(g: P): Boolean = sift(perm)._1.isIdentity
+  def contains(g: P): Boolean = sift(g)._1.isIdentity
 
   /** Checks this BSGS construction for consistency. TODO: do an actual check. */
   def assertValid {
     assert(id.isIdentity)
     id.assertValid
+    // verify that elements in transversals only move points they are supposed to move
+    for (i <- 1 until m) {
+      for (g <- U(i).elementsIterator; j <- 0 until i) {
+        assert(g.image(U(j).beta) == U(j).beta)
+      }
+    }
   }
 
   /** Produces a random element */
