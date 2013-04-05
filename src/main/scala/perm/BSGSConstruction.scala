@@ -2,7 +2,7 @@ package com.faacets.perm
 
 import scala.collection.mutable.ArrayBuffer
 
-/** A class describing a BSGS construction.
+/** A mutable class describing a BSGS construction.
   * @param S    Members of the strong generating set fixing base points
   *             until level k for k = 0 .. m - 1.
   * @param U    Transversal for the each level.
