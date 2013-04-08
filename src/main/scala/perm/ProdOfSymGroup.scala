@@ -67,4 +67,10 @@ object ProdOfSymGroup {
       filter(_.length > 1).toVector // retrieve only groups of size > 1
     ProdOfSymGroup(els.length, part)
   }
+  def partitionPreserving(partition: Iterable[Seq[Int]]): Iterable[ExplicitPermutation] = {
+    val domainSize = partition.flatten.max + 1
+    def genForPoints(points: Seq[Int]): Seq[ExplicitPermutation] =
+      (points zip points.tail).map( p => ExplicitPermutation(domainSize)(p._1,p._2) )
+    partition.map(genForPoints(_)).flatten
+  }
 }

@@ -16,3 +16,8 @@ case class SymmetricGroup(val degree: Int)
   def randomElement =
     new ExplicitPermutation(scala.util.Random.shuffle((0 until degree).toVector))
 }
+
+object SymmetricGroup {
+  def generatorsForS(degree: Int): Seq[ExplicitPermutation] =
+    (0 to degree - 2).map(i => ExplicitPermutation(degree)(i, i + 1))
+}

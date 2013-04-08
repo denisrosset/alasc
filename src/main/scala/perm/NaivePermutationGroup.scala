@@ -3,6 +3,14 @@ package com.faacets.perm
 import scala.collection.mutable
 import scala.collection.immutable
 
+/** Implementation of a permutation group that constructs explicitly all elements.
+  * 
+  * Very slow, but easy to implement. Can be used to check the validity of other approaches.
+  * 
+  * @param id Identity element of the group.
+  * @param G  Generators of the group.
+  * 
+  */
 class NaivePermutationGroup[T <: Permutation[T]](id: T, G: Seq[T]) extends PermutationGroup[T] {
   def degree = id.domainSize
   def identity = id
