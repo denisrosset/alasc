@@ -31,7 +31,7 @@ class BSGSGroup[P <: Permutation[P], T <: Transversal[P, T]]
   val m = U.length /** Length of the stabilizer chain. */
 
   def generators = S
-  def order: Int = (1 /: U)( (p:Int, u:T) => u.size*p)
+  def order = (BigInt(1) /: U)( (p:BigInt, u:T) => u.size*p)
   def contains(g: P): Boolean = sift(g)._1.isIdentity
 
   /** Checks this BSGS construction for consistency. TODO: do an actual check. */

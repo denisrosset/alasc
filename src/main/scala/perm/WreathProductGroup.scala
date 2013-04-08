@@ -31,7 +31,7 @@ case class WreathProductGroup[
 
   def contains(e: WE) = h.contains(e.hel) && e.aelvec.forall(a.contains(_))
 
-  def order = h.order * (0 until h.order).map(i => a.order).product
+  def order = h.order * (0 until h.degree).map(i => a.order).product
 
   def iterator = for(hel <- h.iterator; // loop over iterator on h elements
     aels <- combine((0 until h.degree).toList.map(i => a))) // with iterators on the each copy of a

@@ -25,7 +25,7 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
   def generators =
     part.map( p => (p zip p.tail).map { case ((i,j)) => ExplicitPermutation(degree)(i,j) } ).flatten
   /* The order is the product of fact(n_i), where n_i is the size of the cells. */
-  def order = part.map { i:Vector[Domain] => (1 to i.length).product }.product
+  def order = part.map { i:Vector[Domain] => (1 to i.length).foldLeft(BigInt(1))(_*_) }.product
   /* Checks that the permutation maps each cell to itself set-wise, and does not
      move points that are not in a call. */
   def contains(perm: ExplicitPermutation): Boolean = {

@@ -12,7 +12,7 @@ class BSGSConstruction[P <: Permutation[P], T <: Transversal[P, T]]
 
   val m = U.length /** Length of the stabilizer chain. */
 
-  def order: Int = (1 /: U)( (p:Int, u:T) => u.size*p)
+  def order: BigInt = (BigInt(1) /: U)( (p:BigInt, u:T) => u.size*p)
 
   def sift(g: P, i: Int = 0): (P, Int) = {
     // we left the base? exit
@@ -85,7 +85,7 @@ object BSGSConstruction {
   }
 
   def randomSchreierSims[P <: Permutation[P], T <: Transversal[P, T]]
-    (id: P, cons: BSGSConstruction[P, T], random: () => P, order: Int, emptyU: (Domain, P) => T) = {
+    (id: P, cons: BSGSConstruction[P, T], random: () => P, order: BigInt, emptyU: (Domain, P) => T) = {
     while (cons.order < order)
       cons.addElement(random(), emptyU)
     new BSGSGroup(id, cons.S.flatten.toSet.toSeq, cons.U.toVector)

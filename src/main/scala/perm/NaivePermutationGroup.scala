@@ -31,5 +31,5 @@ class NaivePermutationGroup[T <: Permutation[T]](id: T, G: Seq[T]) extends Permu
   }
   def generators = G
   def iterator: Iterator[T] = _elements.iterator
-  def randomElement = iterator.drop(scala.util.Random.nextInt(order)).next()
+  def randomElement = iterator.drop(scala.util.Random.nextInt(order.intValue)).next()
 }
