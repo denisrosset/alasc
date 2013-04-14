@@ -1,13 +1,14 @@
 package com.faacets.perm
 
-/** Trait defining a group, whose elements are of type E. */
-
-trait FiniteGroup[E <: GroupElement[E]] extends Iterable[E] {
-  def assertValid /** Checks the group construction for consistency. */
-  def identity: E /** Returns the identity element. */
-  def generators: Iterable[E] /** Returns an iterator on a set of generators for the group. */
+/** Trait defining a finite group. */
+trait FiniteGroup extends AbstractGroup {
+  type Group <: FiniteGroup
+  type Element <: FiniteGroupElement
   def order: BigInt /** Order of the group, i.e. number of elements in the group. */
-  def contains(el: E): Boolean /** Checks if the group contains element el. */
-  def iterator: Iterator[E] /** An iterator through all group elements. */
-  def randomElement: E /** Produces a random element. */
+  def elements: Iterable[Element] /** An iterator through all group elements. */
+  def generators: Iterable[Element] /** Returns an iterable on a set of generators for the group. */
+  def contains(e: Element): Boolean /** Checks if the group contains element e. */
+  trait FiniteGroupElement extends AbstractElement {
+    def period: BigInt /** Period of this group element, i.e. the smallest positive integer m such that this**m = identity. */
+  }
 }

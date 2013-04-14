@@ -4,71 +4,85 @@ package wreath {
   /** Represents the 'inhomogenous' wreath product (h, a_0...a_n-1), where h is a permutation group and
     * a_0 ... a_n-1 are finite groups. 
     */
-  case class InhWreathProductGroup[
-    H <: PermutationGroup[HE], A <: FiniteGroup[AE],
-    HE <: Permutation[HE], AE <: GroupElement[AE]](h: H, as: Vector[A])
-      extends FiniteGroup[InhWreathProductElement[HE, AE]] {
-    type E = InhWreathProductElement[HE, AE]
+  trait InhWreathProductGroup extends FiniteGroup {
+    type Group <: InhWreathProductGroup
+    type Element <: InhWreathProductElement
+
+    type H <: PermutationGroup
+    type A <: FiniteGroup
+    val h: H
+    val avec: Vector[A]
 
     def assertValid {
       h.assertValid
       for (g <- h.generators) {
-        val permas = g.images.map(as(_))
-        assert(as == permas)
+        val permavec = g.images.map(avec(_))
+        assert(avec == permavec)
       }
-      as.foreach(_.assertValid)
+      avec.foreach(_.assertValid)
     }
 
-    def identity = InhWreathProductElement(
-      h.identity,
-      as.map(_.identity))
+    def identity = make(
+      h.identity: h.Element,
+      avec.map(_.identity))
 
     def generators = List(
       // Generators of the extern permutation
       for (gen <- h.generators) yield
         identity.copy(hel = gen),
       // Generators of the intern permutations for the k-th copy of group a
-      for ((a, k) <- as.zipWithIndex;
+      for ((a, k) <- avec.zipWithIndex;
         id = identity;
         gen <- a.generators) yield
         id.copy(aelvec = id.aelvec.updated(k, gen))
     ).flatten
 
-    def contains(e: E) = h.contains(e.hel) && (e.aelvec zip as).forall( aela => aela._2.contains(aela._1))
-
-    def order = h.order * as.map(a => a.order).product
-
-    def iterator = for(hel <- h.iterator; // loop over iterator on h elements
-      aels <- combine(as)) // with iterators on the each copy of a
-    yield InhWreathProductElement(hel, aels.toVector)
-
-    def randomElement = InhWreathProductElement(
-      h.randomElement,
-      as.map( _.randomElement ))
-  }
-
-  case class InhWreathProductElement[HE <: Permutation[HE], AE <: GroupElement[AE]](hel: HE, aelvec: Vector[AE]) extends GroupElement[InhWreathProductElement[HE, AE]] {
-    type E = InhWreathProductElement[HE, AE]
-    def assertValid {
-      val aelvecperm = hel.images.map(aelvec(_))
-      // test that permuted elements are compatible
-      for ((a1,a2) <- aelvec zip aelvecperm) a1 * a2
-      hel.assertValid
-      aelvec.foreach( _.assertValid )
+    def contains(e: Element) = h.contains(e.hel) && (e.aelvec zip avec).forall { 
+      case (ael, a) => a.contains(ael.asInstanceOf[a.Element])
     }
 
-    def *(that: E) =
-      InhWreathProductElement(
-        hel * that.hel,
+    def order = h.order * avec.map(a => a.order).product
+
+    def elements = for(hel <- h.elements; // loop over iterator on h elements
+      aels <- combine(avec.map(_.elements))) // with iterators on the each copy of a
+    yield make(hel, aels.toVector)
+
+    def randomElement = make(
+      h.randomElement,
+      avec.map( _.randomElement ))
+
+    def make(hel: h.Element, aelvec: Vector[A#Element]): Element
+
+    trait InhWreathProductElement extends FiniteGroupElement {
+      type Element = InhWreathProductGroup.this.Element
+      val hel: h.Element
+      val aelvec: Vector[A#Element]
+
+      def copy(hel : h.Element = this.hel, aelvec : Vector[A#Element] = this.aelvec): Element
+      def assertValid {
+        hel.assertValid
+        aelvec.foreach( _.assertValid )
+      }
+
+      def *(that: Element) =
+        make(
+          hel * that.hel,
+          aelvec.indices.map(
+            k => {
+              val el1 = aelvec(that.hel.inverse.image(k))
+              val el11 = el1.asInstanceOf[el1.group.Element]
+              val el2 = that.aelvec(k).asInstanceOf[el1.group.Element]
+              val el3 = el11 * el2
+              el3.asInstanceOf[A#Element]
+            }).toVector)
+
+      def inverse = make(
+        hel.inverse,
         Vector(aelvec.indices.map(
-          k => aelvec(that.hel.inverse.image(k))*that.aelvec(k)):_*))
+          k => aelvec(hel.image(k)).inverse):_*))
 
-    def inverse = InhWreathProductElement(
-      hel.inverse,
-      Vector(aelvec.indices.map(
-        k => aelvec(hel.image(k)).inverse):_*))
-
-    def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
-    def equal(that: E) = hel == that.hel && aelvec == that.aelvec
+      def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
+      def equal(that: Element) = hel == that.hel && aelvec == that.aelvec
+    }
   }
 }

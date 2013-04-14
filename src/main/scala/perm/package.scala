@@ -12,10 +12,10 @@ package object perm {
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
   implicit def domainAction(el: Domain) = new {
-    def **[P <: Permutation[P]](p: P) = p.image(el)
+    def **[P <: PermutationGroup#Permutation](p: P) = p.image(el)
   }
 
-  implicit def permutationOrdering[P <: Permutation[P]]: Ordering[P] = {
+  implicit def permutationOrdering[P <: PermutationGroup#Permutation]: Ordering[P] = {
     import scala.math.Ordering.Implicits._
     Ordering.fromLessThan(_.images < _.images)
   }

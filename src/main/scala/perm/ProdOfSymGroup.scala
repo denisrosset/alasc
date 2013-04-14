@@ -9,7 +9,12 @@ package com.faacets.perm
   *                 domain elements.
   */
 case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]]) 
-    extends PermutationGroup[ExplicitPermutation] {
+    extends ExplicitPermutationGroup {
+  type Group = ProdOfSymGroup
+  type Element = ProdOfSymElement
+
+  def make(img: Vector[Domain]) = ProdOfSymElement(img, this)
+
   def assertValid {
     /* Checks that the cells do not intersect, and that all cell elements
      * are in the domain. */
@@ -20,15 +25,15 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
         assert(0 <= j && j < degree)
     }
   }
-  def identity = ExplicitPermutation(degree)
+  def identity = make((0 until degree).toVector)
   /* For each cell of size k, we use as generators the k-1 shifts. */
   def generators =
-    part.map( p => (p zip p.tail).map { case ((i,j)) => ExplicitPermutation(degree)(i,j) } ).flatten
+    part.map( p => (p zip p.tail).map { case ((i,j)) => make((0 until degree).toVector.updated(i, j).updated(j, i)) } ).flatten
   /* The order is the product of fact(n_i), where n_i is the size of the cells. */
   def order = part.map { i:Vector[Domain] => (1 to i.length).foldLeft(BigInt(1))(_*_) }.product
   /* Checks that the permutation maps each cell to itself set-wise, and does not
      move points that are not in a call. */
-  def contains(perm: ExplicitPermutation): Boolean = {
+  def contains(perm: Element): Boolean = {
     for (i <- 0 until degree) {
       val j = perm.image(i)
       if (i != j) {
@@ -48,15 +53,17 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
       for ((i, j) <- (p zip s))
         images(i) = j
     }
-    new ExplicitPermutation(images.toVector)
+    make(images.toVector)
   }
 
   /* Iterates through the group elements by constructing explicitly the permutations
    * of each cell, then taking the cartesian product. */
-  def iterator = combine(part.map(_.permutations.toList)).map(withImages(_)).toIterator
+  def elements = combine(part.map(_.permutations.toList)).map(withImages(_)).toIterable
   /* Gives a random element by selecting random images for each cell in the partition. */
   def randomElement =
     withImages(part.map(scala.util.Random.shuffle(_)))
+  case class ProdOfSymElement(override val img: Vector[Domain], group: ProdOfSymGroup) extends ExplicitPermutation(img) {
+  }
 }
 
 object ProdOfSymGroup {
@@ -66,11 +73,5 @@ object ProdOfSymGroup {
       map(_.map(_._2)). // retrieve only the index of elements
       filter(_.length > 1).toVector // retrieve only groups of size > 1
     ProdOfSymGroup(els.length, part)
-  }
-  def partitionPreserving(partition: Iterable[Seq[Int]]): Iterable[ExplicitPermutation] = {
-    val domainSize = partition.flatten.max + 1
-    def genForPoints(points: Seq[Int]): Seq[ExplicitPermutation] =
-      (points zip points.tail).map( p => ExplicitPermutation(domainSize)(p._1,p._2) )
-    partition.map(genForPoints(_)).flatten
   }
 }

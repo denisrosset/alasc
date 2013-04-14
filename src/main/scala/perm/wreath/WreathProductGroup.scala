@@ -4,18 +4,17 @@ package wreath {
   /** Represents the wreath product a Wr h, where h is a permutation group and
     * a a finite group.
     */
-  case class WreathProductGroup[
-    HE <: Permutation[HE], AE <: GroupElement[AE],
-    H <: PermutationGroup[HE], A <: FiniteGroup[AE]](h: H, a: A)
-      extends FiniteGroup[WreathProductElement[HE, AE]] {
-    type WE = WreathProductElement[HE, AE]
+  trait WreathProductGroup extends FiniteGroup {
+    type Group <: WreathProductGroup
+    type Element <: WreathProductElement
 
-    def assertValid {
-      h.assertValid
-      a.assertValid
-    }
+    type H <: PermutationGroup
+    type A <: FiniteGroup
+    val h: H
+    val a: A
+    def assertValid { h.assertValid; a.assertValid }
 
-    def identity = WreathProductElement(
+    def identity = make(
       h.identity,
       (0 until h.degree).toVector.map(i => a.identity))
 
@@ -30,38 +29,42 @@ package wreath {
         id.copy(aelvec = id.aelvec.updated(k, gen))
     ).flatten
 
-    def contains(e: WE) = h.contains(e.hel) && e.aelvec.forall(a.contains(_))
+    def contains(e: Element) = h.contains(e.hel) && e.aelvec.forall(a.contains(_))
 
     def order = h.order * (0 until h.degree).map(i => a.order).product
 
-    def iterator = for(hel <- h.iterator; // loop over iterator on h elements
-      aels <- combine((0 until h.degree).toList.map(i => a))) // with iterators on the each copy of a
-    yield WreathProductElement(hel, aels.toVector)
+    def elements = for(hel <- h.elements; // loop over iterator on h elements
+      aels <- combine((0 until h.degree).toList.map(i => a.elements))) // with iterators on the each copy of a
+    yield make(hel, aels.toVector)
 
-    def randomElement = WreathProductElement(
+    def randomElement = make(
       h.randomElement,
       (0 until h.degree).toVector.map(i => a.randomElement))
-  }
 
-  case class WreathProductElement[HE <: Permutation[HE], AE <: GroupElement[AE]](hel: HE, aelvec: Vector[AE]) extends GroupElement[WreathProductElement[HE, AE]] {
-    type WE = WreathProductElement[HE, AE]
-    def assertValid {
-      hel.assertValid
-      aelvec.foreach( _.assertValid )
+    def make(hel: h.Element, aelvec: Vector[a.Element]): Element
+
+    trait WreathProductElement extends FiniteGroupElement {
+      type Element = WreathProductGroup.this.Element
+      val hel: h.Element
+      val aelvec: Vector[a.Element]
+      def copy(hel : h.Element = this.hel, aelvec : Vector[a.Element] = this.aelvec): Element
+      def assertValid { hel.assertValid; aelvec.foreach( _.assertValid ); }
+
+      def *(that: Element) =
+        make(
+          hel * that.hel,
+          Vector(aelvec.indices.map(
+            k => aelvec(that.hel.inverse.image(k))*that.aelvec(k)):_*))
+
+      def inverse = make(
+        hel.inverse,
+        Vector(aelvec.indices.map(
+          k => aelvec(hel.image(k)).inverse):_*))
+
+      def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
+      def equal(that: Element) = hel == that.hel && aelvec == that.aelvec
     }
 
-    def *(that: WE) =
-      WreathProductElement(
-        hel * that.hel,
-        Vector(aelvec.indices.map(
-          k => aelvec(that.hel.inverse.image(k))*that.aelvec(k)):_*))
-
-    def inverse = WreathProductElement(
-      hel.inverse,
-      Vector(aelvec.indices.map(
-        k => aelvec(hel.image(k)).inverse):_*))
-
-    def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
-    def equal(that: WE) = hel == that.hel && aelvec == that.aelvec
   }
+
 }
