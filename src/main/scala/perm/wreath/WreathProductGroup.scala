@@ -9,7 +9,7 @@ package wreath {
     type Element <: WreathProductElement
 
     type H <: PermutationGroup
-    type A <: FiniteGroup
+    type A <: PermutationGroup
     val h: H
     val a: A
     def assertValid { h.assertValid; a.assertValid }
