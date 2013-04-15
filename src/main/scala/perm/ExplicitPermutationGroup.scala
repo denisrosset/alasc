@@ -8,16 +8,6 @@ trait ExplicitPermutationGroup extends PermutationGroup {
 
   abstract class ExplicitPermutation(val img: Vector[Domain]) extends Permutation {
     self: Element =>
-    def period = {
-      def innerLoop(e: Element, i: Int): Int = {
-        if (e.isIdentity)
-          i
-        else
-          innerLoop(this*e, i + 1)
-      }
-      innerLoop(this, 1)
-    }
-
     def compare(that: Element): Int = {
       import scala.math.Ordering.Implicits._
       Ordering[Vector[Int]].compare(img, that.img)

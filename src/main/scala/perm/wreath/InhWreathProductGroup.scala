@@ -54,7 +54,7 @@ package wreath {
     def make(hel: h.Element, aelvec: Vector[A#Element]): Element
 
     trait InhWreathProductElement extends FiniteGroupElement {
-      type Element = InhWreathProductGroup.this.Element
+      self: Element =>
       val hel: h.Element
       val aelvec: Vector[A#Element]
 

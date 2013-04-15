@@ -13,7 +13,7 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
   type Group = ProdOfSymGroup
   type Element = ProdOfSymElement
 
-  def make(img: Vector[Domain]) = ProdOfSymElement(img, this)
+  def make(img: Vector[Domain]) = ProdOfSymElement(img)
 
   def assertValid {
     /* Checks that the cells do not intersect, and that all cell elements
@@ -62,7 +62,8 @@ case class ProdOfSymGroup(degree:Int, part: Vector[Vector[Domain]])
   /* Gives a random element by selecting random images for each cell in the partition. */
   def randomElement =
     withImages(part.map(scala.util.Random.shuffle(_)))
-  case class ProdOfSymElement(override val img: Vector[Domain], group: ProdOfSymGroup) extends ExplicitPermutation(img) {
+  case class ProdOfSymElement(override val img: Vector[Domain]) extends ExplicitPermutation(img) {
+    val group = ProdOfSymGroup.this
   }
 }
 

@@ -9,6 +9,16 @@ trait FiniteGroup extends AbstractGroup {
   def generators: Iterable[Element] /** Returns an iterable on a set of generators for the group. */
   def contains(e: Element): Boolean /** Checks if the group contains element e. */
   trait FiniteGroupElement extends AbstractElement {
-    def period: BigInt /** Period of this group element, i.e. the smallest positive integer m such that this**m = identity. */
+    self: Element =>
+    /** Period of this group element, i.e. the smallest positive integer m such that this**m = identity. */
+    def period: Int = {
+      def innerLoop(e: Element, i: Int): Int = {
+        if (e.isIdentity)
+          i
+        else
+          innerLoop(this*e, i + 1)
+      }
+      innerLoop(this, 1)
+    }
   }
 }

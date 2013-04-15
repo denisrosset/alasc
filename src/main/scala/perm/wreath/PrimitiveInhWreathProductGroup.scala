@@ -13,6 +13,7 @@ package wreath {
     def degree = avec.map(_.degree).product
 
     trait PrimitiveInhWreathProductAction extends InhWreathProductElement with Permutation {
+      self: Element =>
       override val domainSize = aelvec.map(_.domainSize).product
       lazy val images = {
         val dims = aelvec.map(_.domainSize)

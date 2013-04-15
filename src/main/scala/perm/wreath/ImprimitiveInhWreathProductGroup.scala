@@ -13,6 +13,7 @@ package wreath {
     def degree = avec.map(_.degree).sum
 
     trait ImprimitiveInhWreathProductAction extends InhWreathProductElement with Permutation {
+      self: Element =>
       lazy val images = {
         val P = scala.collection.mutable.ArrayBuffer.fill[Int](domainSize)(0)
         val sizes = aelvec.map(_.domainSize)

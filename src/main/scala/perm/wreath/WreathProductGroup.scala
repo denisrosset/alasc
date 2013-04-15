@@ -44,9 +44,10 @@ package wreath {
     def make(hel: h.Element, aelvec: Vector[a.Element]): Element
 
     trait WreathProductElement extends FiniteGroupElement {
-      type Element = WreathProductGroup.this.Element
+      self: Element =>
       val hel: h.Element
       val aelvec: Vector[a.Element]
+
       def copy(hel : h.Element = this.hel, aelvec : Vector[a.Element] = this.aelvec): Element
       def assertValid { hel.assertValid; aelvec.foreach( _.assertValid ); }
 
@@ -64,7 +65,5 @@ package wreath {
       def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
       def equal(that: Element) = hel == that.hel && aelvec == that.aelvec
     }
-
   }
-
 }

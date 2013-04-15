@@ -5,7 +5,7 @@ case class SymmetricGroup(val degree: Int) extends ExplicitPermutationGroup {
   type Group = SymmetricGroup
   type Element = SymmetricGroupElement
 
-  def make(img: Vector[Domain]) = SymmetricGroupElement(img, this)
+  def make(img: Vector[Domain]) = SymmetricGroupElement(img)
 
   def assertValid = degree > 0
   def identity = make((0 until degree).toVector)
@@ -19,5 +19,8 @@ case class SymmetricGroup(val degree: Int) extends ExplicitPermutationGroup {
   def randomElement =
     make(scala.util.Random.shuffle((0 until degree).toVector))
 
-  case class SymmetricGroupElement(override val img: Vector[Domain], group: SymmetricGroup) extends ExplicitPermutation(img) { }
+  case class SymmetricGroupElement(override val img: Vector[Domain]) extends ExplicitPermutation(img) {
+    val group = SymmetricGroup.this
+  }
+
 }

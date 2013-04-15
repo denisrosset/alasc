@@ -10,6 +10,7 @@ trait PermutationGroup extends FiniteGroup {
     * trait has to define a lexicograpic ordering on the permutations by implementing Ordered.
     */
   trait Permutation extends FiniteGroupElement with Ordered[Element] {
+    self: Element =>
     def domainSize: Int = group.degree
     def image(el: Domain): Domain /** Image of a domain element. */
     def images: Vector[Domain] /** Images of the permutation acting on 0...domainSize-1 */
