@@ -3,12 +3,11 @@ package com.faacets.perm
 package wreath {
   import com.faacets.math._
 
-  case class ImprimitiveInhWreathProductGroup[R <: InhWreathProductGroup](r: R) extends ActionGroup {
+  case class ImprimitiveInhWreathProductGroup[R <: InhWreathProductGroup](r: R)(implicit evidence: R#A <:< PermutationGroup) extends ActionGroup {
     type Group = ImprimitiveInhWreathProductGroup[R]
     type Element = ImprimitiveInhWreathProductAction
 
     type RepresentedGroup = R
-
 
     def make(h: RepresentedElement) = ImprimitiveInhWreathProductAction(h)
 
@@ -28,13 +27,14 @@ package wreath {
       val group = ImprimitiveInhWreathProductGroup.this
       def image(el: Domain) = 0
       lazy val images = {
+        val gaelvec = g.aelvec.asInstanceOf[Vector[PermutationGroup#Permutation]]
         val P = scala.collection.mutable.ArrayBuffer.fill[Int](domainSize)(0)
-        val sizes = g.aelvec.map(_.domainSize)
+        val sizes = gaelvec.map(_.domainSize)
         val aStart = sizes.scanLeft(0)(_+_)
         for ((n, i) <- sizes.zipWithIndex) {
           for (o <- 0 until n) {
             val i1 = g.hel.image(i)
-            val o1 = g.aelvec(i1).image(o)
+            val o1 = gaelvec(i1).image(o)
             P(aStart(i) + o) = aStart(i1) + o1
           }
         }

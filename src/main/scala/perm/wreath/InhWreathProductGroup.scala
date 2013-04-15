@@ -9,7 +9,7 @@ package wreath {
     type Element <: InhWreathProductElement
 
     type H <: PermutationGroup
-    type A <: PermutationGroup
+    type A <: FiniteGroup
     val h: H
     val avec: Vector[A]
 
