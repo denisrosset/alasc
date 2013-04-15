@@ -10,8 +10,9 @@ package wreath {
     type H <: PermutationGroup
     type A <: PermutationGroup
 
+    def degree = avec.map(_.degree).sum
+
     trait ImprimitiveInhWreathProductAction extends InhWreathProductElement with Permutation {
-      override val domainSize = aelvec.map(_.domainSize).sum
       lazy val images = {
         val P = scala.collection.mutable.ArrayBuffer.fill[Int](domainSize)(0)
         val sizes = aelvec.map(_.domainSize)

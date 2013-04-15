@@ -10,6 +10,8 @@ package wreath {
     type H <: PermutationGroup
     type A <: PermutationGroup
 
+    def degree = avec.map(_.degree).product
+
     trait PrimitiveInhWreathProductAction extends InhWreathProductElement with Permutation {
       override val domainSize = aelvec.map(_.domainSize).product
       lazy val images = {
