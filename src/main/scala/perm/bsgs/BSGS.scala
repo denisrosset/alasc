@@ -98,7 +98,6 @@ package bsgs {
       type Group <: BSGSBasics
       type Element <: BSGSElement
 
-      type TransversalMixin <: AbstractTransversalMixin
       val sarr: Seq[Iterable[g.Element]]
       val uarr: Seq[Transversal]
       def generators = sarr.flatten.map(sift(_)._1)
