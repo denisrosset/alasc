@@ -13,7 +13,9 @@ package bsgs {
 
     trait AbstractTransversal extends PartialFunction[Domain, UnderlyingElement] with Iterable[(Domain, UnderlyingElement)] {
       def beta: Domain /** Element for which the transversal is defined. */
-        
+      def keysIterator: Iterator[Domain] = iterator.map(_._1)
+      def valuesIterator: Iterator[UnderlyingElement] = iterator.map(_._2)
+
       /** Returns a random element of the transversal. */
       def random(implicit gen: scala.util.Random = scala.util.Random): (Domain, UnderlyingElement) = {
         val num = gen.nextInt(size)
