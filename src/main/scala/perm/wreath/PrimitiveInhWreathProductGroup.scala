@@ -25,7 +25,7 @@ package wreath {
     case class PrimitiveInhWreathProductAction(val g: RepresentedElement) extends Action {
       self: Element =>
       val group = PrimitiveInhWreathProductGroup.this
-      def image(el: Domain) = 0
+      def image(el: Domain) = images(el)
       lazy val images = {
         val gaelvec = g.aelvec.asInstanceOf[Vector[PermutationGroup#Permutation]]
         val dims = gaelvec.map(_.domainSize)

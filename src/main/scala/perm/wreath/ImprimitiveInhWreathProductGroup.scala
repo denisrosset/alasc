@@ -25,7 +25,7 @@ package wreath {
     case class ImprimitiveInhWreathProductAction(val g: RepresentedElement) extends Action {
       self: Element =>
       val group = ImprimitiveInhWreathProductGroup.this
-      def image(el: Domain) = 0
+      def image(el: Domain) = images(el)
       lazy val images = {
         val gaelvec = g.aelvec.asInstanceOf[Vector[PermutationGroup#Permutation]]
         val P = scala.collection.mutable.ArrayBuffer.fill[Int](domainSize)(0)
