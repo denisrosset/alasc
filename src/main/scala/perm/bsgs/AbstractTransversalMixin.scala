@@ -13,6 +13,9 @@ package bsgs {
 
     trait AbstractTransversal extends PartialFunction[Domain, UnderlyingElement] with Iterable[(Domain, UnderlyingElement)] {
       def beta: Domain /** Element for which the transversal is defined. */
+
+      // we do not inherit from Map[Domain, UnderlyingElement], but define
+      // *some* of its methods
       def keysIterator: Iterator[Domain] = iterator.map(_._1)
       def valuesIterator: Iterator[UnderlyingElement] = iterator.map(_._2)
 
