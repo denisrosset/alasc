@@ -2,6 +2,8 @@ package com.faacets.perm
 
 package bsgs {
   abstract class BSGS[G <: PermutationGroup](val g: G) extends AbstractTransversalMixin {
+    import scala.util.Random
+
     type UnderlyingGroup = G
     import scala.collection.mutable.ArrayBuffer
     def fromBaseAndSet(sgs: Seq[UnderlyingElement], base: Seq[Domain]) = {
@@ -70,7 +72,7 @@ package bsgs {
           newGenerator = true
         else if (!h.isIdentity) { // new strong generator h fixes all the base points
           newGenerator = true
-          val b = (0 until degree).find( h.hasInSupport(_) ).get
+          val b = (0 until degree).find( h.inSupport(_) ).get
           sarr += List.empty[UnderlyingElement]
           uarr += makeEmpty(b)
         }
@@ -100,12 +102,12 @@ package bsgs {
 
       val sarr: Seq[Iterable[g.Element]]
       val uarr: Seq[Transversal]
-      def generators = sarr.flatten.map(sift(_)._1)
+      def generatorsIterator = sarr.iterator.flatten.map(sift(_)._1)
       def make(bvec: Vector[Domain]): Element
       def identity = make(uarr.map(_.beta).toVector)
       val degree = g.degree
 
-      trait BSGSElement extends Permutation {
+      trait BSGSElement extends PermutationElement {
         self: Element =>
         val bvec: Vector[Domain]
         def underlying: UnderlyingElement = {
@@ -116,26 +118,12 @@ package bsgs {
         }
         def equal(that: Element) = bvec == that.bvec
         def isIdentity = bvec.sameElements(uarr.map(_.beta))
-        def compare(that: Element) = underlying.compare(that.underlying)
         def images = underlying.images
         def image(e: Domain) = underlying.image(e)
         def assertValid =
           (uarr zip bvec).map { case (u,b) => assert(u.isDefinedAt(b)) }
-        def inverse = {
-          val basisPlace = Map.empty[Domain, Int] ++
-          (for ((u, i) <- uarr.zipWithIndex) yield (u.beta, i))
-          val p = SymmetricGroup(length).make(bvec.map(basisPlace(_))).inverse.img
-          make(p.map(uarr(_).beta))
-        }
-        def *(that: Element) = {
-          val basisPlace = Map.empty[Domain, Int] ++
-          (for ((u, i) <- uarr.zipWithIndex) yield (u.beta, i))
-          val g = SymmetricGroup(length)
-          val p1 = g.make(bvec.map(basisPlace(_)))
-          val p2 = g.make(bvec.map(basisPlace(_)))
-          val p3 = p1 * p2
-          make(p3.img.map(uarr(_).beta))
-        }
+        def inverse = ???
+        def *(that: Element) = ???
       }
       /** Length of the stabilizer chain. */
       def length = uarr.length
@@ -143,7 +131,7 @@ package bsgs {
       def contains(el: Element) = true
       def order: BigInt = (BigInt(1) /: uarr)( (p:BigInt, u:Transversal) => u.size*p)
       
-      def randomElement = make(uarr.map(_.random._1).toVector)
+      def randomElement()(implicit gen: Random = Random) = make(uarr.map(_.random._1).toVector)
 
       def sift(el: UnderlyingElement, i: Int = 0, ind: ArrayBuffer[Domain] = ArrayBuffer(uarr.map(_.beta):_*)): (Element, UnderlyingElement, Int) = {
         // we left the base? exit
@@ -172,16 +160,11 @@ package bsgs {
       /** Iterates through all the elements of the group, by describing any element
         * of the group as a product of members of transversals.
         */
-      def elements = {
-        object MyIterable extends Iterable[Element] {
-          def iterator = {
-            def iter(i: Int): Iterator[List[Domain]] =
-              if (i == length) List(Nil).iterator else
-                for(g <- uarr(i).iterator; h <- iter(i+1)) yield g._1 :: h
-            iter(0).map(_.toVector).map(make(_))
-          }
-        }
-        MyIterable
+      def elementsIterator = {
+        def iter(i: Int): Iterator[List[Domain]] =
+          if (i == length) List(Nil).iterator else
+            for(g <- uarr(i).iterator; h <- iter(i+1)) yield g._1 :: h
+        iter(0).map(_.toVector).map(make(_))
       }
 
     }

@@ -1,17 +1,26 @@
 package com.faacets.perm
 
-trait ActionGroup extends PermutationGroup {
-  type Group <: ActionGroup
+trait ActionFiniteGroup extends PermutationGroup {
+  import scala.util.Random
+
+  type Group <: ActionFiniteGroup
   type Element <: Action
 
-  type RepresentedGroup <: AbstractGroup
+  type RepresentedGroup <: FiniteGroup
   type RepresentedElement = r.Element
 
   val r: RepresentedGroup
 
   def make(h: RepresentedElement): Element
+  def generatorsIterator = r.generatorsIterator.map(make(_))
+  def elementsIterator = r.elementsIterator.map(make(_))
+  def contains(a: Element) = r.contains(a.g)
+  def identity = make(r.identity)
+  def randomElement()(implicit gen: Random = Random) = make(r.randomElement)
+  def order = r.order
 
-  trait Action extends Permutation {
+
+  trait Action extends PermutationElement {
     self: Element =>
 
     val g: RepresentedElement
@@ -33,9 +42,6 @@ trait ActionGroup extends PermutationGroup {
     }
 
     def inverse: Element = make(g.inverse)
-
     def equal(that: Element) = (g == that.g)
- 
-  }
-
+   }
 }

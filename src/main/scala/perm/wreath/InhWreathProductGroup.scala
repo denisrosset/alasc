@@ -5,6 +5,8 @@ package wreath {
     * a_0 ... a_n-1 are finite groups. 
     */
   trait InhWreathProductGroup extends FiniteGroup {
+    import scala.util.Random
+
     type Group <: InhWreathProductGroup
     type Element <: InhWreathProductElement
 
@@ -26,28 +28,27 @@ package wreath {
       h.identity: h.Element,
       avec.map(_.identity))
 
-    def generators = List(
+    def generatorsIterator =
       // Generators of the extern permutation
-      for (gen <- h.generators) yield
-        identity.copy(hel = gen),
-      // Generators of the intern permutations for the k-th copy of group a
-      for ((a, k) <- avec.zipWithIndex;
+      (for (gen <- h.generatorsIterator) yield
+        identity.copy(hel = gen)) ++
+    // Generators of the intern permutations for the k-th copy of group a
+      (for ((a, k) <- avec.zipWithIndex;
         id = identity;
-        gen <- a.generators) yield
-        id.copy(aelvec = id.aelvec.updated(k, gen))
-    ).flatten
+        gen <- a.generatorsIterator) yield
+        id.copy(aelvec = id.aelvec.updated(k, gen)))
 
-    def contains(e: Element) = h.contains(e.hel) && (e.aelvec zip avec).forall { 
+    def contains(e: Element) = h.contains(e.hel) && (e.aelvec zip avec).forall {
       case (ael, a) => a.contains(ael.asInstanceOf[a.Element])
     }
 
     def order = h.order * avec.map(a => a.order).product
 
-    def elements = for(hel <- h.elements; // loop over iterator on h elements
-      aels <- combine(avec.map(_.elements))) // with iterators on the each copy of a
+    def elementsIterator = for(hel <- h.elementsIterator; // loop over iterator on h elements
+      aels <- combine(avec.map(_.elements)).iterator) // with iterators on the each copy of a
     yield make(hel, aels.toVector)
 
-    def randomElement = make(
+    def randomElement()(implicit gen: Random = Random) = make(
       h.randomElement,
       avec.map( _.randomElement ))
 

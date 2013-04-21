@@ -1,10 +1,14 @@
 package com.faacets.perm
 
 trait AbstractGroup {
+  import scala.util.Random
+
   type Element <: AbstractElement /** Type of this group element. */
   type Group <: AbstractGroup /** Type of this group. */
+  type Predicate = (Element => Boolean) /** Predicate defining a subgroup. */
+
   def identity: Element /** Identity element of this group. */
-  def randomElement: Element /** Produces a random element. */
+  def randomElement()(implicit gen: Random = Random): Element /** Produces a random element. */
   def assertValid /** Asserts that this group is consistent. */
   trait AbstractElement {
     val group: Group /** Group this element is member of. */

@@ -5,6 +5,8 @@ package wreath {
     * a a finite group.
     */
   trait WreathProductGroup extends FiniteGroup {
+    import scala.util.Random
+
     type Group <: WreathProductGroup
     type Element <: WreathProductElement
 
@@ -18,26 +20,26 @@ package wreath {
       h.identity,
       (0 until h.degree).toVector.map(i => a.identity))
 
-    def generators = List(
+    def generatorsIterator =
       // Generators of the extern permutation
-      for (gen <- h.generators) yield
-        identity.copy(hel = gen),
+      (for (gen <- h.generatorsIterator) yield
+        identity.copy(hel = gen)) ++
       // Generators of the intern permutations for the k-th copy of group a
-      for (k <- 0 until h.degree;
+      (for (k <- 0 until h.degree;
         id = identity;
-        gen <- a.generators) yield
+        gen <- a.generatorsIterator) yield
         id.copy(aelvec = id.aelvec.updated(k, gen))
-    ).flatten
+      )
 
     def contains(e: Element) = h.contains(e.hel) && e.aelvec.forall(a.contains(_))
 
     def order = h.order * (0 until h.degree).map(i => a.order).product
 
-    def elements = for(hel <- h.elements; // loop over iterator on h elements
+    def elementsIterator = for(hel <- h.elementsIterator; // loop over iterator on h elements
       aels <- combine((0 until h.degree).toList.map(i => a.elements))) // with iterators on the each copy of a
     yield make(hel, aels.toVector)
 
-    def randomElement = make(
+    def randomElement()(implicit gen: Random = Random) = make(
       h.randomElement,
       (0 until h.degree).toVector.map(i => a.randomElement))
 

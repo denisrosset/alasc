@@ -11,12 +11,11 @@ package object perm {
     xs.foldLeft(Seq(Seq.empty[A])){
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
-  implicit def domainAction(el: Domain) = new {
-    def **[P <: PermutationGroup#Permutation](p: P) = p.image(el)
-  }
+  def combineList[A](xs: Traversable[Traversable[A]]): Seq[List[A]] =
+    xs.foldLeft(Seq(List.empty[A])){
+      (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
-  implicit def permutationOrdering[P <: PermutationGroup#Permutation]: Ordering[P] = {
-    import scala.math.Ordering.Implicits._
-    Ordering.fromLessThan(_.images < _.images)
+  implicit def domainAction(el: Domain) = new {
+    def **[P <: PermutationGroup#PermutationElement](p: P) = p.image(el)
   }
 }
