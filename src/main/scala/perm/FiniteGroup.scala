@@ -15,7 +15,7 @@ trait FiniteGroup extends AbstractGroup {
   def elements: Iterable[Element] = {
     object MyIterable extends Iterable[Element] {
       override def toString = iterator.mkString("Iterable(",",",")")
-      def iterator = FiniteGroup.this.generatorsIterator
+      def iterator = FiniteGroup.this.elementsIterator
     }
     MyIterable
   }
