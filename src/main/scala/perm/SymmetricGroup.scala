@@ -61,7 +61,7 @@ final case class SymmetricGroup(val degree: Int) extends PermutationGroup with P
     }
   }
 
-  case class SetwiseStabilizerSubgroup(val cells: SortedSet[Cell]) extends SymmetricSubgroup {
+  final case class SetwiseStabilizerSubgroup(val cells: SortedSet[Cell]) extends SymmetricSubgroup {
     type Group = SetwiseStabilizerSubgroup
     type Element = SetwiseStabilizerElement
 
@@ -138,7 +138,7 @@ final case class SymmetricGroup(val degree: Int) extends PermutationGroup with P
           } )
     }
   }
-  case class SymmetricGroupElement(val p: Permutation) extends PermutationElement {
+  final case class SymmetricGroupElement(val p: Permutation) extends PermutationElement {
     self: Element =>
     val group = SymmetricGroup.this
     require(p.domainSize == group.degree)
