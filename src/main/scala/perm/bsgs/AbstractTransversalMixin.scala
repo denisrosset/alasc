@@ -1,35 +1,34 @@
 package com.faacets.perm
+package bsgs
 
-package bsgs {
-  trait AbstractTransversalMixin {
-    type TransversalMixin <: AbstractTransversalMixin
-    type Transversal <: AbstractTransversal
+trait AbstractTransversalMixin {
+  type TransversalMixin <: AbstractTransversalMixin
+  type Transversal <: AbstractTransversal
 
-    type UnderlyingGroup <: PermutationGroup
-    val g: UnderlyingGroup
-    type UnderlyingElement = g.Element
+  type UnderlyingGroup <: PermutationGroup
+  val underlyingGroup: UnderlyingGroup
+  type UnderlyingElement = underlyingGroup.Element
 
-    def makeEmpty(beta: Domain): Transversal
+  def makeEmptyTransversal(beta: Domain): Transversal
 
-    trait AbstractTransversal extends PartialFunction[Domain, UnderlyingElement] with Iterable[(Domain, UnderlyingElement)] {
-      def beta: Domain /** Element for which the transversal is defined. */
+  trait AbstractTransversal extends PartialFunction[Domain, UnderlyingElement] with Iterable[(Domain, UnderlyingElement)] {
+    def beta: Domain /** Element for which the transversal is defined. */
 
-      // we do not inherit from Map[Domain, UnderlyingElement], but define
-      // *some* of its methods
-      def keysIterator: Iterator[Domain] = iterator.map(_._1)
-      def valuesIterator: Iterator[UnderlyingElement] = iterator.map(_._2)
+    // we do not inherit from Map[Domain, UnderlyingElement], but define
+    // *some* of its methods
+    def keysIterator: Iterator[Domain] = iterator.map(_._1)
+    def valuesIterator: Iterator[UnderlyingElement] = iterator.map(_._2)
 
-      /** Returns a random element of the transversal. */
-      def random(implicit gen: scala.util.Random = scala.util.Random): (Domain, UnderlyingElement) = {
-        val num = gen.nextInt(size)
-        iterator.drop(num).next()
-      }
-      def addingGenerator(s: UnderlyingElement): Transversal  /** Returns a new transversal extended with s added to its generators. */
-        /** Checks the sanity of the transversal. */
-      def assertValid {
-        for ((b, u) <- iterator)
-          assert (u.image(beta) == b)
-      }
+    /** Returns a random element of the transversal. */
+    def randomElement(implicit gen: scala.util.Random = scala.util.Random): (Domain, UnderlyingElement) = {
+      val num = gen.nextInt(size)
+      iterator.drop(num).next()
+    }
+    def addingGenerator(s: UnderlyingElement): Transversal  /** Returns a new transversal extended with s added to its generators. */
+      /** Checks the sanity of the transversal. */
+    def assertValid {
+      for ((b, u) <- iterator)
+        assert (u.image(beta) == b)
     }
   }
 }
