@@ -96,7 +96,7 @@ abstract class BSGS[G <: PermutationGroup](val g: G) extends PermutationGroup wi
     }
 
     def contains(el: UnderlyingElement) = basicSift(el)._2.isIdentity
-
+    def uSize: List[Int] = nextNotNullOr(transversal.size :: next.uSize, transversal.size :: Nil)
     def order: BigInt = nextNotNullOr(transversal.size * next.order, transversal.size)
 
     def basicSift(el: UnderlyingElement): (List[Domain], UnderlyingElement) = {
@@ -122,26 +122,34 @@ abstract class BSGS[G <: PermutationGroup](val g: G) extends PermutationGroup wi
       sgList = h :: sgList
       transversal = transversal.addingGenerator(h)
     }
-    def +=(el: UnderlyingElement) = {
-      val (baseImages, h) = basicSift(el)
-      println(el)
-      println(baseImages)
-      def findLevel(level: BSGSConstruction, imageList: List[Domain]) {
-        imageList match {
-          case Nil => level.addStrongGenerator(h)
-          case _ => level.next match {
-            case null => if (!h.isIdentity) {
-              val newBase = domain.find( h.inSupport(_) ).get
-              val newTransversal = makeEmptyTransversal(newBase)
-              level.next = new BSGSConstruction(newTransversal, Nil, null)
-              level.next.addStrongGenerator(h)
-            }
-            case _ => findLevel(level.next, imageList.tail)
+    def construct(el: UnderlyingElement): Option[UnderlyingElement] = {
+      val b = el.image(transversal.beta)
+      if (!transversal.isDefinedAt(b)) {
+        addStrongGenerator(el)
+        return Some(el)
+      }
+      val h = el * transversal.uinv(b)
+      if (next eq null) {
+        if (h.isIdentity)
+          return None
+        val newBase = domain.find( h.inSupport(_) ).get
+        val newTransversal = makeEmptyTransversal(newBase)
+        next = new BSGSConstruction(newTransversal, Nil, null)
+        next.addStrongGenerator(h)
+        addStrongGenerator(h)
+        return Some(h)
+      } else {
+        next.construct(h) match {
+          case None => return None
+          case Some(gen) => {
+            addStrongGenerator(gen)
+            return Some(gen)
           }
         }
       }
-      findLevel(this, baseImages)
     }
+
+    def +=(el: UnderlyingElement) = construct(el)
     def asSubgroup: BSGSSubgroup = BSGSSubgroup(transversal, sgList, nextNotNullOr(next.asSubgroup, null))
   }
 
