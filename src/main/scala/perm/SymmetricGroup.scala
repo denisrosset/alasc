@@ -35,7 +35,7 @@ final case class SymmetricGroup(val degree: Int) extends PermutationGroup with P
   def elementsIterator = Permutation.all(degree).map(SymmetricGroupElement(_))
 
   def randomElement()(implicit gen: Random = Random) =
-    SymmetricGroupElement(Permutation.random(degree))
+    SymmetricGroupElement(Permutation.random(degree)(gen))
 
   def setStabilizer(s: SortedSet[Domain]): Subgroup = {
     val all = SortedSet.empty[Domain] ++ domain
@@ -97,7 +97,7 @@ final case class SymmetricGroup(val degree: Int) extends PermutationGroup with P
     def order = syms.foldLeft(BigInt(1))(_*_.order)
     def identity = SetwiseStabilizerElement(syms.map(_.identity))
     def randomElement()(implicit gen: Random = Random): Element =
-      SetwiseStabilizerElement(syms.map(_.randomElement))
+      SetwiseStabilizerElement(syms.map(_.randomElement()(gen)))
     def elementsIterator: Iterator[Element] = (for {
       p:List[SymmetricGroup#Element] <- combineList(syms.map(_.elements))
     } yield SetwiseStabilizerElement(p)).iterator

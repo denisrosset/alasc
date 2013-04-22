@@ -49,8 +49,8 @@ trait InhWreathProductGroup extends FiniteGroup {
   yield make(hel, aels.toVector)
 
   def randomElement()(implicit gen: Random = Random) = make(
-    h.randomElement,
-    avec.map( _.randomElement ))
+    h.randomElement()(gen),
+    avec.map( _.randomElement()(gen) ))
 
   def make(hel: h.Element, aelvec: Vector[A#Element]): Element
 
