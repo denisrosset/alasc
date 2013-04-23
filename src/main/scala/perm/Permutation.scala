@@ -103,11 +103,13 @@ sealed case class P10() extends Permutation {
 
 private[perm] sealed case class ArrayPermutation (val arr: Array[Domain]) extends Permutation
 {
+  // note that the image of b under the product g*h is given by:
+  // b^(g*h) = (b^g)^h
   def *(that: Permutation): Permutation = {
     if (size != that.size)
       throw new IllegalArgumentException("Permutation size mismatch")
     val a = new Array[Domain](size)
-    for (i <- 0 until size) a(i) = arr(that.arr(i))
+    for (i <- 0 until size) a(i) = that.arr(arr(i))
     Permutation(a)
   }
   def isIdentity: Boolean = iterator.forall( x => x._1 == x._2 )
