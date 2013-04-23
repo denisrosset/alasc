@@ -1,7 +1,7 @@
 package com.faacets.perm
 package bsgs
 
-trait RandomSchreierSims[G <: PermutationGroup] extends BSGS[G] {
+trait RandomSchreierSims extends BSGS {
   def prescribedBase: Base
   override val fullSubgroup = {
     val cons = BSGSConstruction.fromBase(prescribedBase)
@@ -11,10 +11,10 @@ trait RandomSchreierSims[G <: PermutationGroup] extends BSGS[G] {
   }
 }
 
-trait NoPrescribedBase[G <: PermutationGroup] extends RandomSchreierSims[G] {
+trait NoPrescribedBase extends RandomSchreierSims {
   def prescribedBase: Base = Nil
 }
 
-trait PrescribeFullBase[G <: PermutationGroup] extends RandomSchreierSims[G] {
+trait PrescribeFullBase extends RandomSchreierSims {
   def prescribedBase = underlyingGroup.domain.toList
 }

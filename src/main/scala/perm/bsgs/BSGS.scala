@@ -46,14 +46,14 @@ trait BSGSTypes {
   }
 }
 
-abstract class BSGS[G <: PermutationGroup](val g: G) extends PermutationGroup with PermutationHasSubgroup with BSGSTypes {
-  type Group = BSGS[G]
+trait BSGS extends PermutationGroup with PermutationHasSubgroup with BSGSTypes {
+  type Group = BSGS
   type Subgroup = BSGSSubgroup
   type Element = BSGSElement
 
-  val fullSubgroup: BSGSSubgroup
-  type UnderlyingGroup = G
-  override val underlyingGroup: UnderlyingGroup = g
+  val fullSubgroup: BSGSSubgroup = null
+  type UnderlyingGroup <: PermutationGroup
+  override val underlyingGroup: UnderlyingGroup
   override type UnderlyingElement = underlyingGroup.Element
 
   type Base = List[Domain]
