@@ -5,66 +5,63 @@ package wreath
   * a a finite group.
   */
 trait WreathProductGroup extends FiniteGroup {
+  wreath =>
   import scala.util.Random
-
-  type Group <: WreathProductGroup
-  type Element <: WreathProductElement
-
+  type A <: FiniteGroup
   type H <: PermutationGroup
-  type A <: PermutationGroup
-  val h: H
   val a: A
-  def assertValid { h.assertValid; a.assertValid }
+  val h: H
+  type Group = WreathProductGroup
+  type Element = WreathProductElement
 
-  def identity = make(
-    h.identity,
-    (0 until h.degree).toVector.map(i => a.identity))
+  val k = new {
+    type A = wreath.A
+    val a: A = wreath.a
+    val n = wreath.h.degree
+  } with BaseGroup
 
-  def generatorsIterator =
-    // Generators of the extern permutation
-    (for (gen <- h.generatorsIterator) yield
-      identity.copy(hel = gen)) ++
-  // Generators of the intern permutations for the k-th copy of group a
-  (for (k <- 0 until h.degree;
-    id = identity;
-    gen <- a.generatorsIterator) yield
-    id.copy(aelvec = id.aelvec.updated(k, gen))
-  )
+  type K = k.type
 
-  def contains(e: Element) = h.contains(e.hel) && e.aelvec.forall(a.contains(_))
+  def assertValid { h.assertValid; k.assertValid }
 
-  def order = h.order * (0 until h.degree).map(i => a.order).product
+  def identity = WreathProductElement(k.identity, h.identity)
 
-  def elementsIterator = for(hel <- h.elementsIterator; // loop over iterator on h elements
-    aels <- combine((0 until h.degree).toList.map(i => a.elements))) // with iterators on the each copy of a
-  yield make(hel, aels.toVector)
+  def topGroupGeneratorsIterator =
+    for (hgen <- h.generatorsIterator)
+    yield WreathProductElement(k.identity, hgen)
 
-  def randomElement()(implicit gen: Random = Random) = make(
-    h.randomElement()(gen),
-    (0 until h.degree).toVector.map(i => a.randomElement()(gen)))
+  def baseGroupGeneratorsIterator =
+    for (kgen <- k.generatorsIterator)
+    yield WreathProductElement(kgen, h.identity)
 
-  def make(hel: h.Element, aelvec: Vector[a.Element]): Element
+  def generatorsIterator = topGroupGeneratorsIterator ++ baseGroupGeneratorsIterator
 
-  trait WreathProductElement extends FiniteGroupElement {
+  def contains(e: Element) = h.contains(e.hel) && k.contains(e.kel)
+
+  def order = h.order * k.order
+
+  def elementsIterator = for {
+    hel <- h.elementsIterator
+    kel <- k.elementsIterator
+  } yield WreathProductElement(kel, hel)
+
+  def randomElement()(implicit gen: Random = Random) =
+    WreathProductElement(k.randomElement()(gen), h.randomElement()(gen))
+
+  final case class WreathProductElement(val kel: k.Element, val hel: h.Element) extends FiniteGroupElement {
     self: Element =>
-    val hel: h.Element
-    val aelvec: Vector[a.Element]
+    val group = WreathProductGroup.this
 
-    def copy(hel : h.Element = this.hel, aelvec : Vector[a.Element] = this.aelvec): Element
-    def assertValid { hel.assertValid; aelvec.foreach( _.assertValid ); }
+    def assertValid {
+      kel.assertValid
+      hel.assertValid
+    }
 
-    def *(that: Element) =
-      make(
-        hel * that.hel,
-        Vector(aelvec.indices.map(
-          k => aelvec(that.hel.inverse.image(k))*that.aelvec(k)):_*))
+    def *(that: Element) = WreathProductElement(kel * (that.kel**(hel.inverse)), hel * that.hel)
 
-    def inverse = make(
-      hel.inverse,
-      Vector(aelvec.indices.map(
-        k => aelvec(hel.image(k)).inverse):_*))
+    def inverse = WreathProductElement((kel ** hel).inverse, hel.inverse)
 
-    def isIdentity = hel.isIdentity && aelvec.forall(_.isIdentity)
-    def equal(that: Element) = hel == that.hel && aelvec == that.aelvec
+    def isIdentity = kel.isIdentity && hel.isIdentity
+    def equal(that: Element) = kel == that.kel && hel == that.hel
   }
 }
