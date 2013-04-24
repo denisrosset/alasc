@@ -1,12 +1,13 @@
 package com.faacets.perm
 package wreath
 
+import scala.util.Random
+
 /** Represents the wreath product a Wr h, where h is a permutation group and
   * a a finite group.
   */
 trait WreathProductGroup extends FiniteGroup {
   wreath =>
-  import scala.util.Random
   type A <: FiniteGroup
   type H <: PermutationGroup
   val a: A

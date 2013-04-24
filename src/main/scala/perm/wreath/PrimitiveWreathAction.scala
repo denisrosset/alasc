@@ -4,17 +4,15 @@ package wreath
 import com.faacets.math._
 
 trait PrimitiveWreathAction extends WreathAction {
-  def degree = dims.product
-
-  def imageOfElement(g: RepresentedElement, el: Domain) = {
+  val dim = dims.product
+  def imageOf(g: group.Element, el: Domain) = {
     val alpha = ind2sub(dims, el)
     val alpha1 = new Array[Int](alpha.size)
     for (i <- 0 until alpha.size)
-      alpha1(g.hel.image(i)) = imageOfBottomElement(g.kel.ael(i), alpha(i))
+      alpha1(g.hel.image(i)) = bottomAction.imageOf(g.kel.ael(i).asInstanceOf[bottomAction.group.Element], alpha(i))
     sub2ind(dims, alpha1)
-
   }
-  def imagesOfElement(g: RepresentedElement) = Array.tabulate(degree) ( el => imageOfElement(g, el ) )
+  def imagesOf(g: group.Element) = Array.tabulate(dim) ( el => imageOf(g, el ) )
 }
 /*
 import com.faacets.perm._; import wreath._

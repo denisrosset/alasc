@@ -1,37 +1,54 @@
 package com.faacets.perm
 
+trait Action {
+  type Group <: FiniteGroup
+  val group: Group
+  def imageOf(gel: group.Element, el: Domain): Domain
+  def imagesOf(gel: group.Element): Array[Domain]
+  val dim: Int
+}
+
+class TrivialAction[G <: PermutationGroup](g: G) extends Action {
+  type Group = G
+  val group = g
+  val dim = g.degree
+  def imageOf(gel: group.Element, el: Domain) = gel.image(el)
+  def imagesOf(gel: group.Element) = gel.images
+}
+
 trait ActionGroup extends PermutationGroup {
   import scala.util.Random
 
   type Group = ActionGroup
-  type Element = Action
+  type Element = ActionGroupElement
 
-  type RepresentedGroup <: FiniteGroup
-  type RepresentedElement = representedGroup.Element
+  val action: Action
 
-  val representedGroup: RepresentedGroup
+  type RepresentedElement = action.group.Element
 
-  def imageOfElement(g: RepresentedElement, e: Domain): Domain
-  def imagesOfElement(g: RepresentedElement): Array[Domain]
+  def degree = action.dim
 
-  def generatorsIterator = representedGroup.generatorsIterator.map(Action(_))
-  def elementsIterator = representedGroup.elementsIterator.map(Action(_))
-  def contains(a: Element) = representedGroup.contains(a.g)
-  def identity = Action(representedGroup.identity)
-  def randomElement()(implicit gen: Random = Random) = Action(representedGroup.randomElement)
-  def order = representedGroup.order
+  def generatorsIterator =
+    action.group.generatorsIterator.map(ActionGroupElement(_))
+  def elementsIterator =
+    action.group.elementsIterator.map(ActionGroupElement(_))
+  def contains(age: Element) = action.group.contains(age.gel)
+  def identity = ActionGroupElement(action.group.identity)
+  def randomElement()(implicit gen: Random = Random) =
+    ActionGroupElement(action.group.randomElement)
+  def order = action.group.order
 
-  def assertValid = representedGroup.assertValid
+  def assertValid = action.group.assertValid
 
-  case class Action(g: RepresentedElement) extends PermutationElement {
+  case class ActionGroupElement(gel: RepresentedElement) extends PermutationElement {
     self: Element =>
     val group = ActionGroup.this
-    def image(e: Domain) = imageOfElement(g, e)
-    def images = imagesOfElement(g)
-    override def toString: String = this.getClass.getName + "(" + g.toString + ")"
-    def assertValid { g.assertValid }
-    def isIdentity = g.isIdentity
-    def *(that: Element) = Action(g * that.g)
+    def image(el: Domain) = action.imageOf(gel, el)
+    def images = action.imagesOf(gel)
+    override def toString: String = this.getClass.getName + "(" + gel.toString + ")"
+    def assertValid { gel.assertValid }
+    def isIdentity = gel.isIdentity
+    def *(that: Element) = ActionGroupElement(gel * that.gel)
     override def compare(that: Element): Int = {
       val firstNotEqual = (0 until domainSize).find(i => image(i) != that.image(i))
       firstNotEqual match {
@@ -41,7 +58,8 @@ trait ActionGroup extends PermutationGroup {
         case _ => 1
       }
     }
-    def inverse: Element = Action(g.inverse)
-    def equal(that: Element) = (g == that.g)
+    def inverse: Element = ActionGroupElement(gel.inverse)
+    def equal(that: Element) = (gel == that.gel)
    }
 }
+
