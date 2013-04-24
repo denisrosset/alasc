@@ -14,7 +14,7 @@ trait InhImprimitiveWreathAction extends InhWreathAction {
     val o1 = action.imageOf(g.kel.ael(i).asInstanceOf[action.group.Element], o)
     start(i1) + o1
   }
-  def imagesOfElement(g: group.Element) = Array.tabulate(dim) ( el => imageOf(g, el ) )
+  def imagesOf(g: group.Element) = Array.tabulate(dim) ( el => imageOf(g, el ) )
 }
 /*
 import com.faacets.perm._; import wreath._
