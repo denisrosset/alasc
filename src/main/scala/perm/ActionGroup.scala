@@ -8,7 +8,7 @@ trait Action {
   val dim: Int
 }
 
-class TrivialAction[G <: PermutationGroup](g: G) extends Action {
+case class TrivialAction[G <: PermutationGroup](g: G) extends Action {
   type Group = G
   val group = g
   val dim = g.degree
@@ -16,13 +16,11 @@ class TrivialAction[G <: PermutationGroup](g: G) extends Action {
   def imagesOf(gel: group.Element) = gel.images
 }
 
-trait ActionGroup extends PermutationGroup {
+case class ActionGroup[A <: Action](action: Action) extends PermutationGroup {
   import scala.util.Random
 
-  type Group = ActionGroup
+  type Group = ActionGroup[A]
   type Element = ActionGroupElement
-
-  val action: Action
 
   type RepresentedElement = action.group.Element
 
