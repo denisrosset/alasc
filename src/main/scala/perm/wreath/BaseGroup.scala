@@ -30,7 +30,7 @@ trait BaseGroup extends FiniteGroup {
 
   def identity = BaseElement(Array.fill[AnyRef](n)(a.identity))
   def randomElement()(implicit gen: scala.util.Random) =
-    BaseElement(Array.tabulate(n)( i => a.randomElement() ))
+    BaseElement(Array.tabulate(n)( i => a.randomElement()(gen) ))
   def order = a.order.pow(n)
   def make(aels: Seq[a.Element]) = BaseElement(Array.tabulate[AnyRef](n)(aels(_)))
   final case class BaseElement(private[wreath] val arr: Array[AnyRef]) extends FiniteGroupElement {
