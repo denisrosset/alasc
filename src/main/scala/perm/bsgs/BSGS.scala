@@ -129,6 +129,7 @@ trait BSGS extends PermutationGroup with PermutationHasSubgroup with BSGSTypes {
         return Some(el)
       }
       val h = el * transversal.uinv(b)
+      assert(h.image(transversal.beta) == transversal.beta)
       if (next eq null) {
         if (h.isIdentity)
           return None

@@ -1,0 +1,25 @@
+package com
+
+package object faacets {
+  @elidable(FINE)
+  def require_(requirement: Boolean) {
+    if (!requirement)
+      throw new java.lang.AssertionError("assumption failed")
+  }
+
+  /** Tests an expression, throwing an `AssertionError` if false.
+   *  This method differs from assert only in the intent expressed:
+   *  assert contains a predicate which needs to be proven, while
+   *  assume contains an axiom for a static checker.  Calls to this method
+   *  will not be generated if `-Xelide-below` is at least `ASSERTION`.
+   *
+   *  @see elidable
+   *  @param assumption   the expression to test
+   *  @param message      a String to include in the failure message
+   */
+  @elidable(ASSERTION) @inline
+  final def assume(assumption: Boolean, message: => Any) {
+    if (!assumption)
+      throw new java.lang.AssertionError("assumption failed: "+ message)
+  }
+}

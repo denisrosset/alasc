@@ -24,6 +24,8 @@ trait ExplicitTransversalMixin extends BSGSTypes {
       def visit(b: Domain, upair: (UnderlyingElement, UnderlyingElement)) {
         // we received an element b in the orbit, and a pair of permutations
         val (u, uinv) = upair
+        assert(u.image(beta) == b)
+        assert(uinv.image(b) == beta)
         // such that beta^u = b and uinv = u^-1
         // looking at the image c of b by our new generator s
         // c = b^s
@@ -33,13 +35,17 @@ trait ExplicitTransversalMixin extends BSGSTypes {
         if (!newMap.isDefinedAt(c)) {
           val v = u*s
           val vinv = sinv * uinv
+          assert(v.image(beta) == c)
+          assert(vinv.image(c) == beta)
           newMap = newMap + ((c, (v, vinv)))
           visit(c, (v, vinv))
         }
       }
       for ((a, upair) <- map)
         visit(a, upair)
-      ExplicitTransversal(beta, newMap)
+      val n = ExplicitTransversal(beta, newMap)
+      n.assertValid
+      n
     }
   }
 }
