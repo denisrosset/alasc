@@ -1,50 +1,51 @@
-package com.faacets.perm
+package com.faacets
+package perm
 package wreath
+
 import scala.util.Random
 
 /** Represents the base group of a wreath product group.
   * 
   * It is the direct product of a group G n times with itself.
   */
-trait BaseGroup extends FiniteGroup {
-  type Group = BaseGroup
-  type Element = BaseElement
-
-  type A <: FiniteGroup
-
-  val a: A /** Bottom group */
-  val n: Int /** Number of copies */
-
-  def assertValid { a.assertValid }
-  override def toString = "Group representing " + n + " copies of " + a
-  def generatorsIterator = for {
-    agen <- a.generatorsIterator
-    omega <- (0 until n)
-    } yield identity.updated(omega, agen)
-
-  def elementsIterator = for {
-    aels <- combine((0 until n).map(i => a.elements)).iterator // loop over iterators on the each copy of a
-  } yield BaseElement(aels.toArray)
-
-  def contains(el: Element) = (0 until n).forall( i => a.contains(el.ael(i)) )
-
-  def identity = BaseElement(Array.fill[AnyRef](n)(a.identity))
-  def randomElement()(implicit gen: scala.util.Random) =
-    BaseElement(Array.tabulate(n)( i => a.randomElement()(gen) ))
-  def order = a.order.pow(n)
-  def make(aels: Seq[a.Element]) = BaseElement(Array.tabulate[AnyRef](n)(aels(_)))
-  final case class BaseElement(private[wreath] val arr: Array[AnyRef]) extends FiniteGroupElement {
-    self: Element =>
-    val group = BaseGroup.this
-    override def toString = (0 until n).map(ael(_).toString).mkString("(",",",")")
-    def assertValid { (0 until n).foreach { ael(_).assertValid } }
-    def **[P <: PermutationGroup#PermutationElement](perm: P) =
-      BaseElement(Array.tabulate[AnyRef](n)( i => ael(perm.inverse.image(i)) ))
-    def ael(omega: Domain) = arr(omega).asInstanceOf[a.Element]
-    def *(that: Element) = BaseElement(Array.tabulate[AnyRef](n)( i => ael(i)*that.ael(i)))
-    def inverse = BaseElement(Array.tabulate[AnyRef](n)( i => ael(i).inverse ))
-    def isIdentity = (0 until n).forall( ael(_).isIdentity )
-    def equal(that: Element) = (0 until n).forall( i => ael(i).equal(that.ael(i)) )
-    def updated(omega: Domain, el: a.Element) = BaseElement(arr.updated(omega, el))
+class BaseGroup[F <: FiniteElement[F] : Manifest, A <: FiniteGroup[F, A]](a: A, n: Int) extends
+    FiniteGroup[BaseElement[F], BaseGroup[F, A]] {
+  override def toString = "" + n + " direct copies of " + a.toString
+  def compatible(e: BaseElement[F]) = e.arr.size == n
+  def contains(e: BaseElement[F]) = {
+    require_(compatible(e))
+    true
   }
+  def iteratorOverCopies(d: Int): Iterator[List[F]] = d match {
+    case 0 => List(List.empty[F]).iterator
+    case _ => for {
+      f <- a.elements
+      rest <- iteratorOverCopies(d - 1)
+    } yield (f :: rest)
+  }
+  def elements = iteratorOverCopies(n).map(list => new BaseElement(list.toArray))
+  def identity = new BaseElement(Array.tabulate(n)(i => a.identity))
+  def generators = for {
+    k <- (0 until n).iterator
+    g <- a.generators
+  } yield new BaseElement(identity.arr.updated(k, g))
+  def order = a.order.pow(n)
+  def random(implicit gen: Random) = new BaseElement(Array.tabulate(n)(i => a.random))
+}
+
+class BaseElement[F <: FiniteElement[F] : Manifest](val arr: Array[F]) extends FiniteElement[BaseElement[F]] {
+  override def toString = arr.mkString("(",",",")")
+  def *(that: BaseElement[F]) = {
+    val newArr = new Array[F](arr.size)
+    for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
+    new BaseElement(newArr)
+  }
+  def compatible(that: BaseElement[F]) = arr.size == that.arr.size
+  def equal(that: BaseElement[F]) = (0 until arr.size).forall( i => arr(i).equal(that.arr(i)))
+  def inverse = {
+    val newArr = new Array[F](arr.size)
+    for (i <- 0 until arr.size) newArr(i) = arr(i).inverse
+    new BaseElement(newArr)
+  }
+  def isIdentity = (0 until arr.size).forall( i => arr(i).isIdentity )
 }
