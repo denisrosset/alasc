@@ -46,4 +46,32 @@ object WreathGroupSpecification extends Properties("WreathGroup") {
   property("*/inverse/equal") = Prop.forAll(genWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => (we1*we2).inverse.equal(we2.inverse*(we1.inverse))
   ) }
+  property("PrimitiveAction/inverse/equal") = Prop.forAll(genSmallWreathGroupAndElement) { Function.tupled(
+    (w, we) => {
+      val ba = TrivialAction[Perm](w.a.degree).asInstanceOf[Action[Perm, Perm]]
+      val a = new PrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, Sym, Perm](ba, w.h.degree)
+      a(we).inverse.equal(a(we.inverse))
+    }
+  ) }
+  property("ImprimitiveAction/inverse/equal") = Prop.forAll(genSmallWreathGroupAndElement) { Function.tupled(
+    (w, we) => {
+      val ba = TrivialAction[Perm](w.a.degree).asInstanceOf[Action[Perm, Perm]]
+      val a = new PrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, Sym, Perm](ba, w.h.degree)
+      a(we).inverse.equal(a(we.inverse))
+    }
+  ) }
+  property("PrimitiveAction / *") = Prop.forAll(genSmallWreathGroupAndTwoElements) { Function.tupled(
+    (w, we1, we2) => {
+      val ba = TrivialAction[Perm](w.a.degree).asInstanceOf[Action[Perm, Perm]]
+      val a = new PrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, Sym, Perm](ba, w.h.degree)
+      a(we1*we2).equal(a(we1)*a(we2))
+    }
+  ) }
+  property("ImprimitiveAction / *") = Prop.forAll(genSmallWreathGroupAndTwoElements) { Function.tupled(
+    (w, we1, we2) => {
+      val ba = TrivialAction[Perm](w.a.degree).asInstanceOf[Action[Perm, Perm]]
+      val a = new PrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, Sym, Perm](ba, w.h.degree)
+      a(we1*we2).equal(a(we1)*a(we2))
+    }
+  ) }
 }

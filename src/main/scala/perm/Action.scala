@@ -3,9 +3,11 @@ package perm
 
 import scala.util.Random
 
-trait Action[SE <: FiniteElement[SE], DE <: PermElement[DE]] extends Function1[SE, DE] { }
+trait Action[SE <: FiniteElement[SE], DE <: PermElement[DE]] extends Function1[SE, DE] {
+  def dim: Int
+}
 
-case class TrivialAction[E <: PermElement[E]]() extends Action[E, E] {
+case class TrivialAction[E <: PermElement[E]](val dim: Int) extends Action[E, E] {
   def apply(e: E) = e
 }
 
@@ -51,5 +53,5 @@ case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElem
   def image(k: Domain) = a(f).image(k)
   def images = a(f).images
   def images0 = a(f).images0
-  def size = a(f).size
+  def size = a.dim
 }

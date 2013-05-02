@@ -8,5 +8,5 @@ trait WreathAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W <: Wreat
   A <: FiniteGroup[AE], AE <: FiniteElement[AE],
   H <: PermGroup[HE], HE <: PermElement[HE]] extends Action[WEG, Perm] {
   val ba: Action[AE, Perm]
-  val d: Int
+  val n: Int
 }
