@@ -3,36 +3,30 @@ package perm
 
 import scala.util.Random
 
-trait Action[G <: FiniteGroup[E], E <: FiniteElement[E]] {
-  val g: G
-  def imageOf(e: E, k: Domain): Domain
-  def imagesOf0(e: E): ArrayDomain0
-  def imagesOf(e: E): ArrayDomain1
-  val dim: Int
+trait Action[SE <: FiniteElement[SE], DE <: PermElement[DE]] extends Function1[SE, DE] { }
+
+case class TrivialAction[E <: PermElement[E]]() extends Action[E, E] {
+  def apply(e: E) = e
 }
 
-case class TrivialAction[G <: PermGroup[E], E <: PermElement[E]](g: G) extends Action[G, E] {
-  val dim = g.degree
-  def imageOf(e: E, k: Domain) = e.image(k)
-  def imagesOf0(e: E) = e.images0
-  def imagesOf(e: E) = e.images
-}
-
-case class ActionGroup[A <: Action[G, F], G <: FiniteGroup[F], F <: FiniteElement[F]](a: A) extends PermGroup[ActionElement[A, F]] {
-  type Element = ActionElement[A, F]
-  def degree = a.dim
-  def compatible(e: Element) = a.g.compatible(e.f)
-  def contains(e: Element) = a.g.contains(e.f)
-  def elements = a.g.elements.map(ActionElement(_, a))
-  def generators = a.g.elements.map(ActionElement(_, a))
-  def identity = ActionElement(a.g.identity, a)
-  def order = a.g.order
-  def random(implicit gen: Random) = ActionElement(a.g.random, a)
+case class ActionGroup[A <: Action[F, P], 
+  G <: FiniteGroup[F],
+  F <: FiniteElement[F],
+  P <: PermElement[P]](g: G, a: A) extends PermGroup[ActionElement[A, F, P]] {
+  type Element = ActionElement[A, F, P]
+  def degree = a(g.identity).size
+  def compatible(e: Element) = g.compatible(e.f)
+  def contains(e: Element) = g.contains(e.f)
+  def elements = g.elements.map(ActionElement(_, a))
+  def generators = g.elements.map(ActionElement(_, a))
+  def identity = ActionElement(g.identity, a)
+  def order = g.order
+  def random(implicit gen: Random) = ActionElement(g.random, a)
   def fromExplicit(p: Perm) = elements.find(_.explicit.equal(p))
 }
 
-case class ActionElement[A <: Action[_, F], F <: FiniteElement[F]](f: F, a: A) extends PermElement[ActionElement[A, F]] {
-  type Element = ActionElement[A, F]
+case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElement[P]](f: F, a: A) extends PermElement[ActionElement[A, F, P]] {
+  type Element = ActionElement[A, F, P]
   def compatible(that: Element) = a == that.a
   def *(that: Element) = {
     require_(compatible(that))
@@ -54,8 +48,8 @@ case class ActionElement[A <: Action[_, F], F <: FiniteElement[F]](f: F, a: A) e
     }
   }
   def explicit = new Perm(images0)
-  def image(k: Domain) = a.imageOf(f, k)
-  def images = a.imagesOf(f)
-  def images0 = a.imagesOf0(f)
-  def size = a.dim
+  def image(k: Domain) = a(f).image(k)
+  def images = a(f).images
+  def images0 = a(f).images0
+  def size = a(f).size
 }

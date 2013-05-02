@@ -54,26 +54,34 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
   ) }
   property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](w, w.a.map(TrivialAction[Sym, Perm](_)))
-      new Perm(a.imagesOf0(we)).inverse.equal(new Perm(a.imagesOf0(we.inverse)))
+      val ba1 = TrivialAction[Perm]()
+      val ba = w.a.map(i => ba1.asInstanceOf[Action[Perm, Perm]])
+     val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba, w.a.map(_.degree))
+      a(we).inverse.equal(a(we.inverse))
     }
   ) }
   property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](w, w.a.map(TrivialAction[Sym, Perm](_)))
-      new Perm(a.imagesOf0(we)).inverse.equal(new Perm(a.imagesOf0(we.inverse)))
+      val ba1 = TrivialAction[Perm]()
+      val ba = w.a.map(i => ba1.asInstanceOf[Action[Perm, Perm]])
+     val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba, w.a.map(_.degree))
+      a(we).inverse.equal(a(we.inverse))
     }
   ) }
-  property("InhPrimitiveAction/*") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
+  property("InhPrimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](w, w.a.map(TrivialAction[Sym, Perm](_)))
-      new Perm(a.imagesOf0(we1*we2)).equal(new Perm(a.imagesOf0(we1))*new Perm(a.imagesOf0(we2)))
+      val ba1 = TrivialAction[Perm]()
+      val ba = w.a.map(i => ba1.asInstanceOf[Action[Perm, Perm]])
+     val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba, w.a.map(_.degree))
+      a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
-  property("InhImprimitiveAction/*") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
+  property("InhImprimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](w, w.a.map(TrivialAction[Sym, Perm](_)))
-      new Perm(a.imagesOf0(we1*we2)).equal(new Perm(a.imagesOf0(we1))*new Perm(a.imagesOf0(we2)))
+      val ba1 = TrivialAction[Perm]()
+      val ba = w.a.map(i => ba1.asInstanceOf[Action[Perm, Perm]])
+     val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba, w.a.map(_.degree))
+      a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
 }
