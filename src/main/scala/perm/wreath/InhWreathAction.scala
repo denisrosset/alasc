@@ -1,15 +1,13 @@
-package com.faacets.perm
+package com.faacets
+package perm
 package wreath
 
 import com.faacets.math._
 
-trait InhWreathAction extends Action {
-  type Group = InhWreathProductGroup
-  override val group: InhWreathProductGroup
-  type BottomGroup <: FiniteGroup
-  val bottomGroupArr: Array[AnyRef] = group.k.aArr
-  val bottomActionArr: Array[AnyRef]
-  def bottomAction(omega: Domain): Action = bottomActionArr(omega).asInstanceOf[Action]
-  def bottomGroup(omega: Domain): BottomGroup = bottomGroupArr(omega).asInstanceOf[BottomGroup]
-  lazy val dims = Vector.tabulate[Int](group.k.n)(bottomAction(_).dim)
+trait InhWreathAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W <: InhWreathGroup[A, AE, H, HE], WE <: InhWreathElement[AE, HE],
+  A <: FiniteGroup[AE], AE <: FiniteElement[AE],
+  H <: PermGroup[HE], HE <: PermElement[HE]] extends Action[WG, WEG] {
+  val g: WG
+  val ba: Array[Action[A, AE]]
+  lazy val dims = ba.map(_.dim)
 }

@@ -15,9 +15,5 @@ package object perm {
     xs.foldLeft(Seq(List.empty[A])){
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
-  implicit def asDomain(k: Int) = Domain(k)
-/*
-  implicit def domainAction(el: Domain) = new {
-    def **[P <: PermutationGroup#PermutationElement](p: P) = p.image(el)
-  }*/
+//  implicit def asDomain(k: Int) = Domain(k)
 }

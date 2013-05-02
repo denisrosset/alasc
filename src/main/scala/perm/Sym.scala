@@ -3,7 +3,7 @@ package perm
 
 import scala.util.Random
 
-class Sym(val degree: Int) extends AnyVal with PermGroup[Perm, Sym] {
+class Sym(val degree: Int) extends AnyVal with PermGroup[Perm] {
   override def toString = "Sym("+degree+")"
   def identity = Perm(degree)
   def order = (1 to degree).foldLeft(BigInt(1))(_*_)
@@ -14,7 +14,7 @@ class Sym(val degree: Int) extends AnyVal with PermGroup[Perm, Sym] {
   }
   def random(implicit gen: Random) = new Perm(gen.shuffle((0 until degree).toBuffer).toArray)
   def elements = (0 until degree).toArray.permutations.map(new Perm(_))
-  def generators = (0 to degree - 2).toIterator.map(k => identity.withSwap(k, k+1))
+  def generators = (0 to degree - 2).toIterator.map(k => identity.withSwap(Domain.zeroBased(k), Domain.zeroBased(k+1)))
 }
 
 object Sym {
