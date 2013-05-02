@@ -36,7 +36,7 @@ class BaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](a: A, n: 
 
 class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[BaseElement[F]] {
   override def toString = arr.mkString("(",",",")")
-  def apply(k: Domain) = arr(k.zeroBased)
+  def apply(k: Dom) = arr(k._0)
   def *(that: BaseElement[F]) = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
@@ -52,12 +52,12 @@ class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends F
   def isIdentity = (0 until arr.size).forall( i => arr(i).isIdentity )
   def **![P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
-    for (i <- 0 until arr.size) newArr(i) = arr(p.image(Domain.zeroBased(i)).zeroBased)
+    for (i <- 0 until arr.size) newArr(i) = arr(p.image(Dom._0(i))._0)
     new BaseElement(newArr)
   }
   def **[P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
-    for (i <- 0 until arr.size) newArr(p.image(Domain.zeroBased(i)).zeroBased) = arr(i)
+    for (i <- 0 until arr.size) newArr(p.image(Dom._0(i))._0) = arr(i)
     new BaseElement(newArr)
   }
 }

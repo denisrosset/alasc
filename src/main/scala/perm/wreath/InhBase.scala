@@ -35,7 +35,7 @@ class InhBaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](val a:
 
 class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[InhBaseElement[F]] {
   override def toString = arr.mkString("(",",",")")
-  def apply(k: Domain) = arr(k.zeroBased)
+  def apply(k: Dom) = arr(k._0)
   def *(that: InhBaseElement[F]) = {
     require_(compatible(that))
     val newArr = new Array[F](arr.size)
@@ -57,14 +57,14 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
   def isIdentity = (0 until arr.size).forall( i => arr(i).isIdentity )
   def **![P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
-    for (i <- 0 until arr.size) newArr(i) = arr(p.image(Domain.zeroBased(i)).zeroBased)
+    for (i <- 0 until arr.size) newArr(i) = arr(p.image(Dom._0(i))._0)
     val newEl = new InhBaseElement(newArr)
     assert(compatible(newEl))
     newEl
   }
   def **[P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
-    for (i <- 0 until arr.size) newArr(p.image(Domain.zeroBased(i)).zeroBased) = arr(i)
+    for (i <- 0 until arr.size) newArr(p.image(Dom._0(i))._0) = arr(i)
     val newEl = new InhBaseElement(newArr)
     assert(compatible(newEl))
     newEl

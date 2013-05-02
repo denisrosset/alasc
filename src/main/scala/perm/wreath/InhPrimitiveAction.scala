@@ -12,15 +12,15 @@ class InhPrimitiveAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W <:
     val we = weg.asInstanceOf[WE]
     val d = ba.map(_.dim)
     val dim = d.product
-    def image(k: Domain) = {
-      val alpha = ind2sub(d, k.zeroBased)
+    def image(k: Dom) = {
+      val alpha = ind2sub(d, k._0)
       val alpha1 = new Array[Int](alpha.size)
       for (i <- 0 until alpha.size) {
         val action = ba(i)
-        alpha1(we.he.image(Domain.zeroBased(i)).zeroBased) = ba(i)(we.ke(Domain.zeroBased(i))).image(Domain.zeroBased(alpha(i))).zeroBased
+        alpha1(we.he.image(Dom._0(i))._0) = ba(i)(we.ke(Dom._0(i))).image(Dom._0(alpha(i)))._0
       }
-      Domain.zeroBased(sub2ind(d, alpha1))
+      Dom._0(sub2ind(d, alpha1))
     }
-    new Perm(Array.tabulate(dim)( k => image(Domain.zeroBased(k)).zeroBased))
+    new Perm(Array.tabulate(dim)( k => image(Dom._0(k))._0))
   }
 }

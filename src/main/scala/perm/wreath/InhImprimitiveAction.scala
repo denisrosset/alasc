@@ -12,14 +12,14 @@ class InhImprimitiveAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W 
     val d = ba.map(_.dim)
     val we = weg.asInstanceOf[WE]
     val dim = d.sum
-    def image(k: Domain) = {
+    def image(k: Dom) = {
       val start = d.scanLeft(0)(_+_)
-      val i = start.zipWithIndex.find(_._1 > k.zeroBased).get._2 - 1
-      val o = k.zeroBased - start(i)
-      val i1 = we.he.image(Domain.zeroBased(i)).zeroBased
-      val o1 = ba(i)(we.ke(Domain.zeroBased(i))).image(Domain.zeroBased(o)).zeroBased
-      Domain.zeroBased(start(i1) + o1)
+      val i = start.zipWithIndex.find(_._1 > k._0).get._2 - 1
+      val o = k._0 - start(i)
+      val i1 = we.he.image(Dom._0(i))._0
+      val o1 = ba(i)(we.ke(Dom._0(i))).image(Dom._0(o))._0
+      Dom._0(start(i1) + o1)
     }
-    new Perm(Array.tabulate(dim) ( k => image(Domain.zeroBased(k)).zeroBased ))
+    new Perm(Array.tabulate(dim) ( k => image(Dom._0(k))._0 ))
   }
 }

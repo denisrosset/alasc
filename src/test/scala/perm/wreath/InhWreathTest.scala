@@ -10,7 +10,7 @@ object InhWreathGroupGenerators {
   implicit val r = Random
 
   def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
-    s.sameElements(s.indices.map(i => s(e.image(Domain.zeroBased(i)).zeroBased)))
+    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
 
   val genSmallInhWreathGroup = for {
     n <- Gen.choose(1, 3)

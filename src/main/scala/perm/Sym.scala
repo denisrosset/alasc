@@ -14,7 +14,7 @@ class Sym(val degree: Int) extends AnyVal with PermGroup[Perm] {
   }
   def random(implicit gen: Random) = new Perm(gen.shuffle((0 until degree).toBuffer).toArray)
   def elements = (0 until degree).toArray.permutations.map(new Perm(_))
-  def generators = (0 to degree - 2).toIterator.map(k => identity.withSwap(Domain.zeroBased(k), Domain.zeroBased(k+1)))
+  def generators = (0 to degree - 2).toIterator.map(k => identity.withSwap(Dom._0(k), Dom._0(k+1)))
   def fromExplicit(p: Perm) = if (p.size == degree) Some(p) else None
 }
 

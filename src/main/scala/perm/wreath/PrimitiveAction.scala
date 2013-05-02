@@ -13,14 +13,14 @@ class PrimitiveAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W <: Wr
     val d = ba.dim
     val dims = Array.fill[Int](we.he.size)(d)
     val dim = dims.product
-    def image(k: Domain) = {
-      val alpha = ind2sub(dims, k.zeroBased)
+    def image(k: Dom) = {
+      val alpha = ind2sub(dims, k._0)
       val alpha1 = new Array[Int](alpha.size)
       for (i <- 0 until alpha.size) {
-        alpha1(we.he.image(Domain.zeroBased(i)).zeroBased) = ba(we.ke(Domain.zeroBased(i))).image(Domain.zeroBased(alpha(i))).zeroBased
+        alpha1(we.he.image(Dom._0(i))._0) = ba(we.ke(Dom._0(i))).image(Dom._0(alpha(i)))._0
       }
-      Domain.zeroBased(sub2ind(dims, alpha1))
+      Dom._0(sub2ind(dims, alpha1))
     }
-    new Perm(Array.tabulate(dim)( k => image(Domain.zeroBased(k)).zeroBased ))
+    new Perm(Array.tabulate(dim)( k => image(Dom._0(k))._0 ))
   }
 }
