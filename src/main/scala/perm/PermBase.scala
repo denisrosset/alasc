@@ -51,4 +51,5 @@ trait PermElement[E <: PermElement[E]] extends Any with FiniteElement[E] {
 trait PermGroup[E <: PermElement[E]] extends Any with FiniteGroup[E] {
   def degree: Int
   def domain = (0 until degree).toIterator.map(Domain.zeroBased(_))
+  def fromExplicit(p: Perm): Option[E]
 }

@@ -37,26 +37,36 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
   override def toString = arr.mkString("(",",",")")
   def apply(k: Domain) = arr(k.zeroBased)
   def *(that: InhBaseElement[F]) = {
+    require_(compatible(that))
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
     new InhBaseElement(newArr)
   }
-  def compatible(that: InhBaseElement[F]) = arr.size == that.arr.size
-  def equal(that: InhBaseElement[F]) = (0 until arr.size).forall( i => arr(i).equal(that.arr(i)))
+  def compatible(that: InhBaseElement[F]) = arr.size == that.arr.size && (arr zip that.arr).forall(Function.tupled( (e1,e2) => e1.compatible(e2) ))
+  def equal(that: InhBaseElement[F]) = {
+    require_(compatible(that))
+      (0 until arr.size).forall( i => arr(i).equal(that.arr(i)))
+  }
   def inverse = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i).inverse
-    new InhBaseElement(newArr)
+    val newEl = new InhBaseElement(newArr)
+    assert(compatible(newEl))
+    newEl
   }
   def isIdentity = (0 until arr.size).forall( i => arr(i).isIdentity )
   def **![P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(p.image(Domain.zeroBased(i)).zeroBased)
-    new InhBaseElement(newArr)
+    val newEl = new InhBaseElement(newArr)
+    assert(compatible(newEl))
+    newEl
   }
   def **[P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(p.image(Domain.zeroBased(i)).zeroBased) = arr(i)
-    new InhBaseElement(newArr)
+    val newEl = new InhBaseElement(newArr)
+    assert(compatible(newEl))
+    newEl
   }
 }

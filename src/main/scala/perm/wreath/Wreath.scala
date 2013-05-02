@@ -10,6 +10,7 @@ class WreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
   type Element = WreathElement[AE, HE]
   val k = new BaseGroup[A, AE](a, h.degree)
   def identity = new WreathElement(k.identity, h.identity)
+  override def toString = a.toString + " wr " + h.toString
   def generators = 
     k.generators.map(new WreathElement(_, h.identity)) ++
   h.generators.map(new WreathElement(k.identity, _))

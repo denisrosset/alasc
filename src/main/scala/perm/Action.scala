@@ -28,6 +28,7 @@ case class ActionGroup[A <: Action[G, F], G <: FiniteGroup[F], F <: FiniteElemen
   def identity = ActionElement(a.g.identity, a)
   def order = a.g.order
   def random(implicit gen: Random) = ActionElement(a.g.random, a)
+  def fromExplicit(p: Perm) = elements.find(_.explicit.equal(p))
 }
 
 case class ActionElement[A <: Action[_, F], F <: FiniteElement[F]](f: F, a: A) extends PermElement[ActionElement[A, F]] {
