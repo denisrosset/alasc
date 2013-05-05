@@ -3,18 +3,14 @@ package perm
 
 import scala.util.Random
 
-trait PermElement[E <: PermElement[E]] extends Any with FiniteElement[E] {
+trait PermElementLike extends Any {
   def size: Int
   def image(k: Dom): Dom
   def invImage(k: Dom): Dom
   protected[perm] def images0: ArrayDom0 /** Images of 0..n-1 under permutation, is zero-based */
   def images1: ArrayDom1 /** Images of 1..n under permutation, is one-based */
-  def compare(that: E): Int
   def explicit: Perm
-
   def domain: Iterator[Dom] = (0 until size).toIterator.map(Dom._0(_))
-  def isDefinedAt(k: Dom) = (k._0 >= 0 && k._0 < size)
-
   def cycle[P](start: Dom): List[Dom] = {
     def walk(el: Dom): List[Dom] =
       if (el == start)
@@ -46,6 +42,11 @@ trait PermElement[E <: PermElement[E]] extends Any with FiniteElement[E] {
     }
     cycleList.sortBy(_.head)
   }
+  def isDefinedAt(k: Dom) = (k._0 >= 0 && k._0 < size)
+
+}
+trait PermElement[E <: PermElement[E]] extends Any with PermElementLike with FiniteElement[E] {
+  def compare(that: E): Int
 }
 
 trait PermGroup[E <: PermElement[E]] extends Any with FiniteGroup[E] {
