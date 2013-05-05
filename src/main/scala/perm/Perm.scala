@@ -23,7 +23,7 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
   }
   def image(k: Dom) = Dom._0(arr(k._0))
   def images0: ArrayDom0 = arr.clone
-  def images: ArrayDom1 = Array.tabulate[Int](size)(arr(_)+1)
+  def images1: ArrayDom1 = Array.tabulate[Int](size)(arr(_)+1)
   def compatible(that: Perm) = size == that.size
   def explicit = this
   def compare(that: Perm) = {

@@ -50,7 +50,8 @@ case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElem
   }
   def explicit = new Perm(images0)
   def image(k: Dom) = a(f).image(k)
-  def images = a(f).images
+  def invImage(k: Dom) = a(f).invImage(k)
+  def images1 = a(f).images1
   def images0 = a(f).images0
   def size = a(f).size
 }

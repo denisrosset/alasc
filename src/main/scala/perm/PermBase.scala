@@ -7,9 +7,8 @@ trait PermElement[E <: PermElement[E]] extends Any with FiniteElement[E] {
   def size: Int
   def image(k: Dom): Dom
   def invImage(k: Dom): Dom
-  def images: ArrayDom1 /** Images of 1..n under permutation, is one-based */
-
   protected[perm] def images0: ArrayDom0 /** Images of 0..n-1 under permutation, is zero-based */
+  def images1: ArrayDom1 /** Images of 1..n under permutation, is one-based */
   def compare(that: E): Int
   def explicit: Perm
 
