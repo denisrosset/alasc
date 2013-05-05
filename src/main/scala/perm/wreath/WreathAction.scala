@@ -4,9 +4,6 @@ package wreath
 
 import com.faacets.math._
 
-trait WreathAction[WG <: FiniteGroup[WEG], WEG <: FiniteElement[WEG], W <: WreathGroup[A, AE, H, HE], WE <: WreathElement[AE, HE],
-  A <: FiniteGroup[AE], AE <: FiniteElement[AE],
-  H <: PermGroup[HE], HE <: PermElement[HE]] extends Action[WEG, Perm] {
+trait WreathAction[AE <: FiniteElement[AE], HE <: PermElement[HE]] extends Action[WreathElement[AE,HE], Perm] {
   val ba: Action[AE, Perm]
-  val n: Int
 }

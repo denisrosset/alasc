@@ -54,29 +54,29 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
   ) }
   property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val ba = w.a.map(a => TrivialAction[Perm](a.degree).asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba)
+      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+      val a = new InhPrimitiveAction[Perm, Perm](ba)
       a(we).inverse.equal(a(we.inverse))
     }
   ) }
   property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val ba = w.a.map(a => TrivialAction[Perm](a.degree).asInstanceOf[Action[Perm, Perm]])
-      val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba)
+      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+      val a = new InhImprimitiveAction[Perm, Perm](ba)
       a(we).inverse.equal(a(we.inverse))
     }
   ) }
   property("InhPrimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val ba = w.a.map(a => TrivialAction[Perm](a.degree).asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba)
+      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+      val a = new InhPrimitiveAction[Perm, Perm](ba)
       a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
   property("InhImprimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val ba = w.a.map(a => TrivialAction[Perm](a.degree).asInstanceOf[Action[Perm, Perm]])
-      val a = new InhImprimitiveAction[WG, WEG, WG, WEG, Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](ba)
+      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+      val a = new InhImprimitiveAction[Perm, Perm](ba)
       a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
