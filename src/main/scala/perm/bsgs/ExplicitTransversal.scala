@@ -3,8 +3,10 @@ package perm
 package bsgs
 
 import scala.collection.immutable.TreeMap
+import scala.language.higherKinds
+import scala.language.existentials
 
-case class ExplicitTransversal[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) extends AbstractTransversal[ExplicitTransversal[E], E] {
+case class ExplicitTransversal[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) extends Transversal[ExplicitTransversal[E], E] {
   // implementation of PartialFunction
   def apply(b: Dom) = map.apply(b)
 
@@ -45,7 +47,7 @@ case class ExplicitTransversal[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom,
   }
 }
 
-trait ExplicitTransversalMixin[E <: PermElement[E]] extends TransversalMixin[ExplicitTransversal[E], E] {
-  type Transversal = ExplicitTransversal[E]
-  def makeEmptyTransversal(beta: Dom, id: E) = ExplicitTransversal(beta, TreeMap((beta, (id, id))))
+case class ExplicitTransversalFactory[E <: PermElement[E]]() extends TransversalFactory[ExplicitTransversal[E], E] {
+  def empty(beta: Dom, id: E) = ExplicitTransversal(beta, TreeMap((beta, (id, id))))
+
 }

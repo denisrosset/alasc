@@ -4,9 +4,11 @@ package bsgs
 
 import scala.annotation.tailrec
 import scala.util.Random
+import scala.language.higherKinds
+import scala.language.existentials
 
-trait TransversalMixin[T <: AbstractTransversal[T, E], E <: PermElement[E]] {
-  def makeEmptyTransversal(beta: Dom, id: E): T
+trait TransversalFactory[T <: Transversal[T, E], E <: PermElement[E]] {
+  def empty(beta: Dom, id: E): T
 }
 
 trait TransversalLike[E <: PermElement[E]] extends PartialFunction[Dom, (E, E)] with Iterable[(Dom, (E, E))] {
@@ -30,6 +32,6 @@ trait TransversalLike[E <: PermElement[E]] extends PartialFunction[Dom, (E, E)] 
   }
 }
 
-trait AbstractTransversal[T <: AbstractTransversal[T, E], E <: PermElement[E]] extends TransversalLike[E] {
+trait Transversal[T <: Transversal[T, E], E <: PermElement[E]] extends TransversalLike[E] {
   def addingGenerator(s: E): T  /** Returns a new transversal extended with s added to its generators. */
 }

@@ -5,8 +5,31 @@ package bsgs
 import scala.annotation.tailrec
 import scala.util.Random
 
-abstract class BSGS[G <: PermGroup[E], E <: PermElement[E]] {
-  type Transversal <: AbstractTransversal[_, E]
+trait BaseStrategy {
+  def get(generators: List[PermElementLike]): List[Dom]
+}
+
+object EmptyBase extends BaseStrategy {
+  def get(generators: List[PermElementLike]): List[Dom] = {
+    val g = generators.head
+    for (i <- 0 until g.size)
+      if (g.image(Dom._0(i)) != Dom._0(i))
+        return List(Dom._0(i))
+    throw new IllegalArgumentException("The generator list should not contain the identity element.")
+  }
+}
+
+object FullBase extends BaseStrategy {
+  def get(generators: List[PermElementLike]) = {
+    val n = generators.head.size
+    (0 until n).toList.map(Dom._0(_))
+  }
+}
+
+object BSGS {
+  def randomSchreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(generators: List[E], order: BigInt) = {
+
+  }
 }
 
 private[bsgs] trait BSGSLike[E <: PermElement[E]] {
@@ -40,13 +63,10 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
     }
   }
 }
-
-private[bsgs] abstract class BSGSConstruction[T <: AbstractTransversal[T, E], E <: PermElement[E]](
+private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]](
   var trv: T,
   private[bsgs] var sgList: List[E],
-  private[bsgs] var next: BSGSConstruction[T, E]) extends BSGSLike[E] with TransversalMixin[T, E] {
-
-  def makeEmptyConstruction(t: T)
+  private[bsgs] var next: BSGSConstruction[T, E])(implicit trvFactory: TransversalFactory[T, E])  extends BSGSLike[E] {
 
   def addStrongGenerator(h: E) {
     sgList = h :: sgList
@@ -65,7 +85,7 @@ private[bsgs] abstract class BSGSConstruction[T <: AbstractTransversal[T, E], E 
       if (h.isIdentity)
         return None
       val newBase = (0 until el.size).find( k => h.image(Dom._0(k)) != Dom._0(k) ).get
-      val newTransversal = makeEmptyTransversal(Dom._0(newBase), id)
+      val newTransversal = trvFactory.empty(Dom._0(newBase), id)
       next = new BSGSConstruction(newTransversal, Nil, null)
       next.addStrongGenerator(h)
       addStrongGenerator(h)
@@ -82,16 +102,60 @@ private[bsgs] abstract class BSGSConstruction[T <: AbstractTransversal[T, E], E 
   }
 
   def +=(el: E) = construct(el, el*el.inverse)
-  def asGroup: BSGSGroup[T, E] = BSGSGroup(trv, sgList, nextNotNullOr(next.asGroup, null))
+  def asGroup: BSGSGroup[E] = BSGSGroup(trv, sgList, nextNotNullOr(next.asGroup, null))
 }
 
 
-case class BSGSGroup[T <: AbstractTransversal[T, E], E <: PermElement[E]](
-  val trv: T,
+case class BSGSGroup[E <: PermElement[E]](
+  val trv: TransversalLike[E],
   private[bsgs] val sgList: List[E],
-  private[bsgs] val next: BSGSGroup[T, E]) extends BSGSLike[E] with PermGroup[E] {
+  private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
+  def compatible(e: BSGSElement[E]) = (e.g == this) && nextNotNullOr(next.compatible(e.nextEl), true)
+  def elements = for {
+    b <- trv.keysIterator
+    ne <- nextNotNullOr(next.elements, List(null).iterator)
+  } yield BSGSElement(b, ne, this)
+  def contains(e: BSGSElement[E]) = trv.isDefinedAt(e.b) && nextNotNullOr(next.contains(e.nextEl), true)
+  def fromBaseImages(baseImages: List[Dom]): BSGSElement[E] =
+    BSGSElement(baseImages.head, nextNotNullOr(next.fromBaseImages(baseImages.tail), null), this)
+
+  def generators = sgList.iterator.map(sift(_)._1)
+
+  def identity = BSGSElement(trv.beta, nextNotNullOr(next.identity, null), this)
+
+  def random(implicit gen: scala.util.Random) =
+    BSGSElement(trv.random(gen)._1, nextNotNullOr(next.random(gen), null), this)
+
+  def degree = sgList.head.size
+
+  def fromExplicit(p: Perm) = ???
+
+  def sift(e: E): (BSGSElement[E], E) = {
+    val (baseImages, remaining) = basicSift(e)
+    (fromBaseImages(baseImages), remaining)
+  }
+
 }
 
-case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSLike[E]) {
+case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
+//  def *(that: BSGSElement[E]) = g.sift(represents * that.represents)._1 // TODO: make faster
+  def *(that: BSGSElement[E]) = BSGSElement(that.image(b), nextElNotNullOr(nextEl*that.nextEl, null), g)
+
+  def inverse = g.sift(represents.inverse)._1
+  def explicit = represents.explicit
+  def isIdentity = (b == g.trv.beta) && nextElNotNullOr(nextEl.isIdentity, true)
+  def compatible(that: BSGSElement[E]) = g.compatible(that)
+  def size = g.trv(b)._1.size
+  def compare(that: BSGSElement[E]): Int = represents.compare(that.represents)
+  def equal(that: BSGSElement[E]): Boolean = (b == that.b) && nextElNotNullOr( nextEl.equal(that.nextEl), true)
+  def image(k: Dom) = represents.image(k)
+  def invImage(k: Dom) = represents.invImage(k)
+  def images0 = represents.images0
+  def images1 = represents.images1
+  def represents: E = nextElNotNullOr(nextEl.represents * g.trv.u(b), g.trv.u(b))
+  def nextElNotNullOr[R](f: => R, v: R) = nextEl match {
+    case null => v
+    case _ => f
+  }
 
 }
