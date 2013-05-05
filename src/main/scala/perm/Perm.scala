@@ -12,6 +12,15 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
   def isIdentity: Boolean = domain.forall( k => k == image(k) )
   def size = arr.size
   override def toString = "Perm("+size+")"+cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString("")
+  def invImage(k: Dom): Dom = {
+    var i = 0
+    while (i < arr.size) {
+      if (arr(i) == k._0)
+        return Dom._0(i)
+      i += 1
+    }
+    throw new IllegalArgumentException("Permutation should contain the image")
+  }
   def image(k: Dom) = Dom._0(arr(k._0))
   def images0: ArrayDom0 = arr.clone
   def images: ArrayDom1 = Array.tabulate[Int](size)(arr(_)+1)
