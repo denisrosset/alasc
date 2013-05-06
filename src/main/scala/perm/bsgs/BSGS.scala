@@ -4,6 +4,7 @@ package bsgs
 
 import scala.annotation.tailrec
 import scala.util.Random
+import language.implicitConversions
 
 trait BaseStrategy {
   def get(generators: List[PermElementLike]): List[Dom]
@@ -52,7 +53,7 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
   def uSize: List[Int] = nextNotNullOr(trv.size :: next.uSize, trv.size :: Nil)
   def order: BigInt = nextNotNullOr(trv.size * next.order, trv.size)
 
-  def basicSift(el: E): (List[Dom], E) = {
+  def basicSift[F <: PermElement[F]](el: F)(implicit conv: E => F): (List[Dom], F) = {
     val b = el.image(trv.beta)
     if (!trv.isDefinedAt(b))
       return (Nil, el)
@@ -147,7 +148,14 @@ case class BSGSGroup[E <: PermElement[E]](
 
   def degree = sgList.head.size
 
-  def fromExplicit(p: Perm) = ???
+  def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
+    implicit def conversion(e: E) = e.explicit
+    val (baseImages, remaining) = basicSift(p)
+    if (remaining.isIdentity)
+      Some(fromBaseImages(baseImages))
+    else
+      None
+  }
 
   def sift(e: E): (BSGSElement[E], E) = {
     val (baseImages, remaining) = basicSift(e)
@@ -155,6 +163,13 @@ case class BSGSGroup[E <: PermElement[E]](
   }
 
   override def toString = "BSGS group of order " + order + ", degree " + degree + " with base " + base.mkString("(",",",")") + " and transversal sizes " + transversalSizes.mkString("(",",",")")
+
+  def removingTrivialBaseElements: BSGSGroup[E] = {
+    if (trv.size == 1)
+      nextNotNullOr(next.removingTrivialBaseElements, null)
+    else
+      BSGSGroup[E](trv, sgList, nextNotNullOr(next.removingTrivialBaseElements, null))
+  }
 }
 
 case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
