@@ -65,6 +65,10 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
       }
     }
   }
+
+  def base: List[Dom] = trv.beta :: nextNotNullOr(next.base, Nil)
+
+  def transversalSizes: List[Int] = trv.size :: nextNotNullOr(next.transversalSizes, Nil)
 }
 object BSGSConstruction {
     def fromBase[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E]): BSGSConstruction[T, E] = {
@@ -150,6 +154,7 @@ case class BSGSGroup[E <: PermElement[E]](
     (fromBaseImages(baseImages), remaining)
   }
 
+  override def toString = "BSGS group of order " + order + ", degree " + degree + " with base " + base.mkString("(",",",")") + " and transversal sizes " + transversalSizes.mkString("(",",",")")
 }
 
 case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
@@ -172,5 +177,6 @@ case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSEl
     case null => v
     case _ => f
   }
-
+  def baseImage: List[Dom] = b :: nextElNotNullOr(nextEl.baseImage, Nil)
+  override def toString = "BSGS element with base image " + baseImage.mkString("(",",",")")
 }
