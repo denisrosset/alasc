@@ -9,9 +9,6 @@ import scala.util.Random
 object InhWreathGroupGenerators {
   implicit val r = Random
 
-  def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
-    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
-
   val genSmallInhWreathGroup = for {
     n <- Gen.choose(1, 3)
     marr <- Gen.containerOfN[Array, Int](n, Gen.choose(1, 3))
@@ -55,28 +52,28 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
   property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
       val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[Perm, Perm](ba)
+      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
       a(we).inverse.equal(a(we.inverse))
     }
   ) }
   property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
     (w, we) => {
       val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhImprimitiveAction[Perm, Perm](ba)
+      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
       a(we).inverse.equal(a(we.inverse))
     }
   ) }
   property("InhPrimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
       val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[Perm, Perm](ba)
+      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
       a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
   property("InhImprimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
       val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhImprimitiveAction[Perm, Perm](ba)
+      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
       a(we1*we2).equal(a(we1)*a(we2))
     }
   ) }
