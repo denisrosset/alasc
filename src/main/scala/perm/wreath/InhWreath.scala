@@ -5,30 +5,42 @@ package wreath
 import scala.util.Random
 import scala.reflect.ClassTag
 
-class InhWreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
-  H <: PermGroup[HE], HE <: PermElement[HE]](val a: Array[A], val h: H) extends FiniteGroup[InhWreathElement[AE, HE]] {
-  type Element = InhWreathElement[AE, HE]
+case class InhWreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag, H <: PermGroup[HE], HE <: PermElement[HE]](a: Array[A], h: H) extends InhWreathGroupTrait[InhWreathElement[AE, HE], A, AE, H, HE] {
+  def make(ke: InhBaseElement[AE], he: HE) = InhWreathElement(ke, he)
+}
+
+abstract class InhWreathGroupTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
+  H <: PermGroup[HE], HE <: PermElement[HE]] extends FiniteGroup[IWE] {
+  val a: Array[A]
+  val h: H
   val k = new InhBaseGroup[A, AE](a, h.degree)
-  def identity = new InhWreathElement(k.identity, h.identity)
+  def make(ke: InhBaseElement[AE], he: HE): IWE
+  def identity = make(k.identity, h.identity)
   override def toString = a.mkString("(",",",")") + " wr " + h.toString
   def generators = 
-    k.generators.map(new InhWreathElement(_, h.identity)) ++
-  h.generators.map(new InhWreathElement(k.identity, _))
+    k.generators.map(make(_, h.identity)) ++
+  h.generators.map(make(k.identity, _))
   def elements = for {
     he <- h.elements
     ke <- k.elements
-  } yield new InhWreathElement(ke, he)
-  def contains(e: Element) = k.contains(e.ke) && h.contains(e.he)
+  } yield make(ke, he)
+  def contains(e: IWE) = k.contains(e.ke) && h.contains(e.he)
   def order = h.order * k.order
-  def random(implicit gen: Random) = new InhWreathElement(k.random, h.random)
-  def compatible(e: Element) = k.compatible(e.ke) && h.compatible(e.he)
+  def random(implicit gen: Random) = make(k.random, h.random)
+  def compatible(e: IWE) = k.compatible(e.ke) && h.compatible(e.he)
 }
 
-class InhWreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ke: InhBaseElement[AE], val he: HE) extends FiniteElement[InhWreathElement[AE, HE]] {
-  type Element = InhWreathElement[AE, HE]
-  def compatible(that: Element) = ke.compatible(that.ke) && he.compatible(that.he)
-  def *(that: Element) = new InhWreathElement(ke * (that.ke **! he), he * that.he)
-  def equal(that: Element) = ke.equal(that.ke) && he.equal(that.he)
-  def inverse = new InhWreathElement((ke ** he).inverse, he.inverse)
+case class InhWreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](ke: InhBaseElement[AE], he: HE) extends InhWreathElementTrait[InhWreathElement[AE, HE], AE, HE] {
+  def make(newKe: InhBaseElement[AE], newHe: HE) = InhWreathElement(newKe, newHe)
+}
+
+abstract class InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]] extends FiniteElement[IWE] {
+  val ke: InhBaseElement[AE]
+  val he: HE
+  def compatible(that: IWE) = ke.compatible(that.ke) && he.compatible(that.he)
+  def make(newKe: InhBaseElement[AE], newHe: HE): IWE
+  def *(that: IWE) = make(ke * (that.ke **! he), he * that.he)
+  def equal(that: IWE) = ke.equal(that.ke) && he.equal(that.he)
+  def inverse = make((ke ** he).inverse, he.inverse)
   def isIdentity = ke.isIdentity && he.isIdentity
 }

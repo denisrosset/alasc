@@ -4,8 +4,8 @@ package wreath
 
 import com.faacets.math.{ind2sub, sub2ind}
 
-class InhPrimitiveAction[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Array[Action[AE, Perm]]) extends InhWreathAction[AE, HE] {
-  def apply(we: InhWreathElement[AE, HE]) = {
+class InhPrimitiveAction[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Array[Action[AE, Perm]]) extends InhWreathAction[IWE, AE, HE] {
+  def apply(we: IWE) = {
     val dest = (ba zip we.ke.arr).map(Function.tupled( (b, w) => b(w) ))
     val dims = dest.map(_.size)
     val dim = dims.product
