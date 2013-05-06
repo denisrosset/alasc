@@ -4,11 +4,14 @@ package perm
 import scala.util.Random
 import scala.reflect.ClassTag
 
-trait FiniteElement[E <: FiniteElement[E]] extends Any {
+trait FiniteElementLike extends Any {
+  def isIdentity: Boolean
+}
+
+trait FiniteElement[E <: FiniteElement[E]] extends Any with FiniteElementLike {
   def compatible(that: E): Boolean
   def inverse: E
   def *(that: E): E
-  def isIdentity: Boolean
   def equal(that: E): Boolean
 }
 

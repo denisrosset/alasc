@@ -3,7 +3,7 @@ package perm
 
 import scala.util.Random
 
-trait Action[SE <: FiniteElement[SE], DE <: PermElement[DE]] extends Function1[SE, DE] {
+trait Action[-SE <: FiniteElementLike, DE <: PermElement[DE]] extends Function1[SE, DE] {
 }
 
 case class TrivialAction[E <: PermElement[E]]() extends Action[E, E] {
