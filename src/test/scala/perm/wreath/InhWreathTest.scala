@@ -49,32 +49,63 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
   property("*/inverse/equal") = Prop.forAll(genInhWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => (we1*we2).inverse.equal(we2.inverse*(we1.inverse))
   ) }
-  property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
-    (w, we) => {
-      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
-      a(we).inverse.equal(a(we.inverse))
-    }
+
+  val genPrimitive1 = for {
+    (w, we) <- genSmallInhWreathGroupAndElement
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+  } yield (w, we, a)
+
+  val genPrimitive2 = for {
+    (w, we1, we2) <- genSmallInhWreathGroupAndTwoElements
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+  } yield (w, we1, we2, a)
+
+  val genPrimitive2D = for {
+    (w, we1, we2) <- genSmallInhWreathGroupAndTwoElements
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+    k <- Gen.choose(0, a(we1).size - 1)
+  } yield (w, we1, we2, a, Dom._0(k))
+
+  val genImprimitive1 = for {
+    (w, we) <- genSmallInhWreathGroupAndElement
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhImprimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+  } yield (w, we, a)
+
+  val genImprimitive2 = for {
+    (w, we1, we2) <- genSmallInhWreathGroupAndTwoElements
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhImprimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+  } yield (w, we1, we2, a)
+
+  val genImprimitive2D = for {
+    (w, we1, we2) <- genSmallInhWreathGroupAndTwoElements
+    ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
+    a = new InhImprimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
+    k <- Gen.choose(0, a(we1).size - 1)
+  } yield (w, we1, we2, a, Dom._0(k))
+
+  property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genPrimitive1) { Function.tupled(
+    (w, we, a) => a(we).inverse.equal(a(we.inverse))
   ) }
-  property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genSmallInhWreathGroupAndElement) { Function.tupled(
-    (w, we) => {
-      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
-      a(we).inverse.equal(a(we.inverse))
-    }
+  property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genImprimitive1) { Function.tupled(
+    (w, we, a) => a(we).inverse.equal(a(we.inverse))
   ) }
-  property("InhPrimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
-    (w, we1, we2) => {
-      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
-      a(we1*we2).equal(a(we1)*a(we2))
-    }
+  property("InhPrimitiveAction / *") = Prop.forAll(genPrimitive2) { Function.tupled(
+    (w, we1, we2, a) => a(we1*we2).equal(a(we1)*a(we2))
   ) }
-  property("InhImprimitiveAction / *") = Prop.forAll(genSmallInhWreathGroupAndTwoElements) { Function.tupled(
-    (w, we1, we2) => {
-      val ba = w.a.map(a => TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]])
-      val a = new InhPrimitiveAction[InhWreathElement[Perm, Perm], Perm, Perm](ba)
-      a(we1*we2).equal(a(we1)*a(we2))
-    }
+  property("InhPrimitiveAction / *") = Prop.forAll(genPrimitive2D) { Function.tupled(
+    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) == a(we1*we2).image(k)
+  ) }
+
+  property("InhImprimitiveAction / *") = Prop.forAll(genImprimitive2) { Function.tupled(
+    (w, we1, we2, a) => a(we1*we2).equal(a(we1)*a(we2))
+  ) }
+
+  property("InhImprimitiveAction / *") = Prop.forAll(genImprimitive2D) { Function.tupled(
+    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) == a(we1*we2).image(k)
   ) }
 }
