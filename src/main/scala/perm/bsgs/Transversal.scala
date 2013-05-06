@@ -28,6 +28,7 @@ trait TransversalLike[E <: PermElement[E]] extends PartialFunction[Dom, (E, E)] 
     for ((b, (ub, uinvb)) <- iterator)
       assert(ub.image(beta) == b && uinvb.image(b) == beta)
   }
+  def mapValues[F <: PermElement[F]](f: E => F): Transversal[_, F]
 }
 
 trait Transversal[T <: Transversal[T, E], E <: PermElement[E]] extends TransversalLike[E] {

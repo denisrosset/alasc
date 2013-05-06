@@ -130,6 +130,9 @@ case class BSGSGroup[E <: PermElement[E]](
   val trv: TransversalLike[E],
   private[bsgs] val sgList: List[E],
   private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
+  def mapElements[F <: PermElement[F]](f: E => F): BSGSGroup[F] = new BSGSGroup[F](
+    trv.mapValues(f), sgList.map(f(_)), nextNotNullOr(next.mapElements(f), null)
+  )
   def nextInChain: Option[BSGSGroup[E]] = nextNotNullOr(Some(next), None)
   def compatible(e: BSGSElement[E]) = (e.g == this) && nextNotNullOr(next.compatible(e.nextEl), true)
   def elements = for {

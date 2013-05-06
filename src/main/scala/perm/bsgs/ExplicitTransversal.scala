@@ -8,6 +8,7 @@ case class ExplicitTransversal[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom,
   // implementation of PartialFunction
   def apply(b: Dom) = map.apply(b)
 
+  def mapValues[F <: PermElement[F]](f: E => F): ExplicitTransversal[F] = new ExplicitTransversal(beta, TreeMap.empty[Dom, (F, F)] ++ map.mapValues( Function.tupled( (u, uinv) => (f(u), f(uinv)) )))
   // implementation of Iterable
   def isDefinedAt(b: Dom) = map.isDefinedAt(b)
   def iterator = map.iterator
