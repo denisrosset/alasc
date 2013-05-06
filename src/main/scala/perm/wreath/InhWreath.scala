@@ -43,4 +43,6 @@ abstract class InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], 
   def equal(that: IWE) = ke.equal(that.ke) && he.equal(that.he)
   def inverse = make((ke ** he).inverse, he.inverse)
   def isIdentity = ke.isIdentity && he.isIdentity
+  def basePart = make(ke, he*he.inverse)
+  def nonBasePart = make(ke*ke.inverse, he)
 }
