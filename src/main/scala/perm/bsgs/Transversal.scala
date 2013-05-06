@@ -4,8 +4,6 @@ package bsgs
 
 import scala.annotation.tailrec
 import scala.util.Random
-import scala.language.higherKinds
-import scala.language.existentials
 
 trait TransversalFactory[T <: Transversal[T, E], E <: PermElement[E]] {
   def empty(beta: Dom, id: E): T

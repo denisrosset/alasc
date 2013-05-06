@@ -3,8 +3,6 @@ package perm
 package bsgs
 
 import scala.collection.immutable.TreeMap
-import scala.language.higherKinds
-import scala.language.existentials
 
 case class ExplicitTransversal[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) extends Transversal[ExplicitTransversal[E], E] {
   // implementation of PartialFunction

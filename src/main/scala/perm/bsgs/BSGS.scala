@@ -10,8 +10,8 @@ trait BaseStrategy {
 }
 
 object EmptyBase extends BaseStrategy {
-  def get(generators: List[PermElementLike]): List[Dom] = {
-    val g = generators.head
+  def get(elements: List[PermElementLike]): List[Dom] = {
+    val g = elements.head
     for (i <- 0 until g.size)
       if (g.image(Dom._0(i)) != Dom._0(i))
         return List(Dom._0(i))
@@ -20,15 +20,18 @@ object EmptyBase extends BaseStrategy {
 }
 
 object FullBase extends BaseStrategy {
-  def get(generators: List[PermElementLike]) = {
-    val n = generators.head.size
+  def get(elements: List[PermElementLike]) = {
+    val n = elements.head.size
     (0 until n).toList.map(Dom._0(_))
   }
 }
 
 object BSGS {
-  def randomSchreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(generators: List[E], order: BigInt) = {
-
+  def randomSchreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(randomElement: => E, id: E, order: BigInt) = {
+    val cons = BSGSConstruction.fromBase[T, E](baseStrategy.get(List(randomElement)), id, trvFactory)
+    while (cons.order < order)
+      cons.construct(randomElement, id)
+    cons.asGroup
   }
 }
 
@@ -62,6 +65,19 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
       }
     }
   }
+}
+object BSGSConstruction {
+    def fromBase[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E]): BSGSConstruction[T, E] = {
+      def create(levelBase: Base): BSGSConstruction[T, E] = levelBase match {
+        case Nil => null
+        case hd :: tl => new BSGSConstruction(trvFactory.empty(hd, id), Nil, create(tl))(trvFactory)
+      }
+      if (base.isEmpty)
+        create(List(Dom._0(0)))
+      else
+        create(base)
+    }
+
 }
 private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]](
   var trv: T,
@@ -101,7 +117,6 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
     }
   }
 
-  def +=(el: E) = construct(el, el*el.inverse)
   def asGroup: BSGSGroup[E] = BSGSGroup(trv, sgList, nextNotNullOr(next.asGroup, null))
 }
 
