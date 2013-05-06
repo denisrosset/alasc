@@ -31,7 +31,7 @@ case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElem
   def compatible(that: Element) = a == that.a
   def *(that: Element) = {
     require_(compatible(that))
-    ActionElement(f*that.f, a)
+    ActionElement(f*(that.f), a)
   }
   def equal(that: Element) = {
     require_(compatible(that))
