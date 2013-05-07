@@ -181,9 +181,12 @@ case class BSGSGroup[E <: PermElement[E]](
 }
 
 case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
-//  def *(that: BSGSElement[E]) = g.sift(represents * that.represents)._1 // TODO: make faster
-  def *(that: BSGSElement[E]) = BSGSElement(that.image(b), nextElNotNullOr(nextEl*that.nextEl, null), g)
-
+  def *(that: BSGSElement[E]) = g.sift(represents * that.represents)._1 // TODO: make faster
+  def toTeX = TeX(baseImage.mkString("\\text{B}_{"," ","}"))
+  /*def mulHelper(that: BSGSElement[E], thisImg: Dom => Dom, thatImg: Dom => Dom): BSGSElement[E] = 
+    BSGSElement(thatImg(thisImg(g.trv.beta)), nextElNotNullOr(nextEl.mulHelper(that.nextEl, thisImg, thatImg), null), g)
+  def *(that: BSGSElement[E]) = mulHelper(that, this.image, that.image)
+   */
   def inverse = g.sift(represents.inverse)._1
   def explicit = represents.explicit
   def isIdentity = (b == g.trv.beta) && nextElNotNullOr(nextEl.isIdentity, true)
@@ -191,7 +194,7 @@ case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSEl
   def size = g.trv(b)._1.size
   def compare(that: BSGSElement[E]): Int = represents.compare(that.represents)
   def equal(that: BSGSElement[E]): Boolean = (b == that.b) && nextElNotNullOr( nextEl.equal(that.nextEl), true)
-  def image(k: Dom) = represents.image(k)
+  def image(k: Dom) = represents.image(k) //nextElNotNullOr(nextEl.image(g.trv.u(b).image(k)), g.trv.u(b).image(k))
   def invImage(k: Dom) = represents.invImage(k)
   def images0 = represents.images0
   def images1 = represents.images1
