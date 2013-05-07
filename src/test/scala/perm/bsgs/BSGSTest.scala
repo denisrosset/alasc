@@ -36,6 +36,10 @@ object BSGSSpecification extends Properties("BSGS") {
     (s, b, se, be) => be.image(b.trv.beta) == be.b && se.image(b.trv.beta) == be.b
   ) }
 
+  property("fromExplicit/invImage") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
+    (s, b, se, be) => be.invImage(be.b) == b.trv.beta
+  ) }
+
   property("equal/explicit") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
     (s, b, se, be) => be.explicit.equal(se)
   ) }
