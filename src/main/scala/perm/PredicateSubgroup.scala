@@ -5,6 +5,7 @@ import scala.util.Random
 import scala.annotation.tailrec
 
 class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val predicate: E => Boolean) extends PermGroup[E] {
+  override def toString = "Subgroup of " + g.toString + " obeying " + predicate.toString
   def identity = g.identity
   def order = elements.size
   def degree = g.degree
