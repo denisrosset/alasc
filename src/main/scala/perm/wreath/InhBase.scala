@@ -10,7 +10,7 @@ import scala.reflect.ClassTag
   * It is the direct product of a group G n times with itself.
   */
 class InhBaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](val a: Array[A], val n: Int) extends FiniteGroup[InhBaseElement[F]] {
-  override def toString = "" + n + " copies of " + a.toString
+  def toTeX = TeX.mk(a.map(_.toTeX), TeX("("), TeX("\\oplus"), TeX(")"))
   def compatible(e: InhBaseElement[F]) = e.arr.size == n
   def contains(e: InhBaseElement[F]) = {
     require_(compatible(e))
@@ -34,7 +34,7 @@ class InhBaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](val a:
 }
 
 class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[InhBaseElement[F]] {
-  override def toString = arr.mkString("(",",",")")
+  def toTeX = TeX.mk(arr.map(_.toTeX), TeX("\\big ("), TeX(","), TeX("\\big )"))
   def apply(k: Dom) = arr(k._0)
   def *(that: InhBaseElement[F]) = {
     require_(compatible(that))

@@ -4,7 +4,8 @@ package perm
 import scala.util.Random
 
 class Sym(val degree: Int) extends AnyVal with PermGroup[Perm] {
-  override def toString = "Sym("+degree+")"
+  def toTeX = TeX("{S_"+degree+"}")
+  override def toString = toTeX
   def identity = Perm(degree)
   def order = (1 to degree).foldLeft(BigInt(1))(_*_)
   def compatible(p: Perm) = p.size == degree

@@ -11,7 +11,7 @@ object Perm {
 class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
   def isIdentity: Boolean = domain.forall( k => k == image(k) )
   def size = arr.size
-  override def toString = "Perm("+size+")"+cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString("")
+  def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
   def invImage(k: Dom): Dom = {
     var i = 0
     while (i < arr.size) {

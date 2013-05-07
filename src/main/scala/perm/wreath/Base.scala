@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
   */
 class BaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](a: A, n: Int) extends
     FiniteGroup[BaseElement[F]] {
-  override def toString = "" + n + " copies of " + a.toString
+  def toTeX = TeX("{") + a.toTeX + TeX("}^" + n)
   def compatible(e: BaseElement[F]) = e.arr.size == n
   def contains(e: BaseElement[F]) = {
     require_(compatible(e))
@@ -35,7 +35,7 @@ class BaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](a: A, n: 
 }
 
 class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[BaseElement[F]] {
-  override def toString = arr.mkString("(",",",")")
+  def toTeX = TeX.mk(arr.map(_.toTeX), TeX("\\big ("), TeX(","), TeX("\\big )"))
   def apply(k: Dom) = arr(k._0)
   def *(that: BaseElement[F]) = {
     val newArr = new Array[F](arr.size)

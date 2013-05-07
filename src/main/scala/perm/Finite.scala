@@ -4,7 +4,7 @@ package perm
 import scala.util.Random
 import scala.reflect.ClassTag
 
-trait FiniteElementLike extends Any {
+trait FiniteElementLike extends Any with HasTeX {
   def isIdentity: Boolean
 }
 
@@ -15,7 +15,7 @@ trait FiniteElement[E <: FiniteElement[E]] extends Any with FiniteElementLike {
   def equal(that: E): Boolean
 }
 
-trait FiniteGroup[E <: FiniteElement[E]] extends Any {
+trait FiniteGroup[E <: FiniteElement[E]] extends Any with HasTeX {
   def directCopies(n: Int)(implicit c: ClassTag[E]) = new wreath.BaseGroup[FiniteGroup[E], E](this, n)
   def elementClassTag: ClassTag[E] = ClassTag[E](identity.getClass)
   def identity: E

@@ -12,13 +12,13 @@ object InhWreathGroupGenerators {
   val genGroupS = for {
     n <- Gen.choose(1, 3)
     marr <- Gen.containerOfN[Array, Int](n, Gen.choose(1, 3))
-    h = new PredicateSubgroup[Sym, Perm](Sym(n), leaveInvariant(marr))
+    h = new PredicateSubgroup[Sym, Perm](Sym(n), InvariantPredicate(marr))
   } yield new InhWreathGroup[Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](marr.map(Sym(_)), h)
 
   val genGroupB = for {
     n <- Gen.choose(1, 6)
     marr <- Gen.containerOfN[Array, Int](n, Gen.choose(1, 6))
-    h = new PredicateSubgroup[Sym, Perm](Sym(n), leaveInvariant(marr))
+    h = new PredicateSubgroup[Sym, Perm](Sym(n), InvariantPredicate(marr))
   } yield new InhWreathGroup[Sym, Perm, PredicateSubgroup[Sym, Perm], Perm](marr.map(Sym(_)), h)
 
   val genElement1S = for { w <- genGroupS } yield (w, w.random)

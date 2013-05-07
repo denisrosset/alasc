@@ -10,7 +10,7 @@ class WreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
   type Element = WreathElement[AE, HE]
   val k = new BaseGroup[A, AE](a, h.degree)
   def identity = new WreathElement(k.identity, h.identity)
-  override def toString = a.toString + " wr " + h.toString
+  def toTeX = a.toTeX + TeX(" \\wreath ") + h.toTeX
   def generators = 
     k.generators.map(new WreathElement(_, h.identity)) ++
   h.generators.map(new WreathElement(k.identity, _))
@@ -31,4 +31,5 @@ class WreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ke: Base
   def equal(that: Element) = ke.equal(that.ke) && he.equal(that.he)
   def inverse = new WreathElement((ke ** he).inverse, he.inverse)
   def isIdentity = ke.isIdentity && he.isIdentity
+  def toTeX = TeX("\\big (") + ke.toTeX + TeX(",") + he.toTeX + TeX("\\big )")
 }

@@ -136,6 +136,7 @@ case class BSGSGroup[E <: PermElement[E]](
   def mapElements[F <: PermElement[F]](f: E => F): BSGSGroup[F] = new BSGSGroup[F](
     trv.mapValues(f), sgList.map(f(_)), nextNotNullOr(next.mapElements(f), null)
   )
+  def size: Int = nextNotNullOr(next.size, 1) + 1
   def nextInChain: Option[BSGSGroup[E]] = nextNotNullOr(Some(next), None)
   def compatible(e: BSGSElement[E]) = (e.g == this) && nextNotNullOr(next.compatible(e.nextEl), true)
   def elements = for {
@@ -169,7 +170,7 @@ case class BSGSGroup[E <: PermElement[E]](
     (fromBaseImages(baseImages), remaining)
   }
 
-  override def toString = "BSGS group of order " + order + ", degree " + degree + " with base " + base.mkString("(",",",")") + " and transversal sizes " + transversalSizes.mkString("(",",",")")
+  def toTeX = TeX("\\text{BSGS}^{" + order + "," + degree + "}_{\\begin{array}{" + "c"*size + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array}}")
 
   def removingTrivialBaseElements: BSGSGroup[E] = {
     if (trv.size == 1)

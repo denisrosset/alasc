@@ -16,7 +16,7 @@ abstract class InhWreathGroupTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], A 
   val k = new InhBaseGroup[A, AE](a, h.degree)
   def make(ke: InhBaseElement[AE], he: HE): IWE
   def identity = make(k.identity, h.identity)
-  override def toString = a.mkString("(",",",")") + " wr " + h.toString
+  def toTeX = k.toTeX + TeX(" \\rtimes ") + h.toTeX
   def generators = 
     k.generators.map(make(_, h.identity)) ++
   h.generators.map(make(k.identity, _))
@@ -35,6 +35,7 @@ case class InhWreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](ke: 
 }
 
 abstract class InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]] extends FiniteElement[IWE] {
+  def toTeX = TeX("\\big (") + ke.toTeX + TeX(",") + he.toTeX + TeX("\\big )")
   val ke: InhBaseElement[AE]
   val he: HE
   def compatible(that: IWE) = ke.compatible(that.ke) && he.compatible(that.he)

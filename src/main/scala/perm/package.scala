@@ -15,8 +15,8 @@ package object perm {
     xs.foldLeft(Seq(List.empty[A])){
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
-  def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
-    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
+//  def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
+//    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
 
 //  implicit def asDomain(k: Int) = Domain(k)
 }

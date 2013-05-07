@@ -5,6 +5,7 @@ package wreath
 import com.faacets.math.{ind2sub, sub2ind}
 
 class ImprimitiveAction[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Action[AE, Perm]) extends WreathAction[AE, HE] {
+  def toTeX = TeX("\\text{Impr}(") + ba.toTeX + TeX(")")
   def apply(we: WreathElement[AE, HE]) = {
     val dest = we.ke.arr.map(ba(_))
     val dims = dest.map(_.size)
