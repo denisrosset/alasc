@@ -9,6 +9,9 @@ import language.implicitConversions
 trait BaseStrategy {
   def get(generators: List[PermElementLike]): List[Dom]
 }
+case class Prescribedbase(base: List[Dom]) extends BaseStrategy {
+  def get(generators: List[PermElementLike]) = base
+}
 
 object EmptyBase extends BaseStrategy {
   def get(elements: List[PermElementLike]): List[Dom] = {
