@@ -34,7 +34,13 @@ object BSGS {
   def randomSchreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(randomElement: => E, id: E, order: BigInt) = {
     val cons = BSGSConstruction.fromBase[T, E](baseStrategy.get(List(randomElement)), id, trvFactory)
     while (cons.order < order)
-      cons.construct(randomElement, id)
+      cons.addElement(randomElement, id)
+    cons.asGroup
+  }
+
+  def schreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(generators: List[E], id: E) = {
+    val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), id, trvFactory, generators)
+    while (cons.putInOrder(id)) { }
     cons.asGroup
   }
 }
@@ -75,6 +81,27 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
   def transversalSizes: List[Int] = trv.size :: nextNotNullOr(next.transversalSizes, Nil)
 }
 object BSGSConstruction {
+  def fromBaseAndGeneratingSet[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E], generators: List[E]): BSGSConstruction[T, E] = {
+    def create(beta: Dom, tailBase: List[Dom]) = {
+        var trv = trvFactory.empty(beta, id)
+        for (s <- generators) trv = trv.addingGenerator(s)
+        new BSGSConstruction(trv, generators,
+          fromBaseAndGeneratingSet(tailBase, id, trvFactory, generators.filter(_.image(beta) == beta)))(trvFactory)
+    }
+    base match {
+      case Nil => {
+        val genNotIdentity = generators.filter(!_.isIdentity)
+        if (genNotIdentity.isEmpty)
+          return null
+        else {
+          for (g <- genNotIdentity; i <- 0 until g.size; k = Dom._0(i) if g.image(k) != k)
+            return create(k, Nil)
+          throw new IllegalArgumentException("Bad arguments.")
+        }
+      }
+      case hd :: tl => create(hd, tl)
+    }
+  }
   def fromBase[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E]): BSGSConstruction[T, E] = {
     def create(levelBase: Base): BSGSConstruction[T, E] = levelBase match {
       case Nil => null
@@ -85,19 +112,36 @@ object BSGSConstruction {
     else
       create(base)
   }
-
 }
 private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]](
   var trv: T,
   private[bsgs] var sgList: List[E],
   private[bsgs] var next: BSGSConstruction[T, E])(implicit trvFactory: TransversalFactory[T, E])  extends BSGSLike[E] {
 
+  def putInOrder(id: E): Boolean = {
+    if(next ne null) while(next.putInOrder(id)) { }
+    for (b <- trv.keysIterator) {
+      val ub = trv.u(b)
+      for (x <- sgList) { // TODO: test if generator is trivial with more clever transversals
+        if (!trv.isDefinedAt(x.image(b)))
+          trv = trv.addingGenerator(x)
+        val schreierGen = ub*x*trv.uinv(x.image(b))
+        addElement(schreierGen, id).map( someH => {
+          if(next ne null) while(next.putInOrder(id)) { }
+          addStrongGenerator(someH)
+          return true
+        } )
+      }
+    }
+    return false
+  }
+
   def addStrongGenerator(h: E) {
     sgList = h :: sgList
     trv = trv.addingGenerator(h)
   }
 
-  def construct(el: E, id: E): Option[E] = {
+  def addElement(el: E, id: E): Option[E] = {
     val b = el.image(trv.beta)
     if (!trv.isDefinedAt(b)) {
       addStrongGenerator(el)
@@ -115,7 +159,7 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
       addStrongGenerator(h)
       return Some(h)
     } else {
-      next.construct(h, id) match {
+      next.addElement(h, id) match {
         case None => return None
         case Some(gen) => {
           addStrongGenerator(gen)
