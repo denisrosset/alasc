@@ -5,48 +5,10 @@ package bsgs
 import scala.annotation.tailrec
 import scala.util.Random
 import language.implicitConversions
-
-trait BaseStrategy {
-  def get(generators: List[PermElementLike]): List[Dom]
-}
-case class Prescribedbase(base: List[Dom]) extends BaseStrategy {
-  def get(generators: List[PermElementLike]) = base
-}
-
-object EmptyBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]): List[Dom] = {
-    val g = elements.head
-    for (i <- 0 until g.size)
-      if (g.image(Dom._0(i)) != Dom._0(i))
-        return List(Dom._0(i))
-    throw new IllegalArgumentException("The generator list should not contain the identity element.")
-  }
-}
-
-object FullBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]) = {
-    val n = elements.head.size
-      (0 until n).toList.map(Dom._0(_))
-  }
-}
-
-object BSGS {
-  def randomSchreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(randomElement: => E, id: E, order: BigInt) = {
-    val cons = BSGSConstruction.fromBase[T, E](baseStrategy.get(List(randomElement)), id, trvFactory)
-    while (cons.order < order)
-      cons.addElement(randomElement, id)
-    cons.asGroup
-  }
-
-  def schreierSims[T <: Transversal[T, E], E <: PermElement[E]](baseStrategy: BaseStrategy, trvFactory: TransversalFactory[T, E])(generators: List[E], id: E) = {
-    val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), id, trvFactory, generators)
-    while (cons.putInOrder(id)) { }
-    cons.asGroup
-  }
-}
+import scala.language.higherKinds
 
 private[bsgs] trait BSGSLike[E <: PermElement[E]] {
-  def trv: TransversalLike[E]
+  def trv: TransLike[E]
   private[bsgs] def sgList: List[E]
   private[bsgs] def next: BSGSLike[E]
   def nextNotNullOr[Result](f: => Result, inCaseOfNull: Result): Result = next match {
@@ -68,7 +30,7 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
       return (Nil, el)
     val nextEl = el * trv.uinv(b)
     next match {
-      case null => (b :: Nil, el)
+      case null => (b :: Nil, nextEl)
       case _ => {
         val (bList, retEl) = next.basicSift(nextEl)
         (b :: bList, retEl)
@@ -80,43 +42,11 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
 
   def transversalSizes: List[Int] = trv.size :: nextNotNullOr(next.transversalSizes, Nil)
 }
-object BSGSConstruction {
-  def fromBaseAndGeneratingSet[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E], generators: List[E]): BSGSConstruction[T, E] = {
-    def create(beta: Dom, tailBase: List[Dom]) = {
-        var trv = trvFactory.empty(beta, id)
-        for (s <- generators) trv = trv.addingGenerator(s)
-        new BSGSConstruction(trv, generators,
-          fromBaseAndGeneratingSet(tailBase, id, trvFactory, generators.filter(_.image(beta) == beta)))(trvFactory)
-    }
-    base match {
-      case Nil => {
-        val genNotIdentity = generators.filter(!_.isIdentity)
-        if (genNotIdentity.isEmpty)
-          return null
-        else {
-          for (g <- genNotIdentity; i <- 0 until g.size; k = Dom._0(i) if g.image(k) != k)
-            return create(k, Nil)
-          throw new IllegalArgumentException("Bad arguments.")
-        }
-      }
-      case hd :: tl => create(hd, tl)
-    }
-  }
-  def fromBase[T <: Transversal[T, E], E <: PermElement[E]](base: Base, id: E, trvFactory: TransversalFactory[T, E]): BSGSConstruction[T, E] = {
-    def create(levelBase: Base): BSGSConstruction[T, E] = levelBase match {
-      case Nil => null
-      case hd :: tl => new BSGSConstruction(trvFactory.empty(hd, id), Nil, create(tl))(trvFactory)
-    }
-    if (base.isEmpty)
-      create(List(Dom._0(0)))
-    else
-      create(base)
-  }
-}
-private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]](
-  var trv: T,
+
+private[bsgs] class BSGSConstruction[T[E <: PermElement[E]] <: Trans[T[E], E], E <: PermElement[E]](
+  var trv: T[E],
   private[bsgs] var sgList: List[E],
-  private[bsgs] var next: BSGSConstruction[T, E])(implicit trvFactory: TransversalFactory[T, E])  extends BSGSLike[E] {
+  private[bsgs] var next: BSGSConstruction[T, E])(implicit transComp: TransCompanion[T])  extends BSGSLike[E] {
 
   def putInOrder(id: E): Boolean = {
     if(next ne null) while(next.putInOrder(id)) { }
@@ -124,7 +54,7 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
       val ub = trv.u(b)
       for (x <- sgList) { // TODO: test if generator is trivial with more clever transversals
         if (!trv.isDefinedAt(x.image(b)))
-          trv = trv.addingGenerator(x)
+          trv = trv.updated(List(x), sgList)
         val schreierGen = ub*x*trv.uinv(x.image(b))
         addElement(schreierGen, id).map( someH => {
           if(next ne null) while(next.putInOrder(id)) { }
@@ -138,7 +68,7 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
 
   def addStrongGenerator(h: E) {
     sgList = h :: sgList
-    trv = trv.addingGenerator(h)
+    trv = trv.updated(List(h), h :: sgList)
   }
 
   def addElement(el: E, id: E): Option[E] = {
@@ -153,8 +83,8 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
       if (h.isIdentity)
         return None
       val newBase = (0 until el.size).find( k => h.image(Dom._0(k)) != Dom._0(k) ).get
-      val newTransversal = trvFactory.empty(Dom._0(newBase), id)
-      next = new BSGSConstruction(newTransversal, Nil, null)
+      val newTrans = transComp.empty(Dom._0(newBase), id)
+      next = new BSGSConstruction(newTrans, Nil, null)
       next.addStrongGenerator(h)
       addStrongGenerator(h)
       return Some(h)
@@ -172,87 +102,66 @@ private[bsgs] class BSGSConstruction[T <: Transversal[T, E], E <: PermElement[E]
   def asGroup: BSGSGroup[E] = BSGSGroup(trv, sgList, nextNotNullOr(next.asGroup, null))
 }
 
+object BSGSConstruction {
+  def fromBaseAndGeneratingSet[
+    T[E <: PermElement[E]] <: Trans[T[E], E],
+    E <: PermElement[E]
+  ](base: Base, genSet: List[E], id: E,
+    transComp: TransCompanion[T] = ExpTransCompanion): BSGSConstruction[T, E] = {
 
-case class BSGSGroup[E <: PermElement[E]](
-  val trv: TransversalLike[E],
-  private[bsgs] val sgList: List[E],
-  private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
-  def mapElements[F <: PermElement[F]](f: E => F): BSGSGroup[F] = new BSGSGroup[F](
-    trv.mapValues(f), sgList.map(f(_)), nextNotNullOr(next.mapElements(f), null)
-  )
-  def size: Int = nextNotNullOr(next.size, 1) + 1
-  def nextInChain: Option[BSGSGroup[E]] = nextNotNullOr(Some(next), None)
-  def compatible(e: BSGSElement[E]) = (e.g == this) && nextNotNullOr(next.compatible(e.nextEl), true)
-  def elements = for {
-    b <- trv.keysIterator
-    ne <- nextNotNullOr(next.elements, List(null).iterator)
-  } yield BSGSElement(b, ne, this)
-  def contains(e: BSGSElement[E]) = trv.isDefinedAt(e.b) && nextNotNullOr(next.contains(e.nextEl), true)
-  /** Constructs a BSGS element from a sequence of transversal indices. */
-  def fromSequence(sequence: List[Dom]): BSGSElement[E] =
-    BSGSElement(sequence.head, nextNotNullOr(next.fromSequence(sequence.tail), null), this)
-
-  /** Constructs a BSGS element from a base image. */
-  def fromBaseImage(baseImage: List[Dom]): BSGSElement[E] =
-    BSGSElement(baseImage.head, nextNotNullOr(next.fromBaseImage(baseImage.tail.map(k => trv.uinv(baseImage.head).image(k))), null), this)
-
-  def generators = sgList.iterator.map(sift(_)._1)
-
-  def trvElement(b: Dom, level: Int = 0): BSGSElement[E] = BSGSElement(if(level == 0) b else trv.beta, nextNotNullOr(next.trvElement(b, level - 1), null), this)
-
-  def identity = BSGSElement(trv.beta, nextNotNullOr(next.identity, null), this)
-
-  def random(implicit gen: scala.util.Random) =
-    BSGSElement(trv.random(gen)._1, nextNotNullOr(next.random(gen), null), this)
-
-  def degree = sgList.head.size
-
-  def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
-    implicit def conversion(e: E) = e.explicit
-    val (sequence, remaining) = basicSift(p)
-    if (remaining.isIdentity)
-      Some(fromSequence(sequence))
-    else
-      None
+    def create(beta: Dom, tailBase: List[Dom]) = {
+      var trv = transComp.empty(beta, id)
+      trv = trv.updated(genSet, genSet)
+      new BSGSConstruction(trv, genSet,
+        fromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transComp))(transComp)
+    }
+    base match {
+      case Nil => {
+        val genNotIdentity = genSet.filter(!_.isIdentity)
+        if (genNotIdentity.isEmpty)
+          return null
+        else {
+          for (g <- genNotIdentity; i <- 0 until g.size; k = Dom._0(i) if g.image(k) != k)
+            return create(k, Nil)
+          throw new IllegalArgumentException("Bad arguments.")
+        }
+      }
+      case hd :: tl => create(hd, tl)
+    }
   }
 
-  def sift(e: E): (BSGSElement[E], E) = {
-    val (sequence, remaining) = basicSift(e)
-    (fromSequence(sequence), remaining)
-  }
+  def fromBase[
+    T[E <: PermElement[E]] <: Trans[T[E], E],
+    E <: PermElement[E]](base: Base, id: E,
+    transComp: TransCompanion[T] = ExpTransCompanion): BSGSConstruction[T, E] = {
 
-  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*size + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
-
-  def cleanedBase: BSGSGroup[E] = {
-    if (trv.size == 1)
-      nextNotNullOr(next.cleanedBase, null)
+    def create(levelBase: Base): BSGSConstruction[T, E] = levelBase match {
+      case Nil => null
+      case hd :: tl => new BSGSConstruction(transComp.empty(hd, id), Nil, create(tl))(transComp)
+    }
+    if (base.isEmpty)
+      create(List(Dom._0(0)))
     else
-      BSGSGroup[E](trv, sgList, nextNotNullOr(next.cleanedBase, null))
+      create(base)
   }
 }
 
-case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
-  def *(that: BSGSElement[E]) = g.fromBaseImage(baseImage.map( k => that.image(k) ))
-  def inverse = g.fromBaseImage(g.base.map( k => invImage(k) ))
-  def toTeX = TeX(sequence.mkString("\\text{B}_{"," ","}"))
-  def explicit = represents.explicit
-  def isIdentity = (b == g.trv.beta) && nextElNotNullOr(nextEl.isIdentity, true)
-  def compatible(that: BSGSElement[E]) = g.compatible(that)
-  def size = g.trv(b)._1.size
-  def compare(that: BSGSElement[E]): Int = represents.compare(that.represents)
-  def equal(that: BSGSElement[E]): Boolean = (b == that.b) && nextElNotNullOr( nextEl.equal(that.nextEl), true)
-  def image(k: Dom) = g.trv.u(b).image(nextElNotNullOr(nextEl.image(k), k))
-  def invImage(k: Dom) = nextElNotNullOr(nextEl.invImage(g.trv.uinv(b).image(k)), g.trv.uinv(b).image(k))
-  def images0 = represents.images0
-  def images1 = represents.images1
-  def represents: E = nextElNotNullOr(nextEl.represents * g.trv.u(b), g.trv.u(b))
-  def nextElNotNullOr[R](f: => R, v: R) = nextEl match {
-    case null => v
-    case _ => f
+
+object BSGS {
+  def randomSchreierSims[
+    T[E <: PermElement[E]] <: Trans[T[E], E],
+    E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transComp: TransCompanion[T] = ExpTransCompanion) = {
+    val cons = BSGSConstruction.fromBase[T, E](baseStrategy.get(List(randomElement)), id, transComp)
+    while (cons.order < order)
+      cons.addElement(randomElement, id)
+    cons.asGroup
   }
-  def sequence: List[Dom] = b :: nextElNotNullOr(nextEl.sequence, Nil)
-  def baseImageHelper(img: Dom => Dom): List[Dom] =
-    img(g.trv.beta) :: nextElNotNullOr(nextEl.baseImageHelper(img), Nil)
-  def baseImage: List[Dom] =
-    baseImageHelper(image)
+
+  def schreierSims[
+    T[E <: PermElement[E]] <: Trans[T[E], E],
+    E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transComp: TransCompanion[T] = ExpTransCompanion) = {
+    val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transComp)
+    while (cons.putInOrder(id)) { }
+    cons.asGroup
+  }
 }

@@ -17,6 +17,7 @@ package object perm {
 
 //  def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
 //    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
-
-//  implicit def asDomain(k: Int) = Domain(k)
+  object Console {
+    implicit def asDom(k: Int) = Dom(k)
+  }
 }

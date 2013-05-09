@@ -12,7 +12,7 @@ object BSGSGenerators {
   val genBSGS = for {
     degree <- Gen.choose(1, 15)
     s = Sym(degree)
-    bsgs = BSGS.randomSchreierSims(FullBase, ExplicitTransversalFactory[Perm]())(s.random, s.identity, s.order)
+    bsgs = BSGS.randomSchreierSims(s.random, s.order, s.identity)
   } yield (s, bsgs)
 
   val genBSGSAndElement1 = for {
