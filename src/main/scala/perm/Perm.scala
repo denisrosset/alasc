@@ -60,7 +60,12 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
     a(j._0) = k
     new Perm(a)
   }
-  def apply(cycle: Dom*) = {
+  def apply(s: String): Perm = {
+    val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    val list = s.map( c => Dom._0(points.indexOf(c)) )
+    apply(list:_*)
+  }
+  def apply(cycle: Dom*): Perm = {
     val a = arr.clone
     val a0 = a(cycle(0)._0)
     for (i <- 0 until cycle.size - 1)

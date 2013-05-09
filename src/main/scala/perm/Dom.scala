@@ -15,4 +15,12 @@ object Dom {
   def _1(oneBased: Int) = new Dom(oneBased - 1)
   def apply(oneBased: Int) = new Dom(oneBased - startIndex)
   val startIndex = 1
+  object ZeroBased {
+    import scala.language.implicitConversions
+    implicit def intToDom(k: Int) = Dom._0(k)
+  }
+  object OneBased {
+    import scala.language.implicitConversions
+    implicit def intToDom(k: Int) = Dom._1(k)
+  }
 }
