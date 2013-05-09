@@ -144,10 +144,17 @@ case class BSGSGroup[E <: PermElement[E]](
     ne <- nextNotNullOr(next.elements, List(null).iterator)
   } yield BSGSElement(b, ne, this)
   def contains(e: BSGSElement[E]) = trv.isDefinedAt(e.b) && nextNotNullOr(next.contains(e.nextEl), true)
-  def fromBaseImages(baseImages: List[Dom]): BSGSElement[E] =
-    BSGSElement(baseImages.head, nextNotNullOr(next.fromBaseImages(baseImages.tail), null), this)
+  /** Constructs a BSGS element from a sequence of transversal indices. */
+  def fromSequence(sequence: List[Dom]): BSGSElement[E] =
+    BSGSElement(sequence.head, nextNotNullOr(next.fromSequence(sequence.tail), null), this)
+
+  /** Constructs a BSGS element from a base image. */
+  def fromBaseImage(baseImage: List[Dom]): BSGSElement[E] =
+    BSGSElement(baseImage.head, nextNotNullOr(next.fromBaseImage(baseImage.tail.map(k => trv.uinv(baseImage.head).image(k))), null), this)
 
   def generators = sgList.iterator.map(sift(_)._1)
+
+  def trvElement(b: Dom, level: Int = 0): BSGSElement[E] = BSGSElement(if(level == 0) b else trv.beta, nextNotNullOr(next.trvElement(b, level - 1), null), this)
 
   def identity = BSGSElement(trv.beta, nextNotNullOr(next.identity, null), this)
 
@@ -158,38 +165,32 @@ case class BSGSGroup[E <: PermElement[E]](
 
   def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
     implicit def conversion(e: E) = e.explicit
-    val (baseImages, remaining) = basicSift(p)
+    val (sequence, remaining) = basicSift(p)
     if (remaining.isIdentity)
-      Some(fromBaseImages(baseImages))
+      Some(fromSequence(sequence))
     else
       None
   }
 
   def sift(e: E): (BSGSElement[E], E) = {
-    val (baseImages, remaining) = basicSift(e)
-    (fromBaseImages(baseImages), remaining)
+    val (sequence, remaining) = basicSift(e)
+    (fromSequence(sequence), remaining)
   }
 
-  def toTeX = TeX("\\text{BSGS}^{" + order + "," + degree + "}_{\\begin{array}{" + "c"*size + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array}}")
+  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*size + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
 
-  def removingTrivialBaseElements: BSGSGroup[E] = {
+  def cleanedBase: BSGSGroup[E] = {
     if (trv.size == 1)
-      nextNotNullOr(next.removingTrivialBaseElements, null)
+      nextNotNullOr(next.cleanedBase, null)
     else
-      BSGSGroup[E](trv, sgList, nextNotNullOr(next.removingTrivialBaseElements, null))
+      BSGSGroup[E](trv, sgList, nextNotNullOr(next.cleanedBase, null))
   }
 }
 
 case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
-  // def *(that: BSGSElement[E]) = g.sift(represents * that.represents)._1 // TODO: make faster
-  def toTeX = TeX(baseImage.mkString("\\text{B}_{"," ","}"))
-  def mulHelper(that: BSGSElement[E], thisImg: Dom => Dom, thatImg: Dom => Dom): BSGSElement[E] =
-    BSGSElement(thatImg(thisImg(g.trv.beta)), nextElNotNullOr(nextEl.mulHelper(that.nextEl, thisImg, thatImg), null), g)
-  def *(that: BSGSElement[E]) = mulHelper(that, this.image, that.image)
-  def invHelper(invImg: Dom => Dom): BSGSElement[E] =
-    BSGSElement(invImg(g.trv.beta), nextElNotNullOr(nextEl.invHelper(invImg), null), g)
-  def inverse = invHelper(invImage)
-  //  def inverse = g.sift(represents.inverse)._1
+  def *(that: BSGSElement[E]) = g.fromBaseImage(baseImage.map( k => that.image(k) ))
+  def inverse = g.fromBaseImage(g.base.map( k => invImage(k) ))
+  def toTeX = TeX(sequence.mkString("\\text{B}_{"," ","}"))
   def explicit = represents.explicit
   def isIdentity = (b == g.trv.beta) && nextElNotNullOr(nextEl.isIdentity, true)
   def compatible(that: BSGSElement[E]) = g.compatible(that)
@@ -205,8 +206,9 @@ case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSEl
     case null => v
     case _ => f
   }
-  def trvIndices: List[Dom] = b :: nextElNotNullOr(nextEl.baseImage, Nil)
-  def baseImages(img: Dom => Dom = image) =
-    img(g.trv.beta) :: nextElNotNullOr(nextEl.baseImage(img), Nil)
-  override def toString = "BSGS element with base image " + baseImage.mkString("(",",",")")
+  def sequence: List[Dom] = b :: nextElNotNullOr(nextEl.sequence, Nil)
+  def baseImageHelper(img: Dom => Dom): List[Dom] =
+    img(g.trv.beta) :: nextElNotNullOr(nextEl.baseImageHelper(img), Nil)
+  def baseImage: List[Dom] =
+    baseImageHelper(image)
 }

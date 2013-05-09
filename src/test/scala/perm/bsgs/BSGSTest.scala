@@ -32,6 +32,17 @@ object BSGSGenerators {
 
 object BSGSSpecification extends Properties("BSGS") {
   import BSGSGenerators._
+  property("trvElement") = Prop.forAll(genBSGS) { Function.tupled(
+    (s, b) => b.trv.keysIterator.forall( k => b.trvElement(k).represents.equal(b.trv.u(k)) )
+  ) }
+  property("fromSequence/sequence") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
+    (s, b, se, be) => b.fromSequence(be.sequence).equal(be) 
+  ) }
+
+  property("fromBaseImage/baseImage") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
+    (s, b, se, be) => b.fromBaseImage(be.baseImage).equal(be) 
+  ) }
+
   property("fromExplicit/image") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
     (s, b, se, be) => be.image(b.trv.beta) == be.b && se.image(b.trv.beta) == be.b
   ) }
