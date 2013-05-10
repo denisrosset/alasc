@@ -5,12 +5,16 @@ package bsgs
 import scala.language.higherKinds
 
 trait OrbitLike {
+  def builder: OrbitBuilderLike
+  def size: Int
   def beta: Dom
   def contains(k: Dom) = isDefinedAt(k)
   def isDefinedAt(k: Dom): Boolean
+  def updated(newGen: Iterable[PermElementLike], gens: Iterable[PermElementLike]): OrbitLike
 }
 
 trait Orbit[O <: Orbit[O]] extends OrbitLike {
+  def builder: OrbitBuilder[O]
   /** Add the new generators newGen to the orbit.
     * 
     * @param newGen   New generators to add to the orbit.
@@ -18,10 +22,15 @@ trait Orbit[O <: Orbit[O]] extends OrbitLike {
     * 
     * @return New Orbit including newGen.
     */
-  def updated[E <: PermElementLike](newGen: Iterable[E], gens: Iterable[E]): O
+  def updated(newGen: Iterable[PermElementLike], gens: Iterable[PermElementLike]): O
 }
 
-trait OrbitCompanion[O <: Orbit[O]] {
+trait OrbitBuilderLike {
+  def empty(beta: Dom): OrbitLike
+  def fromSet(beta: Dom, set: Iterable[PermElementLike]): OrbitLike
+}
+
+trait OrbitBuilder[O <: Orbit[O]] extends OrbitBuilderLike {
   def empty(beta: Dom): O
-  //  def fromSet[E <: PermElementLike](beta: Dom, set: Iterable[E]): O
+  def fromSet(beta: Dom, set: Iterable[PermElementLike]): O
 }

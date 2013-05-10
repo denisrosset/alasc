@@ -43,10 +43,10 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
   def transversalSizes: List[Int] = trv.size :: nextNotNullOr(next.transversalSizes, Nil)
 }
 
-private[bsgs] class BSGSConstruction[T[E <: PermElement[E]] <: Trans[T[E], E], E <: PermElement[E]](
-  var trv: T[E],
+private[bsgs] class BSGSConstruction[E <: PermElement[E]](
+  var trv: TransLike[E],
   private[bsgs] var sgList: List[E],
-  private[bsgs] var next: BSGSConstruction[T, E])(implicit transComp: TransCompanion[T])  extends BSGSLike[E] {
+  private[bsgs] var next: BSGSConstruction[E]) extends BSGSLike[E] {
 
   def putInOrder(id: E): Boolean = {
     if(next ne null) while(next.putInOrder(id)) { }
@@ -83,7 +83,7 @@ private[bsgs] class BSGSConstruction[T[E <: PermElement[E]] <: Trans[T[E], E], E
       if (h.isIdentity)
         return None
       val newBase = (0 until el.size).find( k => h.image(Dom._0(k)) != Dom._0(k) ).get
-      val newTrans = transComp.empty(Dom._0(newBase), id)
+      val newTrans = trv.builder.empty(Dom._0(newBase), id)
       next = new BSGSConstruction(newTrans, Nil, null)
       next.addStrongGenerator(h)
       addStrongGenerator(h)
@@ -103,17 +103,14 @@ private[bsgs] class BSGSConstruction[T[E <: PermElement[E]] <: Trans[T[E], E], E
 }
 
 object BSGSConstruction {
-  def fromBaseAndGeneratingSet[
-    T[E <: PermElement[E]] <: Trans[T[E], E],
-    E <: PermElement[E]
-  ](base: Base, genSet: List[E], id: E,
-    transComp: TransCompanion[T] = ExpTransCompanion): BSGSConstruction[T, E] = {
+  def fromBaseAndGeneratingSet[E <: PermElement[E]](base: Base, genSet: List[E], id: E,
+    transBuilder: TransBuilderLike = ExpTransBuilder): BSGSConstruction[E] = {
 
     def create(beta: Dom, tailBase: List[Dom]) = {
-      var trv = transComp.empty(beta, id)
+      var trv = transBuilder.empty(beta, id)
       trv = trv.updated(genSet, genSet)
       new BSGSConstruction(trv, genSet,
-        fromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transComp))(transComp)
+        fromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transBuilder))
     }
     base match {
       case Nil => {
@@ -130,14 +127,12 @@ object BSGSConstruction {
     }
   }
 
-  def fromBase[
-    T[E <: PermElement[E]] <: Trans[T[E], E],
-    E <: PermElement[E]](base: Base, id: E,
-    transComp: TransCompanion[T] = ExpTransCompanion): BSGSConstruction[T, E] = {
+  def fromBase[E <: PermElement[E]](base: Base, id: E,
+    transBuilder: TransBuilderLike = ExpTransBuilder): BSGSConstruction[E] = {
 
-    def create(levelBase: Base): BSGSConstruction[T, E] = levelBase match {
+    def create(levelBase: Base): BSGSConstruction[E] = levelBase match {
       case Nil => null
-      case hd :: tl => new BSGSConstruction(transComp.empty(hd, id), Nil, create(tl))(transComp)
+      case hd :: tl => new BSGSConstruction(transBuilder.empty(hd, id), Nil, create(tl))
     }
     if (base.isEmpty)
       create(List(Dom._0(0)))
@@ -148,19 +143,15 @@ object BSGSConstruction {
 
 
 object BSGS {
-  def randomSchreierSims[
-    T[E <: PermElement[E]] <: Trans[T[E], E],
-    E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transComp: TransCompanion[T] = ExpTransCompanion) = {
-    val cons = BSGSConstruction.fromBase[T, E](baseStrategy.get(List(randomElement)), id, transComp)
+  def randomSchreierSims[E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
+    val cons = BSGSConstruction.fromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
     while (cons.order < order)
       cons.addElement(randomElement, id)
     cons.asGroup
   }
 
-  def schreierSims[
-    T[E <: PermElement[E]] <: Trans[T[E], E],
-    E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transComp: TransCompanion[T] = ExpTransCompanion) = {
-    val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transComp)
+  def schreierSims[E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
+    val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
     while (cons.putInOrder(id)) { }
     cons.asGroup
   }
