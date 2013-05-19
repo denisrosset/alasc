@@ -21,7 +21,7 @@ case class ActionGroup[A <: Action[F, P],
   def compatible(e: Element) = g.compatible(e.f)
   def contains(e: Element) = g.contains(e.f)
   def elements = g.elements.map(ActionElement(_, a))
-  def generators = g.elements.map(ActionElement(_, a))
+  def generators = g.generators.map(ActionElement(_, a))
   def identity = ActionElement(g.identity, a)
   def order = g.order
   def random(implicit gen: Random) = ActionElement(g.random, a)
