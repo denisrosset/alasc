@@ -10,6 +10,56 @@ import scala.language.higherKinds
 case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   private[bsgs] val sgList: List[E],
   private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
+  object DomainOrdering extends Ordering[Dom] {
+    lazy val domainOrder = {
+      val a = Array.fill[Int](degree)(-1)
+      val b = base
+      for ( (bel, i) <- b.zipWithIndex ) a(bel._0) = i
+      var k = base.length
+      for ( i <- 0 until degree ) {
+        if (a(i) == -1) {
+          a(i) = k
+          k += 1
+        }
+      }
+      a
+    }
+    def compare(a: Dom, b: Dom) = Ordering.Int.compare(domainOrder(a._0), domainOrder(b._0))
+  }
+
+  object BSGSOrdering extends Ordering[BSGSElement[E]] {
+    def compare(a: BSGSElement[E], b: BSGSElement[E]): Int = {
+      for (bel <- base) {
+        val ord = DomainOrdering.compare(a.image(bel), b.image(bel))
+        if (ord != 0)
+          return ord
+      }
+      0
+    }
+  }
+
+  object ElementOrdering extends Ordering[E] {
+    def compare(a: E, b: E): Int = {
+      for (bel <- base) {
+        val ord = DomainOrdering.compare(a.image(bel), b.image(bel))
+        if (ord != 0)
+          return ord
+      }
+      0
+    }
+  }
+
+  def orderedIterator(uPrev: E): Iterator[E] = for {
+    b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
+    uThis = trv.u(b) * uPrev
+    u <- nextNotNullOr(next.orderedIterator(uThis), Iterator(uThis))
+  } yield u
+  /** From Holt, p. 114 GENERALSEARCH */
+  def generalSearch(uPrev: E, level: Int, test: (E, Int) => Boolean): Iterator[E] = for {
+    b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
+    uThis = trv.u(b) * uPrev if test(uThis, level)
+    u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
+  } yield u
 
   object baseTranspose {
     /** Deterministic base swap.
