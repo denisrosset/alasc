@@ -42,19 +42,9 @@ case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElem
   }
   def inverse = ActionElement(f.inverse, a)
   def isIdentity = f.isIdentity
-  def compare(that: Element) = {
-    require_(compatible(that))
-    val firstNotEqual = domain.find(k => image(k) != that.image(k))
-    firstNotEqual match {
-      case None => 0
-      case Some(k) if image(k) <= that.image(k) => -1
-      case _ => 1
-    }
-  }
-  def explicit = new Perm(images0)
+  def explicit = Perm(images)
   def image(k: Dom) = a(f).image(k)
   def invImage(k: Dom) = a(f).invImage(k)
-  def images1 = a(f).images1
-  def images0 = a(f).images0
+  def images = a(f).images
   def size = a(f).size
 }

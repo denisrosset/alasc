@@ -49,17 +49,52 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     }
   }
 
+/*
+ The following is wrong. Should use the right ordering ?
+
   def orderedIterator(uPrev: E): Iterator[E] = for {
     b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
     uThis = trv.u(b) * uPrev
     u <- nextNotNullOr(next.orderedIterator(uThis), Iterator(uThis))
   } yield u
+
   /** From Holt, p. 114 GENERALSEARCH */
   def generalSearch(uPrev: E, level: Int, test: (E, Int) => Boolean): Iterator[E] = for {
     b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
     uThis = trv.u(b) * uPrev if test(uThis, level)
     u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
   } yield u
+  def subgroupSearch(test: (E, Int) => Boolean): BSGSGroup[E] = {
+    val id = trv.u(trv.beta)
+    assert(id.isIdentity)
+    val cons = BSGSConstruction.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
+    subgroupSearchRec(id, 0, test, cons, base.length) // base.length = m + 1
+  }
+  /** Recursive exploration of the elements of this group to build the subgroup.
+    * 
+    * @return The subgroup new generators and the level to restart the exploration from.
+    */
+  def subgroupSearchRec(uPrev: E, level: Int, test: (E, Int) => Boolean, 
+    partialSubgroup: BSGSConstruction[E], levelCompleted: Int): (List[E], Int) = {
+    var beta = OrbitSet.empty(trv.beta).updated(partialSubgroup.sgList)
+    for (
+      (deltaP, n) <- trv.keysIterator.toList.sort(uPrev.image).zipWithIndex;
+      uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
+    ) {
+      val delta = uPrev.image(deltaP)
+      next match {
+        case null => {
+          if (predicate(uThis)) {
+            partialSubgroup.addStrongGenerator(uThis)
+            return Some(uThis)
+          }
+        }
+        case _ => {
+
+        }
+      }
+  }
+ */
 
   object baseTranspose {
     /** Deterministic base swap.
@@ -69,7 +104,7 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       * @return BSGS group with first two base elements swapped.
       * 
       * Based on Derek Holt "Handbook of Computational Group Theory", 2005, page 103.
-      * Note that their line 3 is wrong, betaT should be used instead of betaT1.
+      * Note that their line 3 is wrong, betaT has to be used instead of betaT1.
       */
     def deterministic = {
       require(next ne null)

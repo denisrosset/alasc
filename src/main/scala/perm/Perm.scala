@@ -6,6 +6,7 @@ import scala.util.Random
 object Perm {
   def apply(n: Int) = new Perm((0 until n).toArray)
   def fromImages(imgs: Dom*) = new Perm(imgs.map(_._0).toArray)
+  def apply(images: DomArray) = new Perm(images.array.asInstanceOf[Array[Int]])
 }
 
 class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
@@ -22,19 +23,9 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
     throw new IllegalArgumentException("Permutation should contain the image")
   }
   def image(k: Dom) = Dom._0(arr(k._0))
-  def images0: ArrayDom0 = arr.clone
-  def images1: ArrayDom1 = Array.tabulate[Int](size)(arr(_)+1)
+  def images: DomArray = DomArray.zeroBased(arr)
   def compatible(that: Perm) = size == that.size
   def explicit = this
-  def compare(that: Perm) = {
-    require_(compatible(that))
-    val firstNotEqual = domain.find(k => image(k) != that.image(k))
-    firstNotEqual match {
-      case None => 0
-      case Some(k) if image(k) <= that.image(k) => -1
-      case _ => 1
-    }
-  }
   // note that the image of b under the product g*h is given by:
   // b^(g*h) = (b^g)^h
   def *(that: Perm): Perm = {

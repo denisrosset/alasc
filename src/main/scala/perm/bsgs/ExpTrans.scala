@@ -5,6 +5,8 @@ package bsgs
 import scala.collection.immutable.TreeMap
 
 case class ExpTrans[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) extends Trans[ExpTrans, E] {
+  import Dom.IntOrder._
+
   def builder = ExpTransBuilder
   // implementation of PartialFunction
   def apply(b: Dom) = map.apply(b)
@@ -45,5 +47,6 @@ case class ExpTrans[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) e
 }
 
 object ExpTransBuilder extends TransBuilder[ExpTrans] {
+  import Dom.IntOrder._
   def empty[E <: PermElement[E]](beta: Dom, id: E) = ExpTrans(beta, TreeMap((beta, (id, id))))
 }

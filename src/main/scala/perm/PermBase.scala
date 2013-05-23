@@ -6,9 +6,8 @@ import scala.util.Random
 trait PermElementLike extends Any {
   def size: Int
   def image(k: Dom): Dom
+  def images: DomArray
   def invImage(k: Dom): Dom
-  protected[perm] def images0: ArrayDom0 /** Images of 0..n-1 under permutation, is zero-based */
-  def images1: ArrayDom1 /** Images of 1..n under permutation, is one-based */
   def explicit: Perm
   def domain: Iterator[Dom] = (0 until size).toIterator.map(Dom._0(_))
   def cycle[P](start: Dom): List[Dom] = {
@@ -21,6 +20,7 @@ trait PermElementLike extends Any {
   }
 
   def cycles: List[List[Dom]] = {
+    import Dom.IntOrder._
     var checked = scala.collection.mutable.BitSet(size)
     var i = Dom(size)
     var cycleList = List.empty[List[Dom]]
@@ -43,10 +43,17 @@ trait PermElementLike extends Any {
     cycleList.sortBy(_.head)
   }
   def isDefinedAt(k: Dom) = (k._0 >= 0 && k._0 < size)
-
+  def intCompare(that: PermElementLike) = {
+    import Dom.IntOrder._
+    val firstNotEqual = domain.find(k => image(k) != that.image(k))
+    firstNotEqual match {
+      case None => 0
+      case Some(k) if image(k) <= that.image(k) => -1
+      case _ => 1
+    }
+  }
 }
 trait PermElement[E <: PermElement[E]] extends Any with PermElementLike with FiniteElement[E] {
-  def compare(that: E): Int
 }
 
 trait PermGroup[E <: PermElement[E]] extends Any with FiniteGroup[E] {
