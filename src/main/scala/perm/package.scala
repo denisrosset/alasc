@@ -4,6 +4,10 @@ import scala.language.implicitConversions
 
 package object perm {
   type Base = Seq[Dom]
+  implicit class RichDomArray(da: DomArray) extends IndexedSeq[Dom] {
+    def length = da.length
+    def apply(k: Int) = da(k)
+  }
   /* Cartesian product of traversable. */
   def combine[A](xs: Traversable[Traversable[A]]): Seq[Seq[A]] =
     xs.foldLeft(Seq(Seq.empty[A])){
@@ -15,7 +19,4 @@ package object perm {
 
 //  def leaveInvariant[E <: PermElement[E], D](s: Seq[D])(e: E) =
 //    s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
-  object Console {
-    implicit def asDom(k: Int) = Dom(k)
-  }
 }

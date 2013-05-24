@@ -17,7 +17,7 @@ class HoltSuite extends FunSuite {
     assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.ElementOrdering.compare(a,b) < 0 ) ) )
     val printed = List("123456", "123465", "143256", "143265", "214356", "214365", "234156", "234165",
       "321456", "321465", "341256", "341265", "412356", "412365", "432156", "432165")
-    assert( els.map(_.images1.mkString("")).sameElements(printed) )
+    assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
   test("Example in 4.6.2") {
     import Dom.OneBased._
@@ -30,6 +30,6 @@ class HoltSuite extends FunSuite {
       (el.image(1) === 1 || el.image(1) === 3) && (level < 1 || el.image(2) === 2)
     val printed = List("123456", "123465", "321456", "321465")
     val els = g.generalSearch(Sym(6).identity, 0, check).toList
-    assert( els.map(_.images1.mkString("")).sameElements(printed) )
+    assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
 }
