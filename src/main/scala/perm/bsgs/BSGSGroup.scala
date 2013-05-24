@@ -64,40 +64,58 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     uThis = trv.u(b) * uPrev if test(uThis, level)
     u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
   } yield u
-/*
+
   def subgroupSearch(test: (E, Int) => Boolean): BSGSGroup[E] = {
     val id = trv.u(trv.beta)
     assert(id.isIdentity)
-    val cons = BSGSConstruction.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
-    subgroupSearchRec(id, 0, test, cons, base.length) // base.length = m + 1
+    val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, test, base.length) // base.length = m + 1
+    assert(levelCompleted == 0)
+    BSGSConstruction.fromBaseAndGeneratingSet(base, strongGenerators, id, trv.builder).asGroup
   }
- */
- /*
+  
   /** Recursive exploration of the elements of this group to build the subgroup.
     * 
     * @return The subgroup new generators and the level to restart the exploration from.
     */
-  def subgroupSearchRec(uPrev: E, level: Int, test: (E, Int) => Boolean, 
-    partialSubgroup: BSGSConstruction[E], levelCompleted: Int): (List[E], Int) = {
-    var beta = OrbitSet.empty(trv.beta).updated(partialSubgroup.sgList)
+  def subgroupSearchRec(uPrev: E, level: Int, test: (E, Int) => Boolean, levelCompleted: Int): (List[E], Int, Int) = {
+    var newLevelCompleted = levelCompleted
+    var newGenerators = List.empty[E]
+    val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
+//    println("Entering level: " + level + " having levelCompleted = " + levelCompleted)
+//    println("Sorted orbit: " + level + " = " + sortedOrbit.mkString(","))
+
     for (
-      (deltaP, n) <- trv.keysIterator.toList.sort(uPrev.image).zipWithIndex;
+      deltaP <- sortedOrbit;
       uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
     ) {
+//      println("Level " + level + " testing " + uThis.images.oneBased.take(level+1).mkString(","))
       val delta = uPrev.image(deltaP)
-      next match {
+      val restartFrom: Int = next match {
         case null => {
-          if (predicate(uThis)) {
-            partialSubgroup.addStrongGenerator(uThis)
-            return Some(uThis)
+          if (test(uThis, level + 1) && !uThis.isIdentity) {
+            newGenerators = uThis :: newGenerators
+            val newRestartFrom = newLevelCompleted - 1
+//            println("Adding current element, returning to level " + newRestartFrom)
+            return (newGenerators, newRestartFrom, newLevelCompleted)
           }
+          level
         }
         case _ => {
-
+          val nextLevel = level + 1
+          val (subNewGenerators, subRestartFrom, subLevelCompleted) = 
+            next.subgroupSearchRec(uThis, nextLevel, test, newLevelCompleted)
+//          println("Received " + subNewGenerators.size + " new generators from visit of level " + nextLevel + " new completed level " + subLevelCompleted + " should restart from " + subRestartFrom)
+          newLevelCompleted = subLevelCompleted
+          newGenerators = newGenerators ++ subNewGenerators
+          subRestartFrom
         }
       }
+      if (restartFrom < level)
+        return (newGenerators, restartFrom, newLevelCompleted)
+    }
+//    println("Leaving level having completed it: " + level)
+    (newGenerators, level - 1, level)
   }
- */
 
   object baseTranspose {
     /** Deterministic base swap.
