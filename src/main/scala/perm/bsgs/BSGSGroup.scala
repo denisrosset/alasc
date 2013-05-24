@@ -10,6 +10,7 @@ import scala.language.higherKinds
 case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   private[bsgs] val sgList: List[E],
   private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
+
   object DomainOrdering extends Ordering[Dom] {
     lazy val domainOrder = {
       val a = Array.fill[Int](degree)(-1)
@@ -48,28 +49,30 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       0
     }
   }
-
-/*
- The following is wrong. Should use the right ordering ?
-
+  case class ImageOrdering(u: E) extends Ordering[Dom] {
+    def compare(a: Dom, b: Dom) = DomainOrdering.compare(u.image(a), u.image(b))
+  }
   def orderedIterator(uPrev: E): Iterator[E] = for {
-    b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
+    b <- trv.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
     uThis = trv.u(b) * uPrev
     u <- nextNotNullOr(next.orderedIterator(uThis), Iterator(uThis))
   } yield u
 
   /** From Holt, p. 114 GENERALSEARCH */
   def generalSearch(uPrev: E, level: Int, test: (E, Int) => Boolean): Iterator[E] = for {
-    b <- trv.keysIterator.toList.sortBy(uPrev.image).toIterator
+    b <- trv.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
     uThis = trv.u(b) * uPrev if test(uThis, level)
     u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
   } yield u
+/*
   def subgroupSearch(test: (E, Int) => Boolean): BSGSGroup[E] = {
     val id = trv.u(trv.beta)
     assert(id.isIdentity)
     val cons = BSGSConstruction.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
     subgroupSearchRec(id, 0, test, cons, base.length) // base.length = m + 1
   }
+ */
+ /*
   /** Recursive exploration of the elements of this group to build the subgroup.
     * 
     * @return The subgroup new generators and the level to restart the exploration from.
