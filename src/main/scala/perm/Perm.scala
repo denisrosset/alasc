@@ -23,7 +23,7 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
     throw new IllegalArgumentException("Permutation should contain the image")
   }
   def image(k: Dom) = Dom._0(arr(k._0))
-  def images: DomArray = DomArray.zeroBased(arr)
+  def images: DomArray = DomArray.fromZeroBasedArray(arr)
   def compatible(that: Perm) = size == that.size
   def explicit = this
   // note that the image of b under the product g*h is given by:
