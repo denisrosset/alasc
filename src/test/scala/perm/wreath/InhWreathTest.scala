@@ -109,6 +109,13 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
     (w, we, a, k) => a(we).inverse.image(k) == a(we.inverse).image(k)
   ) }
 
+  property("InhPrimitiveAction/inverse/invImage") = Prop.forAll(genPrimitive1D) { Function.tupled(
+    (w, we, a, k) => a(we.inverse).image(k) == a(we).invImage(k)
+  ) }
+  property("InhImprimitiveAction/inverse/invImage") = Prop.forAll(genImprimitive1D) { Function.tupled(
+    (w, we, a, k) => a(we.inverse).image(k) == a(we).invImage(k)
+  ) }
+
   property("InhPrimitiveAction / *") = Prop.forAll(genPrimitive2) { Function.tupled(
     (w, we1, we2, a) => a(we1*we2).equal(a(we1)*a(we2))
   ) }
