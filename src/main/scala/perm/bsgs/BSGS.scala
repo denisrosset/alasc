@@ -152,6 +152,10 @@ object BSGSConstruction {
 
 
 object BSGS {
+  def apply[G <: PermGroup[E], E <: PermElement[E]](g: G) = {
+    implicit val gen = scala.util.Random
+    BSGS.randomSchreierSims(g.random, g.order, g.identity)
+  }
   def randomSchreierSims[E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
     val cons = BSGSConstruction.fromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
     while (cons.order < order)
