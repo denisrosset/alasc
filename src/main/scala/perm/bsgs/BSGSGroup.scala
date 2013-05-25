@@ -80,21 +80,16 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     var newLevelCompleted = levelCompleted
     var newGenerators = List.empty[E]
     val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
-//    println("Entering level: " + level + " having levelCompleted = " + levelCompleted)
-//    println("Sorted orbit: " + level + " = " + sortedOrbit.mkString(","))
-
     for (
       deltaP <- sortedOrbit;
       uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
     ) {
-//      println("Level " + level + " testing " + uThis.images.oneBased.take(level+1).mkString(","))
       val delta = uPrev.image(deltaP)
       val restartFrom: Int = next match {
         case null => {
           if (predicate(uThis) && !uThis.isIdentity) {
             newGenerators = uThis :: newGenerators
             val newRestartFrom = newLevelCompleted - 1
-//            println("Adding current element, returning to level " + newRestartFrom)
             return (newGenerators, newRestartFrom, newLevelCompleted)
           }
           level
@@ -103,7 +98,6 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
           val nextLevel = level + 1
           val (subNewGenerators, subRestartFrom, subLevelCompleted) = 
             next.subgroupSearchRec(uThis, nextLevel, predicate, test, newLevelCompleted)
-//          println("Received " + subNewGenerators.size + " new generators from visit of level " + nextLevel + " new completed level " + subLevelCompleted + " should restart from " + subRestartFrom)
           newLevelCompleted = subLevelCompleted
           newGenerators = newGenerators ++ subNewGenerators
           subRestartFrom
@@ -112,7 +106,6 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       if (restartFrom < level)
         return (newGenerators, restartFrom, newLevelCompleted)
     }
-//    println("Leaving level having completed it: " + level)
     (newGenerators, level - 1, level)
   }
 
