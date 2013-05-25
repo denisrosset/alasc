@@ -11,6 +11,8 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
   def trv: TransLike[E]
   private[bsgs] def sgList: List[E]
   private[bsgs] def next: BSGSLike[E]
+  private[bsgs] def id: E
+
   def nextNotNullOr[Result](f: => Result, inCaseOfNull: Result): Result = next match {
     case null => inCaseOfNull
     case _ => f
@@ -46,18 +48,19 @@ private[bsgs] trait BSGSLike[E <: PermElement[E]] {
 private[bsgs] class BSGSConstruction[E <: PermElement[E]](
   var trv: TransLike[E],
   private[bsgs] var sgList: List[E],
+  val id: E,
   private[bsgs] var next: BSGSConstruction[E]) extends BSGSLike[E] {
 
-  def putInOrder(id: E): Boolean = {
-    if(next ne null) while(next.putInOrder(id)) { }
+  def putInOrder: Boolean = {
+    if(next ne null) while(next.putInOrder) { }
     for (b <- trv.keysIterator) {
       val ub = trv.u(b)
       for (x <- sgList) { // TODO: test if generator is trivial with more clever transversals
         if (!trv.isDefinedAt(x.image(b)))
           trv = trv.updated(List(x), sgList)
         val schreierGen = ub*x*trv.uinv(x.image(b))
-        addElement(schreierGen, id).map( someH => {
-          if(next ne null) while(next.putInOrder(id)) { }
+        addElement(schreierGen).map( someH => {
+          if(next ne null) while(next.putInOrder) { }
           addStrongGenerator(someH)
           return true
         } )
@@ -71,7 +74,7 @@ private[bsgs] class BSGSConstruction[E <: PermElement[E]](
     trv = trv.updated(List(h), h :: sgList)
   }
 
-  def addElement(el: E, id: E): Option[E] = {
+  def addElement(el: E): Option[E] = {
     val b = el.image(trv.beta)
     if (!trv.isDefinedAt(b)) {
       addStrongGenerator(el)
@@ -84,12 +87,12 @@ private[bsgs] class BSGSConstruction[E <: PermElement[E]](
         return None
       val newBase = (0 until el.size).find( k => h.image(Dom._0(k)) != Dom._0(k) ).get
       val newTrans = trv.builder.empty(Dom._0(newBase), id)
-      next = new BSGSConstruction(newTrans, Nil, null)
+      next = new BSGSConstruction(newTrans, Nil, id, null)
       next.addStrongGenerator(h)
       addStrongGenerator(h)
       return Some(h)
     } else {
-      next.addElement(h, id) match {
+      next.addElement(h) match {
         case None => return None
         case Some(gen) => {
           addStrongGenerator(gen)
@@ -99,7 +102,7 @@ private[bsgs] class BSGSConstruction[E <: PermElement[E]](
     }
   }
 
-  def asGroup: BSGSGroup[E] = BSGSGroup(trv, sgList, nextNotNullOr(next.asGroup, null))
+  def asGroup: BSGSGroup[E] = BSGSGroup(trv, sgList, id, nextNotNullOr(next.asGroup, null))
 }
 
 object BSGSConstruction {
@@ -109,7 +112,7 @@ object BSGSConstruction {
     def create(beta: Dom, tailBase: List[Dom]) = {
       var trv = transBuilder.empty(beta, id)
       trv = trv.updated(genSet, genSet)
-      new BSGSConstruction(trv, genSet,
+      new BSGSConstruction(trv, genSet, id,
         fromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transBuilder))
     }
     base match {
@@ -132,7 +135,7 @@ object BSGSConstruction {
 
     def create(levelBase: Base): BSGSConstruction[E] = levelBase match {
       case Nil => null
-      case hd :: tl => new BSGSConstruction(transBuilder.empty(hd, id), Nil, create(tl))
+      case hd :: tl => new BSGSConstruction(transBuilder.empty(hd, id), Nil, id, create(tl))
     }
     if (base.isEmpty)
       create(List(Dom._0(0)))
@@ -146,13 +149,13 @@ object BSGS {
   def randomSchreierSims[E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
     val cons = BSGSConstruction.fromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
     while (cons.order < order)
-      cons.addElement(randomElement, id)
+      cons.addElement(randomElement)
     cons.asGroup
   }
 
   def schreierSims[E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
     val cons = BSGSConstruction.fromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
-    while (cons.putInOrder(id)) { }
+    while (cons.putInOrder) { }
     cons.asGroup
   }
 }

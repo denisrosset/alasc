@@ -9,6 +9,7 @@ import scala.language.higherKinds
 
 case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   private[bsgs] val sgList: List[E],
+  private[bsgs] val id: E,
   private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
 
   object DomainOrdering extends Ordering[Dom] {
@@ -66,8 +67,6 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   } yield u
 
   def subgroupSearch(test: (E, Int) => Boolean): BSGSGroup[E] = {
-    val id = trv.u(trv.beta)
-    assert(id.isIdentity)
     val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, test, base.length) // base.length = m + 1
     assert(levelCompleted == 0)
     BSGSConstruction.fromBaseAndGeneratingSet(base, strongGenerators, id, trv.builder).asGroup
@@ -130,7 +129,6 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     def deterministic = {
       require(next ne null)
       val builder = trv.builder
-      val id = identity.represents
       var tList = next.sgList.filter( t => t.image(next.trv.beta) == next.trv.beta )
       val beta = trv.beta
       val beta1 = next.trv.beta
@@ -168,14 +166,13 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       val nTrv = builder.empty(beta1, id).updated(nS, nS)
       val nS1 = nS.filter( s => s.image(beta1) == beta1 )
       val nTrv1 = builder.empty(beta, id).updated(nS1, nS1)
-      BSGSGroup(nTrv, tList, BSGSGroup(nTrv1, tList.filter( t => t.image(beta1) == beta1), next.next))
+      BSGSGroup(nTrv, tList, id, BSGSGroup(nTrv1, tList.filter( t => t.image(beta1) == beta1), id, next.next))
     }
     
     def randomized(implicit r: scala.util.Random) = {
       require(next ne null)
       val nBeta = next.trv.beta
       val nBeta1 = trv.beta
-      val id = identity.represents
       val builder = trv.builder
       var nTrv = builder.empty(nBeta, id)
       var nTrv1 = builder.empty(nBeta1, id)
@@ -193,12 +190,12 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
           nS = h :: nS
         }
       }
-      BSGSGroup(nTrv, nS, BSGSGroup(nTrv1, nS1, next.next))
+      BSGSGroup(nTrv, nS, id, BSGSGroup(nTrv1, nS1, id, next.next))
     }
   }
 
   def mapElements[F <: PermElement[F]](f: E => F): BSGSGroup[F] = new BSGSGroup[F](
-    trv.mapValues(f), sgList.map(f(_)), nextNotNullOr(next.mapElements(f), null)
+    trv.mapValues(f), sgList.map(f(_)), f(id), nextNotNullOr(next.mapElements(f), null)
   )
   def size: Int = nextNotNullOr(next.size, 1) + 1
   def nextInChain: Option[BSGSGroup[E]] = nextNotNullOr(Some(next), None)
@@ -225,7 +222,7 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   def random(implicit gen: scala.util.Random) =
     BSGSElement(trv.random(gen)._1, nextNotNullOr(next.random(gen), null), this)
 
-  def degree = sgList.head.size
+  def degree = id.size
 
   def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
     implicit def conversion(e: E) = e.explicit
@@ -247,6 +244,6 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     if (trv.size == 1)
       nextNotNullOr(next.cleanedBase, null)
     else
-      BSGSGroup[E](trv, sgList, nextNotNullOr(next.cleanedBase, null))
+      BSGSGroup[E](trv, sgList, id, nextNotNullOr(next.cleanedBase, null))
   }
 }
