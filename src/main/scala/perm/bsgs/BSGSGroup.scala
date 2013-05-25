@@ -66,6 +66,54 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
   } yield u
 
+  /** Recursive exploration of the elements of this group to build the subgroup.
+    * 
+    * @return The subgroup new generators and the level to restart the exploration from.
+    */
+  def subgroupSearchRec1(uPrev: E, level: Int, predicate: E => Boolean, test: (E, Int) => Boolean, levelCompleted: Int, partialSubgroup: BSGSConstruction[E], start: BSGSConstruction[E]): (Int, Int) = {
+    var newLevelCompleted = levelCompleted
+    val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
+    var sPrune = trv.size
+    for (
+      deltaP <- sortedOrbit;
+      uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
+    ) {
+      if (sPrune < partialSubgroup.trv.size) {
+        println("Pruned")
+        return (level - 1, level)
+      }
+      val delta = uPrev.image(deltaP)
+      val restartFrom: Int = next match {
+        case null => {
+          if (predicate(uThis) && !uThis.isIdentity) {
+            start.addStrongGeneratorsInChain(List(uThis))
+            val newRestartFrom = newLevelCompleted - 1
+            return (newRestartFrom, newLevelCompleted)
+          }
+          level
+        }
+        case _ => {
+          val nextLevel = level + 1
+          val (subRestartFrom, subLevelCompleted) = 
+            next.subgroupSearchRec1(uThis, nextLevel, predicate, test, newLevelCompleted, partialSubgroup.next, start)
+          newLevelCompleted = subLevelCompleted
+          subRestartFrom
+        }
+      }
+      if (restartFrom < level)
+        return (restartFrom, newLevelCompleted)
+      sPrune -= 1
+    }
+    (level - 1, level)
+  }
+
+  def subgroupSearch1(predicate: E => Boolean, test: (E, Int) => Boolean = ((e, k) => true)): BSGSGroup[E] = {
+    val cons = BSGSConstruction.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
+    val (restartFrom, levelCompleted) = subgroupSearchRec1(id, 0, predicate, test, base.length, cons, cons)
+    assert(levelCompleted == 0)
+    cons.asGroup
+  }
+
   def subgroupSearch(predicate: E => Boolean, test: (E, Int) => Boolean = ((e, k) => true)): BSGSGroup[E] = {
     val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, predicate, test, base.length) // base.length = m + 1
     assert(levelCompleted == 0)
