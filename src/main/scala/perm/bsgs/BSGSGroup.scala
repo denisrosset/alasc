@@ -7,10 +7,40 @@ import scala.util.Random
 import language.implicitConversions
 import scala.language.higherKinds
 
+trait Transversal[E <: PermElement[E]] {
+  def elements: Iterator[E]
+}
+
+case class TransversalEnd[E <: PermElement[E]](id: E) extends Transversal[E] {
+  def elements: Iterator[E] = Iterator(id)
+}
+
+case class TransversalNode[E <: PermElement[E]](uList: List[E], next: Transversal[E]) extends Transversal[E] {
+  def elements: Iterator[E] = for {
+    u <- uList.iterator
+    ne <- next.elements
+  } yield ne * u
+}
+
 case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
   private[bsgs] val sgList: List[E],
   private[bsgs] val id: E,
   private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
+  def cosets(g: BSGSGroup[E]): Transversal[E] = {
+    var o = OrbitSet.fromSet(trv.beta, g.sgList)
+    var addedGenerators = g.sgList
+    var uList = List.empty[E]
+    for (b <- trv.keysIterator) {
+      if (!o.isDefinedAt(b)) {
+        val newGenerator = trv.u(b)
+        uList = newGenerator :: uList
+        addedGenerators = newGenerator :: addedGenerators
+        o = o.updated(List(newGenerator), addedGenerators)
+      }
+    }
+    uList = id :: uList
+    TransversalNode(uList, nextNotNullOr(next.cosets(g.next), TransversalEnd(id)))
+  }
 
   object DomainOrdering extends Ordering[Dom] {
     lazy val domainOrder = {
