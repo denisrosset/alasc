@@ -66,8 +66,8 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
   } yield u
 
-  def subgroupSearch(test: (E, Int) => Boolean): BSGSGroup[E] = {
-    val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, test, base.length) // base.length = m + 1
+  def subgroupSearch(predicate: E => Boolean, test: (E, Int) => Boolean = ((e, k) => true)): BSGSGroup[E] = {
+    val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, predicate, test, base.length) // base.length = m + 1
     assert(levelCompleted == 0)
     BSGSConstruction.fromBaseAndGeneratingSet(base, strongGenerators, id, trv.builder).asGroup
   }
@@ -76,7 +76,7 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
     * 
     * @return The subgroup new generators and the level to restart the exploration from.
     */
-  def subgroupSearchRec(uPrev: E, level: Int, test: (E, Int) => Boolean, levelCompleted: Int): (List[E], Int, Int) = {
+  def subgroupSearchRec(uPrev: E, level: Int, predicate: E => Boolean, test: (E, Int) => Boolean, levelCompleted: Int): (List[E], Int, Int) = {
     var newLevelCompleted = levelCompleted
     var newGenerators = List.empty[E]
     val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
@@ -91,7 +91,7 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       val delta = uPrev.image(deltaP)
       val restartFrom: Int = next match {
         case null => {
-          if (test(uThis, level + 1) && !uThis.isIdentity) {
+          if (predicate(uThis) && !uThis.isIdentity) {
             newGenerators = uThis :: newGenerators
             val newRestartFrom = newLevelCompleted - 1
 //            println("Adding current element, returning to level " + newRestartFrom)
@@ -102,7 +102,7 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
         case _ => {
           val nextLevel = level + 1
           val (subNewGenerators, subRestartFrom, subLevelCompleted) = 
-            next.subgroupSearchRec(uThis, nextLevel, test, newLevelCompleted)
+            next.subgroupSearchRec(uThis, nextLevel, predicate, test, newLevelCompleted)
 //          println("Received " + subNewGenerators.size + " new generators from visit of level " + nextLevel + " new completed level " + subLevelCompleted + " should restart from " + subRestartFrom)
           newLevelCompleted = subLevelCompleted
           newGenerators = newGenerators ++ subNewGenerators
