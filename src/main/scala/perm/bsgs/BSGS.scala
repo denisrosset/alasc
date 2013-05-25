@@ -69,9 +69,15 @@ private[bsgs] class BSGSConstruction[E <: PermElement[E]](
     return false
   }
 
+  def addStrongGeneratorsInChain(h: List[E]) {
+    sgList = h ++ sgList
+    trv = trv.updated(h, sgList)
+    nextNotNullOr(next.addStrongGeneratorsInChain(h.filter(_.image(trv.beta) == trv.beta)), Unit)
+  }
+
   def addStrongGenerator(h: E) {
     sgList = h :: sgList
-    trv = trv.updated(List(h), h :: sgList)
+    trv = trv.updated(List(h), sgList)
   }
 
   def addElement(el: E): Option[E] = {
