@@ -57,7 +57,15 @@ trait PermElement[E <: PermElement[E]] extends Any with PermElementLike with Fin
 }
 
 trait PermGroup[E <: PermElement[E]] extends Any with FiniteGroup[E] {
+  /** Degree of the permutation group, i.e. size of the domain. */
   def degree: Int
+  /** Domain of the permutation group. */
   def domain = (0 until degree).toIterator.map(Dom._0(_))
+  /** Instantiates a group element from an explicit permutation.
+    *
+    * @param p Explicit permutation to instantiate.
+    * 
+    * @return Some(e) if p can be represented by e or None.
+    */
   def fromExplicit(p: Perm): Option[E]
 }
