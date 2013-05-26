@@ -142,7 +142,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   def orderedIterator(uPrev: E): Iterator[E]
 
   // Search
-  def generalSearch(predicate: Predicate[E], test: BaseImageTest = trivialTest, uPrev:E = representedIdentity, partialBaseImage: List[Dom] = List.empty[Dom]): Iterator[E]
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest = trivialTest, uPrev:E = representedIdentity, partialBaseImage: List[Dom] = List.empty[Dom], level: Int = 0): Iterator[E]
 
   def subgroupSearch(predicate: Predicate[E], test: BaseImageTest = trivialTest): BSGSGroup[E]
 
@@ -208,9 +208,9 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   def orderedIterator(uPrev: E) = Iterator(uPrev)
 
   // Search
-  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev:E, partialBaseImage: List[Dom]) = if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev:E, partialBaseImage: List[Dom], level: Int) = if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
 
-  def subgroupSearch(predicate: E => Boolean, test: List[Dom] => Boolean = trivialTest) = this
+  def subgroupSearch(predicate: Predicate[E], test: BaseImageTest) = this
 
   private[bsgs] def subgroupSearchRec(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom], level: Int, levelCompleted: Int, partialSubgroup: BSGSGroup[E], startSubgroup: BSGSGroup[E]): SubgroupSearchResult = {
     if (predicate(uPrev) && !uPrev.isIdentity) {
@@ -313,11 +313,11 @@ final class BSGSGroupNode[E <: PermElement[E]](
 
   // Search
   /** From Holt, p. 114 GENERALSEARCH */
-  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom]): Iterator[E] = for {
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom], level: Int): Iterator[E] = for {
     b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
-    newPartialBaseImage = uPrev.image(b) :: partialBaseImage if test(newPartialBaseImage)
+    newPartialBaseImage = uPrev.image(b) :: partialBaseImage if test(newPartialBaseImage, level)
     uThis = transversal.u(b) * uPrev
-    u <- tail.generalSearch(predicate, test, transversal.u(b) * uPrev, newPartialBaseImage)
+    u <- tail.generalSearch(predicate, test, transversal.u(b) * uPrev, newPartialBaseImage, level + 1)
   } yield u
 
   def subgroupSearch(predicate: Predicate[E], test: BaseImageTest) = {
@@ -335,14 +335,14 @@ final class BSGSGroupNode[E <: PermElement[E]](
     var sPrune = trv.size
     for (
       deltaP <- sortedOrbit;
-      newPartialBaseImage = uPrev.image(deltaP) :: partialBaseImage if test(newPartialBaseImage);
+      newPartialBaseImage = uPrev.image(deltaP) :: partialBaseImage if test(newPartialBaseImage, level);
       uThis = transversal.u(deltaP) * uPrev
     ) {
       if (sPrune < partialSubgroup.transversal.size)
         return SubgroupSearchResult(level - 1, level)
       val delta = uPrev.image(deltaP)
       val SubgroupSearchResult(subRestartFrom, subLevelCompleted) =
-        tail.subgroupSearchRec(predicate, test, uThis, partialBaseImage, level, newLevelCompleted, partialSubgroup.tail, startSubgroup)
+        tail.subgroupSearchRec(predicate, test, uThis, partialBaseImage, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
       newLevelCompleted = subLevelCompleted
       if (subRestartFrom < level)
         return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
@@ -491,7 +491,7 @@ final class BSGSGroupNode[E <: PermElement[E]](
         return None
       val newBase = e.domain.find( k => h.image(k) != k ).get
       val newTrans = trv.builder.empty(newBase, id)
-      tl = new BSGSGroupNode(newTrans, Nil, id, tl)
+      tl = new BSGSGroupNode(newTrans, Nil, id, false, tl)
       addStrongGeneratorsInChain(List(h))
       return Some(h)
     } else

@@ -26,10 +26,17 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity, PrescribedBase(List(1,2,3,4,5,6)))
     assert(g.order == 16)
-    def check(el: Perm, level: Int) =
-      (el.image(1) === 1 || el.image(1) === 3) && (level < 1 || el.image(2) === 2)
+    def test(partialBaseImage: List[Dom], level: Int): Boolean = {
+      val b = partialBaseImage.head
+      if (level == 0)
+        return b === 1 || b === 3
+      if (level == 1)
+        return b === 2
+      return true
+    }
+    def predicate(k: Perm) = (k.image(1) === 1 || k.image(1) === 3) && k.image(2) === 2
     val printed = List("123456", "123465", "321456", "321465")
-    val els = g.generalSearch(Sym(6).identity, 0, check).toList
+    val els = g.generalSearch(predicate, test).toList
     assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
 }
