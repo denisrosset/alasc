@@ -3,15 +3,15 @@ package perm
 package bsgs
 
 trait BaseStrategy {
-  def get(generators: List[PermElementLike]): List[Dom]
+  def get(generators: List[PermElementLike]): Base
 }
 
-case class PrescribedBase(base: List[Dom]) extends BaseStrategy {
+case class PrescribedBase(base: Base) extends BaseStrategy {
   def get(generators: List[PermElementLike]) = base
 }
 
 object EmptyBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]): List[Dom] = {
+  def get(elements: List[PermElementLike]): Base = {
     elements match {
       case Nil => List(Dom._0(0))
       case g :: tail => {

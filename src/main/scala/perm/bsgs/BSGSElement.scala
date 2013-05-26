@@ -7,26 +7,58 @@ import scala.util.Random
 import language.implicitConversions
 import scala.language.higherKinds
 
-case class BSGSElement[E <: PermElement[E]](b: Dom, private[bsgs] nextEl: BSGSElement[E], g: BSGSGroup[E]) extends PermElement[BSGSElement[E]] {
-  def *(that: BSGSElement[E]) = g.fromBaseImage(baseImage.map( k => that.image(k) ))
-  def inverse = g.fromBaseImage(g.base.map( k => invImage(k) ))
+sealed abstract class BSGSElement[E <: PermElement[E]] extends PermElement[BSGSElement[E]] {
+  def b: Dom
+  def g: BSGSGroup[E]
+  def isTerminal: Boolean
+  def tail: BSGSElement[E]
   def toTeX = TeX(sequence.mkString("\\text{B}_{"," ","}"))
-  def explicit = represents.explicit
-  def isIdentity = (b == g.trv.beta) && nextElNotNullOr(nextEl.isIdentity, true)
-  def compatible(that: BSGSElement[E]) = g.compatible(that)
-  def size = g.trv(b)._1.size
-  def equal(that: BSGSElement[E]): Boolean = (b == that.b) && nextElNotNullOr( nextEl.equal(that.nextEl), true)
-  def image(k: Dom) = g.trv.u(b).image(nextElNotNullOr(nextEl.image(k), k))
-  def invImage(k: Dom) = nextElNotNullOr(nextEl.invImage(g.trv.uinv(b).image(k)), g.trv.uinv(b).image(k))
-  def images = represents.images
-  def represents: E = nextElNotNullOr(nextEl.represents * g.trv.u(b), g.trv.u(b))
-  def nextElNotNullOr[R](f: => R, v: R) = nextEl match {
-    case null => v
-    case _ => f
-  }
-  def sequence: List[Dom] = b :: nextElNotNullOr(nextEl.sequence, Nil)
-  def baseImageHelper(img: Dom => Dom): List[Dom] =
-    img(g.trv.beta) :: nextElNotNullOr(nextEl.baseImageHelper(img), Nil)
+  def inverse = g.fromBaseImage(g.base.map( k => invImage(k) ))
+  def sequence: List[Dom]
   def baseImage: List[Dom] =
     baseImageHelper(image)
+  def baseImageHelper(img: Dom => Dom): List[Dom]
+  def images = represents.images
+  def represents: E
+}
+
+final case class BSGSElementTerminal[E <: PermElement[E]](g: BSGSGroup[E]) extends BSGSElement[E] {
+  def isTerminal = true
+  def compatible(that: BSGSElement[E]) = equal(that)
+  def size = g.representedIdentity.size
+  def explicit = g.representedIdentity.explicit
+  def b = throw new IllegalArgumentException("Invalid operation on end of BSGS chain.")
+  def tail = throw new IllegalArgumentException("Invalid operation on end of BSGS chain.")
+  def *(that: BSGSElement[E]) = that
+  def represents = g.representedIdentity
+  override def inverse = this
+  def isIdentity = true
+  def image(k: Dom) = k
+  def invImage(k: Dom) = k
+  def sequence = Nil
+  def baseImageHelper(img: Dom => Dom) = Nil
+  def equal(that: BSGSElement[E]) = that match {
+    case BSGSElementTerminal(g1) => true
+    case _ => false
+  }
+}
+
+final case class BSGSElementNode[E <: PermElement[E]](g: BSGSGroup[E], b: Dom, private[bsgs] var tl: BSGSElement[E]) extends BSGSElement[E] {
+  def isTerminal = false
+  def tail = tl
+  def *(that: BSGSElement[E]) = g.fromBaseImage(baseImage.map( k => that.image(k) )) // TODO: optimize
+  def explicit = represents.explicit
+  def isIdentity = (b == g.transversal.beta) && tail.isIdentity
+  def compatible(that: BSGSElement[E]) = g.compatible(that)
+  def size = g.representedIdentity.size
+  def equal(that: BSGSElement[E]): Boolean = that match {
+    case BSGSElementNode(g1, b1, tl1) => b == b1 && tl.equal(tl1)
+    case _ => false
+  }
+  def image(k: Dom) = g.transversal.u(b).image(tail.image(k))
+  def invImage(k: Dom) = tail.invImage(g.transversal.uinv(b).image(k))
+  def represents: E = tail.represents * g.transversal.u(b)
+  def sequence: List[Dom] = b :: tail.sequence
+  def baseImageHelper(img: Dom => Dom): List[Dom] =
+    img(g.transversal.beta) :: tail.baseImageHelper(img)
 }

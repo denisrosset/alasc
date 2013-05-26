@@ -1,5 +1,8 @@
 package com.faacets
 package perm
 package object bsgs {
-  type Base = Seq[Dom]
+  type Base = List[Dom]
+  type Predicate[E <: PermElement[E]] = (E => Boolean)
+  type BaseImageTest = (List[Dom] => Boolean)
+  def trivialTest(l: List[Dom]) = true
 }

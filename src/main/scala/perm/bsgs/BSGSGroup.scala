@@ -7,55 +7,106 @@ import scala.util.Random
 import language.implicitConversions
 import scala.language.higherKinds
 
-trait Transversal[E <: PermElement[E]] {
-  def elements: Iterator[E]
+case class SiftResult[F <: PermElement[F]](val transversalIndices: List[Dom], val remaining: F) {
+  def prepend(b: Dom) = SiftResult(b :: transversalIndices, remaining)
 }
 
-case class TransversalEnd[E <: PermElement[E]](id: E) extends Transversal[E] {
-  def elements: Iterator[E] = Iterator(id)
-}
+sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSElement[E]] {
+  // Mutable/immutable toggle
+  private[bsgs] def isImmutable: Boolean
+  private[bsgs] def makeImmutable: Unit
 
-case class TransversalNode[E <: PermElement[E]](uList: List[E], next: Transversal[E]) extends Transversal[E] {
-  def elements: Iterator[E] = for {
-    u <- uList.iterator
-    ne <- next.elements
-  } yield ne * u
-}
+  // Chain structure
+  /** Tests whether this stabilizer chain element is the last. */
+  def isTerminal: Boolean
+  /** Returns the next subgroup in the stabilizer chain.
+    * @note throws IllegalArgumentException on the terminal element. */
+  def tail: BSGSGroup[E]
+  /** Returns the length of the stabilizer chain. */
+  def length: Int
 
-case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
-  private[bsgs] val sgList: List[E],
-  private[bsgs] val id: E,
-  private[bsgs] val next: BSGSGroup[E]) extends BSGSLike[E] with PermGroup[BSGSElement[E]] {
-  def cosets(g: BSGSGroup[E]): Transversal[E] = {
-    var o = OrbitSet.fromSet(trv.beta, g.sgList)
-    var addedGenerators = g.sgList
-    var uList = List.empty[E]
-    for (b <- trv.keysIterator) {
-      if (!o.isDefinedAt(b)) {
-        val newGenerator = trv.u(b)
-        uList = newGenerator :: uList
-        addedGenerators = newGenerator :: addedGenerators
-        o = o.updated(List(newGenerator), addedGenerators)
+  // Group operations
+  def compatible(e: BSGSElement[E]): Boolean
+  def contains(e: BSGSElement[E]) = true
+  def contains(el: E) = basicSift(el).remaining.isIdentity
+  def degree = representedIdentity.size
+  def elements: Iterator[BSGSElement[E]]
+  def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
+    implicit def conversion(e: E) = e.explicit
+    val SiftResult(sequence, remaining) = basicSift(p)
+    if (remaining.isIdentity)
+      Some(fromSequence(sequence))
+    else
+      None
+  }
+  def generators = strongGenerators.iterator.map(sift(_)._1)
+  def identity: BSGSElement[E]
+  def order: BigInt
+  def random(implicit gen:scala.util.Random): BSGSElement[E]
+  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*length + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
+
+  // BSGS data
+  /** Base element for current node in stabilizer chain. */
+  def beta: Dom
+  /** Base of transversal chain. */
+  def base: Base
+  def strongGenerators: List[E]
+  def representedIdentity: E
+  def transversal: TransLike[E]
+  /** Size of transversal of this node in stabilizer chain. */
+  def transversalSize = transversal.size
+  /** List of transversal sizes. */
+  def transversalSizes: List[Int]
+
+  // BSGS operations
+  /** Sifts an element through the stabilizer chain. */
+  def sift(e: E): (BSGSElement[E], E) = {
+    assert(isImmutable)
+    val SiftResult(sequence, remaining) = basicSift(e)
+    (fromSequence(sequence), remaining)
+  }
+
+  /** Constructs a BSGS element from a sequence of transversal indices.
+    * 
+    * @param sequence Sequence of transversal indices.
+    * 
+    * @return Constructed BSGS group element.
+    */
+  def fromSequence(sequence: List[Dom]): BSGSElement[E]
+
+  /** Constructs a BSGS element from a base image. */
+  def fromBaseImage(baseImage: List[Dom]): BSGSElement[E]
+
+  /** Sifts element f through the stabilizer chains.
+    * 
+    * @param f    Element to sift through
+    * 
+    * @return Transversal indices and the part remaining after sifting.
+    */
+  def basicSift[F <: PermElement[F]](f: F)(implicit conv: E => F): SiftResult[F]
+  def transversalElement(level: Int, b: Dom): BSGSElement[E]
+
+  // Modifications
+  def cleanedBase: BSGSGroup[E]
+  def convertElements[F <: PermElement[F]](f: E => F): BSGSGroup[F]
+
+  // Orderings
+  lazy val domainOrder = {
+    assert(isImmutable)
+    val a = Array.fill[Int](degree)(-1)
+    val b = base
+    for ( (bel, i) <- b.zipWithIndex ) a(bel._0) = i
+    var k = base.length
+    for ( i <- 0 until degree ) {
+      if (a(i) == -1) {
+        a(i) = k
+        k += 1
       }
     }
-    uList = id :: uList
-    TransversalNode(uList, nextNotNullOr(next.cosets(g.next), TransversalEnd(id)))
+    a
   }
 
   object DomainOrdering extends Ordering[Dom] {
-    lazy val domainOrder = {
-      val a = Array.fill[Int](degree)(-1)
-      val b = base
-      for ( (bel, i) <- b.zipWithIndex ) a(bel._0) = i
-      var k = base.length
-      for ( i <- 0 until degree ) {
-        if (a(i) == -1) {
-          a(i) = k
-          k += 1
-        }
-      }
-      a
-    }
     def compare(a: Dom, b: Dom) = Ordering.Int.compare(domainOrder(a._0), domainOrder(b._0))
   }
 
@@ -80,241 +131,370 @@ case class BSGSGroup[E <: PermElement[E]](val trv: TransLike[E],
       0
     }
   }
+
   case class ImageOrdering(u: E) extends Ordering[Dom] {
     def compare(a: Dom, b: Dom) = DomainOrdering.compare(u.image(a), u.image(b))
   }
-  def orderedIterator(uPrev: E): Iterator[E] = for {
-    b <- trv.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
-    uThis = trv.u(b) * uPrev
-    u <- nextNotNullOr(next.orderedIterator(uThis), Iterator(uThis))
-  } yield u
 
-  /** From Holt, p. 114 GENERALSEARCH */
-  def generalSearch(uPrev: E, level: Int, test: (E, Int) => Boolean): Iterator[E] = for {
-    b <- trv.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
-    uThis = trv.u(b) * uPrev if test(uThis, level)
-    u <- nextNotNullOr(next.generalSearch(uThis, level + 1, test), Iterator(uThis))
-  } yield u
+  /** Iterates through the elements of the represented group using the order
+    * defined in Holt TODO:(add ref. of pages)
+    */
+  def orderedIterator(uPrev: E): Iterator[E]
 
+  // Search
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest = trivialTest, uPrev:E = representedIdentity, partialBaseImage: List[Dom] = List.empty[Dom]): Iterator[E]
+
+  def subgroupSearch(predicate: Predicate[E], test: BaseImageTest = trivialTest): BSGSGroup[E]
+
+  private[bsgs] case class SubgroupSearchResult(val restartFrom: Int, val levelCompleted: Int) { }
   /** Recursive exploration of the elements of this group to build the subgroup.
     * 
     * @return The subgroup new generators and the level to restart the exploration from.
     */
-  def subgroupSearchRec1(uPrev: E, level: Int, predicate: E => Boolean, test: (E, Int) => Boolean, levelCompleted: Int, partialSubgroup: BSGSConstruction[E], start: BSGSConstruction[E]): (Int, Int) = {
+  private[bsgs] def subgroupSearchRec(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom], level: Int, levelCompleted: Int, partialSubgroup: BSGSGroup[E], startSubgroup: BSGSGroup[E]): SubgroupSearchResult
+
+  // Subgroups
+  def cosets(subgroup: BSGSGroup[E]): Transversal[E]
+
+  // Base swaps
+  def deterministicBaseSwap: BSGSGroup[E]
+  def randomizedBaseSwap(implicit r: scala.util.Random): BSGSGroup[E]
+
+  // Mutable operations
+  private[bsgs] def putInOrder: Boolean
+  private[bsgs] def addStrongGeneratorsHere(l: List[E]): Unit
+  private[bsgs] def addStrongGeneratorsInChain(l: List[E]): Unit
+  private[bsgs] def addElement(e: E): Option[E]
+}
+
+final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E) extends BSGSGroup[E] {
+  // Mutable/immutable toggle
+  private[bsgs] def isImmutable = true
+  private[bsgs] def makeImmutable { }
+
+  // Chain structure
+  def isTerminal = true
+  def tail = throw new IllegalArgumentException("Cannot get tail of BSGS chain terminal.")
+  def length = 0
+  private[this] def element = BSGSElementTerminal(this)
+
+  // Group operations
+  def compatible(e: BSGSElement[E]) = e.isTerminal
+  def elements = Iterator(element)
+  def identity = element
+  def order = BigInt(1)
+  def random(implicit gen: Random) = element
+
+  // BSGS data
+  def beta = throw new IllegalArgumentException("Cannot get base element of BSGS chain terminal.")
+  def base = Nil
+  def strongGenerators = List.empty[E]
+  def representedIdentity = id
+  def transversal = throw new IllegalArgumentException("Cannot get transversal of BSGS chain terminal.")
+  def transversalSizes = Nil
+
+  // BSGS operations
+  def fromSequence(sequence: List[Dom]) = { require_(sequence.isEmpty); element }
+  def fromBaseImage(baseImage: List[Dom]) =  { require_(baseImage.isEmpty); element }
+  def basicSift[F <: PermElement[F]](f: F)(implicit conv: E => F) = SiftResult(Nil, f)
+  def transversalElement(level: Int, b: Dom) = element
+
+  // Modifications
+  def cleanedBase = this
+  def convertElements[F <: PermElement[F]](f: E => F) =
+    BSGSGroupTerminal(f(id))
+
+  // Orderings
+  def orderedIterator(uPrev: E) = Iterator(uPrev)
+
+  // Search
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev:E, partialBaseImage: List[Dom]) = if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
+
+  def subgroupSearch(predicate: E => Boolean, test: List[Dom] => Boolean = trivialTest) = this
+
+  private[bsgs] def subgroupSearchRec(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom], level: Int, levelCompleted: Int, partialSubgroup: BSGSGroup[E], startSubgroup: BSGSGroup[E]): SubgroupSearchResult = {
+    if (predicate(uPrev) && !uPrev.isIdentity) {
+      startSubgroup.addStrongGeneratorsInChain(List(uPrev))
+      return SubgroupSearchResult(levelCompleted - 1, levelCompleted)
+    }
+    return SubgroupSearchResult(level - 1, levelCompleted)
+  }
+
+  // Subgroups
+  def cosets(g: BSGSGroup[E]) = TransversalTerminal(id)
+
+  // Base swaps
+  def deterministicBaseSwap: BSGSGroup[E] = throw new IllegalArgumentException("Cannot swap base of BSGS chain terminal")
+  def randomizedBaseSwap(implicit r: scala.util.Random): BSGSGroup[E] = throw new IllegalArgumentException("Cannot swap base of BSGS chain terminal")
+
+
+  // Mutable operations
+  private[bsgs] def putInOrder = false
+  private[bsgs] def addStrongGeneratorsInChain(h: List[E]) = if(!h.isEmpty) throw new IllegalArgumentException("Cannot add strong generators to BSGS chain terminal.")
+  private[bsgs] def addStrongGeneratorsHere(h: List[E]) = if(!h.isEmpty) throw new IllegalArgumentException("Cannot add strong generators to BSGS chain terminal.")
+  private[bsgs] def addElement(e: E) = throw new IllegalArgumentException("Cannot add element to BSGS chain terminal.")
+}
+
+final class BSGSGroupNode[E <: PermElement[E]](
+  private[bsgs] var trv: TransLike[E],
+  private[bsgs] var sg: List[E],
+  private[bsgs] var id: E,
+  private[bsgs] var isImmutable: Boolean,
+  private[bsgs] var tl: BSGSGroup[E])
+    extends BSGSGroup[E] {
+  // Mutable/immutable toggle
+  def this(newTrv: TransLike[E], newSg: List[E], newId: E, newTl: BSGSGroup[E]) =
+    this(newTrv, newSg, newId, true, newTl)
+  private[bsgs] def makeImmutable {
+    isImmutable = true
+    tail.makeImmutable
+  }
+
+  // Chain structure
+  def isTerminal = false
+  def tail = tl
+  def length = tail.length + 1
+
+  // Group operations
+  def compatible(e: BSGSElement[E]) = e match {
+    case BSGSElementNode(g, b, tl) => g == this && tail.compatible(e.tail)
+    case _ => false
+  }
+  def elements = for ( n <- tail.elements; b <- trv.keysIterator ) yield
+    BSGSElementNode(this, b, n)
+  def identity = BSGSElementNode(this, trv.beta, tail.identity)
+  def order = transversalSize * tail.order
+  def random(implicit gen: Random) =
+    BSGSElementNode(this, trv.random(gen)._1, tail.random(gen))
+
+
+  // BSGS data
+  def beta = trv.beta
+  def base = beta :: tail.base
+  def strongGenerators = sg
+  def representedIdentity = id
+  def transversal = trv
+  def transversalSizes = trv.size :: tail.transversalSizes
+
+  // BSGS operations
+  def fromSequence(sequence: List[Dom]): BSGSElement[E] =
+    BSGSElementNode(this, sequence.head, tail.fromSequence(sequence.tail))
+  def fromBaseImage(baseImage: List[Dom]) =
+    BSGSElementNode(this, baseImage.head, tail.fromBaseImage(baseImage.tail.map(k => trv.uinv(baseImage.head).image(k))))
+
+  def basicSift[F <: PermElement[F]](f: F)(implicit conv: E => F) = {
+    val b = f.image(beta)
+    if (!trv.isDefinedAt(b))
+      SiftResult(Nil, f)
+    else {
+      val nextF = f * trv.uinv(b)
+      val SiftResult(transversalIndices, remaining) = tail.basicSift(nextF)
+      SiftResult(b :: transversalIndices, remaining)
+    }
+  }
+  def transversalElement(level: Int, b: Dom) = new BSGSElementNode(this, if (level == 0) b else beta, tail.transversalElement(level - 1, b))
+
+  // Modifications
+  def cleanedBase = {
+    if (trv.size == 1)
+      tail.cleanedBase
+    else
+      new BSGSGroupNode(trv, sg, id, tail.cleanedBase)
+  }
+  def convertElements[F <: PermElement[F]](f: E => F) =
+    new BSGSGroupNode(trv.mapValues(f), sg.map(f), f(id), tail.convertElements(f))
+
+  // Orderings
+  def orderedIterator(uPrev: E) =  for {
+    b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
+    uThis = transversal.u(b) * uPrev
+    u <- tail.orderedIterator(uThis)
+  } yield u
+
+  // Search
+  /** From Holt, p. 114 GENERALSEARCH */
+  def generalSearch(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom]): Iterator[E] = for {
+    b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
+    newPartialBaseImage = uPrev.image(b) :: partialBaseImage if test(newPartialBaseImage)
+    uThis = transversal.u(b) * uPrev
+    u <- tail.generalSearch(predicate, test, transversal.u(b) * uPrev, newPartialBaseImage)
+  } yield u
+
+  def subgroupSearch(predicate: Predicate[E], test: BaseImageTest) = {
+    val cons = BSGS.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
+    val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, test, id, Nil, 0, length, cons, cons)
+    assert(levelCompleted == 0)
+    cons.makeImmutable
+    cons
+  }
+
+  private[bsgs] def subgroupSearchRec(predicate: Predicate[E], test: BaseImageTest, uPrev: E, partialBaseImage: List[Dom], level: Int, levelCompleted: Int, partialSubgroup: BSGSGroup[E], startSubgroup: BSGSGroup[E]): SubgroupSearchResult = {
+    // TODO: fix bug
     var newLevelCompleted = levelCompleted
-    val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
+    val sortedOrbit = transversal.keysIterator.toList.sorted(ImageOrdering(uPrev))
     var sPrune = trv.size
     for (
       deltaP <- sortedOrbit;
-      uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
+      newPartialBaseImage = uPrev.image(deltaP) :: partialBaseImage if test(newPartialBaseImage);
+      uThis = transversal.u(deltaP) * uPrev
     ) {
-      if (sPrune < partialSubgroup.trv.size) {
-        println("Pruned")
-        return (level - 1, level)
-      }
+      if (sPrune < partialSubgroup.transversal.size)
+        return SubgroupSearchResult(level - 1, level)
       val delta = uPrev.image(deltaP)
-      val restartFrom: Int = next match {
-        case null => {
-          if (predicate(uThis) && !uThis.isIdentity) {
-            start.addStrongGeneratorsInChain(List(uThis))
-            val newRestartFrom = newLevelCompleted - 1
-            return (newRestartFrom, newLevelCompleted)
-          }
-          level
-        }
-        case _ => {
-          val nextLevel = level + 1
-          val (subRestartFrom, subLevelCompleted) = 
-            next.subgroupSearchRec1(uThis, nextLevel, predicate, test, newLevelCompleted, partialSubgroup.next, start)
-          newLevelCompleted = subLevelCompleted
-          subRestartFrom
-        }
-      }
-      if (restartFrom < level)
-        return (restartFrom, newLevelCompleted)
+      val SubgroupSearchResult(subRestartFrom, subLevelCompleted) =
+        tail.subgroupSearchRec(predicate, test, uThis, partialBaseImage, level, newLevelCompleted, partialSubgroup.tail, startSubgroup)
+      newLevelCompleted = subLevelCompleted
+      if (subRestartFrom < level)
+        return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
       sPrune -= 1
     }
-    (level - 1, level)
+    SubgroupSearchResult(level - 1, level)
   }
 
-  def subgroupSearch1(predicate: E => Boolean, test: (E, Int) => Boolean = ((e, k) => true)): BSGSGroup[E] = {
-    val cons = BSGSConstruction.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
-    val (restartFrom, levelCompleted) = subgroupSearchRec1(id, 0, predicate, test, base.length, cons, cons)
-    assert(levelCompleted == 0)
-    cons.asGroup
+  // Subgroups
+  def cosets(g: BSGSGroup[E]) = {
+    var o = OrbitSet.fromSet(trv.beta, g.strongGenerators)
+    var addedGenerators = g.strongGenerators
+    var uList = List.empty[E]
+    for (b <- trv.keysIterator) {
+      if (!o.isDefinedAt(b)) {
+        val newGenerator = trv.u(b)
+        uList = newGenerator :: uList
+        addedGenerators = newGenerator :: addedGenerators
+        o = o.updated(List(newGenerator), addedGenerators)
+      }
+    }
+    uList = id :: uList
+    TransversalNode(uList, tail.cosets(g.tail))
   }
 
-  def subgroupSearch(predicate: E => Boolean, test: (E, Int) => Boolean = ((e, k) => true)): BSGSGroup[E] = {
-    val (strongGenerators, restartFrom, levelCompleted) = subgroupSearchRec(id, 0, predicate, test, base.length) // base.length = m + 1
-    assert(levelCompleted == 0)
-    BSGSConstruction.fromBaseAndGeneratingSet(base, strongGenerators, id, trv.builder).asGroup
-  }
-  
-  /** Recursive exploration of the elements of this group to build the subgroup.
+  // Base swaps
+  /** Deterministic base swap.
     * 
-    * @return The subgroup new generators and the level to restart the exploration from.
+    * @param transComp  Transversal companion object.
+    * 
+    * @return BSGS group with first two base elements swapped.
+    * 
+    * Based on Derek Holt "Handbook of Computational Group Theory", 2005, page 103.
+    * Note that their line 3 is wrong, betaT has to be used instead of betaT1.
     */
-  def subgroupSearchRec(uPrev: E, level: Int, predicate: E => Boolean, test: (E, Int) => Boolean, levelCompleted: Int): (List[E], Int, Int) = {
-    var newLevelCompleted = levelCompleted
-    var newGenerators = List.empty[E]
-    val sortedOrbit = trv.keysIterator.toList.sorted(ImageOrdering(uPrev))
-    for (
-      deltaP <- sortedOrbit;
-      uThis = trv.u(deltaP) * uPrev if test(uThis, level) // TODO: could avoid multiplication by using another test function signature
-    ) {
-      val delta = uPrev.image(deltaP)
-      val restartFrom: Int = next match {
-        case null => {
-          if (predicate(uThis) && !uThis.isIdentity) {
-            newGenerators = uThis :: newGenerators
-            val newRestartFrom = newLevelCompleted - 1
-            return (newGenerators, newRestartFrom, newLevelCompleted)
-          }
-          level
-        }
-        case _ => {
-          val nextLevel = level + 1
-          val (subNewGenerators, subRestartFrom, subLevelCompleted) = 
-            next.subgroupSearchRec(uThis, nextLevel, predicate, test, newLevelCompleted)
-          newLevelCompleted = subLevelCompleted
-          newGenerators = newGenerators ++ subNewGenerators
-          subRestartFrom
+  def deterministicBaseSwap: BSGSGroup[E] = {
+    if (tail.isTerminal) throw new IllegalArgumentException("Cannot swap base of last element in the BSGS chain.")
+    val builder = transversal.builder
+    var tList = tail.strongGenerators.filter( t => t.image(tail.beta) == tail.beta )
+    val beta1 = tail.beta
+    var gammaSet = transversal.keysIterator.filter( k => k != beta && k != beta1 ).toSet
+    var betaT = OrbitSet.empty(beta)
+    var betaT1 = OrbitSet.empty(beta1)
+    betaT = betaT.updated(tList, tList)
+    betaT1 = betaT1.updated(tList, tList)
+    var beta1Gi = OrbitSet.empty(beta1)
+    beta1Gi = beta1Gi.updated(sg, sg)
+    val siz = (transversal.size*tail.transversal.size)/beta1Gi.size
+    def exploreGamma {
+      val gamma = gammaSet.head
+      val (x, xinv) = trv(gamma)
+      if (!tail.transversal.isDefinedAt(beta1**xinv)) {
+        var o = OrbitSet.empty(gamma)
+        o = o.updated(tList, tList)
+        gammaSet = gammaSet diff o.orbit
+      } else {
+        val y = tail.transversal.u(beta1**xinv)
+        val yx = y*x
+        if(!betaT.contains(beta**yx)) {
+          tList = yx :: tList
+          betaT = betaT.updated(List(yx), tList)
+          betaT1 = betaT1.updated(List(yx), tList)
+          gammaSet = gammaSet diff betaT.orbit
         }
       }
-      if (restartFrom < level)
-        return (newGenerators, restartFrom, newLevelCompleted)
     }
-    (newGenerators, level - 1, level)
-  }
-
-  object baseTranspose {
-    /** Deterministic base swap.
-      * 
-      * @param transComp  Transversal companion object.
-      * 
-      * @return BSGS group with first two base elements swapped.
-      * 
-      * Based on Derek Holt "Handbook of Computational Group Theory", 2005, page 103.
-      * Note that their line 3 is wrong, betaT has to be used instead of betaT1.
-      */
-    def deterministic = {
-      require(next ne null)
-      val builder = trv.builder
-      var tList = next.sgList.filter( t => t.image(next.trv.beta) == next.trv.beta )
-      val beta = trv.beta
-      val beta1 = next.trv.beta
-      var gammaSet = trv.keysIterator.filter( k => k != beta && k != beta1 ).toSet
-      var betaT = OrbitSet.empty(beta)
-      var betaT1 = OrbitSet.empty(beta1)
-      betaT = betaT.updated(tList, tList)
-      betaT1 = betaT1.updated(tList, tList)
-      var beta1Gi = OrbitSet.empty(beta1)
-      beta1Gi = beta1Gi.updated(sgList, sgList)
-      val siz = (trv.size*next.trv.size)/beta1Gi.size
-      def exploreGamma {
-        val gamma = gammaSet.head
-        val (x, xinv) = trv(gamma)
-        if (!next.trv.isDefinedAt(beta1**xinv)) {
-          var o = OrbitSet.empty(gamma)
-          o = o.updated(tList, tList)
-          gammaSet = gammaSet diff o.orbit
-        } else {
-          val y = next.trv.u(beta1**xinv)
-          val yx = y*x
-          if(!betaT.contains(beta**yx)) {
-            tList = yx :: tList
-            betaT = betaT.updated(List(yx), tList)
-            betaT1 = betaT1.updated(List(yx), tList)
-            gammaSet = gammaSet diff betaT.orbit
-          }
-        }
-      }
-      while (betaT.size < siz) {
-        assert(!gammaSet.isEmpty)
-        exploreGamma
-      }
-      val nS = sgList ++ tList
-      val nTrv = builder.empty(beta1, id).updated(nS, nS)
-      val nS1 = nS.filter( s => s.image(beta1) == beta1 )
-      val nTrv1 = builder.empty(beta, id).updated(nS1, nS1)
-      BSGSGroup(nTrv, tList, id, BSGSGroup(nTrv1, tList.filter( t => t.image(beta1) == beta1), id, next.next))
+    while (betaT.size < siz) {
+      assert(!gammaSet.isEmpty)
+      exploreGamma
     }
-    
-    def randomized(implicit r: scala.util.Random) = {
-      require(next ne null)
-      val nBeta = next.trv.beta
-      val nBeta1 = trv.beta
-      val builder = trv.builder
-      var nTrv = builder.empty(nBeta, id)
-      var nTrv1 = builder.empty(nBeta1, id)
-      var nS = sgList
-      var nS1 = sgList.filter(_.image(nBeta) == nBeta)
-      nTrv = nTrv.updated(nS, nS)
-      nTrv1 = nTrv1.updated(nS1, nS1)
-      val siz = (trv.size*next.trv.size)/nTrv.size
-      while (nTrv1.size < siz) {
-        val g = random(r)
-        val h = g.represents * nTrv.uinv(g.image(nBeta))
-        if (!nTrv1.isDefinedAt(h.image(nBeta1))) {
-          nTrv1 = nTrv1.updated(List(h), h :: nS)
-          nS1 = h :: nS1
-          nS = h :: nS
-        }
+    val nS = sg ++ tList
+    val nTrv = builder.empty(beta1, id).updated(nS, nS)
+    val nS1 = nS.filter( s => s.image(beta1) == beta1 )
+    val nTrv1 = builder.empty(beta, id).updated(nS1, nS1)
+    new BSGSGroupNode(nTrv, tList, id, new BSGSGroupNode(nTrv1, tList.filter( t => t.image(beta1) == beta1), id, tail.tail))
+  }
+
+  def randomizedBaseSwap(implicit r: scala.util.Random): BSGSGroup[E] = {
+    if (tail.isTerminal) throw new IllegalArgumentException("Cannot swap base of last element in the BSGS chain.")
+    val nBeta = tail.beta
+    val nBeta1 = beta
+    val builder = transversal.builder
+    var nTrv = builder.empty(nBeta, id)
+    var nTrv1 = builder.empty(nBeta1, id)
+    var nS = sg
+    var nS1 = sg.filter(_.image(nBeta) == nBeta)
+    nTrv = nTrv.updated(nS, nS)
+    nTrv1 = nTrv1.updated(nS1, nS1)
+    val siz = (transversal.size*tail.transversal.size)/nTrv.size
+    while (nTrv1.size < siz) {
+      val g = random(r)
+      val h = g.represents * nTrv.uinv(g.image(nBeta))
+      if (!nTrv1.isDefinedAt(h.image(nBeta1))) {
+        nTrv1 = nTrv1.updated(List(h), h :: nS)
+        nS1 = h :: nS1
+        nS = h :: nS
       }
-      BSGSGroup(nTrv, nS, id, BSGSGroup(nTrv1, nS1, id, next.next))
     }
+    new BSGSGroupNode(nTrv, nS, id, new BSGSGroupNode(nTrv1, nS1, id, tail.tail))
   }
 
-  def mapElements[F <: PermElement[F]](f: E => F): BSGSGroup[F] = new BSGSGroup[F](
-    trv.mapValues(f), sgList.map(f(_)), f(id), nextNotNullOr(next.mapElements(f), null)
-  )
-  def size: Int = nextNotNullOr(next.size, 1) + 1
-  def nextInChain: Option[BSGSGroup[E]] = nextNotNullOr(Some(next), None)
-  def compatible(e: BSGSElement[E]) = (e.g == this) && nextNotNullOr(next.compatible(e.nextEl), true)
-  def elements = for {
-    b <- trv.keysIterator
-    ne <- nextNotNullOr(next.elements, List(null).iterator)
-  } yield BSGSElement(b, ne, this)
-  def contains(e: BSGSElement[E]) = trv.isDefinedAt(e.b) && nextNotNullOr(next.contains(e.nextEl), true)
-  /** Constructs a BSGS element from a sequence of transversal indices. */
-  def fromSequence(sequence: List[Dom]): BSGSElement[E] =
-    BSGSElement(sequence.head, nextNotNullOr(next.fromSequence(sequence.tail), null), this)
 
-  /** Constructs a BSGS element from a base image. */
-  def fromBaseImage(baseImage: List[Dom]): BSGSElement[E] =
-    BSGSElement(baseImage.head, nextNotNullOr(next.fromBaseImage(baseImage.tail.map(k => trv.uinv(baseImage.head).image(k))), null), this)
-
-  def generators = sgList.iterator.map(sift(_)._1)
-
-  def trvElement(b: Dom, level: Int = 0): BSGSElement[E] = BSGSElement(if(level == 0) b else trv.beta, nextNotNullOr(next.trvElement(b, level - 1), null), this)
-
-  def identity = BSGSElement(trv.beta, nextNotNullOr(next.identity, null), this)
-
-  def random(implicit gen: scala.util.Random) =
-    BSGSElement(trv.random(gen)._1, nextNotNullOr(next.random(gen), null), this)
-
-  def degree = id.size
-
-  def fromExplicit(p: Perm): Option[BSGSElement[E]] = {
-    implicit def conversion(e: E) = e.explicit
-    val (sequence, remaining) = basicSift(p)
-    if (remaining.isIdentity)
-      Some(fromSequence(sequence))
-    else
-      None
+  // Mutable operations
+  private[bsgs] def putInOrder: Boolean = {
+    assert(!isImmutable)
+    while(tail.putInOrder) { }
+    for (b <- trv.keysIterator) {
+      val ub = trv.u(b)
+      for (x <- sg) { // TODO: test if generator is trivial with more clever transversals
+        if (!trv.isDefinedAt(x.image(b)))
+          trv = trv.updated(List(x), sg)
+        val schreierGen = ub*x*trv.uinv(x.image(b))
+        addElement(schreierGen).map( someH => {
+          while(tail.putInOrder) { }
+          addStrongGeneratorsHere(List(someH))
+          return true
+        } )
+      }
+    }
+    false
   }
 
-  def sift(e: E): (BSGSElement[E], E) = {
-    val (sequence, remaining) = basicSift(e)
-    (fromSequence(sequence), remaining)
+  private[bsgs] def addStrongGeneratorsHere(l: List[E]) {
+    assert(!isImmutable)
+    sg = l ++ sg
+    trv = trv.updated(l, sg)
   }
 
-  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*size + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
+  private[bsgs] def addStrongGeneratorsInChain(l: List[E]) {
+    assert(!isImmutable)
+    addStrongGeneratorsHere(l)
+    tail.addStrongGeneratorsInChain(l.filter(_.image(beta) == beta))
+  }
 
-  def cleanedBase: BSGSGroup[E] = {
-    if (trv.size == 1)
-      nextNotNullOr(next.cleanedBase, null)
-    else
-      BSGSGroup[E](trv, sgList, id, nextNotNullOr(next.cleanedBase, null))
+  private[bsgs] def addElement(e: E): Option[E] = {
+    assert(!isImmutable)
+    val b = e.image(beta)
+    if (!trv.isDefinedAt(b)) {
+      addStrongGeneratorsHere(List(e))
+      return Some(e)
+    }
+    val h = e * trv.uinv(b)
+    assert(h.image(beta) == beta)
+    if (tail.isTerminal) {
+      if (h.isIdentity)
+        return None
+      val newBase = e.domain.find( k => h.image(k) != k ).get
+      val newTrans = trv.builder.empty(newBase, id)
+      tl = new BSGSGroupNode(newTrans, Nil, id, tl)
+      addStrongGeneratorsInChain(List(h))
+      return Some(h)
+    } else
+      tail.addElement(h).map(gen => {addStrongGeneratorsHere(List(gen)); gen})
   }
 }
