@@ -1,15 +1,31 @@
 package com.faacets
 package perm
-
+import scala.util.parsing.combinator._
 import scala.util.Random
 
-object Perm {
+trait PermParserLike extends RegexParsers {
+  def cycle = "(" ~> (repsep(oneBasedDom, ",") <~ ")")
+  def oneBasedDom: Parser[Dom] = """\d+""".r ^^ { i => Dom._1(i.toInt) }
+  def size: Parser[Int] = """\d+""".r ^^ { _.toInt }
+  def cycles(sz: Int) = rep(cycle) ^^ { cycles => (Perm(sz) /: cycles)( Perm.addCycle ) }
+}
+
+object PermParser extends PermParserLike {
+  def perm = (("Perm(" ~> size) <~ ")") >> ( sz => cycles(sz) )
+}
+
+object Perm extends DumpableCompanion[Perm] {
+  def fromTextDump(dump: String): Option[Perm] = PermParser.parse(PermParser.perm, dump).map(Some(_)).getOrElse(None)
+  def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
   def apply(n: Int) = new Perm((0 until n).toArray)
   def fromImages(imgs: Dom*) = new Perm(imgs.map(_._0).toArray)
   def apply(images: DomArray) = new Perm(images.array.asInstanceOf[Array[Int]])
 }
 
-class Perm(val arr: Array[Int]) extends PermElement[Perm] {
+class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
+  def toTextDump = "Perm("+size+")"+cyclesToText
+  def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
+  def cyclesToText = cycles.map(_.map(_._1).mkString("(",",",")")).mkString("")
   def isIdentity: Boolean = domain.forall( k => k == image(k) )
   def size = arr.size
   def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
