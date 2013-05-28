@@ -3,7 +3,7 @@ package perm
 
 import scala.util.Random
 
-trait PermElementLike extends Any {
+trait PermElementLike {
   def size: Int
   def image(k: Dom): Dom
   def images: DomArray
@@ -53,10 +53,12 @@ trait PermElementLike extends Any {
     }
   }
 }
-trait PermElement[E <: PermElement[E]] extends Any with PermElementLike with FiniteElement[E] {
+trait PermElement[E <: PermElement[E]] extends PermElementLike with FiniteElement[E] {
+  private[this] def orderRec(mul: E, acc: Int): Int = if(mul.isIdentity) acc else orderRec(this*mul, acc + 1)
+  def order = orderRec(this.asInstanceOf[E], 1)
 }
 
-trait PermGroup[E <: PermElement[E]] extends Any with FiniteGroup[E] {
+trait PermGroup[E <: PermElement[E]] extends FiniteGroup[E] {
   /** Degree of the permutation group, i.e. size of the domain. */
   def degree: Int
   /** Domain of the permutation group. */

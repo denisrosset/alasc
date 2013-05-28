@@ -43,7 +43,8 @@ class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends F
     new BaseElement(newArr)
   }
   def compatible(that: BaseElement[F]) = arr.size == that.arr.size
-  def equal(that: BaseElement[F]) = (0 until arr.size).forall( i => arr(i).equal(that.arr(i)))
+  def ===(that: BaseElement[F]) = (0 until arr.size).forall( i => arr(i) === that.arr(i))
+  override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
   def inverse = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i).inverse

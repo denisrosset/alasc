@@ -79,69 +79,69 @@ object InhWreathGroupSpecification extends Properties("InhWreathGroup") {
   import InhWreathGroupGenerators._
   type WG = InhWreathGroup[Sym, Perm, PredicateSubgroup[Sym, Perm], Perm]
   type WEG = InhWreathElement[Perm, Perm]
-  property("inverse/equal") = Prop.forAll(genElement1B) { Function.tupled(
-    (w, we) => we.inverse.inverse.equal(we)
+  property("inverse/===") = Prop.forAll(genElement1B) { Function.tupled(
+    (w, we) => we.inverse.inverse === we
   ) }
 
-  property("* / inverse / equal") = Prop.forAll(genElement2B) { Function.tupled(
-    (w, we1, we2) => (we1*we2).inverse.equal(we2.inverse*(we1.inverse))
+  property("* / inverse / ===") = Prop.forAll(genElement2B) { Function.tupled(
+    (w, we1, we2) => (we1*we2).inverse === (we2.inverse*(we1.inverse))
   ) }
 
-  property("InhPrimitiveAction/inverse/equal") = Prop.forAll(genPrimitive1) { Function.tupled(
-    (w, we, a) => a(we).inverse.equal(a(we.inverse))
+  property("InhPrimitiveAction/inverse/===") = Prop.forAll(genPrimitive1) { Function.tupled(
+    (w, we, a) => a(we).inverse === (a(we.inverse))
   ) }
 
-  property("InhImprimitiveAction/inverse/equal") = Prop.forAll(genImprimitive1) { Function.tupled(
-    (w, we, a) => a(we).inverse.equal(a(we.inverse))
+  property("InhImprimitiveAction/inverse/===") = Prop.forAll(genImprimitive1) { Function.tupled(
+    (w, we, a) => a(we).inverse === (a(we.inverse))
   ) }
 
   property("InhPrimitiveAction/inverse/explicit") = Prop.forAll(genPrimitive1) { Function.tupled(
-    (w, we, a) => a(we).inverse.explicit.equal(a(we.inverse).explicit)
+    (w, we, a) => a(we).inverse.explicit === (a(we.inverse).explicit)
   ) }
   property("InhImprimitiveAction/inverse/explicit") = Prop.forAll(genImprimitive1) { Function.tupled(
-    (w, we, a) => a(we).inverse.explicit.equal(a(we.inverse).explicit)
+    (w, we, a) => a(we).inverse.explicit === (a(we.inverse).explicit)
   ) }
 
   property("InhPrimitiveAction/inverse/image") = Prop.forAll(genPrimitive1D) { Function.tupled(
-    (w, we, a, k) => a(we).inverse.image(k) == a(we.inverse).image(k)
+    (w, we, a, k) => a(we).inverse.image(k) === a(we.inverse).image(k)
   ) }
   property("InhImprimitiveAction/inverse/image") = Prop.forAll(genImprimitive1D) { Function.tupled(
-    (w, we, a, k) => a(we).inverse.image(k) == a(we.inverse).image(k)
+    (w, we, a, k) => a(we).inverse.image(k) === a(we.inverse).image(k)
   ) }
 
   property("InhPrimitiveAction/inverse/invImage") = Prop.forAll(genPrimitive1D) { Function.tupled(
-    (w, we, a, k) => a(we.inverse).image(k) == a(we).invImage(k)
+    (w, we, a, k) => a(we.inverse).image(k) === a(we).invImage(k)
   ) }
   property("InhImprimitiveAction/inverse/invImage") = Prop.forAll(genImprimitive1D) { Function.tupled(
-    (w, we, a, k) => a(we.inverse).image(k) == a(we).invImage(k)
+    (w, we, a, k) => a(we.inverse).image(k) === a(we).invImage(k)
   ) }
 
   property("InhPrimitiveAction / *") = Prop.forAll(genPrimitive2) { Function.tupled(
-    (w, we1, we2, a) => a(we1*we2).equal(a(we1)*a(we2))
+    (w, we1, we2, a) => a(we1*we2) === (a(we1)*a(we2))
   ) }
   property("InhImprimitiveAction / *") = Prop.forAll(genImprimitive2) { Function.tupled(
-    (w, we1, we2, a) => a(we1*we2).equal(a(we1)*a(we2))
+    (w, we1, we2, a) => a(we1*we2) === (a(we1)*a(we2))
   ) }
 
   property("InhPrimitiveAction / * / explicit") = Prop.forAll(genPrimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => (a(we1).explicit*(a(we2).explicit)).equal(a(we1*we2).explicit)
+    (w, we1, we2, a, k) => (a(we1).explicit*(a(we2).explicit)) === (a(we1*we2).explicit)
   ) }
   property("InhImprimitiveAction / * / explicit") = Prop.forAll(genImprimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => (a(we1).explicit*(a(we2).explicit)).equal(a(we1*we2).explicit)
+    (w, we1, we2, a, k) => (a(we1).explicit*(a(we2).explicit)) === (a(we1*we2).explicit)
   ) }
 
   property("InhPrimitiveAction / * / inverse / explicit") = Prop.forAll(genPrimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => (a(we2).explicit.inverse*(a(we1).explicit.inverse)).equal(a((we1*we2).inverse).explicit)
+    (w, we1, we2, a, k) => (a(we2).explicit.inverse*(a(we1).explicit.inverse)) === (a((we1*we2).inverse).explicit)
   ) }
   property("InhImprimitiveAction / * / inverse / explicit") = Prop.forAll(genImprimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => (a(we2).explicit.inverse*(a(we1).explicit.inverse)).equal(a((we1*we2).inverse).explicit)
+    (w, we1, we2, a, k) => (a(we2).explicit.inverse*(a(we1).explicit.inverse)) === (a((we1*we2).inverse).explicit)
   ) }
 
   property("InhPrimitiveAction / * / image") = Prop.forAll(genPrimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) == a(we1*we2).image(k)
+    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) === a(we1*we2).image(k)
   ) }
 
   property("InhImprimitiveAction / * / image") = Prop.forAll(genImprimitive2D) { Function.tupled(
-    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) == a(we1*we2).image(k)
+    (w, we1, we2, a, k) => a(we2).image(a(we1).image(k)) === a(we1*we2).image(k)
   ) }
 }

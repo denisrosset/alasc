@@ -3,7 +3,7 @@ package perm
 
 import scala.util.Random
 
-class Sym(val degree: Int) extends AnyVal with PermGroup[Perm] {
+class Sym(val degree: Int) extends PermGroup[Perm] {
   def toTeX = TeX("{S_"+degree+"}")
   override def toString = toTeX
   def identity = Perm(degree)

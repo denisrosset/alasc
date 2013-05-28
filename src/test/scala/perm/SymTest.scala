@@ -24,6 +24,6 @@ object SymSpecification extends Properties("Sym") {
   import SymGenerators._
   property("contains/identity") = Prop.forAll(genSym) { s: Sym => s.contains(s.identity) }
   property("fromExplicit/equal") = Prop.forAll(genSymAndElement) { Function.tupled(
-    (s, e) => s.fromExplicit(e.explicit).get.equal(e) 
+    (s, e) => s.fromExplicit(e.explicit).get === e
   ) }
 }

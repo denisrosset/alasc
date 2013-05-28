@@ -41,7 +41,8 @@ abstract class InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], 
   def compatible(that: IWE) = ke.compatible(that.ke) && he.compatible(that.he)
   def make(newKe: InhBaseElement[AE], newHe: HE): IWE
   def *(that: IWE) = make(ke * (that.ke **! he), he * that.he)
-  def equal(that: IWE) = ke.equal(that.ke) && he.equal(that.he)
+  override def hashCode() = ke.hashCode() + he.hashCode()*41
+  def ===(that: IWE) = ke === that.ke && he === that.he
   def inverse = make((ke ** he).inverse, he.inverse)
   def isIdentity = ke.isIdentity && he.isIdentity
   def basePart = make(ke, he*he.inverse)

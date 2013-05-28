@@ -4,18 +4,19 @@ package perm
 import scala.util.Random
 import scala.reflect.ClassTag
 
-trait FiniteElementLike extends Any with HasTeX {
+trait FiniteElementLike extends HasTeX {
   def isIdentity: Boolean
 }
 
-trait FiniteElement[E <: FiniteElement[E]] extends Any with FiniteElementLike {
+trait FiniteElement[E <: FiniteElement[E]] extends FiniteElementLike {
   def compatible(that: E): Boolean
   def inverse: E
   def *(that: E): E
-  def equal(that: E): Boolean
+  def ===(that: E): Boolean
+  override def equals(that: Any) = if (this.getClass() == that.getClass()) this === that.asInstanceOf[E] else false
 }
 
-trait FiniteGroup[E <: FiniteElement[E]] extends Any with HasTeX {
+trait FiniteGroup[E <: FiniteElement[E]] extends HasTeX {
   /** Tests whether element e is compatible with group structure. */
   def compatible(e: E): Boolean
   /** Tests if e is contained in this group. */

@@ -32,15 +32,15 @@ object BSGSGenerators {
 
 object BSGSSpecification extends Properties("BSGS") {
   import BSGSGenerators._
-  property("trvElement") = Prop.forAll(genBSGS) { Function.tupled(
-    (s, b) => b.transversal.keysIterator.forall( k => b.transversalElement(0, k).represents.equal(b.transversal.u(k)) )
+  property("transversalElement") = Prop.forAll(genBSGS) { Function.tupled(
+    (s, b) => b.transversal.keysIterator.forall( k => b.transversalElement(0, k).represents === (b.transversal.u(k)) )
   ) }
   property("fromSequence/sequence") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
-    (s, b, se, be) => b.fromSequence(be.sequence).equal(be) 
+    (s, b, se, be) => b.fromSequence(be.sequence) === (be) 
   ) }
 
   property("fromBaseImage/baseImage") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
-    (s, b, se, be) => b.fromBaseImage(be.baseImage).equal(be) 
+    (s, b, se, be) => b.fromBaseImage(be.baseImage) === (be) 
   ) }
 
   property("fromExplicit/image") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
@@ -51,13 +51,13 @@ object BSGSSpecification extends Properties("BSGS") {
     (s, b, se, be) => be.invImage(be.b) == b.transversal.beta
   ) }
 
-  property("equal/explicit") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
-    (s, b, se, be) => be.explicit.equal(se)
+  property("===/explicit") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
+    (s, b, se, be) => be.explicit === se
   ) }
-  property("inverse/equal/explicit") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
-    (s, b, se, be) => be.inverse.explicit.equal(se.inverse)
+  property("inverse/===/explicit") = Prop.forAll(genBSGSAndElement1) { Function.tupled(
+    (s, b, se, be) => be.inverse.explicit === (se.inverse)
   ) }
   property("*/fromExplicit/explicit") = Prop.forAll(genBSGSAndElement2) { 
-   case (s: Sym, b: BSGSGroup[Perm], se1: Perm, se2: Perm, be1: BSGSElement[Perm], be2: BSGSElement[Perm]) => (be1*be2).explicit.equal(se1*se2)
+   case (s: Sym, b: BSGSGroup[Perm], se1: Perm, se2: Perm, be1: BSGSElement[Perm], be2: BSGSElement[Perm]) => (be1*be2).explicit === (se1*se2)
   }
 }

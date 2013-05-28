@@ -14,7 +14,7 @@ object BSGS {
     BSGS.randomSchreierSims(g.random, g.order, g.identity)
   }
   def randomSchreierSims[E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
-    val cons = BSGS.fromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
+    val cons = BSGS.mutableFromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
     while (cons.order < order)
       cons.addElement(randomElement)
     cons.makeImmutable
@@ -22,20 +22,26 @@ object BSGS {
   }
 
   def schreierSims[E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
-    val cons = BSGS.fromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
+    val cons = BSGS.mutableFromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
     while (cons.putInOrder) { }
+    cons.removeRedundantGenerators
     cons.makeImmutable
     cons
   }
 
+  def fromBaseAndStrongGeneratingSet[E <: PermElement[E]](base: Base, strongGeneratingSet: List[E], identity: E, transBuilder: TransBuilderLike = ExpTransBuilder): BSGSGroup[E] = {
+    val cons = mutableFromBaseAndGeneratingSet(base, strongGeneratingSet, identity, transBuilder)
+    cons.makeImmutable
+    cons
+  }
   // Internal constructions
-  private[bsgs] def fromBaseAndGeneratingSet[E <: PermElement[E]](base: Base, genSet: List[E], id: E,
+  private[bsgs] def mutableFromBaseAndGeneratingSet[E <: PermElement[E]](base: Base, genSet: List[E], id: E,
     transBuilder: TransBuilderLike = ExpTransBuilder): BSGSGroup[E] = {
     def create(beta: Dom, tailBase: List[Dom]) = {
       var trv = transBuilder.empty(beta, id)
       trv = trv.updated(genSet, genSet)
       new BSGSGroupNode(trv, genSet, id, false,
-        fromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transBuilder))
+        mutableFromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transBuilder))
     }
     base match {
       case Nil => {
@@ -52,7 +58,7 @@ object BSGS {
     }
   }
 
-  private[bsgs] def fromBase[E <: PermElement[E]](base: Base, id: E,
+  private[bsgs] def mutableFromBase[E <: PermElement[E]](base: Base, id: E,
     transBuilder: TransBuilderLike = ExpTransBuilder): BSGSGroup[E] = {
 
     def create(levelBase: Base): BSGSGroup[E] = levelBase match {
@@ -64,5 +70,4 @@ object BSGS {
     else
       create(base)
   }
-
 }

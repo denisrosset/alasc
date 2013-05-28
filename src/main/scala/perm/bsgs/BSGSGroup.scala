@@ -39,7 +39,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
     else
       None
   }
-  def generators = strongGenerators.iterator.map(sift(_)._1)
+  def generators = strongGeneratingSet.iterator.map(sift(_)._1)
   def identity: BSGSElement[E]
   def order: BigInt
   def random(implicit gen:scala.util.Random): BSGSElement[E]
@@ -50,7 +50,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   def beta: Dom
   /** Base of transversal chain. */
   def base: Base
-  def strongGenerators: List[E]
+  def strongGeneratingSet: List[E]
   def representedIdentity: E
   def transversal: TransLike[E]
   /** Size of transversal of this node in stabilizer chain. */
@@ -165,6 +165,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   private[bsgs] def addStrongGeneratorsHere(l: List[E]): Unit
   private[bsgs] def addStrongGeneratorsInChain(l: List[E]): Unit
   private[bsgs] def addElement(e: E): Option[E]
+  private[bsgs] def removeRedundantGenerators: List[E]
 }
 
 final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E) extends BSGSGroup[E] {
@@ -188,7 +189,7 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   // BSGS data
   def beta = throw new IllegalArgumentException("Cannot get base element of BSGS chain terminal.")
   def base = Nil
-  def strongGenerators = List.empty[E]
+  def strongGeneratingSet = List.empty[E]
   def representedIdentity = id
   def transversal = throw new IllegalArgumentException("Cannot get transversal of BSGS chain terminal.")
   def transversalSizes = Nil
@@ -233,6 +234,7 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   private[bsgs] def addStrongGeneratorsInChain(h: List[E]) = if(!h.isEmpty) throw new IllegalArgumentException("Cannot add strong generators to BSGS chain terminal.")
   private[bsgs] def addStrongGeneratorsHere(h: List[E]) = if(!h.isEmpty) throw new IllegalArgumentException("Cannot add strong generators to BSGS chain terminal.")
   private[bsgs] def addElement(e: E) = throw new IllegalArgumentException("Cannot add element to BSGS chain terminal.")
+  private[bsgs] def removeRedundantGenerators = List.empty[E]
 }
 
 final class BSGSGroupNode[E <: PermElement[E]](
@@ -271,7 +273,7 @@ final class BSGSGroupNode[E <: PermElement[E]](
   // BSGS data
   def beta = trv.beta
   def base = beta :: tail.base
-  def strongGenerators = sg
+  def strongGeneratingSet = sg
   def representedIdentity = id
   def transversal = trv
   def transversalSizes = trv.size :: tail.transversalSizes
@@ -321,9 +323,10 @@ final class BSGSGroupNode[E <: PermElement[E]](
   } yield u
 
   def subgroupSearch(predicate: Predicate[E], test: BaseImageTest) = {
-    val cons = BSGS.fromBaseAndGeneratingSet(base, Nil, id, trv.builder)
+    val cons = BSGS.mutableFromBaseAndGeneratingSet(base, Nil, id, trv.builder)
     val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, test, id, Nil, 0, length, cons, cons)
     assert(levelCompleted == 0)
+    cons.removeRedundantGenerators
     cons.makeImmutable
     cons
   }
@@ -353,8 +356,8 @@ final class BSGSGroupNode[E <: PermElement[E]](
 
   // Subgroups
   def cosets(g: BSGSGroup[E]) = {
-    var o = OrbitSet.fromSet(trv.beta, g.strongGenerators)
-    var addedGenerators = g.strongGenerators
+    var o = OrbitSet.fromSet(trv.beta, g.strongGeneratingSet)
+    var addedGenerators = g.strongGeneratingSet
     var uList = List.empty[E]
     for (b <- trv.keysIterator) {
       if (!o.isDefinedAt(b)) {
@@ -381,7 +384,7 @@ final class BSGSGroupNode[E <: PermElement[E]](
   def deterministicBaseSwap: BSGSGroup[E] = {
     if (tail.isTerminal) throw new IllegalArgumentException("Cannot swap base of last element in the BSGS chain.")
     val builder = transversal.builder
-    var tList = tail.strongGenerators.filter( t => t.image(tail.beta) == tail.beta )
+    var tList = tail.strongGeneratingSet.filter( t => t.image(tail.beta) == tail.beta )
     val beta1 = tail.beta
     var gammaSet = transversal.keysIterator.filter( k => k != beta && k != beta1 ).toSet
     var betaT = OrbitSet.empty(beta)
@@ -496,5 +499,27 @@ final class BSGSGroupNode[E <: PermElement[E]](
       return Some(h)
     } else
       tail.addElement(h).map(gen => {addStrongGeneratorsHere(List(gen)); gen})
+  }
+
+  private[bsgs] def removeRedundantGenerators: List[E] = {
+    assert(!isImmutable)
+    var removed = tail.removeRedundantGenerators
+    var myGenerators = strongGeneratingSet.diff(removed)
+    def tryToRemove: Boolean = {
+      for (g <- myGenerators) {
+        val newGenerators = myGenerators.diff(List(g))
+        val o = OrbitSet.fromSet(beta, newGenerators)
+        if (o.size == transversal.size) {
+          myGenerators = newGenerators
+          removed = g :: removed
+          return true
+        }
+      }
+      return false
+    }
+    while(tryToRemove) { }
+    assert( OrbitSet.fromSet(beta, myGenerators).size == transversal.size )
+    sg = myGenerators
+    removed
   }
 }

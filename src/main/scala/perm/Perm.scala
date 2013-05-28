@@ -9,7 +9,7 @@ object Perm {
   def apply(images: DomArray) = new Perm(images.array.asInstanceOf[Array[Int]])
 }
 
-class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
+class Perm(val arr: Array[Int]) extends PermElement[Perm] {
   def isIdentity: Boolean = domain.forall( k => k == image(k) )
   def size = arr.size
   def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
@@ -39,7 +39,8 @@ class Perm(val arr: Array[Int]) extends AnyVal with PermElement[Perm] {
     for (i <- 0 until size) a(arr(i)) = i
     new Perm(a)
   }
-  def equal(that: Perm) = {
+  override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
+  def ===(that: Perm) = {
     require_(compatible(that))
     arr.sameElements(that.arr)
   }

@@ -25,7 +25,7 @@ case class ActionGroup[A <: Action[F, P],
   def identity = ActionElement(g.identity, a)
   def order = g.order
   def random(implicit gen: Random) = ActionElement(g.random, a)
-  def fromExplicit(p: Perm) = elements.find(_.explicit.equal(p))
+  def fromExplicit(p: Perm) = elements.find(_.explicit === p)
 }
 
 case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElement[P]](f: F, a: A) extends PermElement[ActionElement[A, F, P]] {
@@ -36,10 +36,11 @@ case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElem
     require_(compatible(that))
     ActionElement(f*(that.f), a)
   }
-  def equal(that: Element) = {
+  def ===(that: Element) = {
     require_(compatible(that))
-    f.equal(that.f)
+    f === that.f
   }
+  override def hashCode() = f.hashCode()
   def inverse = ActionElement(f.inverse, a)
   def isIdentity = f.isIdentity
   def explicit = Perm(images)

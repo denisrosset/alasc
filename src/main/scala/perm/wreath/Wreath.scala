@@ -28,7 +28,8 @@ class WreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ke: Base
   type Element = WreathElement[AE, HE]
   def compatible(that: Element) = ke.compatible(that.ke) && he.compatible(that.he)
   def *(that: Element) = new WreathElement(ke * (that.ke **! he), he * that.he)
-  def equal(that: Element) = ke.equal(that.ke) && he.equal(that.he)
+  def ===(that: Element) = ke === that.ke && he === that.he
+  override def hashCode() = ke.hashCode() + he.hashCode()*41
   def inverse = new WreathElement((ke ** he).inverse, he.inverse)
   def isIdentity = ke.isIdentity && he.isIdentity
   def toTeX = TeX("\\big (") + ke.toTeX + TeX(",") + he.toTeX + TeX("\\big )")

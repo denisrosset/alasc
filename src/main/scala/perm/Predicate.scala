@@ -33,5 +33,5 @@ class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val pr
   }
   def elements = g.elements.filter(predicate(_))
   def generators = elements.filter(!_.isIdentity)
-  def fromExplicit(p: Perm) = elements.find(_.explicit.equal(p))
+  def fromExplicit(p: Perm) = elements.find(_.explicit === p)
 }

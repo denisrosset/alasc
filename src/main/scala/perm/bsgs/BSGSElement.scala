@@ -24,7 +24,7 @@ sealed abstract class BSGSElement[E <: PermElement[E]] extends PermElement[BSGSE
 
 final case class BSGSElementTerminal[E <: PermElement[E]](g: BSGSGroup[E]) extends BSGSElement[E] {
   def isTerminal = true
-  def compatible(that: BSGSElement[E]) = equal(that)
+  def compatible(that: BSGSElement[E]) = ===(that)
   def size = g.representedIdentity.size
   def explicit = g.representedIdentity.explicit
   def b = throw new IllegalArgumentException("Invalid operation on end of BSGS chain.")
@@ -37,7 +37,7 @@ final case class BSGSElementTerminal[E <: PermElement[E]](g: BSGSGroup[E]) exten
   def invImage(k: Dom) = k
   def sequence = Nil
   def baseImageHelper(img: Dom => Dom) = Nil
-  def equal(that: BSGSElement[E]) = that match {
+  def ===(that: BSGSElement[E]) = that match {
     case BSGSElementTerminal(g1) => true
     case _ => false
   }
@@ -51,8 +51,8 @@ final case class BSGSElementNode[E <: PermElement[E]](g: BSGSGroup[E], b: Dom, p
   def isIdentity = (b == g.transversal.beta) && tail.isIdentity
   def compatible(that: BSGSElement[E]) = g.compatible(that)
   def size = g.representedIdentity.size
-  def equal(that: BSGSElement[E]): Boolean = that match {
-    case BSGSElementNode(g1, b1, tl1) => b == b1 && tl.equal(tl1)
+  def ===(that: BSGSElement[E]): Boolean = that match {
+    case BSGSElementNode(g1, b1, tl1) => b == b1 && tl === tl1
     case _ => false
   }
   def image(k: Dom) = g.transversal.u(b).image(tail.image(k))
