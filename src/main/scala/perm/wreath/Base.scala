@@ -42,6 +42,7 @@ class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends F
     for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
     new BaseElement(newArr)
   }
+  def updated(k: Dom, newF: F) = new BaseElement(arr.updated(k._0, newF))
   def compatible(that: BaseElement[F]) = arr.size == that.arr.size
   def ===(that: BaseElement[F]) = (0 until arr.size).forall( i => arr(i) === that.arr(i))
   override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)

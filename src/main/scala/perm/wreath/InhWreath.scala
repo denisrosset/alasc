@@ -34,7 +34,7 @@ case class InhWreathElement[AE <: FiniteElement[AE], HE <: PermElement[HE]](ke: 
   def make(newKe: InhBaseElement[AE], newHe: HE) = InhWreathElement(newKe, newHe)
 }
 
-abstract class InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]] extends FiniteElement[IWE] {
+trait InhWreathElementTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]] extends FiniteElement[IWE] {
   def toTeX = TeX("\\big (") + ke.toTeX + TeX(",") + he.toTeX + TeX("\\big )")
   val ke: InhBaseElement[AE]
   val he: HE

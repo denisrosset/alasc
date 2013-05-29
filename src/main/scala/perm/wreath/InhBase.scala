@@ -42,6 +42,7 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
     for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
     new InhBaseElement(newArr)
   }
+  def updated(k: Dom, newF: F) = new InhBaseElement(arr.updated(k._0, newF))
   def compatible(that: InhBaseElement[F]) = arr.size == that.arr.size && (arr zip that.arr).forall(Function.tupled( (e1,e2) => e1.compatible(e2) ))
   override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
   def ===(that: InhBaseElement[F]) = {
