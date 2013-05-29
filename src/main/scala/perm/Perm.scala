@@ -7,7 +7,7 @@ trait PermParserLike extends RegexParsers {
   def cycle = "(" ~> (repsep(oneBasedDom, ",") <~ ")")
   def oneBasedDom: Parser[Dom] = """\d+""".r ^^ { i => Dom._1(i.toInt) }
   def size: Parser[Int] = """\d+""".r ^^ { _.toInt }
-  def cycles(sz: Int) = rep(cycle) ^^ { cycles => (Perm(sz) /: cycles)( Perm.addCycle ) }
+  def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm(sz, cycles) }
 }
 
 object PermParser extends PermParserLike {
@@ -17,9 +17,10 @@ object PermParser extends PermParserLike {
 object Perm extends DumpableCompanion[Perm] {
   def fromTextDump(dump: String): Option[Perm] = PermParser.parse(PermParser.perm, dump).map(Some(_)).getOrElse(None)
   def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
-  def apply(n: Int) = new Perm((0 until n).toArray)
+  def apply(n: Int): Perm = new Perm((0 until n).toArray)
+  def apply(n: Int, cycles: List[List[Dom]]): Perm = (Perm(n) /: cycles)( Perm.addCycle )
+  def apply(images: DomArray): Perm = new Perm(images.array.asInstanceOf[Array[Int]])
   def fromImages(imgs: Dom*) = new Perm(imgs.map(_._0).toArray)
-  def apply(images: DomArray) = new Perm(images.array.asInstanceOf[Array[Int]])
 }
 
 class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
