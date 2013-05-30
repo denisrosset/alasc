@@ -517,13 +517,17 @@ final class BSGSGroupNode[E <: PermElement[E]](
     } else
       tail.addElement(h).map(gen => {addStrongGeneratorsHere(List(gen)); gen})
   }
-
+  /** Removes the redundant generators in the strong generating set.
+    * 
+    * @note Implementation of REMOVEGENS, section 4.4.4, p.95 of Holt.
+    */
   private[bsgs] def removeRedundantGenerators: List[E] = {
     assert(!isImmutable)
     var removed = tail.removeRedundantGenerators
     var myGenerators = strongGeneratingSet.diff(removed)
     def tryToRemove: Boolean = {
-      for (g <- myGenerators) {
+      val candidatesToRemoval = myGenerators.diff(tail.strongGeneratingSet)
+      for (g <- candidatesToRemoval) {
         val newGenerators = myGenerators.diff(List(g))
         val o = OrbitSet.fromSet(beta, newGenerators)
         if (o.size == transversal.size) {
