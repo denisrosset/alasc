@@ -146,6 +146,8 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
 
   def subgroupSearch(predicate: Predicate[E], test: BaseImageTest = TrivialBaseImageTest): BSGSGroup[E]
 
+  def intersection(g: BSGSGroup[E]): BSGSGroup[E]
+
   private[bsgs] case class SubgroupSearchResult(val restartFrom: Int, val levelCompleted: Int) { }
   /** Recursive exploration of the elements of this group to build the subgroup.
     * 
@@ -220,6 +222,8 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
     }
     return SubgroupSearchResult(level - 1, levelCompleted)
   }
+
+  def intersection(g: BSGSGroup[E]) = this
 
   // Subgroups
   def cosets(g: BSGSGroup[E]) = TransversalTerminal(id)
@@ -352,6 +356,19 @@ final class BSGSGroupNode[E <: PermElement[E]](
       sPrune -= 1
     }
     SubgroupSearchResult(level - 1, level)
+  }
+
+  def intersection(h: BSGSGroup[E]): BSGSGroup[E] = {
+    case class IntersectionTest(hSubgroup: BSGSGroup[E], hPrev: E) extends BaseImageTest {
+      def apply(baseImage: Dom): (Boolean, BaseImageTest) = {
+        val b = hPrev.invImage(baseImage)
+        if (!hSubgroup.transversal.isDefinedAt(b))
+          return (false, null)
+        val uh = hSubgroup.transversal.u(b)
+        return (true, IntersectionTest(hSubgroup.tail, uh * hPrev))
+      }
+    }
+    subgroupSearch(h.contains(_), IntersectionTest(h, representedIdentity))
   }
 
   // Subgroups

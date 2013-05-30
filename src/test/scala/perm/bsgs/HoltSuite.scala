@@ -26,17 +26,36 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity, PrescribedBase(List(1,2,3,4,5,6)))
     assert(g.order == 16)
-    def test(partialBaseImage: List[Dom], level: Int): Boolean = {
-      val b = partialBaseImage.head
-      if (level == 0)
-        return b === 1 || b === 3
-      if (level == 1)
-        return b === 2
-      return true
+    case class Test(level: Int) extends BaseImageTest {
+      def apply(b: Dom): (Boolean, BaseImageTest) = {
+        if (level == 0)
+          return (b === 1 || b === 3, Test(1))
+        if (level == 1)
+          return (b === 2, Test(2))
+        return (true, Test(level + 1))
+      }
     }
     def predicate(k: Perm) = (k.image(1) === 1 || k.image(1) === 3) && k.image(2) === 2
     val printed = List("123456", "123465", "321456", "321465")
-    val els = g.generalSearch(predicate, test).toList
+    val els = g.generalSearch(predicate, Test(0)).toList
     assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
+  }
+  test("Example 4.6") {
+    import Dom.OneBased._
+    val g1 = Perm(8)(1,2,3)
+    val g2 = Perm(8)(4,5,6)
+    val g3 = Perm(8)(1,4)(2,5)(3,6)(7,8)
+    val h1 = Perm(8)(1,6)(2,4)(3,5)(7,8)
+    val h2 = Perm(8)(1,2)(3,7)(4,6)(5,8)
+    val h3 = Perm(8)(2,3,7)(4,5,8)
+    val id = Sym(8).identity
+    val g = BSGS.schreierSims(List(g1,g2,g3), id, FullBase)
+    val h = BSGS.schreierSims(List(h1,h2,h3), id, FullBase)
+    assert(g.order == 18)
+    assert(h.order == 24)
+    val ginterh = g.intersection(h)
+    val hinterg = h.intersection(g)
+    assert(ginterh.order == 6)
+    assert(hinterg.order == 6)
   }
 }
