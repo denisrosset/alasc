@@ -1,8 +1,6 @@
-package com.faacets
-package perm
+package net.alasc
 
 import org.scalacheck._
-import com.faacets.perm._
 import scala.util.Random
 
 object SymGenerators {

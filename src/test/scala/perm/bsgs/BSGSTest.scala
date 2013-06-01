@@ -1,10 +1,7 @@
-package com.faacets
-package perm
+package net.alasc
 package bsgs
 
 import org.scalacheck._
-import com.faacets.perm._
-import com.faacets.perm.bsgs._
 import scala.util.Random
 
 object BSGSGenerators {

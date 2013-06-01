@@ -1,5 +1,4 @@
-package com.faacets
-package perm
+package net.alasc
 package bsgs
 
 import org.scalatest.FunSuite

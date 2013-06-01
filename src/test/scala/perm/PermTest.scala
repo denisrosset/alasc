@@ -1,8 +1,6 @@
-package com.faacets
-package perm
+package net.alasc
 
 import org.scalacheck._
-import com.faacets.perm._
 
 object PermGenerators {
   implicit val r = scala.util.Random

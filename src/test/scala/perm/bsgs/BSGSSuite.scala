@@ -1,8 +1,8 @@
-package com.faacets.perm
+package net.alasc
+package bsgs
 
 import org.scalatest.FunSuite
 import org.scalacheck._
-import com.faacets.perm._
 
 class BSGSSuite extends FunSuite {
 /*

@@ -1,9 +1,7 @@
-package com.faacets
-package perm
+package net.alasc
 package wreath
 
 import org.scalacheck._
-import com.faacets.perm._
 import scala.util.Random
 
 object InhWreathGroupGenerators {
