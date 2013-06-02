@@ -14,11 +14,17 @@ case class TrivialAction[E <: PermElement[E]]() extends Action[E, E] {
   def apply(e: E) = e
 }
 
-case class ActionGroup[A <: Action[F, P], 
+object PermConversionAction extends Action[PermElementLike, Perm] {
+  override def hashCode = 0xfefebaba
+  override def equals(that: Any) = that == this
+  def apply(e: PermElementLike) = e.explicit
+}
+
+case class ActionGroup[
   G <: FiniteGroup[F],
   F <: FiniteElement[F],
-  P <: PermElement[P]](g: G, a: A) extends PermGroup[ActionElement[A, F, P]] {
-  type Element = ActionElement[A, F, P]
+  P <: PermElement[P]](g: G, a: Action[F, P]) extends PermGroup[ActionElement[F, P]] {
+  type Element = ActionElement[F, P]
   def degree = a(g.identity).size
   def compatible(e: Element) = g.compatible(e.f)
   def contains(e: Element) = g.contains(e.f)
@@ -30,8 +36,9 @@ case class ActionGroup[A <: Action[F, P],
   def fromExplicit(p: Perm) = elements.find(_.explicit === p)
 }
 
-case class ActionElement[A <: Action[F, P], F <: FiniteElement[F], P <: PermElement[P]](f: F, a: A) extends PermElement[ActionElement[A, F, P]] {
-  type Element = ActionElement[A, F, P]
+case class ActionElement[F <: FiniteElement[F], P <: PermElement[P]](f: F, a: Action[F, P]) extends PermElement[ActionElement[F, P]] {
+  type Element = ActionElement[F, P]
+  def source = f
   def compatible(that: Element) = a == that.a
   def *(that: Element) = {
     require_(compatible(that))

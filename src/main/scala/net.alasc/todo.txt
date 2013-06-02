@@ -1,0 +1,3 @@
+*** In Group / BSGS stuff
+- (important) allow different bases than the FullBase
+- base change using either a deterministic algorithm or a randomized one
