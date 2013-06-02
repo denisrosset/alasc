@@ -25,6 +25,7 @@ object Perm extends DumpableCompanion[Perm] {
 
 class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
   def toTextDump = "Perm("+size+")"+cyclesToText
+  override def toString = toTextDump
   def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
   def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
   def isIdentity: Boolean = domain.forall( k => k == image(k) )
