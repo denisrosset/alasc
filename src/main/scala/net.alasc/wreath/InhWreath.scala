@@ -26,7 +26,7 @@ abstract class InhWreathGroupTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], A 
   } yield make(ke, he)
   def contains(e: IWE) = k.contains(e.ke) && h.contains(e.he)
   def order = h.order * k.order
-  def random(implicit gen: Random) = make(k.random, h.random)
+  def randomElement(gen: Random) = make(k.randomElement(gen), h.randomElement(gen))
   def compatible(e: IWE) = k.compatible(e.ke) && h.compatible(e.he)
 }
 

@@ -41,7 +41,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   def generators = strongGeneratingSet.iterator.map(sift(_)._1)
   def identity: BSGSElement[E]
   def order: BigInt
-  def random(implicit gen:scala.util.Random): BSGSElement[E]
+  def randomElement(gen: Random): BSGSElement[E]
 //  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*length + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
 
   // BSGS data
@@ -185,7 +185,7 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   def elements = Iterator(element)
   def identity = element
   def order = BigInt(1)
-  def random(implicit gen: Random) = element
+  def randomElement(gen: Random) = element
 
   // BSGS data
   def beta = throw new IllegalArgumentException("Cannot get base element of BSGS chain terminal.")
@@ -271,7 +271,7 @@ final class BSGSGroupNode[E <: PermElement[E]](
     BSGSElementNode(this, b, n)
   def identity = BSGSElementNode(this, trv.beta, tail.identity)
   def order = transversalSize * tail.order
-  def random(implicit gen: Random) =
+  def randomElement(gen: Random) =
     BSGSElementNode(this, trv.random(gen)._1, tail.random(gen))
 
 

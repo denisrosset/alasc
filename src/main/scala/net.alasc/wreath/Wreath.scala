@@ -19,7 +19,7 @@ class WreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
   } yield new WreathElement(ke, he)
   def contains(e: Element) = k.contains(e.ke) && h.contains(e.he)
   def order = h.order * k.order
-  def random(implicit gen: Random) = new WreathElement(k.random, h.random)
+  def randomElement(gen: Random) = new WreathElement(k.randomElement(gen), h.randomElement(gen))
   def compatible(e: Element) = k.compatible(e.ke) && h.compatible(e.he)
 }
 

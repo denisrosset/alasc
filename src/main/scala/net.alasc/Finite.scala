@@ -37,11 +37,18 @@ trait FiniteGroup[E <: FiniteElement[E]] {
   def identity: E
   /** Order of this group. */
   def order: BigInt
+
   /** Generates a random group element.
     * 
     * @param gen Instance of random generator to use.
     */
-  def random(implicit gen: Random): E
+  def randomElement(gen: Random): E
+
+  /** Generates a random group element.
+    * 
+    * @param gen Instance of random generator to use.
+    */
+  def random(implicit gen: Random = Random) = randomElement(gen)
 
   def directCopies(n: Int)(implicit c: ClassTag[E]) = new wreath.BaseGroup[FiniteGroup[E], E](this, n)
   def elementClassTag: ClassTag[E] = ClassTag[E](identity.getClass)

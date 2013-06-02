@@ -26,7 +26,7 @@ case class ActionGroup[A <: Action[F, P],
   def generators = g.generators.map(ActionElement(_, a))
   def identity = ActionElement(g.identity, a)
   def order = g.order
-  def random(implicit gen: Random) = ActionElement(g.random, a)
+  def randomElement(gen: Random) = ActionElement(g.randomElement(gen), a)
   def fromExplicit(p: Perm) = elements.find(_.explicit === p)
 }
 

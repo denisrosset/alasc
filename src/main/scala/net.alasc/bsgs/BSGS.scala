@@ -8,14 +8,13 @@ import scala.language.higherKinds
 
 
 object BSGS {
-  def apply[G <: PermGroup[E], E <: PermElement[E]](g: G) = {
-    implicit val gen = scala.util.Random
-    BSGS.randomSchreierSims(g.random, g.order, g.identity)
+  def apply[G <: PermGroup[E], E <: PermElement[E]](g: G)(implicit gen: Random) = {
+    BSGS.randomSchreierSims(g.random(_), g.order, g.identity)
   }
-  def randomSchreierSims[E <: PermElement[E]](randomElement: => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
-    val cons = BSGS.mutableFromBase[E](baseStrategy.get(List(randomElement)), id, transBuilder)
+  def randomSchreierSims[E <: PermElement[E]](randomElement: Random => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder)(implicit gen: Random) = {
+    val cons = BSGS.mutableFromBase[E](baseStrategy.get(List(randomElement(gen))), id, transBuilder)
     while (cons.order < order)
-      cons.addElement(randomElement)
+      cons.addElement(randomElement(gen))
     cons.makeImmutable
     cons
   }

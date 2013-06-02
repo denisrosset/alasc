@@ -30,7 +30,7 @@ class BaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](a: A, n: 
     g <- a.generators
   } yield new BaseElement(identity.arr.updated(k, g))
   def order = a.order.pow(n)
-  def random(implicit gen: Random) = new BaseElement(Array.tabulate(n)(i => a.random))
+  def randomElement(gen: Random) = new BaseElement(Array.tabulate(n)(i => a.randomElement(gen)))
 }
 
 class BaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[BaseElement[F]] {

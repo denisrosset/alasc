@@ -30,7 +30,8 @@ class InhBaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](val a:
     g <- a(k).generators
   } yield new InhBaseElement(identity.arr.updated(k, g))
   def order = a.foldLeft(BigInt(1))(_*_.order)
-  def random(implicit gen: Random) = new InhBaseElement(a.map(_.random))
+  def randomElement(gen: Random) = new InhBaseElement(a.map(_.randomElement(gen)))
+  def create(f: A => F) = new InhBaseElement(a.map(f(_)))
 }
 
 class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extends FiniteElement[InhBaseElement[F]] {

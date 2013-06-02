@@ -6,11 +6,19 @@ import scala.annotation.tailrec
 
 /** Generator of random elements from generators of a group.
   * 
+  * A random bag is a set of random group elements that always generates
+  * the group;random elements are provided by multiplying elements of the
+  * bag and returning one element of the product which is removed from the bag.
+  * 
+  * The random number generator must not be changed during use.
+  * 
   * @note Straight-forward implementation of PRINITIALIZE and PRRANDOM of 
   *       section 3.2.2, pp. 70-71 of Holt
   */
-class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private var x: Array[E]) {
-  def random(implicit gen: Random) = {
+class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private var x: Array[E], val gen: Random) {
+  def random(implicit gen: Random) = randomElement(gen)
+  def randomElement(newGen: Random) = {
+    require_(gen eq newGen)
     val r = x.length
     val s = gen.nextInt(r)
     @tailrec def genNotS: Int = {
@@ -40,7 +48,7 @@ class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private
 }
 
 object RandomBag {
-  def apply[E <: FiniteElement[E]: ClassTag](xseq: Seq[E], id: E, r: Int, n: Int)(implicit gen: Random): RandomBag[E] = {
+  def apply[E <: FiniteElement[E]: ClassTag](xseq: Seq[E], id: E, r: Int, n: Int = 50, gen: Random = Random): RandomBag[E] = {
     val k = xseq.length
     require_(r >= k)
     require_(r >= 10)
@@ -48,8 +56,8 @@ object RandomBag {
     xseq.copyToArray(x)
     for (i <- k until r)
       x(i) = x(i - k)
-    val bag = new RandomBag(id, x)
-    for (i <- 0 until n) bag.random(gen)
+    val bag = new RandomBag(id, x, gen)
+    for (i <- 0 until n) bag.randomElement(gen)
     bag
   }
 }

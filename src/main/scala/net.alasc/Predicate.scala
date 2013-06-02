@@ -21,12 +21,12 @@ class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val pr
     require_(compatible(e))
     predicate(e)
   }
-  @tailrec final def random(implicit gen: Random) = {
+  @tailrec final def randomElement(gen: Random) = {
     val e = g.random
     if (predicate(e))
       e
     else
-      random
+      randomElement(gen)
   }
   def elements = g.elements.filter(predicate(_))
   def generators = elements.filter(!_.isIdentity)
