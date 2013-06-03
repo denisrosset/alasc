@@ -4,16 +4,9 @@ package wreath
 import scala.util.Random
 import scala.reflect.ClassTag
 
-case class InhWreathGroup[A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag, H <: PermGroup[HE], HE <: PermElement[HE]](a: Array[A], h: H) extends InhWreathGroupTrait[InhWreathElement[AE, HE], A, AE, H, HE] {
-  def make(ke: InhBaseElement[AE], he: HE) = InhWreathElement(ke, he)
-}
-
-abstract class InhWreathGroupTrait[IWE <: InhWreathElementTrait[IWE, AE, HE], A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag,
-  H <: PermGroup[HE], HE <: PermElement[HE]] extends FiniteGroup[IWE] {
-  val a: Array[A]
-  val h: H
+case class InhWreathGroup[IWE <: InhWreathElementTrait[IWE, AE, HE], A <: FiniteGroup[AE], AE <: FiniteElement[AE] : ClassTag, H <: PermGroup[HE], HE <: PermElement[HE]](a: Array[A], h: H, builder: (InhBaseElement[AE], HE) => IWE) extends FiniteGroup[IWE] {
+  def make(ke: InhBaseElement[AE], he: HE): IWE = builder(ke, he)
   val k = new InhBaseGroup[A, AE](a, h.degree)
-  def make(ke: InhBaseElement[AE], he: HE): IWE
   def identity = make(k.identity, h.identity)
 //  def toTeX = k.toTeX + TeX(" \\rtimes ") + h.toTeX
   def kGenerators = k.generators.map(make(_, h.identity))
