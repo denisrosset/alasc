@@ -16,7 +16,7 @@ case class TrivialAction[E <: PermElement[E]]() extends Action[E, E] {
 
 object PermConversionAction extends Action[PermElementLike, Perm] {
   override def hashCode = 0xfefebaba
-  override def equals(that: Any) = that == this
+  override def equals(that: Any) = that.asInstanceOf[AnyRef] eq this
   def apply(e: PermElementLike) = e.explicit
 }
 

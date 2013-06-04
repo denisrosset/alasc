@@ -141,7 +141,7 @@ object Group {
     val g = new Group(faithfulAction, id, knownGenerators = Some(gens.toList))
     g
   }
-  def apply[P <: PermElement[P] : ClassTag](gens: Iterable[P], identity: P)(implicit gen: Random) = {
+  def apply[P <: PermElement[P] : ClassTag](gens: Iterable[P], identity: P) = {
     require_(!gens.isEmpty) // TODO: relax and allow trivial group
     val id = if (identity eq null) gens.head*gens.head.inverse else identity
     val g = new Group(PermConversionAction, id, knownGenerators = Some(gens.toList))
