@@ -1,8 +1,6 @@
 package net.alasc
 package wreath
 
-import com.faacets.coremath.{ind2sub, sub2ind}
-
 class ImprimitiveAction[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Action[AE, Perm]) extends WreathAction[AE, HE] {
 //  def toTeX = TeX("\\text{Impr}(") + ba.toTeX + TeX(")")
   def apply(we: WreathElement[AE, HE]) = {

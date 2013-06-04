@@ -12,6 +12,12 @@ package object alasc {
     xs.foldLeft(Seq(List.empty[A])){
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
+  def ind2sub(N: Seq[Int], i: Int): Seq[Int] =
+    N.scanLeft((0, i)) { case ((rem, quot), n) => (quot % n, quot / n) }.map(_._1).tail
+
+  def sub2ind(N: Seq[Int], I: Seq[Int]): Int =
+    (N zip I).foldLeft((0, 1)) { case ((tot, mul), (n, i)) => (tot + mul * i, mul * n) }._1
+
   import scala.annotation.elidable
   import scala.annotation.elidable._
 

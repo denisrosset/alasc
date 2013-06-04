@@ -1,8 +1,6 @@
 package net.alasc
 package wreath
 
-import com.faacets.coremath.{ind2sub, sub2ind}
-
 class InhPrimitiveAction[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Array[Action[AE, Perm]]) extends InhWreathAction[IWE, AE, HE] {
   override def hashCode = 0xbabecafe + scala.util.hashing.MurmurHash3.seqHash(ba)
   override def equals(that: Any) = that match {
