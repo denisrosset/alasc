@@ -18,7 +18,7 @@ object SymGenerators {
   } yield (s, s.random, s.random)
 }
 
-object SymSpecification extends Properties("Sym") {
+object SymSpec extends Properties("Sym") {
   import SymGenerators._
   property("contains/identity") = Prop.forAll(genSym) { s: Sym => s.contains(s.identity) }
   property("fromExplicit/equal") = Prop.forAll(genSymAndElement) { Function.tupled(
