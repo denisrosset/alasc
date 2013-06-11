@@ -15,3 +15,11 @@ Similar projects include:
 * The open source C++ library [PermLib](http://www.math.uni-rostock.de/~rehn/software/permlib.html)
 * The open source C program [GAP System](http://www.gap-system.org/)
 * The closed source program [Magma](http://magma.maths.usyd.edu.au/magma/)
+
+This software is licensed under the terms of the New BSD License.
+
+YourKit is kindly supporting AlaSc open source project with its full-featured Java Profiler.
+YourKit, LLC is the creator of innovative and intelligent tools for profiling
+Java and .NET applications. Take a look at YourKit's leading software products:
+* [YourKit Java Profiler](http://www.yourkit.com/download/) and
+* [YourKit .NET Profiler](http://www.yourkit.com/dotnet/download/)
