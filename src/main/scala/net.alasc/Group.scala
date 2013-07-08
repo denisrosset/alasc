@@ -75,6 +75,8 @@ class Group[F <: FiniteElement[F] : ClassTag](
     }
   }
 
+  def strongGenerators: Seq[F] = bsgs.strongGeneratingSet.map(_.source)
+
   def generatorsList: List[F] = knownGenerators match {
     case Some(list) => list
     case None => {
