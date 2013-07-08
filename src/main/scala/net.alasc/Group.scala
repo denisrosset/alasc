@@ -91,6 +91,7 @@ class Group[F <: FiniteElement[F] : ClassTag](
   def randomElement(gen: Random) = (knownRandom, knownRandomIsUniformStateless) match {
     case (Some(rfun), true) => rfun(gen)
     case _ => {
+      bsgs
       val rfun = (gen: Random) => bsgs.randomElement(gen).represents.source
       knownRandom = Some(rfun)
       rfun(gen)
