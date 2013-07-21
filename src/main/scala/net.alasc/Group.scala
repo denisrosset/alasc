@@ -45,7 +45,7 @@ class Group[F <: FiniteElement[F] : ClassTag](
     case None => {
       require_(randomGenerator.isDefined)
       val gens = knownGenerators.getOrElse(throwIncomplete)
-      val bag = RandomBag(gens, identity, min(10, gens.length), 50, randomGenerator.get)
+      val bag = RandomBag(gens, identity, max(10, gens.length), 50, randomGenerator.get)
       val rfun = (gen: Random) => bag.randomElement(gen)
       knownRandom = Some(rfun)
       knownRandomIsUniformStateless = false
