@@ -36,6 +36,28 @@ class Group[F <: FiniteElement[F] : ClassTag](
     generators
   }
 
+  /** Returns subgroup fixing a given sequence.
+    * 
+    * @param s   Sequence to be fixed by the subgroup.
+    * 
+    * @return The subgroup fixing s.
+    */
+  def fixing[O](s: Seq[O]) = {
+    val groupBase = bsgs.base
+
+    def leaveInvariant(a: ActionElement[F, Perm]) =
+      groupBase.map(d => s(a.image(d)._0)).sameElements(s)
+
+    case class Test(base: Base) extends BaseImageTest {
+      def apply(baseImage: Dom) = {
+        val takeIt = s(base.head._0) == s(baseImage._0)
+        (takeIt, Test(base.tail))
+      }
+    }
+    val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
+    new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
+  }
+
   def throwIncomplete = throw new IllegalArgumentException("Group information is incomplete. Lookup the Group class documentation for possible combinations.")
 
   def actionElement(f: F) = ActionElement(f, faithfulAction)
@@ -160,4 +182,8 @@ object Group {
     val g = new Group(PermConversionAction, id, knownRandom = Some(rand), knownOrder = Some(order))
     g
   }
-}
+  def symmetricGroup(degree: Int) = {
+    val gens = (1 until degree).map(i => Perm(degree)(Dom._1(i), Dom._1(i+1)))
+    Group(gens, Perm(degree))
+    }
+  }

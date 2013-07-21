@@ -1,6 +1,7 @@
 package net.alasc
 
 import org.scalatest.FunSuite
+import org.scalacheck._
 
 class GroupSuite extends FunSuite {
   test("Rubik cube group order (example from GAP system)") {
@@ -15,5 +16,27 @@ class GroupSuite extends FunSuite {
     val gens = List(g1,g2,g3,g4,g5,g6)
     val g = Group(gens, Perm(48))
     assert(g.order === BigInt("43252003274489856000"))
+    val colors = List(
+      1,1,1,1,1,1,1,1,
+      2,2,2,2,2,2,2,2,
+      3,3,3,3,3,3,3,3,
+      4,4,4,4,4,4,4,4,
+      5,5,5,5,5,5,5,5,
+      6,6,6,6,6,6,6,6)
+    assert(g.fixing(colors).order === 1)
+  }
+}
+
+object GroupGenerators {
+  val genGroupAndSeq = for {
+    degree <- Gen.choose(2, 20)
+    seq <- Gen.listOfN(degree, Gen.choose(1, 5))
+  } yield (Group.symmetricGroup(degree), seq)
+}
+
+object GroupSpec extends Properties("Group") {
+  import GroupGenerators._
+  property("fixing") = Prop.forAll(genGroupAndSeq) { Function.tupled(
+    (group, seq) => group.fixing(seq).order == seq.groupBy(identity).map( kv => (2 to kv._2.length).map(BigInt(_)).fold(BigInt(1))(_*_) ).product)
   }
 }
