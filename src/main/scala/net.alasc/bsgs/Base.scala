@@ -2,6 +2,9 @@ package net.alasc
 package bsgs
 
 case class Base(list: List[Dom]) {
+  def conjugatedBy(e: PermElementLike) = {
+    Base(list.map( b => e.image(b) ))
+  }
 }
 
 trait BaseStrategy {

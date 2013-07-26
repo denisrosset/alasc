@@ -17,6 +17,10 @@ case class ExpTrans[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) e
   override def size = map.size // for speed reasons
 
   // implementation of AbstractTrans
+  def conjugatedBy(g: E): ExpTrans[E] = {
+    val ginv = g.inverse
+    ExpTrans(g.image(beta), map.map { case (k,(v,vinv)) => (g.image(k), (ginv*v*g, ginv*vinv*g)) })
+  }
   def updated(newGens: Iterable[E], allGens: Iterable[E]): ExpTrans[E] = {
     val newGensInv = newGens.map( g => (g, g.inverse) )
     var candidates = TreeMap.empty[Dom, (E, E)] ++ (

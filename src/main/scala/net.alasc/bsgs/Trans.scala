@@ -26,12 +26,14 @@ trait TransLike[E <: PermElement[E]] extends PartialFunction[Dom, (E, E)] with I
     for ((b, (ub, uinvb)) <- iterator)
       assert(ub.image(beta) == b && uinvb.image(b) == beta)
   }
+  def conjugatedBy(g: E): TransLike[E]
   def updated(newGens: Iterable[E], allGens: Iterable[E]): TransLike[E]  /** Returns a new transversal extended with s added to its generators. */
   def mapValues[F <: PermElement[F]](f: E => F): TransLike[F]
   def builder: TransBuilderLike
 }
 
 trait Trans[T[E <: PermElement[E]] <: Trans[T, E], E <: PermElement[E]] extends TransLike[E] {
+  def conjugatedBy(g: E): T[E]
   def updated(newGens: Iterable[E], allGens: Iterable[E]): T[E]  /** Returns a new transversal extended with s added to its generators. */
   def builder: TransBuilder[T]
   def mapValues[F <: PermElement[F]](f: E => F): Trans[T, F]

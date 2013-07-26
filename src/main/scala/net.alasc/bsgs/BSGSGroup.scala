@@ -158,6 +158,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   def cosets(subgroup: BSGSGroup[E]): Transversal[E]
 
   // Base swaps
+  def conjugatedBy(e: E): BSGSGroup[E]
   def deterministicBaseSwap: BSGSGroup[E]
   def randomizedBaseSwap(implicit r: scala.util.Random): BSGSGroup[E]
 
@@ -228,6 +229,7 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   def cosets(g: BSGSGroup[E]) = TransversalTerminal(id)
 
   // Base swaps
+  def conjugatedBy(e: E) = this
   def deterministicBaseSwap: BSGSGroup[E] = throw new IllegalArgumentException("Cannot swap base of BSGS chain terminal")
   def randomizedBaseSwap(implicit r: scala.util.Random): BSGSGroup[E] = throw new IllegalArgumentException("Cannot swap base of BSGS chain terminal")
 
@@ -390,6 +392,11 @@ final class BSGSGroupNode[E <: PermElement[E]](
   }
 
   // Base swaps
+  def conjugatedBy(e: E): BSGSGroup[E] = {
+    val einv = e.inverse
+    new BSGSGroupNode(trv.conjugatedBy(e), sg.map(x => einv*x*e), id, isImmutable, tl.conjugatedBy(e))
+  }
+
   /** Deterministic base swap.
     * 
     * @param transComp  Transversal companion object.

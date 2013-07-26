@@ -26,7 +26,7 @@ object PermSpec extends Properties("Perm") {
   property("===") = Prop.forAll(genPerm) { pp => pp === pp }
 
   property("*/inverse/===") = Prop.forAll(genPermPair) {
-    Function.tupled( (p1, p2) => ((p1*p2).inverse) === (p2.inverse)*(p1.inverse) )
+    case (p1, p2) => ((p1*p2).inverse) === (p2.inverse)*(p1.inverse)
   }
 
   property("image/inverse") = Prop.forAll(genPerm) {

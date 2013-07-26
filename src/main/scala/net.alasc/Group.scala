@@ -58,6 +58,20 @@ class Group[F <: FiniteElement[F] : ClassTag](
     new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
   }
 
+  def conjugatedBy(f: F): Group[F] = {
+    val finv = f.inverse
+    new Group(faithfulAction, identity,
+      knownGenerators.map( _.map( g => finv * g * f ) ),
+      None, // knownBaseForStrongGeneratorsAndAction.map( base => base.conjugatedBy(actionElement(f)) ),
+      knownOrder,
+      knownRandom.map( fun => ( (r: Random) => finv * fun(r) * f ) ),
+      knownRandomIsUniformStateless,
+      randomGenerator,
+      None, // FIXME: do a change of basis
+      transBuilder,
+      baseStrategy)
+  }
+
   def throwIncomplete = throw new IllegalArgumentException("Group information is incomplete. Lookup the Group class documentation for possible combinations.")
 
   def actionElement(f: F) = ActionElement(f, faithfulAction)

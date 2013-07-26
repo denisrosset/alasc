@@ -13,16 +13,33 @@ object ExpTransSpec extends Properties("ExpTrans") {
   } yield (Dom._1(beta), (1 to n).map(a => Sym(k).random))
 
   property("contains") = Prop.forAll(genBaseGenerators) {
-    Function.tupled( (beta, gens) => {
+    case (beta, gens) => {
       val t = ExpTransBuilder.empty(beta, Perm(gens.head.size)).updated(gens, gens)
       t.contains(beta) && (for (b <- t.keysIterator; g <- gens) yield t.isDefinedAt(g.image(b)) && t.isDefinedAt(g.inverse.image(b))).forall(b => b)
-    } )
+    }
   }
   
   property("u/uinv") = Prop.forAll(genBaseGenerators) {
-    Function.tupled( (beta, gens) => {
+    case (beta, gens) => {
       val t = ExpTransBuilder.empty(beta, Perm(gens.head.size)).updated(gens, gens)
       t.keysIterator.forall(b => t.u(b).image(beta) === b)
-    } )
+    }
+  }
+
+  property("conjugatedBy/u/uinv") = Prop.forAll(genBaseGenerators) {
+    case (beta, Seq(g, gens @ _ *)) => {
+      val t = ExpTransBuilder.empty(beta, Perm(gens.head.size)).updated(gens, gens)
+      val t1 = t.conjugatedBy(g)
+      t1.keysIterator.forall(b => t1.u(b).image(g.image(beta)) === b)
+    }
+  }
+
+  property("conjugatedBy/inverse") = Prop.forAll(genBaseGenerators) {
+    case (beta, Seq(g, gens @ _ *)) => {
+      val t = ExpTransBuilder.empty(beta, Perm(gens.head.size)).updated(gens, gens)
+      val t1 = t.conjugatedBy(g)
+      val t2 = t1.conjugatedBy(g.inverse)
+      t == t2
+    }
   }
 }
