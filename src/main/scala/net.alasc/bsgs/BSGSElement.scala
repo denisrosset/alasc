@@ -12,7 +12,7 @@ sealed abstract class BSGSElement[E <: PermElement[E]] extends PermElement[BSGSE
   def isTerminal: Boolean
   def tail: BSGSElement[E]
 //  def toTeX = TeX(sequence.mkString("\\text{B}_{"," ","}"))
-  def inverse = g.fromBaseImage(g.base.map( k => invImage(k) ))
+  def inverse = g.fromBaseImage(g.base.list.map( k => invImage(k) ))
   def sequence: List[Dom]
   def baseImage: List[Dom] =
     baseImageHelper(image)

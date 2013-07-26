@@ -93,9 +93,9 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   lazy val domainOrder = {
     assert(isImmutable)
     val a = Array.fill[Int](degree)(-1)
-    val b = base
+    val b = base.list
     for ( (bel, i) <- b.zipWithIndex ) a(bel._0) = i
-    var k = base.length
+    var k = base.list.length
     for ( i <- 0 until degree ) {
       if (a(i) == -1) {
         a(i) = k
@@ -111,7 +111,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
 
   object BSGSOrdering extends Ordering[BSGSElement[E]] {
     def compare(a: BSGSElement[E], b: BSGSElement[E]): Int = {
-      for (bel <- base) {
+      for (bel <- base.list) {
         val ord = DomainOrdering.compare(a.image(bel), b.image(bel))
         if (ord != 0)
           return ord
@@ -122,7 +122,7 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
 
   object ElementOrdering extends Ordering[E] {
     def compare(a: E, b: E): Int = {
-      for (bel <- base) {
+      for (bel <- base.list) {
         val ord = DomainOrdering.compare(a.image(bel), b.image(bel))
         if (ord != 0)
           return ord
@@ -189,7 +189,7 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
 
   // BSGS data
   def beta = throw new IllegalArgumentException("Cannot get base element of BSGS chain terminal.")
-  def base = Nil
+  def base = Base(Nil)
   def strongGeneratingSet = List.empty[E]
   def representedIdentity = id
   def transversal = throw new IllegalArgumentException("Cannot get transversal of BSGS chain terminal.")
@@ -277,7 +277,7 @@ final class BSGSGroupNode[E <: PermElement[E]](
 
   // BSGS data
   def beta = trv.beta
-  def base = beta :: tail.base
+  def base = Base(beta :: tail.base.list)
   def strongGeneratingSet = sg
   def representedIdentity = id
   def transversal = trv

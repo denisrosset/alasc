@@ -35,36 +35,36 @@ object BSGS {
   // Internal constructions
   private[bsgs] def mutableFromBaseAndGeneratingSet[E <: PermElement[E]](base: Base, genSet: List[E], id: E,
     transBuilder: TransBuilderLike = ExpTransBuilder): BSGSGroup[E] = {
-    def create(beta: Dom, tailBase: List[Dom]) = {
+    def create(beta: Dom, tailBase: Base) = {
       var trv = transBuilder.empty(beta, id)
       trv = trv.updated(genSet, genSet)
       new BSGSGroupNode(trv, genSet, id, false,
         mutableFromBaseAndGeneratingSet(tailBase, genSet.filter(_.image(beta) == beta), id, transBuilder))
     }
-    base match {
+    base.list match {
       case Nil => {
         val genNotIdentity = genSet.filter(!_.isIdentity)
         if (genNotIdentity.isEmpty)
           return BSGSGroupTerminal(id)
         else {
           for (g <- genNotIdentity; i <- 0 until g.size; k = Dom._0(i) if g.image(k) != k)
-            return create(k, Nil)
+            return create(k, Base(Nil))
           throw new IllegalArgumentException("Bad arguments.")
         }
       }
-      case hd :: tl => create(hd, tl)
+      case hd :: tl => create(hd, Base(tl))
     }
   }
 
   private[bsgs] def mutableFromBase[E <: PermElement[E]](base: Base, id: E,
     transBuilder: TransBuilderLike = ExpTransBuilder): BSGSGroup[E] = {
 
-    def create(levelBase: Base): BSGSGroup[E] = levelBase match {
+    def create(levelBase: Base): BSGSGroup[E] = levelBase.list match {
       case Nil => BSGSGroupTerminal(id)
-      case hd :: tl => new BSGSGroupNode(transBuilder.empty(hd, id), Nil, id, false, create(tl))
+      case hd :: tl => new BSGSGroupNode(transBuilder.empty(hd, id), Nil, id, false, create(Base(tl)))
     }
-    if (base.isEmpty)
-      create(List(Dom._0(0)))
+    if (base.list.isEmpty)
+      create(Base(List(Dom._0(0))))
     else
       create(base)
   }

@@ -1,6 +1,9 @@
 package net.alasc
 package bsgs
 
+case class Base(list: List[Dom]) {
+}
+
 trait BaseStrategy {
   def get(generators: List[PermElementLike]): Base
 }
@@ -10,23 +13,20 @@ case class PrescribedBase(base: Base) extends BaseStrategy {
 }
 
 object EmptyBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]): Base = {
-    elements match {
-      case Nil => List(Dom._0(0))
-      case g :: tail => {
-        for (i <- 0 until g.size)
-          if (g.image(Dom._0(i)) != Dom._0(i))
-            return List(Dom._0(i))
-        List(Dom._0(0))
-      }
+  def get(elements: List[PermElementLike]): Base = elements match {
+    case Nil => Base(List(Dom._0(0)))
+    case g :: tail => {
+      for (i <- 0 until g.size)
+        if (g.image(Dom._0(i)) != Dom._0(i))
+          return Base(List(Dom._0(i)))
+      Base(List(Dom._0(0)))
     }
   }
 }
 
 object FullBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]) = {
+  def get(elements: List[PermElementLike]) = Base({
     val n = elements.head.size
-      (0 until n).toList.map(Dom._0(_))
-  }
+    (0 until n).toList.map(Dom._0(_))
+  })
 }
-

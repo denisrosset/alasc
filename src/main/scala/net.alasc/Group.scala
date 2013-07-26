@@ -46,12 +46,12 @@ class Group[F <: FiniteElement[F] : ClassTag](
     val groupBase = bsgs.base
 
     def leaveInvariant(a: ActionElement[F, Perm]) =
-      groupBase.map(d => s(a.image(d)._0)).sameElements(s)
+      groupBase.list.map(d => s(a.image(d)._0)).sameElements(s)
 
     case class Test(base: Base) extends BaseImageTest {
       def apply(baseImage: Dom) = {
-        val takeIt = s(base.head._0) == s(baseImage._0)
-        (takeIt, Test(base.tail))
+        val takeIt = s(base.list.head._0) == s(baseImage._0)
+        (takeIt, Test(Base(base.list.tail)))
       }
     }
     val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
