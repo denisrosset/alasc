@@ -22,7 +22,7 @@ class HoltSuite extends FunSuite {
     val g1 = Perm(6)(1,2,3,4)
     val g2 = Perm(6)(2,4)
     val g3 = Perm(6)(5,6)
-    val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity, PrescribedBase(List(1,2,3,4,5,6)))
+    val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity, PrescribedBase(Base(List(1,2,3,4,5,6))))
     assert(g.order == 16)
     case class Test(level: Int) extends BaseImageTest {
       def apply(b: Dom): (Boolean, BaseImageTest) = {
