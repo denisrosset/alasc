@@ -11,11 +11,13 @@ trait FiniteElementLike {
 }
 
 trait FiniteElement[E <: FiniteElement[E]] extends FiniteElementLike {
+  self: E =>
   def compatible(that: FiniteElementLike) = try {
     compatible(that.asInstanceOf[E])
   } catch {
     case e: ClassCastException => false
   }
+  def conjugatedBy(e: E): E = (e.inverse) * this * e
   def compatible(that: E): Boolean
   def inverse: E
   def *(that: E): E

@@ -56,6 +56,7 @@ trait PermElementLike extends FiniteElementLike {
   }
 }
 trait PermElement[E <: PermElement[E]] extends PermElementLike with FiniteElement[E] {
+  self: E =>
   def permMul(that: PermElementLike) = this*(that.asInstanceOf[E])
 }
 
