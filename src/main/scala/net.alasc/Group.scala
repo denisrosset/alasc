@@ -149,6 +149,9 @@ class Group[F <: FiniteElement[F] : ClassTag](
     that
   }
 
+  def isSubgroup(potentialSubgroup: Group[F]) =
+    this.intersection(potentialSubgroup).order == potentialSubgroup.order
+
   def intersection(that: Group[F]) = {
     val newBSGS = bsgs.intersection(madeCompatible(that).bsgs)
     new Group(faithfulAction, 

@@ -17,6 +17,7 @@ final class DomArray private[alasc] (val array: Array[Int]) extends IndexedSeq[D
   def length = array.length
   def zeroBased = array
   def oneBased: Array[Int] = array.map(_+1)
+  override def toList = array.toList.map(Dom._0(_))
 }
 
 object DomArray {
