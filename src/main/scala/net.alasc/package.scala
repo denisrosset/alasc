@@ -12,6 +12,12 @@ package object alasc {
     xs.foldLeft(Seq(List.empty[A])){
       (x, y) => for (a <- x.view; b <- y) yield a :+ b }
 
+  def bind2sub(N: Seq[BigInt], i: BigInt): Seq[BigInt] =
+    N.scanLeft((BigInt(0), i)) { case ((rem, quot), n) => (quot % n, quot / n) }.map(_._1).tail
+
+  def bsub2ind(N: Seq[BigInt], I: Seq[BigInt]): BigInt =
+    (N zip I).foldLeft((BigInt(0), BigInt(1))) { case ((tot, mul), (n, i)) => (tot + mul * i, mul * n) }._1
+
   def ind2sub(N: Seq[Int], i: Int): Seq[Int] =
     N.scanLeft((0, i)) { case ((rem, quot), n) => (quot % n, quot / n) }.map(_._1).tail
 

@@ -11,6 +11,9 @@ sealed abstract class Transversal[E <: PermElement[E]] {
   def tail: Transversal[E]
 
   def elements: Iterator[E]
+
+  def representatives: List[E]
+  def sizes: List[Int]
 }
 
 private[bsgs] final case class TransversalTerminal[E <: PermElement[E]](val id: E) extends Transversal[E] {
@@ -18,6 +21,8 @@ private[bsgs] final case class TransversalTerminal[E <: PermElement[E]](val id: 
   def tail = throw new IllegalArgumentException("Cannot get tail of Transversal terminal.")
 
   def elements: Iterator[E] = Iterator(id)
+  def representatives = Nil
+  def sizes = Nil
 }
 
 private[bsgs] final case class TransversalNode[E <: PermElement[E]](val uList: List[E], val tl: Transversal[E]) extends Transversal[E] {
@@ -27,4 +32,6 @@ private[bsgs] final case class TransversalNode[E <: PermElement[E]](val uList: L
     u <- uList.iterator
     ne <- tail.elements
   } yield ne * u
+  def representatives = uList
+  def sizes = uList.size :: tail.sizes
 }
