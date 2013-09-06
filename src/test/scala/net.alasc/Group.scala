@@ -25,6 +25,12 @@ class GroupSuite extends FunSuite {
       6,6,6,6,6,6,6,6)
     assert(g.fixing(colors).order === 1)
   }
+
+  test("Removing strong generators") {
+    import Dom.OneBased._
+    val g = Group(List(Perm(8)(1,2),Perm(8)(2,3),Perm(8)(3,4,5,6),Perm(8)(3,4,7,8)),Perm(8))
+    assert(g.order == 40320)
+  }
 }
 
 object GroupGenerators {
