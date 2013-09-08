@@ -49,6 +49,24 @@ trait BSGSMutable[E <: PermElement[E]] {
       }
     }
   }
+  private[bsgs] def collectAllGenerators: Set[E] = {
+    this match {
+      case g: BSGSGroupTerminal[E] => Set.empty[E]
+      case g: BSGSGroupNode[E] => g.tail.collectAllGenerators ++ g.sg
+    }
+  }
+  private[bsgs] def replaceGenerators(gens: List[E]) {
+    this match {
+      case g: BSGSGroupTerminal[E] => { }
+      case g: BSGSGroupNode[E] => {
+        g.sg = gens
+        g.tail.replaceGenerators(gens.filter(_.image(g.beta) == g.beta))
+      }
+    }
+  }
+  private[bsgs] def cleanupGenerators {
+    replaceGenerators(collectAllGenerators.toList)
+  }
   private[bsgs] def addElement(e: E): Option[E] = this match {
     case g: BSGSGroupTerminal[E] => throw new IllegalArgumentException("Cannot add element to BSGS chain terminal.")
     case g: BSGSGroupNode[E] => {

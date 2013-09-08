@@ -22,6 +22,7 @@ object BSGS {
   def schreierSims[E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
     val cons = BSGS.mutableFromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
     while (cons.putInOrder) { }
+    cons.cleanupGenerators
     cons.removeRedundantGenerators
     cons.makeImmutable
     cons

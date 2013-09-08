@@ -22,6 +22,7 @@ trait BSGSSearch[E <: PermElement[E]] {
       val cons = BSGS.mutableFromBaseAndGeneratingSet(g.base, Nil, g.id, g.trv.builder)
       val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, test, g.id, 0, g.length, cons, cons)
       assert(levelCompleted == 0)
+      cons.cleanupGenerators
       cons.removeRedundantGenerators
       cons.makeImmutable
       cons
