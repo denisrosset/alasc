@@ -13,6 +13,7 @@ case class ExpTrans[E <: PermElement[E]](beta: Dom, map: TreeMap[Dom, (E, E)]) e
   def mapValues[F <: PermElement[F]](f: E => F): ExpTrans[F] = new ExpTrans(beta, TreeMap.empty[Dom, (F, F)] ++ map.mapValues( Function.tupled( (u, uinv) => (f(u), f(uinv)) )))
   // implementation of Iterable
   def isDefinedAt(b: Dom) = map.isDefinedAt(b)
+  override def keysIterator = map.keysIterator
   def iterator = map.iterator
   override def size = map.size // for speed reasons
 
