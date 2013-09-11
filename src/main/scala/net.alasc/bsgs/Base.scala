@@ -8,15 +8,15 @@ case class Base(list: List[Dom]) {
 }
 
 trait BaseStrategy {
-  def get(generators: List[PermElementLike]): Base
+  def get(generators: List[PermElementLike], identity: PermElementLike): Base
 }
 
 case class PrescribedBase(base: Base) extends BaseStrategy {
-  def get(generators: List[PermElementLike]) = base
+  def get(generators: List[PermElementLike], identity: PermElementLike) = base
 }
 
 object EmptyBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]): Base = elements match {
+  def get(elements: List[PermElementLike], identity: PermElementLike): Base = elements match {
     case Nil => Base(List(Dom._0(0)))
     case g :: tail => {
       for (i <- 0 until g.size)
@@ -28,8 +28,8 @@ object EmptyBase extends BaseStrategy {
 }
 
 object FullBase extends BaseStrategy {
-  def get(elements: List[PermElementLike]) = Base({
-    val n = elements.head.size
+  def get(elements: List[PermElementLike], identity: PermElementLike) = Base({
+    val n = identity.size
     (0 until n).toList.map(Dom._0(_))
   })
 }

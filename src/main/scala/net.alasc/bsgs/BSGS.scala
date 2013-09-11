@@ -12,7 +12,7 @@ object BSGS {
     BSGS.randomSchreierSims(g.random(_), g.order, g.identity)
   }
   def randomSchreierSims[E <: PermElement[E]](randomElement: Random => E, order: BigInt, id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder)(implicit gen: Random) = {
-    val cons = BSGS.mutableFromBase[E](baseStrategy.get(List(randomElement(gen))), id, transBuilder)
+    val cons = BSGS.mutableFromBase[E](baseStrategy.get(List(randomElement(gen)), id), id, transBuilder)
     while (cons.order < order)
       cons.addElement(randomElement(gen))
     cons.makeImmutable
@@ -20,7 +20,7 @@ object BSGS {
   }
 
   def schreierSims[E <: PermElement[E]](generators: List[E], id: E, baseStrategy: BaseStrategy = EmptyBase, transBuilder: TransBuilderLike = ExpTransBuilder) = {
-    val cons = BSGS.mutableFromBaseAndGeneratingSet(baseStrategy.get(generators), generators, id, transBuilder)
+    val cons = BSGS.mutableFromBaseAndGeneratingSet(baseStrategy.get(generators, id), generators, id, transBuilder)
     while (cons.putInOrder) { }
     cons.cleanupGenerators
     cons.removeRedundantGenerators

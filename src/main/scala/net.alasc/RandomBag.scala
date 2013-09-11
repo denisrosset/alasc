@@ -50,6 +50,7 @@ class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private
 object RandomBag {
   def apply[E <: FiniteElement[E]: ClassTag](xseq: Seq[E], id: E, r: Int, n: Int = 50, gen: Random = Random): RandomBag[E] = {
     val k = xseq.length
+    assert(k > 0)
     require_(r >= k)
     require_(r >= 10)
     var x = new Array[E](r)
