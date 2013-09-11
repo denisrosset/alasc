@@ -33,16 +33,18 @@ class GroupSuite extends FunSuite {
   }
 }
 
+
 object GroupGenerators {
   val genGroupAndSeq = for {
     degree <- Gen.choose(2, 20)
     seq <- Gen.listOfN(degree, Gen.choose(1, 5))
   } yield (Group.symmetricGroup(degree), seq)
+
 }
 
 object GroupSpec extends Properties("Group") {
   import GroupGenerators._
-  property("fixing") = Prop.forAll(genGroupAndSeq) { Function.tupled(
-    (group, seq) => group.fixing(seq).order == seq.groupBy(identity).map( kv => (2 to kv._2.length).map(BigInt(_)).fold(BigInt(1))(_*_) ).product)
+  property("fixing") = Prop.forAll(genGroupAndSeq) {
+    case (group, seq) => group.fixing(seq).order == seq.groupBy(identity).map( kv => (2 to kv._2.length).map(BigInt(_)).fold(BigInt(1))(_*_) ).product
   }
 }
