@@ -84,8 +84,6 @@ sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSEleme
   // Modifications
   def convertElements[F <: PermElement[F]](f: E => F): BSGSGroup[F]
 
-  // Subgroups
-  def cosets(subgroup: BSGSGroup[E]): Transversal[E]
 }
 
 final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E) extends BSGSGroup[E] {
@@ -123,9 +121,6 @@ final case class BSGSGroupTerminal[E <: PermElement[E]] private[bsgs](val id: E)
   // Modifications
   def convertElements[F <: PermElement[F]](f: E => F) =
     BSGSGroupTerminal(f(id))
-
-  // Subgroups
-  def cosets(g: BSGSGroup[E]) = TransversalTerminal(id)
 }
 
 final class BSGSGroupNode[E <: PermElement[E]](
@@ -190,21 +185,4 @@ final class BSGSGroupNode[E <: PermElement[E]](
   // Modifications
   def convertElements[F <: PermElement[F]](f: E => F) =
     new BSGSGroupNode(trv.mapValues(f), sg.map(f), f(id), tail.convertElements(f))
-
-  // Subgroups
-  def cosets(g: BSGSGroup[E]) = {
-    var o = OrbitSet.fromSet(trv.beta, g.strongGeneratingSet)
-    var addedGenerators = g.strongGeneratingSet
-    var uList = List.empty[E]
-    for (b <- trv.keysIterator) {
-      if (!o.isDefinedAt(b)) {
-        val newGenerator = trv.u(b)
-        uList = newGenerator :: uList
-        addedGenerators = newGenerator :: addedGenerators
-        o = o.updated(List(newGenerator), addedGenerators)
-      }
-    }
-    uList = id :: uList
-    TransversalNode(uList, tail.cosets(g.tail))
-  }
 }
