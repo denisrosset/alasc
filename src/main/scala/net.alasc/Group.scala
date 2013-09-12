@@ -97,9 +97,6 @@ class Group[F <: FiniteElement[F] : ClassTag](
         case (Some(base), Some(sgs)) => BSGS.fromBaseAndStrongGeneratingSet(base, sgs.map(actionElement(_)), actionElement(identity), transBuilder)
         // if not, we have to use the Schreier Sims construction
         case _ => (randomGenerator, knownOrder, knownRandom, knownGenerators) match {
-          // specialized case for trivial group - will avoid constructing a random bag when there are no generators
-/*          case (_, Some(ko), _, _) if ko == 1 =>
-            BSGS.schreierSims(List.empty[ActionElement[F, Perm]], actionElement(identity), baseStrategy, transBuilder)*/
           // either the randomized Schreier-Sims algorithm with the user provided random function
           case (Some(rg), Some(ko), Some(r), _) => BSGS.randomSchreierSims(actionElement _ compose r, ko, actionElement(identity), baseStrategy, transBuilder)(rg)
           // or the randomized Schreier-Sims algorithm with a random bag we construct out of the group generators
