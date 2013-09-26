@@ -10,7 +10,7 @@ case class SiftResult[F <: PermElement[F]](val transversalIndices: List[Dom], va
   def prepend(b: Dom) = SiftResult(b :: transversalIndices, remaining)
 }
 
-sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSElement[E]] with BSGSOrderings[E] with BSGSSearch[E] with BSGSMutable[E] with BSGSBase[E] with BSGSLexicographic[E] {
+sealed abstract class BSGSGroup[E <: PermElement[E]] extends PermGroup[BSGSElement[E]] with BSGSOrderings[E] with BSGSSearch[E] with BSGSMutable[E] with BSGSBase[E] with BSGSLexicographic[E] with BSGSCheck[E] {
   // Chain structure
   /** Tests whether this stabilizer chain element is the last. */
   def isTerminal: Boolean
