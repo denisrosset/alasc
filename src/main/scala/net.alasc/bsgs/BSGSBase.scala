@@ -4,6 +4,30 @@ package bsgs
 trait BSGSBase[E <: PermElement[E]] {
   self: BSGSGroup[E] =>
 
+  def insertBasePoint(basePoint: Dom): BSGSGroup[E] = this match {
+    case terminal: BSGSGroupTerminal[E] => new BSGSGroupNode(transversal.builder.empty(basePoint, representedIdentity),
+      Nil, representedIdentity, isImmutable, this)
+    case node: BSGSGroupNode[E] => {
+      require_(!base.list.contains(basePoint))
+      val orbit = OrbitSet.fromSet(basePoint, strongGeneratingSet)
+      if (orbit.size > 1)
+        new BSGSGroupNode(node.trv, node.sg, node.id, node.isImmutable, tail.insertBasePoint(basePoint))
+      else
+        new BSGSGroupNode(transversal.builder.empty(basePoint, representedIdentity),
+          strongGeneratingSet, representedIdentity, isImmutable, this)
+    }
+  }
+
+  def withBase(newBase: Base): BSGSGroup[E] = ???
+
+  def withRedundantBasePoint(newBasePoint: Dom): BSGSGroup[E] = this match {
+    case g: BSGSGroupTerminal[E] => new BSGSGroupNode(transversal.builder.empty(newBasePoint, g.id), Nil, g.id, isImmutable, this)
+    case g: BSGSGroupNode[E] => {
+      require_(beta != newBasePoint)
+      tail.withRedundantBasePoint(newBasePoint)
+    }
+  }
+
   def cleanedBase: BSGSGroup[E] = this match {
     case g: BSGSGroupTerminal[E] => g
     case g: BSGSGroupNode[E] => {
@@ -100,4 +124,3 @@ trait BSGSBase[E <: PermElement[E]] {
     }
   }
 }
-
