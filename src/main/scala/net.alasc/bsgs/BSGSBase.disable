@@ -1,13 +1,13 @@
 package net.alasc
 package bsgs
 
-trait BSGSBase[E <: PermElement[E]] {
-  self: BSGSGroup[E] =>
+trait BSGSBase[F <: FiniteElement[F], E <: PermElement[E]] {
+  self: Group[F, E]#BSGSGroup =>
 
-  def insertBasePoint(basePoint: Dom): BSGSGroup[E] = this match {
-    case terminal: BSGSGroupTerminal[E] => new BSGSGroupNode(transversal.builder.empty(basePoint, representedIdentity),
+  def insertBasePoint(basePoint: Dom): Group[F, E]#BSGSGroup = this match {
+    case terminal: BSGSGroupTerminal => new BSGSGroupNode(transversal.builder.empty(basePoint, representedIdentity),
       Nil, representedIdentity, isImmutable, this)
-    case node: BSGSGroupNode[E] => {
+    case node: BSGSGroupNode => {
       require_(!base.list.contains(basePoint))
       val orbit = OrbitSet.fromSet(basePoint, strongGeneratingSet)
       if (orbit.size > 1)
@@ -18,9 +18,9 @@ trait BSGSBase[E <: PermElement[E]] {
     }
   }
 
-  def withBase(newBase: Base): BSGSGroup[E] = ???
+  def withBase(newBase: Base): BSGSGroup = ???
 
-  def withRedundantBasePoint(newBasePoint: Dom): BSGSGroup[E] = this match {
+  def withRedundantBasePoint(newBasePoint: Dom): BSGSGroup = this match {
     case g: BSGSGroupTerminal[E] => new BSGSGroupNode(transversal.builder.empty(newBasePoint, g.id), Nil, g.id, isImmutable, this)
     case g: BSGSGroupNode[E] => {
       require_(beta != newBasePoint)

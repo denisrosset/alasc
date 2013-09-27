@@ -1,0 +1,355 @@
+  /*
+   sealed abstract class BSGS {
+
+   //    def contains(el: E) = basicSift(el).remaining.isIdentity
+   //    def degree = representedIdentity.size
+   //    def elements: Iterator[BSGSElement]
+   /*    def fromExplicit(p: Perm): Option[BSGSElement] = {
+   implicit def conversion(e: E) = e.explicit
+   val SiftResult(sequence, remaining) = basicSift(p)
+   if (remaining.isIdentity)
+   Some(fromSequence(sequence))
+   else
+   None
+   }*/
+   //  def toTeX = TeX("{}^{"+degree+"}_{"+order+"} \\text{BSGS} \\left ( \\begin{array}{" + "c"*length + "}" + base.mkString(" & ") + "\\\\" + transversalSizes.mkString(" & ") + "\\end{array} \\right )")
+
+
+   // BSGS operations
+   /** Sifts an element through the stabilizer chain. */
+   /*    def sift(e: E): (BSGSElement, E) = {
+   assert(isImmutable)
+   val SiftResult(sequence, remaining) = basicSift(e)
+   (fromSequence(sequence), remaining)
+   }*/
+
+   /** Constructs a BSGS element from a sequence of transversal indices.
+   * 
+   * @param sequence Sequence of transversal indices.
+   * 
+   * @return Constructed BSGS group element.
+   */
+   //    def fromSequence(sequence: List[Dom]): BSGSElement
+
+   /** Constructs a BSGS element from a base image. */
+   //    def fromBaseImage(baseImage: List[Dom]): BSGSElement
+
+   /** Sifts element f through the stabilizer chains.
+   * 
+   * @param f    Element to sift through
+   * 
+   * @return Transversal indices and the part remaining after sifting.
+   */
+   /*    def basicSift[F <: PermElement[F]](f: F)(implicit conv: E => F): SiftResult[F]
+   def transversalElement(level: Int, b: Dom): BSGSElement*/
+
+   // Modifications
+   //    def convertElements[F <: PermElement[F]](f: E => F): BSGSGroup[F]
+
+   }
+
+   final case class BSGSGroupTerminal private[bsgs](val id: E) extends BSGSGroup {
+   // Mutable/immutable toggle
+   //    private[bsgs] def isImmutable = true
+   //    private[bsgs] def makeImmutable { }
+
+   // Chain structure
+   /*    def isTerminal = true
+   def length = 0*/
+   //    private[this] def element = BSGSElementTerminal(this)
+
+   // Group operations
+   /*    def compatible(e: BSGSElement) = e.isTerminal
+   def elements = Iterator(element)
+
+
+   // BSGS operations
+   /*    def fromSequence(sequence: List[Dom]) = { require_(sequence.isEmpty); element }
+   def fromBaseImage(baseImage: List[Dom]) =  { require_(baseImage.isEmpty); element }
+   def transversalElement(level: Int, b: Dom) = element*/
+
+   // Modifications
+   /*    def convertElements[F <: PermElement[F]](f: E => F) =
+   BSGSGroupTerminal(f(id))*/
+   }
+   */
+   /*
+   final class BSGSGroupNode(
+   private[bsgs] var trv: TransLike[E],
+   private[bsgs] var sg: List[E],
+   private[bsgs] var id: E,
+   private[bsgs] var isImmutable: Boolean,
+   private[bsgs] var tl: BSGSGroup)
+   extends BSGSGroup {
+   // Mutable/immutable toggle
+   def this(newTrv: TransLike[E], newSg: List[E], newId: E, newTl: BSGSGroup) =
+   this(newTrv, newSg, newId, true, newTl)
+   private[bsgs] def makeImmutable {
+   isImmutable = true
+   tail.makeImmutable
+   }
+
+
+   // Group operations
+   def compatible(e: BSGSElement) = e match {
+   case BSGSElementNode(g, b, tl) => g == this && tail.compatible(e.tail)
+   case _ => false
+   }
+
+
+   // BSGS data
+   def strongGeneratingSet = sg
+   def transversal = trv
+   def transversalSizes = trv.size :: tail.transversalSizes
+
+   // BSGS operations
+   def fromSequence(sequence: List[Dom]): BSGSElement =
+   BSGSElementNode(this, sequence.head, tail.fromSequence(sequence.tail))
+   def fromBaseImage(baseImage: List[Dom]) =
+   BSGSElementNode(this, baseImage.head, tail.fromBaseImage(baseImage.tail.map(k => trv.uinv(baseImage.head).image(k))))
+
+   def basicSift[F <: PermElement[F]](f: F)(implicit conv: E => F) = {
+   }
+   def transversalElement(level: Int, b: Dom) = new BSGSElementNode(this, if (level == 0) b else beta, tail.transversalElement(level - 1, b))
+
+   // Modifications
+   def convertElements[F <: PermElement[F]](f: E => F) =
+   new BSGSGroupNode(trv.mapValues(f), sg.map(f), f(id), tail.convertElements(f))
+   }
+
+   sealed abstract class BSGSElement extends PermElement[BSGSElement] {
+   def b: Dom
+   def g: BSGSGroup
+   def isTerminal: Boolean
+   def tail: BSGSElement
+   //  def toTeX = TeX(sequence.mkString("\\text{B}_{"," ","}"))
+   def inverse = g.fromBaseImage(g.base.list.map( k => invImage(k) ))
+   def sequence: List[Dom]
+   def baseImage: List[Dom] =
+   baseImageHelper(image)
+   def baseImageHelper(img: Dom => Dom): List[Dom]
+   def images = represents.images
+   def represents: E
+   }
+
+   final case class BSGSElementTerminal(g: BSGSGroup) extends BSGSElement {
+   def isTerminal = true
+   def compatible(that: BSGSElement) = ===(that)
+   def size = g.representedIdentity.size
+   def explicit = g.representedIdentity.explicit
+   def b = throw new IllegalArgumentException("Invalid operation on end of BSGS chain.")
+   def tail = throw new IllegalArgumentException("Invalid operation on end of BSGS chain.")
+   def *(that: BSGSElement) = that
+   def represents = g.representedIdentity
+   override def inverse = this
+   def isIdentity = true
+   def image(k: Dom) = k
+   def invImage(k: Dom) = k
+   def sequence = Nil
+   def baseImageHelper(img: Dom => Dom) = Nil
+   def ===(that: BSGSElement) = that match {
+   case BSGSElementTerminal(g1) => true
+   case _ => false
+   }
+   }
+
+   final case class BSGSElementNode(g: BSGSGroup, b: Dom, private[bsgs] var tl: BSGSElement) extends BSGSElement {
+   def isTerminal = false
+   def tail = tl
+   def *(that: BSGSElement) = g.fromBaseImage(baseImage.map( k => that.image(k) )) // TODO: optimize
+   def explicit = represents.explicit
+   def isIdentity = (b == g.transversal.beta) && tail.isIdentity
+   def compatible(that: BSGSElement) = g.compatible(that)
+   def size = g.representedIdentity.size
+   def ===(that: BSGSElement): Boolean = that match {
+   case BSGSElementNode(g1, b1, tl1) => b == b1 && tl === tl1
+   case _ => false
+   }
+   def image(k: Dom) = g.transversal.u(b).image(tail.image(k))
+   def invImage(k: Dom) = tail.invImage(g.transversal.uinv(b).image(k))
+   def represents: E = tail.represents * g.transversal.u(b)
+   def sequence: List[Dom] = b :: tail.sequence
+   def baseImageHelper(img: Dom => Dom): List[Dom] =
+   img(g.transversal.beta) :: tail.baseImageHelper(img)
+   }
+
+   var knownBSGS: Option[BSGSGroup] = None
+   if (knownBSGS.isDefined) {
+   order
+   generators
+   }
+
+   /** Returns subgroup fixing a given sequence.
+   * 
+   * @param s   Sequence to be fixed by the subgroup.
+   * 
+   * @return The subgroup fixing s.
+   */
+   /*
+   FIXME: restore this functionality
+   def fixing[O](s: Seq[O]) = {
+   val groupBase = bsgs.base
+
+   def leaveInvariant(a: ActionElement[F, Perm]) =
+   groupBase.list.map(d => s(a.image(d)._0)).sameElements(s)
+
+   case class Test(base: Base) extends BaseImageTest {
+   def apply(baseImage: Dom) = {
+   val takeIt = s(base.list.head._0) == s(baseImage._0)
+   (takeIt, Test(Base(base.list.tail)))
+   }
+   }
+   val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
+   new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
+   }
+   */
+
+   def conjugatedBy(f: F): Group[F] = {
+   val finv = f.inverse
+   new Group(faithfulAction, identity,
+   knownGenerators.map( _.map( g => finv * g * f ) ),
+   None, // knownBaseForStrongGeneratorsAndAction.map( base => base.conjugatedBy(actionElement(f)) ),
+   knownOrder,
+   knownRandom.map( fun => ( (r: Random) => finv * fun(r) * f ) ),
+   knownRandomIsUniformStateless,
+   randomGenerator,
+   transBuilder,
+   baseStrategy)
+   }
+
+   def throwIncomplete = throw new IllegalArgumentException("Group information is incomplete. Lookup the Group class documentation for possible combinations.")
+
+   def actionElement(f: F) = ActionElement(f, faithfulAction)
+
+   def randomFromGeneratorsOnly = knownRandom match {
+   case Some(rfun) => rfun
+   case None => {
+   require_(randomGenerator.isDefined)
+   val gens = identity :: knownGenerators.getOrElse(throwIncomplete)
+   val bag = RandomBag(gens, identity, max(10, gens.length), 50, randomGenerator.get)
+   val rfun = (gen: Random) => bag.randomElement(gen)
+   knownRandom = Some(rfun)
+   knownRandomIsUniformStateless = false
+   rfun
+   }
+   }
+   def bsgs = knownBSGS match {
+   case Some(b) => b
+   case None => {
+   val bsgs = (knownBaseForStrongGeneratorsAndAction, knownGenerators) match {
+   // if the user provides a base, this means the provided generators from a strong generating set
+   case (Some(base), Some(sgs)) => BSGS.fromBaseAndStrongGeneratingSet(base, sgs.map(actionElement(_)), actionElement(identity), transBuilder)
+   // if not, we have to use the Schreier Sims construction
+   case _ => (randomGenerator, knownOrder, knownRandom, knownGenerators) match {
+   // either the randomized Schreier-Sims algorithm with the user provided random function
+   case (Some(rg), Some(ko), Some(r), _) => BSGS.randomSchreierSims(actionElement _ compose r, ko, actionElement(identity), baseStrategy, transBuilder)(rg)
+   // or the randomized Schreier-Sims algorithm with a random bag we construct out of the group generators
+   case (Some(rg), Some(ko), _, Some(g)) => BSGS.randomSchreierSims(actionElement _ compose randomFromGeneratorsOnly, ko, actionElement(identity), baseStrategy, transBuilder)(rg)
+   // as a fail-over, we use the deterministic Schreier-Sims algorithm
+   case (_, _, _, Some(g)) => BSGS.schreierSims(g.map(actionElement _), actionElement(identity), baseStrategy, transBuilder)
+   case _ => throwIncomplete
+   }
+   }
+   knownBSGS = Some(bsgs)
+   bsgs
+   }
+   }
+
+   def strongGenerators: Seq[F] = bsgs.strongGeneratingSet.map(_.source)
+
+   def generatorsList: List[F] = knownGenerators match {
+   case Some(list) => list
+   case None => {
+   val g = bsgs.strongGeneratingSet.map(_.source)
+   knownGenerators = Some(g)
+   g
+   }
+   }
+
+   def generators = generatorsList.iterator
+
+   def randomElement(gen: Random) = (knownRandom, knownRandomIsUniformStateless) match {
+   case (Some(rfun), true) => rfun(gen)
+   case _ => {
+   bsgs
+   val rfun = (gen: Random) => bsgs.randomElement(gen).represents.source
+   knownRandom = Some(rfun)
+   rfun(gen)
+   }
+   }
+
+   def order = knownOrder match {
+   case Some(o) => o
+   case None => {
+   val o = bsgs.order
+   knownOrder = Some(o)
+   o
+   }
+   }
+
+   def madeCompatible(that: Group[F]) = {
+   assert(that.faithfulAction == faithfulAction)
+   assert(bsgs.base == that.bsgs.base)
+   that
+   }
+   */
+   /*
+   def isSubgroup(potentialSubgroup: Group[F]) =
+   this.intersection(potentialSubgroup).order == potentialSubgroup.order
+
+   FIXME: restore this
+   def intersection(that: Group[F]) = {
+   val newBSGS = bsgs.intersection(madeCompatible(that).bsgs)
+   new Group(faithfulAction, 
+   identity,
+   knownBSGS = Some(newBSGS),
+   randomGenerator = if (randomGenerator == that.randomGenerator) randomGenerator else None)
+   }
+   def &(that: Group[F]) = intersection(that)
+   */
+
+   /*
+   override def toString = (knownGenerators match {
+   case Some(s) => "Group " + s.mkString("<", ", ", ">")
+   case None => "Unconstructed group"
+   }) + (knownOrder match {
+   case Some(o) => " of order " + o
+   case None => ""
+   })
+
+   def elements = bsgs.elements.map(_.represents.source)
+   def compatible(f: F) = true
+   def contains(f: F) = bsgs.contains(actionElement(f))
+   */
+   }
+
+   object Group {
+   /*
+   def apply[F <: FiniteElement[F] : ClassTag](faithfulAction: Action[F, Perm], gens: Iterable[F], identity: F)(implicit gen: Random) = {
+   require_(!gens.isEmpty) // TODO: relax and allow trivial group
+   val id = if (identity eq null) gens.head*gens.head.inverse else identity
+   val g = new Group(faithfulAction, id, knownGenerators = Some(gens.toList))
+   g
+   }
+   def apply[P <: PermElement[P] : ClassTag](gens: Iterable[P], identity: P) = {
+   require_(!gens.isEmpty) // TODO: relax and allow trivial group
+   val id = if (identity eq null) gens.head*gens.head.inverse else identity
+   val g = new Group(PermConversionAction, id, knownGenerators = Some(gens.toList))
+   g
+   }
+   def apply[F <: FiniteElement[F] : ClassTag](faithfulAction: Action[F, Perm], rand: Random => F, order: BigInt, identity: F)(implicit gen: Random) = {
+   val id = if (identity eq null) { val e = rand(gen); e*e.inverse } else identity
+   val g = new Group(faithfulAction, id, knownRandom = Some(rand), knownOrder = Some(order))
+   g
+   }
+   def apply[P <: PermElement[P] : ClassTag](rand: Random => P, order: BigInt, identity: P)(implicit gen: Random) = {
+   val id = if (identity eq null) { val e = rand(gen); e*e.inverse } else identity
+   val g = new Group(PermConversionAction, id, knownRandom = Some(rand), knownOrder = Some(order))
+   g
+   }
+   def symmetricGroup(degree: Int) = {
+   val gens = (1 until degree).map(i => Perm(degree)(Dom._1(i), Dom._1(i+1)))
+   Group(gens, Perm(degree))
+   }
+   */
+   }

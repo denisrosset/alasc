@@ -1,8 +1,8 @@
 package net.alasc
 package bsgs
 
-trait BSGSSearch[E <: PermElement[E]] {
-  self: BSGSGroup[E] =>
+trait BSGSSearch[F <: FiniteElement[F], E <: PermElement[E]] {
+  self: Group[F, E]#BSGSGroup =>
 
   // Search
   def generalSearch(predicate: Predicate[E], test: BaseImageTest = TrivialBaseImageTest, uPrev:E = representedIdentity): Iterator[E] = this match {

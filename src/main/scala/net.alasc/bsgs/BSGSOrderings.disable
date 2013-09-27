@@ -1,8 +1,8 @@
 package net.alasc
 package bsgs
 
-trait BSGSOrderings[E <: PermElement[E]] {
-  self: BSGSGroup[E] =>
+trait BSGSOrderings[F <: FiniteElement[F], E <: PermElement[E]] {
+  self: Group[F, E]#BSGSGroup =>
 
   lazy val domainOrder = {
     assert(isImmutable)

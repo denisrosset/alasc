@@ -1,8 +1,8 @@
 package net.alasc
 package bsgs
 
-trait BSGSCheck[E <: PermElement[E]] {
-  self: BSGSGroup[E] =>
+trait BSGSCheck[F <: FiniteElement[F], E <: PermElement[E]] {
+  self: Group[F, E]#BSGSGroup =>
 
   /** Checks the consistency of the BSGS chain.
     * 
