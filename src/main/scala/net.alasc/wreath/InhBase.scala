@@ -26,7 +26,7 @@ class InhBaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](val a:
   def elements = iteratorOverCopies(n).map(list => new InhBaseElement(list.toArray))
   def identity = new InhBaseElement(a.map(_.identity))
   def generators = for {
-    k <- (0 until n).iterator
+    k <- (0 until n)
     g <- a(k).generators
   } yield new InhBaseElement(identity.arr.updated(k, g))
   def order = a.foldLeft(BigInt(1))(_*_.order)

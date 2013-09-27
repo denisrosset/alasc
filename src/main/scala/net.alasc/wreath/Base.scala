@@ -26,7 +26,7 @@ class BaseGroup[A <: FiniteGroup[F], F <: FiniteElement[F] : ClassTag](a: A, n: 
   def elements = iteratorOverCopies(n).map(list => new BaseElement(list.toArray))
   def identity = new BaseElement(Array.tabulate(n)(i => a.identity))
   def generators = for {
-    k <- (0 until n).iterator
+    k <- (0 until n)
     g <- a.generators
   } yield new BaseElement(identity.arr.updated(k, g))
   def order = a.order.pow(n)

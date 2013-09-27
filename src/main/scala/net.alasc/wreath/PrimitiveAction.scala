@@ -1,20 +1,14 @@
 package net.alasc
 package wreath
 
-class PrimitiveAction[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Action[AE, Perm]) extends WreathAction[AE, HE] {
-//  def toTeX = TeX("\\text{Pr}(") + ba.toTeX + TeX(")")
-  def apply(we: WreathElement[AE, HE]) = {
-    val dest = we.ke.arr.map(ba(_))
-    val dims = dest.map(_.size)
-    val dim = dims.product
-    def image(k: Dom) = {
-      val alpha = ind2sub(dims, k._0)
-      val alpha1 = new Array[Int](alpha.size)
-      for (i <- 0 until alpha.size) {
-        alpha1(we.he.image(Dom._0(i))._0) = dest(i).image(Dom._0(alpha(i)))._0
-      }
-      Dom._0(sub2ind(dims, alpha1))
-    }
-    new Perm(Array.tabulate(dim)( k => image(Dom._0(k))._0 ))
+class PrimitiveAction[AE <: FiniteElement[AE], HE <: PermElement[HE]](val ba: Action[AE], val identity: WreathElement[AE, HE]) extends WreathAction[AE, HE] {
+  val dimensions = Seq.fill(identity.ke.arr.size)(ba.dimension)
+  val dimension = BigInt(ba.dimension).pow(identity.ke.arr.size).toInt
+  def apply(we: WreathElement[AE, HE], k: Dom) = {
+    val alpha = ind2sub(dimensions, k._0)
+    val alpha1 = new Array[Int](alpha.size)
+    for (i <- 0 until alpha.size)
+      alpha1(we.he.image(Dom._0(i))._0) = ba(we.ke.arr(i), Dom._0(alpha(i)))._0
+    Dom._0(sub2ind(dimensions, alpha1))
   }
 }

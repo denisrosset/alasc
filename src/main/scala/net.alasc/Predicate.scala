@@ -3,16 +3,14 @@ package net.alasc
 import scala.util.Random
 import scala.annotation.tailrec
 
-trait Predicate extends Function1[PermElementLike, Boolean] { }
-
-case class InvariantPredicate[D](s: Seq[D]) extends Predicate {
+case class InvariantPredicate[D, E <: PermElement[E]](s: Seq[D]) extends Predicate[E] {
   def groups = s.zipWithIndex.groupBy(_._1).values.map( els => els.map(_._2) )
   def groupStrings = groups.map( _.map( _+1 )).map(_.mkString("["," ", "]"))
-  def apply(e: PermElementLike) =
+  def apply(e: E) =
     s.sameElements(s.indices.map(i => s(e.image(Dom._0(i))._0)))
 }
 
-class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val predicate: Predicate) extends PermGroup[E] {
+class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val predicate: Predicate[E]) extends PermGroup[E] {
   def identity = g.identity
   def order = elements.size
   def degree = g.degree
@@ -29,6 +27,6 @@ class PredicateSubgroup[G <: PermGroup[E], E <: PermElement[E]](val g: G, val pr
       randomElement(gen)
   }
   def elements = g.elements.filter(predicate(_))
-  def generators = elements.filter(!_.isIdentity)
+  def generators = elements.toSeq.filter(!_.isIdentity)
   def fromExplicit(p: Perm) = elements.find(_.explicit === p)
 }

@@ -46,30 +46,30 @@ object WreathGroupSpecification extends Properties("WreathGroup") {
   ) }
   property("PrimitiveAction/inverse/===") = Prop.forAll(genSmallWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val ba = TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]]
-      val a = new PrimitiveAction[Perm, Perm](ba)
-      a(we).inverse === (a(we.inverse))
+      val ba = TrivialAction(w.a.identity)
+      val a = new PrimitiveAction(ba, w.identity)
+      a.toPerm(we).inverse === a.toPerm(we.inverse)
     }
   ) }
   property("ImprimitiveAction/inverse/===") = Prop.forAll(genSmallWreathGroupAndElement) { Function.tupled(
     (w, we) => {
-      val ba = TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]]
-      val a = new ImprimitiveAction[Perm, Perm](ba)
-      a(we).inverse === (a(we.inverse))
+      val ba = TrivialAction(w.a.identity)
+      val a = new ImprimitiveAction(ba, w.identity)
+      a.toPerm(we).inverse === a.toPerm(we.inverse)
     }
   ) }
   property("PrimitiveAction / *") = Prop.forAll(genSmallWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val ba = TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]]
-      val a = new PrimitiveAction[Perm, Perm](ba)
-      a(we1*we2) === (a(we1)*a(we2))
+      val ba = TrivialAction(w.a.identity)
+      val a = new PrimitiveAction(ba, w.identity)
+      a.toPerm(we1*we2) === (a.toPerm(we1)*a.toPerm(we2))
     }
   ) }
   property("ImprimitiveAction / *") = Prop.forAll(genSmallWreathGroupAndTwoElements) { Function.tupled(
     (w, we1, we2) => {
-      val ba = TrivialAction[Perm]().asInstanceOf[Action[Perm, Perm]]
-      val a = new ImprimitiveAction[Perm, Perm](ba)
-      a(we1*we2) === (a(we1)*a(we2))
+      val ba = TrivialAction(w.a.identity)
+      val a = new ImprimitiveAction(ba, w.identity)
+      a.toPerm(we1*we2) === (a.toPerm(we1)*a.toPerm(we2))
     }
   ) }
 }

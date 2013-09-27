@@ -24,6 +24,8 @@ package object alasc {
   def sub2ind(N: Seq[Int], I: Seq[Int]): Int =
     (N zip I).foldLeft((0, 1)) { case ((tot, mul), (n, i)) => (tot + mul * i, mul * n) }._1
 
+  type Predicate[F <: FiniteElement[F]] = (F => Boolean)
+
   import scala.annotation.elidable
   import scala.annotation.elidable._
 

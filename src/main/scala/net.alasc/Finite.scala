@@ -33,8 +33,8 @@ trait FiniteGroup[E <: FiniteElement[E]] {
   def contains(e: E): Boolean
   /** Iterates through the group elements. */
   def elements: Iterator[E]
-  /** Iterates through the group generators. */
-  def generators: Iterator[E]
+  /** Sequence of the group generators. */
+  def generators: Seq[E]
   /** Identity element of this group. */
   def identity: E
   /** Order of this group. */
