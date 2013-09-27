@@ -3,6 +3,7 @@ package net.alasc
 import scala.util.Random
 import scala.reflect.ClassTag
 import scala.annotation.tailrec
+import scala.collection.mutable.ArraySeq
 
 /** Generator of random elements from generators of a group.
   * 
@@ -15,7 +16,7 @@ import scala.annotation.tailrec
   * @note Straight-forward implementation of PRINITIALIZE and PRRANDOM of 
   *       section 3.2.2, pp. 70-71 of Holt
   */
-class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private var x: Array[E], val gen: Random) {
+class RandomBag[F <: FiniteElement[F]] private[alasc](private var x0: F, private var x: ArraySeq[F], val gen: Random) {
   def random(implicit gen: Random) = randomElement(gen)
   def randomElement(newGen: Random) = {
     require_(gen eq newGen)
@@ -48,15 +49,15 @@ class RandomBag[E <: FiniteElement[E]] private[alasc](private var x0: E, private
 }
 
 object RandomBag {
-  def apply[E <: FiniteElement[E]: ClassTag](xseq: Seq[E], id: E, r: Int, n: Int = 50, gen: Random = Random): RandomBag[E] = {
+  def apply[F <: FiniteElement[F]](xseq: Seq[F], id: F, r: Int, n: Int = 50, gen: Random = Random): RandomBag[F] = {
     val k = xseq.length
-    assert(k > 0)
     require_(r >= k)
     require_(r >= 10)
-    var x = new Array[E](r)
-    xseq.copyToArray(x)
-    for (i <- k until r)
-      x(i) = x(i - k)
+    val x = (if (k == 0)
+      ArraySeq.fill(r)(id)
+    else
+      ArraySeq.tabulate(r)(i => xseq(i % k))
+    )
     val bag = new RandomBag(id, x, gen)
     for (i <- 0 until n) bag.randomElement(gen)
     bag
