@@ -21,10 +21,13 @@ trait Transversal[F <: FiniteElement[F]] extends ReadOnlyMap[Dom, WithInverse[F]
   def beta: Dom /** Element for which the transversal is defined. */
   def identity: F
 
+  def orbit: Set[Dom] = keysIterator.toSet
+
   def contains(k: Dom) = isDefinedAt(k)
 
   def updated(newGens: Iterable[F], allGens: Iterable[F]): Transversal[F]  /** Returns a new transversal extended with s added to its generators. */
-  def conjugatedBy(g: F): Transversal[F]
+  def conjugatedBy(f: F): Transversal[F] = conjugatedBy(f, f.inverse)
+  def conjugatedBy(f: F, finv: F): Transversal[F]
   def mapValues[G <: FiniteElement[G]](f: F => G, gAction: Action[G]): Transversal[G]
 
   /** Returns a random element of the transversal. */

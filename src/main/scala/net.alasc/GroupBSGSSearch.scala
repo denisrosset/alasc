@@ -44,7 +44,7 @@ trait GroupBSGSSearch[F <: FiniteElement[F]] {
     /** Iterates through the elements of the represented group using the order
       * defined in Holt pp. 109-111
       */
-    def orderedIterator(uPrev: F): Iterator[F] = this match {
+    def orderedIterator(uPrev: F = identity): Iterator[F] = this match {
       case terminal: BSGSTerminal => Iterator(uPrev)
       case node: BSGSNode => for {
         b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator

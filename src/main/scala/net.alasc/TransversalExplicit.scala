@@ -50,9 +50,8 @@ case class TransversalExplicit[F <: FiniteElement[F]](beta: Dom, action: Action[
   }
 
   // implementation of AbstractTrans
-  def conjugatedBy(g: F): TransversalExplicit[F] = {
-    val ginv = g.inverse
-    TransversalExplicit(action(g, beta), action, treeMap.map { case (b, WithInverse(v,vinv)) => (action(g, b), WithInverse(ginv*v*g, ginv*vinv*g)) })
+  def conjugatedBy(f: F, finv: F): TransversalExplicit[F] = {
+    TransversalExplicit(action(f, beta), action, treeMap.map { case (b, WithInverse(v,vinv)) => (action(f, b), WithInverse(finv*v*f, finv*vinv*f)) })
   }
 }
 

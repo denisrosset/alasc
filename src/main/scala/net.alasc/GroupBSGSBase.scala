@@ -8,6 +8,116 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
   trait BSGSBase {
     self: BSGSChain =>
 
+    def conjugatedBy(f: F): BSGSChain = conjugatedBy(f, f.inverse)
+
+    def conjugatedBy(f: F, finv: F): BSGSChain = this match {
+      case terminal: BSGSTerminal => terminal
+      case node: BSGSNode =>
+        new BSGSNode(transversal.conjugatedBy(f, finv), strongGeneratingSet.map(x => finv*x*f), tail.conjugatedBy(f, finv))
+    }
+
+    def removingRedundantBasePoints: BSGSChain = this match {
+      case terminal: BSGSTerminal => terminal
+      case node: BSGSNode if transversal.size == 1 => tail.removingRedundantBasePoints
+      case node: BSGSNode => {
+        val newTail = tail.removingRedundantBasePoints
+        if (newTail eq tail)
+          this
+        else
+          new BSGSNode(transversal, strongGeneratingSet, newTail)
+      }
+    }
+
+    /** Changes the current base. The base of the returned BSGSChain will start
+      * with newBase, but can be longer if needed. No redundant base points will be 
+      * kept in these additional points.
+      */
+    def withBase(newBase: List[Dom]): BSGSChain = options.baseChangeStrategy match {
+      case BaseSwapOnly => withBaseNoConjugation(newBase)
+      case BaseSwapAndConjugation => withBaseConjugation(newBase)
+      case BaseFromScratch => withBaseFromScratch(newBase)
+    }
+
+    def withBaseFromScratch(newBase: List[Dom]): BSGSChain = options.useRandomizedAlgorithms match {
+      case true =>
+        BSGSChain.randomSchreierSims(newBase, randomElement, order)
+      case false =>
+        BSGSChain.deterministicSchreierSims(newBase, generators)
+    }
+
+    def withBaseConjugation(newBase: List[Dom]): BSGSChain = {
+      val (newChain, f, finv) = withBaseConjugationHelper(newBase, identity, identity)
+      newChain.conjugatedBy(f)
+    }
+
+    def withBaseConjugationHelper(newBase: List[Dom], f: F, finv: F): (BSGSChain, F, F) = newBase match {
+      case hd :: tl => {
+        if (!isTerminal) {
+          val alpha = action(finv, hd)
+          if (transversal.isDefinedAt(alpha)) {
+            val (newTail, newF, newFinv) =
+              tail.withBaseConjugationHelper(tl, transversal(alpha).u*f, finv*transversal(alpha).uinv)
+            val newNode = new BSGSNode(transversal, strongGeneratingSet, newTail)
+            return ((newNode, newF, newFinv))
+          }
+        }
+        val swappedNode = withHeadBasePoint(hd)
+        val (newTail, newF, newFinv) = swappedNode.tail.withBaseConjugationHelper(tl, f, finv)
+        val newNode = new BSGSNode(swappedNode.transversal, swappedNode.strongGeneratingSet, newTail)
+        ((newNode, newF, newFinv))
+      }
+      case Nil => (removingRedundantBasePoints, f, finv)
+    }
+
+    def withBaseNoConjugation(newBase: List[Dom]): BSGSChain = newBase match {
+      case hd :: tl => {
+        val newHead = withHeadBasePoint(hd)
+        val newTail = newHead.tail.withBaseNoConjugation(tl)
+        new BSGSNode(newHead.transversal, newHead.strongGeneratingSet, newTail)
+      }
+      case Nil => removingRedundantBasePoints
+    }
+
+    /** Called on a BSGSChain containing basePoint, returns
+      * a BSGSChain with basePoint at head.
+      */
+    def putExistingBasePointInHead(basePoint: Dom): BSGSChain = {
+      if (beta == basePoint)
+        return this
+      val newTail = tail.putExistingBasePointInHead(basePoint)
+      val beforeSwap = new BSGSNode(transversal, strongGeneratingSet,
+        newTail)
+      val afterSwap = beforeSwap.baseSwap
+      assert(afterSwap.beta == basePoint)
+      afterSwap
+    }
+
+    def withHeadBasePoint(basePoint: Dom): BSGSChain = {
+      val withPoint = if (base.contains(basePoint)) this else insertBasePoint(basePoint)
+      withPoint.putExistingBasePointInHead(basePoint)
+    }
+
+    /** Returns an updated BSGSChain with the new basePoint inserted.
+      * 
+      * The current BSGSChain must not contains basePoint
+      */
+    def insertBasePoint(basePoint: Dom): BSGSChain = this match {
+      case terminal: BSGSTerminal =>
+        new BSGSNode(makeTransversal(basePoint), Nil, terminal)
+      case node: BSGSNode => {
+        val orbit = makeOrbit(basePoint, strongGeneratingSet)
+        if (orbit.size > 1)
+          new BSGSNode(transversal, strongGeneratingSet, tail.insertBasePoint(basePoint))
+        else
+          new BSGSNode(makeTransversal(basePoint), strongGeneratingSet, this)
+      }
+    }
+
+    def baseSwap: BSGSChain = options.useRandomizedAlgorithms match {
+      case true => randomizedBaseSwap(options.randomGenerator)
+      case false => deterministicBaseSwap
+    }
+
     /** Deterministic base swap.
       * 
       * @return BSGS group with first two base elements swapped.
@@ -55,7 +165,7 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
       new BSGSNode(nTrv, tList, new BSGSNode(nTrv1, tList.filter( t => action(t, beta1) == beta1), tail.tail))
     }
 
-    def randomizedBaseSwap(implicit r: scala.util.Random): BSGSChain = {
+    def randomizedBaseSwap(r: scala.util.Random): BSGSChain = {
       require_(isInstanceOf[BSGSNode])
       val node = asInstanceOf[BSGSNode]
       require_(!tail.isTerminal)

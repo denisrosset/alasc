@@ -1,5 +1,4 @@
 package net.alasc
-package bsgs
 
 import org.scalatest.FunSuite
 
@@ -9,20 +8,25 @@ class HoltSuite extends FunSuite {
     val g1 = Perm(6)(1,2,3,4)
     val g2 = Perm(6)(2,4)
     val g3 = Perm(6)(5,6)
-    val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity)
+    val id = Perm(6)
+    val base = List(1, 2, 5).map(Dom._1(_))
+    val g = new GroupFromGenerators(id, TrivialAction(id), List(g1, g2, g3), base)
     assert(g.order == 16)
-    val els: List[Perm] = g.orderedIterator(Sym(6).identity).toList
-    assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.ElementOrdering.compare(a,b) < 0 ) ) )
+    val els: List[Perm] = g.bsgs.orderedIterator().toList
+    assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.bsgs.ElementOrdering.compare(a,b) < 0 ) ) )
     val printed = List("123456", "123465", "143256", "143265", "214356", "214365", "234156", "234165",
       "321456", "321465", "341256", "341265", "412356", "412365", "432156", "432165")
     assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
+
   test("Example in 4.6.2") {
     import Dom.OneBased._
     val g1 = Perm(6)(1,2,3,4)
     val g2 = Perm(6)(2,4)
     val g3 = Perm(6)(5,6)
-    val g = BSGS.schreierSims(List(g1,g2,g3), Sym(6).identity, PrescribedBase(Base(List(1,2,3,4,5,6))))
+    val id = Perm(6)
+    val base = List[Dom](1,2,3,4,5,6)
+    val g = new GroupFromGenerators(id, TrivialAction(id), List(g1, g2, g3), base)
     assert(g.order == 16)
     case class Test(level: Int) extends BaseImageTest {
       def apply(b: Dom): (Boolean, BaseImageTest) = {
@@ -35,9 +39,10 @@ class HoltSuite extends FunSuite {
     }
     def predicate(k: Perm) = (k.image(1) === 1 || k.image(1) === 3) && k.image(2) === 2
     val printed = List("123456", "123465", "321456", "321465")
-    val els = g.generalSearch(predicate, Test(0)).toList
+    val els = g.bsgs.generalSearch(predicate, Test(0)).toList
     assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
+ /*
   test("Example 4.6") {
     import Dom.OneBased._
     val g1 = Perm(8)(1,2,3)
@@ -55,5 +60,5 @@ class HoltSuite extends FunSuite {
     val hinterg = h.intersection(g)
     assert(ginterh.order == 6)
     assert(hinterg.order == 6)
-  }
+  }*/
 }

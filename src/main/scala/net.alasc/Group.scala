@@ -2,6 +2,30 @@ package net.alasc
 
 import scala.util.Random
 
+sealed abstract class BaseChangeStrategy { }
+
+case object BaseSwapOnly extends BaseChangeStrategy { }
+
+case object BaseSwapAndConjugation extends BaseChangeStrategy { }
+
+case object BaseFromScratch extends BaseChangeStrategy { }
+
+case class GroupOptions(
+  val useRandomizedAlgorithms: Boolean,
+  val randomGenerator: scala.util.Random,
+  val transversalBuilder: TransversalBuilder,
+  val orbitBuilder: OrbitBuilder,
+  val baseChangeStrategy: BaseChangeStrategy) { }
+
+object GroupOptions {
+  def default = GroupOptions(
+    useRandomizedAlgorithms = true,
+    randomGenerator = scala.util.Random,
+    transversalBuilder = TransversalExplicit,
+    orbitBuilder = OrbitSet,
+    baseChangeStrategy = BaseSwapAndConjugation)
+}
+
 /** All-around group class. Constructs a BSGS behind the scenes as needed.
   * 
   * The group can be constructed by using the following algorithms (listed
@@ -17,19 +41,19 @@ import scala.util.Random
   */
 abstract class Group[F <: FiniteElement[F]](
   val identity: F,
-  val action: Action[F]
+  val action: Action[F],
+  val options: GroupOptions = GroupOptions.default
 ) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] {
   containingGroup =>
 
-  def random = scala.util.Random // FIXME: add as parameter
-
-  def transversalBuilder: TransversalBuilder = TransversalExplicit // FIXME: add as parameter
-  def orbitBuilder: OrbitBuilder = OrbitSet
+  def withOptions(newOptions: GroupOptions) =
+    new GroupFromBSGS(identity, action, bsgs.base, bsgs.strongGeneratingSet, newOptions)
 
   def makeTransversal(newBeta: Dom, genSet: List[F] = Nil) =
-    transversalBuilder.empty(newBeta, identity, action).updated(genSet, genSet)
+    options.transversalBuilder.empty(newBeta, identity, action).updated(genSet, genSet)
+
   def makeOrbit(newBeta: Dom, genSet: List[F] = Nil) =
-    orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
+    options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
 
   require_(action.faithful)
 
@@ -79,8 +103,11 @@ abstract class Group[F <: FiniteElement[F]](
     def identity = containingGroup.identity
     def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
-
-//    def setStabilizer(set: Set[Dom]): BSGSChain
+    // def intersection(that: Subgroup): Subgroup
+    // def &(that: Subgroup) = intersection(that)
+    // def conjugatedBy(f: F): Subgroup
+    // def isSubgroup(potentialSubgroup: Subgroup) = this.intersection(potentialSubgroup).order == potentialSubgroup.order
+    //    def setStabilizer(set: Set[Dom]): BSGSChain
   }
 
   /** Returns subgroup fixing a given sequence.
@@ -89,20 +116,34 @@ abstract class Group[F <: FiniteElement[F]](
     * 
     * @return The subgroup fixing s.
     */
-/*
-  def fixing[O](s: Seq[O]): Subgroup = {
+  /*
+   def fixing[O](s: Seq[O]): Subgroup = {
 
-    def leaveInvariant(a: ActionElement[F, Perm]) =
-      base.list.map(d => s(a.image(d)._0)).sameElements(s)
+   def leaveInvariant(a: ActionElement[F, Perm]) =
+   base.list.map(d => s(a.image(d)._0)).sameElements(s)
 
-    object Test extends BaseImageTest {
-      def apply(baseImage: Dom) = {
-        val takeIt = s(base.list.head._0) == s(baseImage._0)
-        (takeIt, Test(Base(base.list.tail)))
-      }
+   object Test extends BaseImageTest {
+   def apply(baseImage: Dom) = {
+   val takeIt = s(base.list.head._0) == s(baseImage._0)
+   (takeIt, Test(Base(base.list.tail)))
+   }
+   }
+   val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
+   new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
+   }
+   */
+}
+
+import scala.language.higherKinds
+
+object Group { // : ClassTag
+  def apply[E <: PermElement[E]](elements: E*) = {
+    assert(!elements.isEmpty)
+    val identity = elements.find(_.isIdentity) match {
+      case Some(id) => id
+      case None => elements.head * elements.head.inverse
     }
-    val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
-    new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
+    val generators = elements.filterNot(_.isIdentity).toList
+    new GroupFromGenerators(identity, TrivialAction(identity), generators, Nil)
   }
- */
 }

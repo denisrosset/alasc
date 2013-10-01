@@ -54,4 +54,6 @@ trait FiniteGroup[E <: FiniteElement[E]] {
 
   def directCopies(n: Int)(implicit c: ClassTag[E]) = new wreath.BaseGroup[FiniteGroup[E], E](this, n)
   def elementClassTag: ClassTag[E] = ClassTag[E](identity.getClass)
+
+  def toGroup(action: Action[E]): Group[E] = new GroupFromRandomElementsAndOrder(identity, action, randomElement, order)
 }

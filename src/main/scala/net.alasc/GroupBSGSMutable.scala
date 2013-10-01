@@ -8,16 +8,17 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
   trait BSGSMutableCompanion {
     def randomSchreierSims(base: List[Dom], randomElement: Random => F, knownOrder: BigInt): BSGSChain = {
       def findBaseElement: Dom = {
-        val f = randomElement(random)
+        val f = randomElement(options.randomGenerator)
         action.domain.find(b => action(f, b) != b).getOrElse(Dom._1(1))
       }
       val chain = mutableFromBase(if(base.isEmpty) List(findBaseElement) else base)
       while (chain.order < knownOrder)
-        chain.addElement(randomElement(random))
+        chain.addElement(randomElement(options.randomGenerator))
       chain.makeImmutable
       chain
     }
-    def schreierSims(base: List[Dom], generators: List[F]) = {
+
+    def deterministicSchreierSims(base: List[Dom], generators: List[F]) = {
       def findBaseElement: Dom = {
         if (generators.isEmpty)
           Dom._1(1)

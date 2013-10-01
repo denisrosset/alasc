@@ -9,7 +9,11 @@ trait GroupBSGSData[F <: FiniteElement[F]] {
     self: BSGSChain =>
 
     def beta: Dom = transversal.beta
-    def transversalSize = transversal.size
+
+    final def transversals: List[Transversal[F]] = this.isTerminal match {
+      case true => Nil
+      case false => transversal :: tail.transversals
+    }
 
     final def base: List[Dom] = this.isTerminal match {
       case true => Nil

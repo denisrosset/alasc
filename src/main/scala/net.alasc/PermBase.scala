@@ -72,4 +72,6 @@ trait PermGroup[E <: PermElement[E]] extends FiniteGroup[E] {
     * @return Some(e) if p can be represented by e or None.
     */
   def fromExplicit(p: Perm): Option[E]
+
+  def toGroup: Group[E] = toGroup(TrivialAction(identity))
 }
