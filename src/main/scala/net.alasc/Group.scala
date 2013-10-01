@@ -51,7 +51,7 @@ abstract class Group[F <: FiniteElement[F]](
     var transversal: Transversal[F],
     var strongGeneratingSet: List[F],
     var tail: BSGSChain,
-    var isImmutable: Boolean = false) extends BSGSChain {
+    var isImmutable: Boolean = true) extends BSGSChain {
     def isTerminal = false
   }
 
