@@ -21,6 +21,8 @@ case class TransversalExplicit[F <: FiniteElement[F]](beta: Dom, action: Action[
     TransversalExplicit(beta, gAction, TreeMap.empty[Dom, WithInverse[G]] ++ treeMap.mapValues( wi => WithInverse(f(wi.u), f(wi.uinv))))
 
   def updated(newGens: Iterable[F], allGens: Iterable[F]): TransversalExplicit[F] = {
+    if (newGens.isEmpty)
+      return this
     val newGensInv = newGens.map( g => (g, g.inverse) )
     var candidates = TreeMap.empty[Dom, WithInverse[F]] ++ (
       for ((s, sinv) <- newGensInv; b <- keysIterator; img = action(s, b) if !treeMap.contains(img) )

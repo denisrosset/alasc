@@ -23,6 +23,13 @@ abstract class Group[F <: FiniteElement[F]](
 
   def random = scala.util.Random // FIXME: add as parameter
   def transversalBuilder: TransversalBuilder = TransversalExplicit // FIXME: add as parameter
+  def orbitBuilder: OrbitBuilder = OrbitSet
+
+  def makeTransversal(newBeta: Dom, genSet: List[F] = Nil) =
+    transversalBuilder.empty(newBeta, identity, action).updated(genSet, genSet)
+  def makeOrbit(newBeta: Dom, genSet: List[F] = Nil) =
+    orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
+
   require_(action.faithful)
 
   def bsgs: BSGSChain

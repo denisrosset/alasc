@@ -10,6 +10,8 @@ trait Orbit[F <: FiniteElementLike] {
   def contains(k: Dom) = isDefinedAt(k)
   def isDefinedAt(k: Dom): Boolean
 
+  def orbit: Set[Dom]
+
   /** Add the new generators newGen to the orbit.
     * 
     * @param newGen   New generators to add to the orbit.

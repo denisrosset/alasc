@@ -39,18 +39,18 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
     def mutableFromBaseAndGeneratingSet(base: List[Dom], genSet: List[F]): BSGSChain = base match {
       case Nil => new BSGSTerminal
       case beta :: tailBase => {
-        val transversal = transversalBuilder.fromSet(beta, identity, action, genSet)
+        val transversal = makeTransversal(beta, genSet)
         val tailGenSet = genSet.filter(g => action(g, beta) == beta)
         val tail = mutableFromBaseAndGeneratingSet(tailBase, tailGenSet)
-        new BSGSNode(transversal, genSet, tail)
+        new BSGSNode(transversal, genSet, tail, false)
       }
     }
     def mutableFromBase(base: List[Dom]): BSGSChain = base match {
       case Nil => new BSGSTerminal
       case beta :: tailBase => {
-        val transversal = transversalBuilder.empty(beta, identity, action)
+        val transversal = makeTransversal(beta)
         val tail = mutableFromBase(tailBase)
-        new BSGSNode(transversal, Nil, tail)
+        new BSGSNode(transversal, Nil, tail, false)
       }
     }
   }
@@ -135,8 +135,8 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
         if (h.isIdentity)
           return None
         val newBasePoint = action.domain.find( k => action(h, k) != k ).get
-        val newTransversal = transversalBuilder.empty(newBasePoint, identity, action)
-        val newTail = new BSGSNode(newTransversal, Nil, tail)
+        val newTransversal = makeTransversal(newBasePoint)
+        val newTail = new BSGSNode(newTransversal, Nil, tail, false)
         node.tail = newTail
         addStrongGeneratorsInChain(List(h))
         return Some(h)

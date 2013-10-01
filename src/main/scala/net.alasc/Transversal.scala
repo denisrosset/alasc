@@ -42,5 +42,4 @@ trait Transversal[F <: FiniteElement[F]] extends ReadOnlyMap[Dom, WithInverse[F]
 
 trait TransversalBuilder {
   def empty[F <: FiniteElement[F]](beta: Dom, identity: F, action: Action[F]): Transversal[F]
-  def fromSet[F <: FiniteElement[F]](beta: Dom, identity: F, action: Action[F], set: Iterable[F]): Transversal[F] = empty(beta, identity, action).updated(set, set)
 }
