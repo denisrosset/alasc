@@ -18,10 +18,11 @@ import scala.util.Random
 abstract class Group[F <: FiniteElement[F]](
   val identity: F,
   val action: Action[F]
-) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] {
+) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] {
   containingGroup =>
 
   def random = scala.util.Random // FIXME: add as parameter
+
   def transversalBuilder: TransversalBuilder = TransversalExplicit // FIXME: add as parameter
   def orbitBuilder: OrbitBuilder = OrbitSet
 
@@ -37,7 +38,7 @@ abstract class Group[F <: FiniteElement[F]](
   private[alasc] object BSGSChain extends BSGSMutableCompanion {
   }
 
-  private[alasc] sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable {
+  private[alasc] sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable with BSGSSearch with BSGSBase {
     def isTerminal: Boolean
     def tail: BSGSChain
 
@@ -78,5 +79,30 @@ abstract class Group[F <: FiniteElement[F]](
     def identity = containingGroup.identity
     def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
+
+//    def setStabilizer(set: Set[Dom]): BSGSChain
   }
+
+  /** Returns subgroup fixing a given sequence.
+    * 
+    * @param s   Sequence to be fixed by the subgroup.
+    * 
+    * @return The subgroup fixing s.
+    */
+/*
+  def fixing[O](s: Seq[O]): Subgroup = {
+
+    def leaveInvariant(a: ActionElement[F, Perm]) =
+      base.list.map(d => s(a.image(d)._0)).sameElements(s)
+
+    object Test extends BaseImageTest {
+      def apply(baseImage: Dom) = {
+        val takeIt = s(base.list.head._0) == s(baseImage._0)
+        (takeIt, Test(Base(base.list.tail)))
+      }
+    }
+    val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
+    new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
+  }
+ */
 }
