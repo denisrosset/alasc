@@ -26,19 +26,7 @@ object GroupOptions {
     baseChangeStrategy = BaseSwapAndConjugation)
 }
 
-/** All-around group class. Constructs a BSGS behind the scenes as needed.
-  * 
-  * The group can be constructed by using the following algorithms (listed
-  * below by decreasing priority):
-  * 
-  * - the random Schreier-Sims algorithm if all the following elements are provided:
-  *   - the order of the group,
-  *   - a random number generator (by default, [[scala.util.Random]] will be used),
-  *   - a way to generate random group elements, using either:
-  *     - a random element function,
-  *     - creating a [[RandomBag] from the list of generators.
-  * - the deterministic Schreier-Sims algorihm if the group generators are known.
-  */
+/** All-around group class. Constructs a BSGS behind the scene. */
 abstract class Group[F <: FiniteElement[F]](
   val identity: F,
   val action: Action[F],
@@ -112,6 +100,7 @@ abstract class Group[F <: FiniteElement[F]](
     def identity = containingGroup.identity
     def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
+
     def intersection(that: Subgroup): Subgroup = {
       val newBSGS = subBSGS.intersection(that.subBSGS)
       new Subgroup(newBSGS)
@@ -126,36 +115,31 @@ abstract class Group[F <: FiniteElement[F]](
       case true => this
       case false => new Subgroup(subBSGS.withHeadBasePoint(k).tail)
     }
-    //    def setStabilizer(set: Set[Dom]): BSGSChain
+
+
+
+    /** Returns subgroup fixing a given sequence. */
+    def fixing[O](s: Seq[O]) = {
+
+      require_(s.size == action.dimension)
+      def leaveInvariant(f: F) =
+        (0 until s.size).forall( i => s(action(f, Dom._0(i))._0) == s(i) )
+
+      val groupBase = bsgs.base
+
+      case class Test(remainingBase: List[Dom]) extends BaseImageTest {
+        def apply(baseImage: Dom) = {
+          val takeIt = s(remainingBase.head._0) == s(baseImage._0)
+          (takeIt, Test(remainingBase.tail))
+        }
+      }
+      val newBSGS = subBSGS.subgroupSearch( leaveInvariant, Test(subBSGS.base) )
+      new Subgroup(newBSGS)
+    }
   }
-
-  /** Returns subgroup fixing a given sequence.
-    * 
-    * @param s   Sequence to be fixed by the subgroup.
-    * 
-    * @return The subgroup fixing s.
-    */
-  /*
-   def fixing[O](s: Seq[O]): Subgroup = {
-
-   def leaveInvariant(a: ActionElement[F, Perm]) =
-   base.list.map(d => s(a.image(d)._0)).sameElements(s)
-
-   object Test extends BaseImageTest {
-   def apply(baseImage: Dom) = {
-   val takeIt = s(base.list.head._0) == s(baseImage._0)
-   (takeIt, Test(Base(base.list.tail)))
-   }
-   }
-   val subgroupBSGS = bsgs.subgroupSearch( leaveInvariant, Test(groupBase) )
-   new Group(faithfulAction, identity, knownBSGS = Some(subgroupBSGS))
-   }
-   */
 }
 
-import scala.language.higherKinds
-
-object Group { // : ClassTag
+object Group {
   def apply[E <: PermElement[E]](elements: E*) = {
     assert(!elements.isEmpty)
     val identity = elements.find(_.isIdentity) match {
