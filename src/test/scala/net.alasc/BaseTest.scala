@@ -8,7 +8,7 @@ object BaseGenerators {
   val groupAndBase = for {
     g <- Gen.oneOf(M11.g, M12.g, M24.g)
     n <- Gen.choose(3, 6)
-    method <- Gen.oneOf(BaseSwapOnly, BaseFromScratch) //BaseSwapAndConjugation, BaseSwapAndConjugation) //BaseSwapOnly, , BaseFromScratch)
+    method <- Gen.oneOf(BaseSwapAndConjugation, BaseSwapOnly, BaseFromScratch)
     base <- Gen.listOfN(n, Gen.choose(1, g.identity.size)) if base.distinct.size == base.size
     seed <- Gen.choose(0, 1000)
     useRandom <- Gen.oneOf(true, false)
@@ -33,7 +33,7 @@ object BaseSpec extends Properties("GroupBSGSBase") {
 }
 
 class BaseSuite extends FunSuite {
-  test("Other bug") {
+  test("Explicit test for bug discovered by BaseSpec 1") {
     import net.alasc._
     import Dom.OneBased._
     val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
@@ -46,7 +46,7 @@ class BaseSuite extends FunSuite {
     comingBack.check
     assert(start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit)))
   }
-  test("Bug in base swap 1") {
+  test("Explicit test for bug discovered by BaseSpec 2") {
     import Dom.OneBased._
     val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = true)
     val g = M11.g.withOptions(newOptions)
@@ -62,8 +62,7 @@ class BaseSuite extends FunSuite {
     swapped.check
   }
 
-
-  test("Bug in base swap") {
+  test("Explicit test for bug discovered by BaseSpec 3") {
     val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = false)
     val group = M11.g.withOptions(newOptions)
     val newBase = List(6, 4, 9, 2).map(Dom._1(_))
