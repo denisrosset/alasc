@@ -117,7 +117,7 @@ trait GroupBSGSSearch[F <: FiniteElement[F]] {
     def intersection(h: BSGSChain): BSGSChain = this match {
       case terminal: BSGSTerminal => terminal
       case node: BSGSNode => {
-        assert(base.sameElements(h.base)) // FIXME: change the basis
+        val hWithBase = h.withBase(base)
         case class IntersectionTest(hSubgroup: BSGSChain, hPrev: F) extends BaseImageTest {
           def apply(baseImage: Dom): (Boolean, BaseImageTest) = {
             val b = action(hPrev.inverse, baseImage)
@@ -127,7 +127,7 @@ trait GroupBSGSSearch[F <: FiniteElement[F]] {
             return (true, IntersectionTest(hSubgroup.tail, uh * hPrev))
           }
         }
-        subgroupSearch(h.contains(_), IntersectionTest(h, identity))
+        subgroupSearch(hWithBase.contains(_), IntersectionTest(hWithBase, identity))
       }
     }
   }

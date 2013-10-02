@@ -94,6 +94,15 @@ abstract class Group[F <: FiniteElement[F]](
   def generators = bsgs.strongGeneratingSet
   def compatible(f: F) = identity.compatible(f)
   def contains(f: F) = bsgs.contains(f)
+  def subgroup = new Subgroup(bsgs)
+  object Subgroup {
+    def apply(elements: F*) = {
+      require_(elements.forall(f => containingGroup.contains(f)))
+      require_(elements.forall(f => !f.isIdentity))
+      val subBSGS = BSGSChain.deterministicSchreierSims(bsgs.base, elements.toList)
+      new Subgroup(subBSGS)
+    }
+  }
 
   class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] {
     def order = subBSGS.order
@@ -103,10 +112,20 @@ abstract class Group[F <: FiniteElement[F]](
     def identity = containingGroup.identity
     def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
-    // def intersection(that: Subgroup): Subgroup
-    // def &(that: Subgroup) = intersection(that)
-    // def conjugatedBy(f: F): Subgroup
-    // def isSubgroup(potentialSubgroup: Subgroup) = this.intersection(potentialSubgroup).order == potentialSubgroup.order
+    def intersection(that: Subgroup): Subgroup = {
+      val newBSGS = subBSGS.intersection(that.subBSGS)
+      new Subgroup(newBSGS)
+    }
+    def &(that: Subgroup) = intersection(that)
+    def conjugatedBy(f: F): Subgroup = {
+      val newBSGS = subBSGS.conjugatedBy(f)
+      new Subgroup(newBSGS)
+    }
+    def isSubgroup(potentialSubgroup: Subgroup) = potentialSubgroup.subBSGS.strongGeneratingSet.forall(g => Subgroup.this.contains(g))
+    def stabilizer(k: Dom) = subBSGS.isTerminal match {
+      case true => this
+      case false => new Subgroup(subBSGS.withHeadBasePoint(k).tail)
+    }
     //    def setStabilizer(set: Set[Dom]): BSGSChain
   }
 

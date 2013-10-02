@@ -42,23 +42,22 @@ class HoltSuite extends FunSuite {
     val els = g.bsgs.generalSearch(predicate, Test(0)).toList
     assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
   }
- /*
   test("Example 4.6") {
     import Dom.OneBased._
+    val group = Sym(8).toGroup
     val g1 = Perm(8)(1,2,3)
     val g2 = Perm(8)(4,5,6)
     val g3 = Perm(8)(1,4)(2,5)(3,6)(7,8)
     val h1 = Perm(8)(1,6)(2,4)(3,5)(7,8)
     val h2 = Perm(8)(1,2)(3,7)(4,6)(5,8)
     val h3 = Perm(8)(2,3,7)(4,5,8)
-    val id = Sym(8).identity
-    val g = BSGS.schreierSims(List(g1,g2,g3), id, FullBase)
-    val h = BSGS.schreierSims(List(h1,h2,h3), id, FullBase)
+    val g = group.Subgroup(g1,g2,g3)
+    val h = group.Subgroup(h1,h2,h3)
     assert(g.order == 18)
     assert(h.order == 24)
     val ginterh = g.intersection(h)
     val hinterg = h.intersection(g)
     assert(ginterh.order == 6)
     assert(hinterg.order == 6)
-  }*/
+  }
 }
