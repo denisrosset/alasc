@@ -9,7 +9,6 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
     self: BSGSChain =>
 
     def conjugatedBy(f: F): BSGSChain = conjugatedBy(f, f.inverse)
-
     def conjugatedBy(f: F, finv: F): BSGSChain = this match {
       case terminal: BSGSTerminal => terminal
       case node: BSGSNode =>
@@ -57,12 +56,14 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
           if (transversal.isDefinedAt(alpha)) {
             val (newTail, newF, newFinv) =
               tail.withBaseConjugationHelper(tl, transversal(alpha).u*f, finv*transversal(alpha).uinv)
-            val newNode = new BSGSNode(transversal, strongGeneratingSet, newTail)
+            val newStrongGeneratingSet = (strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
+            val newNode = new BSGSNode(transversal, newStrongGeneratingSet, newTail)
             return ((newNode, newF, newFinv))
           }
         }
         val swappedNode = withHeadBasePoint(hd)
         val (newTail, newF, newFinv) = swappedNode.tail.withBaseConjugationHelper(tl, f, finv)
+        val newStrongGeneratingSet = (swappedNode.strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
         val newNode = new BSGSNode(swappedNode.transversal, swappedNode.strongGeneratingSet, newTail)
         ((newNode, newF, newFinv))
       }
@@ -72,8 +73,12 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
     def withBaseNoConjugation(newBase: List[Dom]): BSGSChain = newBase match {
       case hd :: tl => {
         val newHead = withHeadBasePoint(hd)
+        newHead.check
         val newTail = newHead.tail.withBaseNoConjugation(tl)
-        new BSGSNode(newHead.transversal, newHead.strongGeneratingSet, newTail)
+        newTail.check
+        val newStrongGeneratingSet = 
+          (newHead.strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
+        new BSGSNode(newHead.transversal, newStrongGeneratingSet, newTail)
       }
       case Nil => removingRedundantBasePoints
     }
@@ -85,11 +90,10 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
       if (beta == basePoint)
         return this
       val newTail = tail.putExistingBasePointInHead(basePoint)
-      val beforeSwap = new BSGSNode(transversal, strongGeneratingSet,
+      val newStrongGeneratingSet = (strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
+      val beforeSwap = new BSGSNode(transversal, newStrongGeneratingSet,
         newTail)
-      val afterSwap = beforeSwap.baseSwap
-      assert(afterSwap.beta == basePoint)
-      afterSwap
+      beforeSwap.baseSwap
     }
 
     def withHeadBasePoint(basePoint: Dom): BSGSChain = {
@@ -158,11 +162,11 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
         assert(!gammaSet.isEmpty)
         exploreGamma
       }
-      val nS = strongGeneratingSet ++ tList
+      val nS = (tList diff strongGeneratingSet) ::: strongGeneratingSet
       val nTrv = makeTransversal(beta1, nS)
       val nS1 = nS.filter( s => action(s, beta1) == beta1 )
       val nTrv1 = makeTransversal(beta, nS1)
-      new BSGSNode(nTrv, tList, new BSGSNode(nTrv1, tList.filter( t => action(t, beta1) == beta1), tail.tail))
+      new BSGSNode(nTrv, nS, new BSGSNode(nTrv1, nS1, tail.tail))
     }
 
     def randomizedBaseSwap(r: scala.util.Random): BSGSChain = {
@@ -171,20 +175,19 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
       require_(!tail.isTerminal)
       val nBeta = tail.beta
       val nBeta1 = beta
-      var nTrv = makeTransversal(nBeta)
-      var nTrv1 = makeTransversal(nBeta1)
       var nS = strongGeneratingSet
       var nS1 = strongGeneratingSet.filter(g => action(g, nBeta) == nBeta)
-      nTrv = nTrv.updated(nS, nS)
-      nTrv1 = nTrv1.updated(nS1, nS1)
+      var nTrv = makeTransversal(nBeta, nS)
+      var nTrv1 = makeTransversal(nBeta1, nS1)
       val siz = (transversal.size*tail.transversal.size)/nTrv.size
       while (nTrv1.size < siz) {
-        val g = random(r)
+        val g = self.randomElement(r)
         val h = g * nTrv(action(g, nBeta)).uinv
         if (!nTrv1.isDefinedAt(action(h, nBeta1))) {
-          nTrv1 = nTrv1.updated(List(h), h :: nS)
-          nS1 = h :: nS1
           nS = h :: nS
+          nS1 = h :: nS1
+          nTrv1 = nTrv1.updated(List(h), nS1)
+          nTrv = nTrv.updated(List(h), nS)
         }
       }
       new BSGSNode(nTrv, nS, new BSGSNode(nTrv1, nS1, tail.tail))

@@ -43,7 +43,7 @@ abstract class Group[F <: FiniteElement[F]](
   val identity: F,
   val action: Action[F],
   val options: GroupOptions = GroupOptions.default
-) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] {
+) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] with GroupBSGSCheck[F] {
   containingGroup =>
 
   def withOptions(newOptions: GroupOptions) =
@@ -59,10 +59,10 @@ abstract class Group[F <: FiniteElement[F]](
 
   def bsgs: BSGSChain
 
-  private[alasc] object BSGSChain extends BSGSMutableCompanion {
+  object BSGSChain extends BSGSMutableCompanion {
   }
 
-  private[alasc] sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable with BSGSSearch with BSGSBase {
+  sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable with BSGSSearch with BSGSBase with BSGSCheck {
     def isTerminal: Boolean
     def tail: BSGSChain
 
@@ -72,7 +72,7 @@ abstract class Group[F <: FiniteElement[F]](
     def strongGeneratingSet: List[F]
   }
 
-  private[alasc] final class BSGSNode(
+  final class BSGSNode(
     var transversal: Transversal[F],
     var strongGeneratingSet: List[F],
     var tail: BSGSChain,
@@ -80,7 +80,7 @@ abstract class Group[F <: FiniteElement[F]](
     def isTerminal = false
   }
 
-  private[alasc] final class BSGSTerminal extends BSGSChain {
+ final class BSGSTerminal extends BSGSChain {
     def isTerminal = true
     def isImmutable = true
     def strongGeneratingSet = List.empty[F]

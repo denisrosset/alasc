@@ -14,6 +14,9 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
       val chain = mutableFromBase(if(base.isEmpty) List(findBaseElement) else base)
       while (chain.order < knownOrder)
         chain.addElement(randomElement(options.randomGenerator))
+      chain.cleanupGenerators
+      chain.removeRedundantGenerators
+      chain.cleanupGenerators
       chain.makeImmutable
       chain
     }
@@ -29,6 +32,7 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
       while (chain.putInOrder) { }
       chain.cleanupGenerators
       chain.removeRedundantGenerators
+      chain.cleanupGenerators
       chain.makeImmutable
       chain
     }
@@ -180,14 +184,14 @@ trait GroupBSGSMutable[F <: FiniteElement[F]] {
       case node: BSGSNode => tail.collectAllGenerators ++ node.strongGeneratingSet
     }
 
-    def buildStrongGeneratorsList(strongGenerators: List[F]): List[F] = this match {
+    def buildStrongGeneratorsList(newStrongGenerators: List[F]): List[F] = this match {
       case terminal: BSGSTerminal => {
-        assert(strongGenerators.isEmpty)
+        assert(newStrongGenerators.isEmpty)
         List.empty[F]
       }
       case node: BSGSNode => {
         val (fixingBeta, notFixingBeta) =
-          strongGenerators.partition(g => action(g, beta) == beta)
+          newStrongGenerators.partition(g => action(g, beta) == beta)
         val generatorsTail = tail.buildStrongGeneratorsList(fixingBeta)
         node.strongGeneratingSet = notFixingBeta ++ generatorsTail
         node.strongGeneratingSet
