@@ -51,9 +51,9 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
 
     def withBaseConjugationHelper(newBase: List[Dom], f: F, finv: F): (BSGSChain, F, F) = newBase match {
       case hd :: tl => {
+        val alpha = action(finv, hd)
         if (!isTerminal) {
-          val alpha = action(finv, hd)
-          if (transversal.isDefinedAt(alpha)) {
+          if (!base.contains(alpha) && transversal.isDefinedAt(alpha)) {
             val (newTail, newF, newFinv) =
               tail.withBaseConjugationHelper(tl, transversal(alpha).u*f, finv*transversal(alpha).uinv)
             val newStrongGeneratingSet = (strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
@@ -61,10 +61,10 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
             return ((newNode, newF, newFinv))
           }
         }
-        val swappedNode = withHeadBasePoint(hd)
+        val swappedNode = withHeadBasePoint(alpha)
         val (newTail, newF, newFinv) = swappedNode.tail.withBaseConjugationHelper(tl, f, finv)
         val newStrongGeneratingSet = (swappedNode.strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
-        val newNode = new BSGSNode(swappedNode.transversal, swappedNode.strongGeneratingSet, newTail)
+        val newNode = new BSGSNode(swappedNode.transversal, newStrongGeneratingSet, newTail)
         ((newNode, newF, newFinv))
       }
       case Nil => (removingRedundantBasePoints, f, finv)

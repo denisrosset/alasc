@@ -33,6 +33,19 @@ object BaseSpec extends Properties("GroupBSGSBase") {
 }
 
 class BaseSuite extends FunSuite {
+  test("Explicit test for bug discovered by BaseSpec 4") {
+    import net.alasc._
+    import Dom.OneBased._
+    val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapAndConjugation, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
+    val group = M11.g.withOptions(newOptions)
+    val newBase = List(10, 1, 4, 9, 2).map(Dom._1(_))
+    val start = group.bsgs
+    val modified = start.withBase(newBase)
+    modified.check
+    val comingBack = modified.withBase(start.base)
+    comingBack.check
+    assert(start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit)))
+  }
   test("Explicit test for bug discovered by BaseSpec 1") {
     import net.alasc._
     import Dom.OneBased._
