@@ -1,7 +1,5 @@
 package net.alasc
 
-import scala.annotation.tailrec
-
 trait GroupBSGSData[F <: FiniteElement[F]] {
   groupSelf: Group[F] =>
 
@@ -9,6 +7,18 @@ trait GroupBSGSData[F <: FiniteElement[F]] {
     self: BSGSChain =>
 
     def beta: Dom = transversal.beta
+
+    def iterator = new Iterator[BSGSChain] {
+      private var current: BSGSChain = self
+      def hasNext = !current.isTerminal
+      def next = {
+        if (hasNext) {
+          val result = current
+          current = result.tail
+          result
+        } else Iterator.empty.next
+      }
+    }
 
     final def transversals: List[Transversal[F]] = this.isTerminal match {
       case true => Nil
