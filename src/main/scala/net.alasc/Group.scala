@@ -1,6 +1,7 @@
 package net.alasc
 
 import scala.util.Random
+import scala.math.max
 
 sealed abstract class BaseChangeStrategy { }
 
@@ -83,11 +84,26 @@ abstract class Group[F <: FiniteElement[F]](
   def compatible(f: F) = identity.compatible(f)
   def contains(f: F) = bsgs.contains(f)
   def subgroup = new Subgroup(bsgs)
+
   object Subgroup {
-    def apply(elements: F*) = {
-      require_(elements.forall(f => containingGroup.contains(f)))
-      require_(elements.forall(f => !f.isIdentity))
-      val subBSGS = BSGSChain.deterministicSchreierSims(bsgs.base, elements.toList)
+    def apply(myGenerators: F*) = {
+      require_(myGenerators.forall(f => containingGroup.contains(f)))
+      require_(myGenerators.forall(f => !f.isIdentity))
+      val subBSGS = BSGSChain.deterministicSchreierSims(bsgs.base, myGenerators.toList)
+      new Subgroup(subBSGS)
+    }
+
+    def fromGeneratorsAndOrder(myGenerators: List[F], myOrder: BigInt) = {
+      if (options.useRandomizedAlgorithms) {
+        val bag = RandomBag(myGenerators, identity, max(10, myGenerators.length), 50, options.randomGenerator)
+        val subBSGS = BSGSChain.randomSchreierSims(bsgs.base, bag.randomElement, myOrder)
+        new Subgroup(subBSGS)
+      } else apply(myGenerators:_*)
+    }
+
+    def fromRandomAndOrder(myRandomElement: Random => F, myOrder: BigInt) = {
+      require_(options.useRandomizedAlgorithms == true)
+      val subBSGS = BSGSChain.randomSchreierSims(bsgs.base, myRandomElement, myOrder)
       new Subgroup(subBSGS)
     }
   }
