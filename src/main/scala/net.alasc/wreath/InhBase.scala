@@ -38,7 +38,7 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
 //  def toTeX = TeX.mk(arr.map(_.toTeX), TeX("\\big ("), TeX(","), TeX("\\big )"))
   def apply(k: Dom) = arr(k._0)
   def *(that: InhBaseElement[F]) = {
-    require_(compatible(that))
+    // require_(compatible(that))
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i)*that.arr(i)
     new InhBaseElement(newArr)
@@ -47,14 +47,14 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
   def compatible(that: InhBaseElement[F]) = arr.size == that.arr.size && (arr zip that.arr).forall(Function.tupled( (e1,e2) => e1.compatible(e2) ))
   override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
   def ===(that: InhBaseElement[F]) = {
-    require_(compatible(that))
+    // require_(compatible(that))
       (0 until arr.size).forall( i => arr(i) === that.arr(i))
   }
   def inverse = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(i).inverse
     val newEl = new InhBaseElement(newArr)
-    assert(compatible(newEl))
+    // assert(compatible(newEl))
     newEl
   }
   def isIdentity = (0 until arr.size).forall( i => arr(i).isIdentity )
@@ -62,14 +62,14 @@ class InhBaseElement[F <: FiniteElement[F] : ClassTag](val arr: Array[F]) extend
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(i) = arr(p.image(Dom._0(i))._0)
     val newEl = new InhBaseElement(newArr)
-    assert(compatible(newEl))
+    // assert(compatible(newEl))
     newEl
   }
   def **[P <: PermElement[P]](p: P) = {
     val newArr = new Array[F](arr.size)
     for (i <- 0 until arr.size) newArr(p.image(Dom._0(i))._0) = arr(i)
     val newEl = new InhBaseElement(newArr)
-    assert(compatible(newEl))
+    // assert(compatible(newEl))
     newEl
   }
 }
