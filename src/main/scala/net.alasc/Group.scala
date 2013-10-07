@@ -19,7 +19,7 @@ case class GroupOptions(
   val baseChangeStrategy: BaseChangeStrategy) { }
 
 object GroupOptions {
-  def default = GroupOptions(
+  var default = GroupOptions(
     useRandomizedAlgorithms = true,
     randomGenerator = scala.util.Random,
     transversalBuilder = TransversalExplicit,
