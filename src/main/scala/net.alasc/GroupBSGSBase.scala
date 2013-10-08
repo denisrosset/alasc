@@ -8,7 +8,7 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
   trait BSGSBase {
     self: BSGSChain =>
 
-    def conjugatedBy(f: F): BSGSChain = conjugatedBy(f, f.inverse)
+    def conjugatedBy(f: F): BSGSChain = if (f.isIdentity) this else conjugatedBy(f, f.inverse)
     def conjugatedBy(f: F, finv: F): BSGSChain = this match {
       case terminal: BSGSTerminal => terminal
       case node: BSGSNode =>
