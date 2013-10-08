@@ -12,11 +12,18 @@ class InhImprimitiveAction[IWE <: InhWreathElementTrait[IWE, AE, HE], AE <: Fini
     case _ => false
   }
 
-  def apply(we: IWE, k: Dom) = {
-    val i = start.zipWithIndex.find(_._1 > k._0).get._2 - 1
-    val o = k._0 - start(i)
-    val i1 = we.he.image(Dom._0(i))._0
-    val o1 = ba(i)(we.ke.arr(i), Dom._0(o))._0
-    Dom._0(start(i1) + o1)
+  def apply(we: IWE, k: Dom): Dom = {
+    var i = 0
+    val n = dimensions.size
+    while (i < n) {
+      if (start(i + 1) > k._0) {
+        val o = k._0 - start(i)
+        val i1 = we.he.image(Dom._0(i))._0
+        val o1 = ba(i)(we.ke.arr(i), Dom._0(o))._0
+        return Dom._0(start(i1) + o1)
+      }
+      i += 1
+    }
+    throw new IllegalArgumentException("Element k outside domain.")
   }
 }
