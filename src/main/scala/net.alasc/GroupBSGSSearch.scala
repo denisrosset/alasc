@@ -2,6 +2,14 @@ package net.alasc
 
 import scala.annotation.tailrec
 
+trait BaseImageTest {
+  def apply(baseImage: Dom): (Boolean, BaseImageTest)
+}
+
+object TrivialBaseImageTest extends BaseImageTest {
+  def apply(baseImage: Dom) = (true, this)
+}
+
 trait GroupBSGSSearch[F <: FiniteElement[F]] {
   groupSelf: Group[F] =>
 
