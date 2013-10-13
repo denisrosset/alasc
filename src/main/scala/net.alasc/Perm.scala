@@ -28,12 +28,22 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
   override def toString = toTextDump
   def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
   def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
-  def isIdentity: Boolean = domain.forall( k => k == image(k) )
-  def size = arr.size
+  def isIdentity: Boolean = {
+    val n = arr.length
+    var i = 0
+    while (i < n) {
+      if (Dom._0(i) != image(Dom._0(i)))
+        return false
+      i += 1
+    }
+    return true
+  }
+  def size = arr.length
 //  def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
   def invImage(k: Dom): Dom = {
     var i = 0
-    while (i < arr.size) {
+    val n = arr.length
+    while (i < n) {
       if (arr(i) == k._0)
         return Dom._0(i)
       i += 1
@@ -49,12 +59,22 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
   def *(that: Perm): Perm = {
     require_(compatible(that))
     val a = new Array[Int](size)
-    for (i <- 0 until size) a(i) = that.arr(arr(i))
+    var i = 0
+    val n = arr.length
+    while (i < n) {
+      a(i) = that.arr(arr(i))
+      i += 1
+    }
     new Perm(a)
   }
   def inverse: Perm = {
     val a = new Array[Int](size)
-    for (i <- 0 until size) a(arr(i)) = i
+    val n = arr.length
+    var i = 0
+    while (i < n) {
+      a(arr(i)) = i
+      i += 1
+    }
     new Perm(a)
   }
   override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
