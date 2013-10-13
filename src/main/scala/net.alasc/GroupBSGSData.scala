@@ -37,7 +37,7 @@ trait GroupBSGSData[F <: FiniteElement[F]] {
 
     final def order: BigInt = this.isTerminal match {
       case true => BigInt(1)
-      case false => transversal.size * tail.order
+      case false => if(transversal.size == 1) tail.order else transversal.size * tail.order
     }
 
     final def makeImmutable: Unit = this match {
