@@ -73,9 +73,7 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
     def withBaseNoConjugation(newBase: List[Dom]): BSGSChain = newBase match {
       case hd :: tl => {
         val newHead = withHeadBasePoint(hd)
-        newHead.check
         val newTail = newHead.tail.withBaseNoConjugation(tl)
-        newTail.check
         val newStrongGeneratingSet = 
           (newHead.strongGeneratingSet diff newTail.strongGeneratingSet) ::: newTail.strongGeneratingSet
         new BSGSNode(newHead.transversal, newStrongGeneratingSet, newTail)
