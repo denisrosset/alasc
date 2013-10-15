@@ -32,7 +32,7 @@ abstract class Group[F <: FiniteElement[F]](
   val identity: F,
   val action: Action[F],
   val options: GroupOptions = GroupOptions.default
-) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] with GroupBSGSCheck[F] {
+) extends FiniteGroup[F] with GroupBSGSData[F] with GroupBSGSElements[F] with GroupBSGSSifting[F] with GroupBSGSMutable[F] with GroupBSGSSearch[F] with GroupBSGSBase[F] with GroupBSGSCheck[F] with GroupCoset[F] {
   containingGroup =>
 
   def withOptions(newOptions: GroupOptions) =
@@ -51,7 +51,7 @@ abstract class Group[F <: FiniteElement[F]](
   object BSGSChain extends BSGSMutableCompanion {
   }
 
-  sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable with BSGSSearch with BSGSBase with BSGSCheck {
+  sealed abstract class BSGSChain extends BSGSData with BSGSElements with BSGSSifting with BSGSMutable with BSGSSearch with BSGSBase with BSGSCheck with BSGSCoset {
     def isTerminal: Boolean
     def tail: BSGSChain
 
@@ -108,7 +108,7 @@ abstract class Group[F <: FiniteElement[F]](
     }
   }
 
-  class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] {
+  class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] with SubgroupCoset {
     def order = subBSGS.order
     def randomElement(gen: Random) = subBSGS.randomElement(gen)
     def generators = subBSGS.strongGeneratingSet
@@ -131,8 +131,6 @@ abstract class Group[F <: FiniteElement[F]](
       case true => this
       case false => new Subgroup(subBSGS.withHeadBasePoint(k).tail)
     }
-
-
 
     /** Returns subgroup fixing a given sequence. */
     def fixing[O](s: Seq[O]) = {
