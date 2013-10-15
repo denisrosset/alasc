@@ -37,6 +37,8 @@ trait GroupBSGSBase[F <: FiniteElement[F]] {
       case BaseFromScratch => withBaseFromScratch(newBase)
     }
 
+    def withLexicographicBase: BSGSChain = withBase((1 to action.dimension).map(Dom._1(_)).toList)
+
     def withBaseFromScratch(newBase: List[Dom]): BSGSChain = options.useRandomizedAlgorithms match {
       case true =>
         BSGSChain.randomSchreierSims(newBase, randomElement, order)
