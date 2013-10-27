@@ -109,6 +109,7 @@ abstract class Group[F <: FiniteElement[F]](
   }
 
   class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] with SubgroupCoset {
+    def group = containingGroup
     def order = subBSGS.order
     def randomElement(gen: Random) = subBSGS.randomElement(gen)
     def generators = subBSGS.strongGeneratingSet
