@@ -10,12 +10,11 @@ trait PermParserLike extends RegexParsers {
   def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm(sz, cycles) }
 }
 
-object PermParser extends PermParserLike {
-  def perm = (("Perm(" ~> size) <~ ")") >> ( sz => cycles(sz) )
-}
-
 object Perm extends DumpableCompanion[Perm] {
-  def fromTextDump(dump: String): Option[Perm] = PermParser.parse(PermParser.perm, dump).map(Some(_)).getOrElse(None)
+  val parser = new DumpParser with PermParserLike {
+    def dump = (("Perm(" ~> size) <~ ")") >> ( sz => cycles(sz) )
+  }
+
   def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
   def apply(n: Int): Perm = new Perm((0 until n).toArray)
   def apply(n: Int, cycles: List[List[Dom]]): Perm = (Perm(n) /: cycles)( Perm.addCycle )
@@ -24,8 +23,8 @@ object Perm extends DumpableCompanion[Perm] {
 }
 
 class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
-  def toTextDump = "Perm("+size+")"+cyclesToText
-  override def toString = toTextDump
+  def toText = "Perm("+size+")"+cyclesToText
+  override def toString = toText
   def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
   def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
   def isIdentity: Boolean = {
