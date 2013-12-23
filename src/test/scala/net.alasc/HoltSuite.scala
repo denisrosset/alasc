@@ -10,7 +10,7 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List(1, 2, 5).map(Dom._1(_))
-    val g = new GroupFromGenerators(id, TrivialAction(id), List(g1, g2, g3), base)
+    val g = PGroup.fromGenerators(id, List(g1, g2, g3), base)
     assert(g.order == 16)
     val els: List[Perm] = g.bsgs.orderedIterator().toList
     assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.bsgs.ElementOrdering.compare(a,b) < 0 ) ) )
@@ -26,7 +26,7 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List[Dom](1,2,3,4,5,6)
-    val g = new GroupFromGenerators(id, TrivialAction(id), List(g1, g2, g3), base)
+    val g = PGroup.fromGenerators(id, List(g1, g2, g3), base)
     assert(g.order == 16)
     case class Test(level: Int) extends BaseImageTest {
       def apply(b: Dom): (Boolean, BaseImageTest) = {

@@ -33,7 +33,7 @@ object PermSpec extends Properties("Perm") {
     pp => pp.domain.forall( i => pp.inverse.image(i) === pp.invImage(i) )
   }
 
-  property("toTextDump/fromTextDump") = Prop.forAll(genPerm) {
-    pp => Perm.fromTextDump(pp.toTextDump).get === pp
+  property("toText/fromText") = Prop.forAll(genPerm) {
+    pp => Perm.fromText(pp.toText) === pp
   }
 }

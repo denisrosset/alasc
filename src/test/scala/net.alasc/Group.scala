@@ -13,7 +13,7 @@ class GroupSuite extends FunSuite {
     val g4 = Perm(48)(25,27,32,30)(26,29,31,28)( 3,38,43,19)( 5,36,45,21)( 8,33,48,24)
     val g5 = Perm(48)(33,35,40,38)(34,37,39,36)( 3, 9,46,32)( 2,12,47,29)( 1,14,48,27)
     val g6 = Perm(48)(41,43,48,46)(42,45,47,44)(14,22,30,38)(15,23,31,39)(16,24,32,40)
-    val g = Group(g1, g2, g3, g4, g5, g6)
+    val g = PGroup(g1, g2, g3, g4, g5, g6)
     assert(g.order === BigInt("43252003274489856000"))
     val colors = List(
       1,1,1,1,1,1,1,1,
@@ -27,7 +27,7 @@ class GroupSuite extends FunSuite {
 
   test("Bug in removing strong generators") {
     import Dom.OneBased._
-    val g = Group(Perm(8)(1,2),Perm(8)(2,3),Perm(8)(3,4,5,6),Perm(8)(3,4,7,8))
+    val g = PGroup(Perm(8)(1,2),Perm(8)(2,3),Perm(8)(3,4,5,6),Perm(8)(3,4,7,8))
     assert(g.order == 40320)
   }
 }

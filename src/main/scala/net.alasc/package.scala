@@ -1,3 +1,6 @@
+/*
+# Main package `alasc` for computational group theory
+*/
 package net
 
 import scala.language.implicitConversions
@@ -40,3 +43,21 @@ package object alasc {
       throw new IllegalArgumentException("requirement failed: "+ message)
   }
 }
+/*
+MasterDocument
+Include: Dom.scala
+Include: Group.scala
+Include: Orbit.scala
+Include: Transversal.scala
+
+# Unconverted code #
+Include: Action.scala
+Include: BigSeq.scala
+Include: Dumpable.scala
+Include: Finite.scala
+Include: Perm.scala
+Include: PermBase.scala
+Include: Permutable.scala
+Include: RandomBag.scala
+Include: Sym.scala
+*/

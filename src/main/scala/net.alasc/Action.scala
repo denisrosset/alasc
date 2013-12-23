@@ -6,7 +6,7 @@ trait Action[F <: FiniteElementLike] {
   def faithful: Boolean
   def dimension: Int
   def identity: F
-  def domain: Iterator[Dom] = (0 until dimension).toIterator.map(Dom._0(_))
+  def domain: Iterable[Dom] = (0 until dimension).map(Dom._0(_))
   def apply(f: F, k: Dom): Dom
   def toPerm(f: F): Perm = Perm.fromImages((0 until dimension).map(k => apply(f, Dom._0(k))):_*)
 }

@@ -52,7 +52,7 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
   def image(k: Dom) = Dom._0(arr(k._0))
   def images: DomArray = DomArray.fromZeroBasedArray(arr)
   def compatible(that: Perm) = size == that.size
-  def explicit = this
+  def toExplicit = this
   // note that the image of b under the product g*h is given by:
   // b^(g*h) = (b^g)^h
   def *(that: Perm): Perm = {

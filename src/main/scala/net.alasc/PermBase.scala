@@ -10,7 +10,7 @@ trait PermElementLike extends FiniteElementLike {
   def image(k: Dom): Dom
   def images: DomArray
   def invImage(k: Dom): Dom
-  def explicit: Perm
+  def toExplicit: Perm
   def domain: Iterable[Dom] = (0 until size).toIterable.map(Dom._0(_))
   def cycle[P](start: Dom): List[Dom] = {
     def walk(el: Dom): List[Dom] =
@@ -61,17 +61,19 @@ trait PermElement[E <: PermElement[E]] extends PermElementLike with FiniteElemen
 }
 
 trait PermGroup[E <: PermElement[E]] extends FiniteGroup[E] {
-  /** Degree of the permutation group, i.e. size of the domain. */
+/*
+Degree of the permutation group, i.e. size of the domain.
+*/
   def degree: Int
-  /** Domain of the permutation group. */
+/*
+Domain of the permutation group.
+*/
   def domain = (0 until degree).toIterator.map(Dom._0(_))
-  /** Instantiates a group element from an explicit permutation.
-    *
-    * @param p Explicit permutation to instantiate.
-    * 
-    * @return Some(e) if p can be represented by e or None.
-    */
+/*
+Instantiates a group element from an explicit permutation `p`. Returns
+`Some(e)` if `p` can be represented by `e` or `None`.
+*/
   def fromExplicit(p: Perm): Option[E]
 
-  def toGroup: Group[E] = toGroup(TrivialAction(identity))
+  def toGroup: PGroup[E] = PGroup.fromRandomElementsAndOrder(identity, randomElement, order)
 }

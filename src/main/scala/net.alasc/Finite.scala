@@ -54,5 +54,5 @@ trait FiniteGroup[E <: FiniteElement[E]] {
 
   def elementClassTag: ClassTag[E] = ClassTag[E](identity.getClass)
 
-  def toGroup(action: Action[E]): Group[E] = new GroupFromRandomElementsAndOrder(identity, action, randomElement, order)
+  def toGroup(action: Action[E]): Group[E] = FGroup.fromRandomElementsAndOrder(identity, action, randomElement, order)
 }
