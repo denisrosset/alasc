@@ -11,6 +11,7 @@ trait PermElementLike extends FiniteElementLike {
   def images: DomArray
   def invImage(k: Dom): Dom
   def toExplicit: Perm
+  def support = domain.filter( k => k != image(k) )
   def domain: Iterable[Dom] = (0 until size).toIterable.map(Dom._0(_))
   def cycle[P](start: Dom): List[Dom] = {
     def walk(el: Dom): List[Dom] =
