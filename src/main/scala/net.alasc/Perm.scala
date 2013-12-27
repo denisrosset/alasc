@@ -76,7 +76,7 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
     }
     new Perm(a)
   }
-  override def hashCode() = scala.util.hashing.MurmurHash3.seqHash(arr)
+  override def hashCode() = scala.util.hashing.MurmurHash3.arrayHash(arr)
   def ===(that: Perm) = {
     require_(compatible(that))
     arr.sameElements(that.arr)
