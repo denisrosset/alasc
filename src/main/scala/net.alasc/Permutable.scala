@@ -1,5 +1,18 @@
 package net.alasc
 
+trait OrderedPermutable[P <: OrderedPermutable[P, F, T], F <: FiniteElement[F], T] extends Permutable[P, F, T] with Ordered[P] {
+  orderedPermutable: P =>
+  def compare(that: P): Int = {
+    for(i <- permutableSequence.indices) {
+      val compareValue = permutableOrdering.compare(permutableSequence(i),
+        that.permutableSequence(i))
+      if (compareValue != 0)
+        return compareValue
+    }
+    0
+  }
+}
+
 /*
 Trait for objects that can be permuted by the action of a finite group.
 
@@ -9,6 +22,8 @@ F is the type of the finite group elements.
 trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T <: Ordered[T]] {
   permutable: P =>
 
+
+  val permutableOrdering: Ordering[T]
   /* Returns the current object permuted by f. */
   def permutedBy(f: F): P
   /* Returns the sequence associated with the current object. */
