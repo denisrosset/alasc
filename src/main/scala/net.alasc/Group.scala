@@ -778,6 +778,20 @@ Lexicographic order is a total order according to the following rule:
           tail.rightCosetMinimalRepresentativeUsingBSGSBase(newF)
         }
       }
+
+    def rightCosetMinimalRepresentativeUsingBSGSBase(f: F, finv: F)(implicit domOrdering: Ordering[Dom]): (F, F) =
+      chain match {
+        // end of BSGS chain, we have our result
+        case terminal: BSGSTerminal => (f, finv)
+        case node: BSGSNode => {
+          // beta**(sk sk-1 ... s2 s1 f) = (beta**sk) ** (sk-1 ... s2 s1 f)  = b ** partial
+          val minimumB = transversal.keysIterator.minBy(b => act(f, b))
+          // special case: if minimumB == beta, then u = identity
+          val (newF, newFinv) = if(minimumB == beta) (f, finv) else (transversal(minimumB).u * f, finv * transversal(minimumB).uinv)
+          tail.rightCosetMinimalRepresentativeUsingBSGSBase(newF, newFinv)
+        }
+      }
+
   }
 
 /*
