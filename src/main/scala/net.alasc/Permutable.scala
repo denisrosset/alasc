@@ -48,7 +48,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
 
     /* Returns the minimal lexicographic representative. */
     def head = permutedBy(
-      findSequenceMinimalRepresentativeSubgroup(Iterable(permutableGroup.identity), groupBSGSStart, symmetryBSGS).inverse)
+      findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(permutableGroup.identity), groupBSGSStart, symmetryBSGS).inverse)
 
     /* Returns an iterator on the lexicographic representatives. */
     def iterator: Iterator[P] = {
@@ -91,7 +91,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
      The argument `candidatesAreMinimal` is used internally to avoid looking twice for
      minimal coset representatives when the current transversal is trivial (size = 1).
      */
-    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: Iterable[F], groupChain: permutableGroup.BSGSChain, symChain: permutableGroup.BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
+    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: permutableGroup.BSGSChain, symChain: permutableGroup.BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
       import Dom.IntOrder._
 
       val beta = groupChain.beta
@@ -114,18 +114,28 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
         case false => {
           var first = true
           var minimumValue: T = permutableSequence(0)
+          val keysArray = groupChain.transversal.keysIterator.map(_._0).toArray
           var possibleCandidates = ArrayBuffer.empty[(F, Dom)]
-
-          for (c <- candidates; b <- groupChain.transversal.keysIterator) {
-            val betaimage = permutableGroup.act(c, b)
-            val value = permutedSequence(betaimage)
-            if (first || permutableOrdering.compare(value, minimumValue) == -1) {
-              possibleCandidates.clear
-              minimumValue = value
-              first = false
+          var cind = 0
+          val csize = candidates.size
+          val ksize = keysArray.size
+          while (cind < csize) {
+            var kind = 0
+            val c = candidates(cind)
+            while (kind < ksize) {
+              val b = Dom._0(keysArray(kind))
+              val betaimage = permutableGroup.act(c, b)
+              val value = permutedSequence(betaimage)
+              if (first || permutableOrdering.compare(value, minimumValue) == -1) {
+                possibleCandidates.clear
+                minimumValue = value
+                first = false
+              }
+              if (value == minimumValue)
+                possibleCandidates += ((c, b))
+              kind += 1
             }
-            if (value == minimumValue)
-              possibleCandidates += ((c, b))
+            cind += 1
           }
 
           val nextBeta = Dom._0(beta._0 + 1)
@@ -133,12 +143,19 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
           if (groupChain.transversal.size == 1 && candidatesAreMinimal)
             findSequenceMinimalRepresentativeSubgroup(possibleCandidates.map(_._1), groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
           else {
-            val newCandidates = MutableSet.empty[F] ++ (for ((c, b) <- possibleCandidates) yield {
+            val newCandidates = MutableSet.empty[F]
+            var i = 0
+            val n = possibleCandidates.size
+            while (i < n) {
+              val c = possibleCandidates(i)._1
+              val b = possibleCandidates(i)._2
               if (b == beta && candidatesAreMinimal)
-                c else toMinimal(groupChain.transversal(b).u * c)
-            })
-
-            findSequenceMinimalRepresentativeSubgroup(newCandidates, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
+                newCandidates += c 
+              else 
+                newCandidates += toMinimal(groupChain.transversal(b).u * c)
+              i += 1
+            }
+            findSequenceMinimalRepresentativeSubgroup(ArrayBuffer.empty[F] ++ newCandidates, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
           }
         }
       }
@@ -198,7 +215,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
           else
             for (((c, sym), b) <- candidatesForValue(value)) {
               val u = chain.transversal(b).u
-              val newU = findSequenceMinimalRepresentativeSubgroup(Iterable(u), chain.lexicographicTail, sym, Some(c))
+              val newU = findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(u), chain.lexicographicTail, sym, Some(c))
               val newC = newU * c
               if (!newCandidates.isDefinedAt(newC)) {
                 val newSym = sym.conjugatedBy(newU.inverse).withHeadBasePoint(chain.beta).tail
