@@ -31,6 +31,7 @@ class Dom private[alasc] (val zeroBased: Int) extends AnyVal {
   def _0: Int = zeroBased
   def **[P <: PermElement[P]](p: P) = p.image(this)
   def ===(that: Dom) = zeroBased == that.zeroBased
+  def next = new Dom(zeroBased + 1)
 }
 
 object Dom {

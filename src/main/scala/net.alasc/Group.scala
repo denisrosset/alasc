@@ -273,7 +273,44 @@ The method `check` throws an exception if an inconsistency is found.
       case BaseFromScratch => withBaseFromScratch(newBase)
     }
 
-    def withLexicographicBase: BSGSChain = withBase((1 to actionDimension).map(Dom._1(_)).toList)
+    def fullLexicographicBase: List[Dom] = (1 to actionDimension).map(Dom._1(_)).toList
+
+    def withFullLexicographicBase: BSGSChain = withBase(fullLexicographicBase)
+    // TODO: this computes twice the new base
+    def withLexicographicBase: BSGSChain = withBase(lexicographicBase())
+
+    @annotation.tailrec final def findFirstLexicographicBasePoint(start: Dom = Dom._1(1)): Option[Dom] =
+      (start._1 > actionDimension) match {
+        case true => None
+        case false => {
+          strongGeneratingSet.exists(g => act(g, start) != start) match {
+            case true => Some(start)
+            case false => findFirstLexicographicBasePoint(Dom._1(start._1 + 1))
+          }
+        }
+      }
+
+    def lexicographicTail: BSGSChain = {
+      if (beta._1 == actionDimension)
+        new BSGSTerminal
+      else {
+        val nextBeta = beta.next
+        tail match {
+          case terminal: BSGSTerminal =>
+            new BSGSNode(makeTransversal(nextBeta), Nil, terminal, true)
+          case node: BSGSNode =>
+            node.withHeadBasePoint(nextBeta)
+        }
+      }
+    }
+
+    def lexicographicBase(start: Dom = Dom._1(1)): List[Dom] = {
+      val basePoint = findFirstLexicographicBasePoint(start)
+      basePoint match {
+        case None => Nil
+        case Some(beta) => beta :: withHeadBasePoint(beta).tail.lexicographicBase(Dom._1(beta._1 + 1))
+      }
+    }
 
     def withBaseFromScratch(newBase: List[Dom]): BSGSChain = options.useRandomizedAlgorithms match {
       case true =>
@@ -733,8 +770,6 @@ Lexicographic order is a total order according to the following rule:
       chain match {
         // end of BSGS chain, we have our result
         case terminal: BSGSTerminal => f
-        case node: BSGSNode if node.transversal.size == 1 =>
-          tail.rightCosetMinimalRepresentativeUsingBSGSBase(f)
         case node: BSGSNode => {
           // beta**(sk sk-1 ... s2 s1 f) = (beta**sk) ** (sk-1 ... s2 s1 f)  = b ** partial
           val minimumB = transversal.keysIterator.minBy(b => act(f, b))
@@ -877,12 +912,9 @@ Lexicographic order is a total order according to the following rule:
 
     /** Returns subgroup fixing a given sequence. */
     def fixing[O](s: Seq[O]) = {
-
       require_(s.size == actionDimension)
       def leaveInvariant(f: F) =
         (0 until s.size).forall( i => s(act(f, Dom._0(i))._0) == s(i) )
-
-      val groupBase = bsgs.base
 
       case class Test(remainingBase: List[Dom]) extends BaseImageTest {
         def apply(baseImage: Dom) = {
@@ -890,7 +922,8 @@ Lexicographic order is a total order according to the following rule:
           (takeIt, Test(remainingBase.tail))
         }
       }
-      val newBSGS = subBSGS.subgroupSearch( leaveInvariant, Test(subBSGS.base) )
+      val fullBase = subBSGS.fullLexicographicBase
+      val newBSGS = subBSGS.withBase(fullBase).subgroupSearch( leaveInvariant, Test(fullBase) ).removingRedundantBasePoints
       new Subgroup(newBSGS)
     }
 /*
@@ -918,7 +951,7 @@ Lexicographic order is a total order according to the following rule:
 (see also the comment above for `rightCosetMinimalRepresentativeUsingBSGSBase`).
 */
     def rightCosetMinimalRepresentative(f: F): F =
-      subBSGS.withLexicographicBase.rightCosetMinimalRepresentativeUsingBSGSBase(f)(Dom.IntOrder.DomOrdering)
+      subBSGS.withFullLexicographicBase.rightCosetMinimalRepresentativeUsingBSGSBase(f)(Dom.IntOrder.DomOrdering)
 
 
   }
