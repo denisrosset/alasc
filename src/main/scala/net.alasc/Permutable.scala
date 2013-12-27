@@ -14,12 +14,13 @@ trait OrderedPermutable[P <: OrderedPermutable[P, F, T], F <: FiniteElement[F], 
 }
 
 /*
-Trait for objects that can be permuted by the action of a finite group.
+ Trait for objects that can be permuted by the action of a finite group.
 
-These objects are represented by a sequence of T, and T is any Ordered type.
-F is the type of the finite group elements.
-*/
-trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T <: Ordered[T]] {
+ These objects are represented by a sequence of T, and T is any type with an
+ ordering `permutableOrdering`.
+ F is the type of the finite group elements.
+ */
+trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
   permutable: P =>
 
 
@@ -35,17 +36,19 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T <: Ordered[T
   /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
   def findPermutationTo(that: P) = representatives.Block.start.blockForSequence(that.permutableSequence).permutation.inverse
 
+  def domainEnd = Dom._1(permutableSequence.size)
+
   /* Big sequence of representatives in the lexicographic order. */
   object representatives extends BigSeq[P] {
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
     import Dom.IntOrder.DomOrdering
-  
-    protected lazy val groupLexBSGS = permutableGroup.bsgs.withLexicographicBase
-    protected lazy val symmetryLexBSGS = permutableSymmetrySubgroup.subBSGS.withLexicographicBase
+    
+    def groupBSGSStart = permutableGroup.bsgs.withHeadBasePoint(Dom._0(0))
+    def symmetryBSGS = permutableSymmetrySubgroup.subBSGS
 
     /* Returns the minimal lexicographic representative. */
     def head = permutedBy(
-      findSequenceMinimalRepresentativeSubgroup(Iterable(permutableGroup.identity), groupLexBSGS, symmetryLexBSGS).inverse)
+      findSequenceMinimalRepresentativeSubgroup(Iterable(permutableGroup.identity), groupBSGSStart, symmetryBSGS).inverse)
 
     /* Returns an iterator on the lexicographic representatives. */
     def iterator: Iterator[P] = {
@@ -76,33 +79,39 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T <: Ordered[T
       permutedBy(Block.start.blockForIndex(index).permutation.inverse)
     }
 
-/* Finds the minimal lexicographic representative.
+    /* Finds the minimal lexicographic representative.
 
-The candidate permutations `candidates` have been selected at the previous levels
-of the BSGS chain, and they will be filtered using the remaining subgroup given by
-`groupChain`. The redundancy given by the symmetry group `symChain` will be removed
-by looking at minimal coset representatives in symChain.
+     The candidate permutations `candidates` have been selected at the previous levels
+     of the BSGS chain, and they will be filtered using the remaining subgroup given by
+     `groupChain`. The redundancy given by the symmetry group `symChain` will be removed
+     by looking at minimal coset representatives in symChain.
 
-The main `sequence` can be implicitly permuted by the argument `permutedByInverseOf`.
+     The main `sequence` can be implicitly permuted by the argument `permutedByInverseOf`.
 
-The argument `candidatesAreMinimal` is used internally to avoid looking twice for
-minimal coset representatives when the current transversal is trivial (size = 1).
-*/
-    protected def findSequenceMinimalRepresentativeSubgroup(candidates: Iterable[F], groupChain: permutableGroup.BSGSChain, symChain: permutableGroup.BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
+     The argument `candidatesAreMinimal` is used internally to avoid looking twice for
+     minimal coset representatives when the current transversal is trivial (size = 1).
+     */
+    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: Iterable[F], groupChain: permutableGroup.BSGSChain, symChain: permutableGroup.BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
+      import Dom.IntOrder._
+
+      val beta = groupChain.beta
+
       def permutedSequence(k: Dom): T = permutedByInverseOf match {
         case None => permutableSequence(k._0)
         case Some(f) => permutableSequence(permutableGroup.act(f, k)._0)
       }
+
       def toMinimal(f: F) = symChain.rightCosetMinimalRepresentativeUsingBSGSBase(f.inverse).inverse
-      groupChain match {
-        case terminal: permutableGroup.BSGSTerminal => {
+
+      (beta == domainEnd) match {
+        case true => {
           assert(candidates.size == 1)
           if (!candidatesAreMinimal)
             toMinimal(candidates.head)
           else
             candidates.head
         }
-        case node: permutableGroup.BSGSNode => {
+        case false => {
           var first = true
           var minimumValue: T = permutableSequence(0)
           var possibleCandidates = ArrayBuffer.empty[(F, Dom)]
@@ -110,7 +119,7 @@ minimal coset representatives when the current transversal is trivial (size = 1)
           for (c <- candidates; b <- groupChain.transversal.keysIterator) {
             val betaimage = permutableGroup.act(c, b)
             val value = permutedSequence(betaimage)
-            if (first || value < minimumValue) {
+            if (first || permutableOrdering.compare(value, minimumValue) == -1) {
               possibleCandidates.clear
               minimumValue = value
               first = false
@@ -119,32 +128,35 @@ minimal coset representatives when the current transversal is trivial (size = 1)
               possibleCandidates += ((c, b))
           }
 
-          if (node.transversal.size == 1 && candidatesAreMinimal)
-            return findSequenceMinimalRepresentativeSubgroup(possibleCandidates.map(_._1), groupChain.tail, symChain, permutedByInverseOf, true)
+          val nextBeta = Dom._0(beta._0 + 1)
 
-          val newCandidates = MutableSet.empty[F] ++ (for ((c, b) <- possibleCandidates) yield {
-            if (b == groupChain.beta && candidatesAreMinimal)
-              c else toMinimal(groupChain.transversal(b).u * c)
-          })
+          if (groupChain.transversal.size == 1 && candidatesAreMinimal)
+            findSequenceMinimalRepresentativeSubgroup(possibleCandidates.map(_._1), groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
+          else {
+            val newCandidates = MutableSet.empty[F] ++ (for ((c, b) <- possibleCandidates) yield {
+              if (b == beta && candidatesAreMinimal)
+                c else toMinimal(groupChain.transversal(b).u * c)
+            })
 
-          findSequenceMinimalRepresentativeSubgroup(newCandidates, groupChain.tail, symChain, permutedByInverseOf, true)
+            findSequenceMinimalRepresentativeSubgroup(newCandidates, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
+          }
         }
       }
     }
 
     object Block {
-      def start = Block(groupLexBSGS, Seq( (permutableGroup.identity, symmetryLexBSGS) ))
+      def start = Block(groupBSGSStart, Seq( (permutableGroup.identity, symmetryBSGS) ))
     }
 
-/*
-Block of representatives defined by the k-th first sequence values.
-      
-The block is generated by the permutations given in `candidates` and
-the elements of the remanining BSGS chain given in `chain`.
-      
-Each candidate has an associated symmetry subgroup valid restricted to the base
-points of `chain`. 
-*/
+    /*
+     Block of representatives defined by the k-th first sequence values.
+     
+     The block is generated by the permutations given in `candidates` and
+     the elements of the remanining BSGS chain given in `chain`.
+     
+     Each candidate has an associated symmetry subgroup valid restricted to the base
+     points of `chain`. 
+     */
 
     case class Block(chain: permutableGroup.BSGSChain, candidates: Seq[(F, permutableGroup.BSGSChain)]) {
       /* New possible candidates grouped by the permuted sequence value at `chain`.beta. */
@@ -168,7 +180,7 @@ points of `chain`.
       }
 
       /* Sorted possible values for the permuted sequence at `chain`.beta. */
-      lazy val sortedValues = candidatesForValue.keys.toSeq.sorted
+      lazy val sortedValues = candidatesForValue.keys.toSeq.sorted(permutableOrdering)
 
       /* When the block is trivial, returns the associated permutation. */
       def permutation = {
@@ -180,29 +192,29 @@ points of `chain`.
       def blockForValue(value: T) = {
         if (!blocksForValue.isDefinedAt(value)) {
           val newCandidates = new MutableHashMap[F, permutableGroup.BSGSChain]
-          for (((c, sym), b) <- candidatesForValue(value)) {
-            if (chain.transversal.size == 1)
+          if (chain.transversal.size == 1)
+            for (((c, sym), b) <- candidatesForValue(value))
               newCandidates(c) = sym.withHeadBasePoint(chain.beta).tail
-            else {
+          else
+            for (((c, sym), b) <- candidatesForValue(value)) {
               val u = chain.transversal(b).u
-              val newU = findSequenceMinimalRepresentativeSubgroup(Iterable(u), chain.tail, sym, Some(c))
+              val newU = findSequenceMinimalRepresentativeSubgroup(Iterable(u), chain.lexicographicTail, sym, Some(c))
               val newC = newU * c
               if (!newCandidates.isDefinedAt(newC)) {
                 val newSym = sym.conjugatedBy(newU.inverse).withHeadBasePoint(chain.beta).tail
                 newCandidates(newC) = newSym
               }
             }
-          }
-          val newBlock = Block(chain.tail, newCandidates.toSeq)
+          val newBlock = Block(chain.lexicographicTail, newCandidates.toSeq)
           blocksForValue(value) = newBlock
         }
         blocksForValue(value)
       }
 
       /* Return the index of the first representative of the block corresponding to
-         the permuted sequence value `value` at `chain`.beta. */
+       the permuted sequence value `value` at `chain`.beta. */
       def indexOfValue(value: T) =
-        sortedValues.view.filter(_ < value).map(blockForValue(_).size).sum
+        sortedValues.view.filter(permutableOrdering.compare(_, value) == -1).map(blockForValue(_).size).sum
 
       /* Returns the block corresponding to the sequence `seq`. */
       def blockForSequence(seq: IndexedSeq[T] = permutableSequence): Block = {
@@ -229,7 +241,7 @@ points of `chain`.
       }
 
       /* Returns the children block corresponding to the partial index `index`.
-         Also returns the child subindex. */
+       Also returns the child subindex. */
       def partialBlockForIndex(index: BigInt): (Block, BigInt) = {
         assert(0 <= index && index < size)
         var remainingIndex = index
