@@ -115,7 +115,8 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
           var first = true
           var minimumValue: T = permutableSequence(0)
           val keysArray = groupChain.transversal.keysIterator.map(_._0).toArray
-          var possibleCandidates = ArrayBuffer.empty[(F, Dom)]
+          var possibleCandidatesF = ArrayBuffer.empty[F]
+          var possibleCandidatesDom0 = ArrayBuffer.empty[Short]
           var cind = 0
           val csize = candidates.size
           val ksize = keysArray.size
@@ -127,32 +128,37 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
               val betaimage = permutableGroup.act(c, b)
               val value = permutedSequence(betaimage)
               if (first || permutableOrdering.compare(value, minimumValue) == -1) {
-                possibleCandidates.clear
+                possibleCandidatesF.clear
+                possibleCandidatesDom0.clear
                 minimumValue = value
                 first = false
               }
-              if (value == minimumValue)
-                possibleCandidates += ((c, b))
+              if (value == minimumValue) {
+                possibleCandidatesF += c
+                possibleCandidatesDom0 += b._0.toShort
+              }
               kind += 1
             }
+            candidates(cind) = candidates(0)
             cind += 1
           }
 
           val nextBeta = Dom._0(beta._0 + 1)
 
           if (groupChain.transversal.size == 1 && candidatesAreMinimal)
-            findSequenceMinimalRepresentativeSubgroup(possibleCandidates.map(_._1), groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
+            findSequenceMinimalRepresentativeSubgroup(possibleCandidatesF, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
           else {
             val newCandidates = MutableSet.empty[F]
             var i = 0
-            val n = possibleCandidates.size
+            val n = possibleCandidatesF.size
             while (i < n) {
-              val c = possibleCandidates(i)._1
-              val b = possibleCandidates(i)._2
+              val c = possibleCandidatesF(i)
+              val b = Dom._0(possibleCandidatesDom0(i))
               if (b == beta && candidatesAreMinimal)
                 newCandidates += c 
               else 
                 newCandidates += toMinimal(groupChain.transversal(b).u * c)
+              possibleCandidatesF(i) = possibleCandidatesF(0)
               i += 1
             }
             findSequenceMinimalRepresentativeSubgroup(ArrayBuffer.empty[F] ++ newCandidates, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
@@ -176,6 +182,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
      */
 
     case class Block(chain: permutableGroup.BSGSChain, candidates: Seq[(F, permutableGroup.BSGSChain)]) {
+      lazy val chainTail = chain.lexicographicTail
       /* New possible candidates grouped by the permuted sequence value at `chain`.beta. */
       protected lazy val candidatesForValue = {
         val map = new MutableHashMap[T, MutableSet[((F, permutableGroup.BSGSChain), Dom)]] with MultiMap[T, ((F, permutableGroup.BSGSChain), Dom)]
@@ -186,9 +193,6 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
         }
         map
       }
-
-      /* Cache of children blocks. */
-      protected val blocksForValue = new WeakHashMap[T, Block]
 
       /* Number of representatives in this block. */
       lazy val size: BigInt = {
@@ -207,25 +211,21 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
 
       /* Return the block where all permuted sequences have value `value` at `chain`.beta. */
       def blockForValue(value: T) = {
-        if (!blocksForValue.isDefinedAt(value)) {
-          val newCandidates = new MutableHashMap[F, permutableGroup.BSGSChain]
-          if (chain.transversal.size == 1)
-            for (((c, sym), b) <- candidatesForValue(value))
-              newCandidates(c) = sym.withHeadBasePoint(chain.beta).tail
-          else
-            for (((c, sym), b) <- candidatesForValue(value)) {
-              val u = chain.transversal(b).u
-              val newU = findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(u), chain.lexicographicTail, sym, Some(c))
-              val newC = newU * c
-              if (!newCandidates.isDefinedAt(newC)) {
-                val newSym = sym.conjugatedBy(newU.inverse).withHeadBasePoint(chain.beta).tail
-                newCandidates(newC) = newSym
-              }
+        val newCandidates = new MutableHashMap[F, permutableGroup.BSGSChain]
+        if (chain.transversal.size == 1)
+          for (((c, sym), b) <- candidatesForValue(value))
+            newCandidates(c) = sym.withHeadBasePoint(chain.beta).tail
+        else
+          for (((c, sym), b) <- candidatesForValue(value)) {
+            val u = chain.transversal(b).u
+            val newU = findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(u), chainTail, sym, Some(c))
+            val newC = newU * c
+            if (!newCandidates.isDefinedAt(newC)) {
+              val newSym = sym.conjugatedBy(newU.inverse).withHeadBasePoint(chain.beta).tail
+              newCandidates(newC) = newSym
             }
-          val newBlock = Block(chain.lexicographicTail, newCandidates.toSeq)
-          blocksForValue(value) = newBlock
-        }
-        blocksForValue(value)
+          }
+        Block(chainTail, newCandidates.toSeq)
       }
 
       /* Return the index of the first representative of the block corresponding to
@@ -234,7 +234,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
         sortedValues.view.filter(permutableOrdering.compare(_, value) == -1).map(blockForValue(_).size).sum
 
       /* Returns the block corresponding to the sequence `seq`. */
-      def blockForSequence(seq: IndexedSeq[T] = permutableSequence): Block = {
+      @annotation.tailrec final def blockForSequence(seq: IndexedSeq[T] = permutableSequence): Block = {
         if (chain.isTerminal)
           this
         else {
@@ -246,7 +246,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
       }
 
       /* Returns the index of the representative with sequence `seq`. */
-      def indexOfSequence(seq: IndexedSeq[T] = permutableSequence, currentIndex: BigInt = 0): BigInt = {
+      @annotation.tailrec final def indexOfSequence(seq: IndexedSeq[T] = permutableSequence, currentIndex: BigInt = 0): BigInt = {
         if (chain.isTerminal)
           currentIndex
         else {
@@ -274,7 +274,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
       import scala.annotation.tailrec
 
       /* Returns the final block corresponding to partial index `index`. */
-      @tailrec final def blockForIndex(index: BigInt): Block = {
+      @annotation.tailrec final def blockForIndex(index: BigInt): Block = {
         val (newBlock, newIndex) = partialBlockForIndex(index)
         if (newIndex == 0 && newBlock.size == 1)
           newBlock
