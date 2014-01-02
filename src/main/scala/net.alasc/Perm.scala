@@ -10,24 +10,88 @@ trait PermParserLike extends RegexParsers {
   def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm(sz, cycles) }
 }
 
+sealed abstract class Perm extends PermElement[Perm] with Dumpable {
+  def toText = "Perm("+size+")"+cyclesToText
+  override def toString = toText
+  def apply(s: String): Perm = {
+    val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    val list = s.map( c => Dom._0(points.indexOf(c)) )
+    apply(list:_*)
+  }
+  def apply(cycle: Dom*): Perm
+  def withSwap(i: Dom, j: Dom): Perm
+  def compatible(that: Perm) = size == that.size
+  def toExplicit = this
+}
+
+object Perm12 extends Perm {
+  final def isIdentity = true
+  final def size = 2
+  final def invImage(k: Dom) = k
+  final def image(k: Dom) = k
+  final def images = DomArray.fromZeroBasedArray(Array(0, 1))
+  final def *(that: Perm) = that
+  final def inverse = this
+  val cachedHashCode = scala.util.hashing.MurmurHash3.arrayHash(Array(0, 1))
+  final override def hashCode() = cachedHashCode
+  final def ===(that: Perm) = this eq that
+  final def withSwap(i: Dom, j: Dom) = Perm21
+  final def apply(cycle: Dom*): Perm = cycle.size match {
+    case 1 => this
+    case 2 => Perm21
+    case _ => sys.error("Illegal cycle size")
+  }
+}
+
+object Perm21 extends Perm {
+  final def isIdentity = false
+  final def size = 2
+  final def invImage(k: Dom) = Dom._0(1 - k._0)
+  final def image(k: Dom) = Dom._0(1 - k._0)
+  final def images = DomArray.fromZeroBasedArray(Array(1, 0))
+  final def *(that: Perm) = {
+    if (that eq Perm21)
+      Perm12
+    else
+      Perm21
+  }
+  final def inverse = this
+  val cachedHashCode = scala.util.hashing.MurmurHash3.arrayHash(Array(1, 0))
+  final override def hashCode() = cachedHashCode
+  final def ===(that: Perm) = this eq that
+  final def withSwap(i: Dom, j: Dom) = Perm12
+  final def apply(cycle: Dom*): Perm = cycle.size match {
+    case 1 => this
+    case 2 => Perm12
+    case _ => sys.error("Illegal cycle size")
+  }
+}
+
 object Perm extends DumpableCompanion[Perm] {
   val parser = new DumpParser with PermParserLike {
     def dump = (("Perm(" ~> size) <~ ")") >> ( sz => cycles(sz) )
   }
 
   def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
-  def apply(n: Int): Perm = new Perm((0 until n).toArray)
+  def apply(n: Int): Perm = n match {
+    case 2 => Perm12
+    case _ => new ArrayPerm((0 until n).map(_.toShort).toArray)
+  }
   def apply(n: Int, cycles: List[List[Dom]]): Perm = (Perm(n) /: cycles)( Perm.addCycle )
-  def apply(images: DomArray): Perm = new Perm(images.array.asInstanceOf[Array[Int]])
-  def fromImages(imgs: Dom*) = new Perm(imgs.map(_._0).toArray)
+  def apply(images: DomArray): Perm = images.size match {
+    case 2 if images(0)._0 == 0 => Perm12
+    case 2 => Perm21
+    case _ => new ArrayPerm(images.array.map(_.toShort))
+  }
+  def fromImages(imgs: Dom*) = imgs.size match {
+    case 2 if imgs(0)._0 == 0 => Perm12
+    case 2 => Perm21
+    case _ => new ArrayPerm(imgs.map(_._0.toShort).toArray)
+  }
 }
 
-class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
-  def toText = "Perm("+size+")"+cyclesToText
-  override def toString = toText
-  def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
-  def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
-  def isIdentity: Boolean = {
+final class ArrayPerm private[alasc](val arr: Array[Short]) extends Perm {
+  final def isIdentity: Boolean = {
     val n = arr.length
     var i = 0
     while (i < n) {
@@ -37,9 +101,9 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
     }
     return true
   }
-  def size = arr.length
+  final def size = arr.length
 //  def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
-  def invImage(k: Dom): Dom = {
+  final def invImage(k: Dom): Dom = {
     var i = 0
     val n = arr.length
     while (i < n) {
@@ -49,57 +113,51 @@ class Perm(val arr: Array[Int]) extends PermElement[Perm] with Dumpable {
     }
     throw new IllegalArgumentException("Permutation should contain the image")
   }
-  def image(k: Dom) = Dom._0(arr(k._0))
-  def images: DomArray = DomArray.fromZeroBasedArray(arr)
-  def compatible(that: Perm) = size == that.size
-  def toExplicit = this
+  final def image(k: Dom) = Dom._0(arr(k._0))
+  final def images: DomArray = DomArray.fromZeroBasedArray(arr.map(_.toInt))
   // note that the image of b under the product g*h is given by:
   // b^(g*h) = (b^g)^h
-  def *(that: Perm): Perm = {
+  final def *(thatgen: Perm): Perm = {
+    val that = thatgen.asInstanceOf[ArrayPerm]
     require_(compatible(that))
-    val a = new Array[Int](size)
+    val a = new Array[Short](size)
     var i = 0
     val n = arr.length
     while (i < n) {
       a(i) = that.arr(arr(i))
       i += 1
     }
-    new Perm(a)
+    new ArrayPerm(a)
   }
-  def inverse: Perm = {
-    val a = new Array[Int](size)
+  final def inverse: Perm = {
+    val a = new Array[Short](size)
     val n = arr.length
     var i = 0
     while (i < n) {
-      a(arr(i)) = i
+      a(arr(i)) = i.toShort
       i += 1
     }
-    new Perm(a)
+    new ArrayPerm(a)
   }
-  override def hashCode() = scala.util.hashing.MurmurHash3.arrayHash(arr)
-  def ===(that: Perm) = {
+  final override def hashCode() = scala.util.hashing.MurmurHash3.arrayHash(arr)
+  final def ===(that: Perm) = {
     require_(compatible(that))
-    arr.sameElements(that.arr)
+    arr.sameElements(that.asInstanceOf[ArrayPerm].arr)
   }
-  def withSwap(i: Dom, j: Dom): Perm = {
+  final def withSwap(i: Dom, j: Dom): Perm = {
     require_(isDefinedAt(i) && isDefinedAt(j))
     val a = arr.clone
     val k = a(i._0)
     a(i._0) = a(j._0)
     a(j._0) = k
-    new Perm(a)
+    new ArrayPerm(a)
   }
-  def apply(s: String): Perm = {
-    val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    val list = s.map( c => Dom._0(points.indexOf(c)) )
-    apply(list:_*)
-  }
-  def apply(cycle: Dom*): Perm = {
+  final def apply(cycle: Dom*): Perm = {
     val a = arr.clone
     val a0 = a(cycle(0)._0)
     for (i <- 0 until cycle.size - 1)
       a(cycle(i)._0) = a(cycle(i + 1)._0)
     a(cycle(cycle.size-1)._0) = a0
-    new Perm(a)
+    new ArrayPerm(a)
   }
 }

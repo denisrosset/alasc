@@ -3,6 +3,8 @@ package net.alasc
 import scala.util.Random
 
 trait PermElementLike extends FiniteElementLike {
+  def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
+  def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
   private[this] def orderRec(mul: PermElementLike, acc: Int): Int = if(mul.isIdentity) acc else orderRec(this.permMul(mul), acc + 1)
   def permMul(that: PermElementLike): PermElementLike
   def order = orderRec(this, 1)
