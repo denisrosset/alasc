@@ -32,7 +32,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
   /* The base permutation group whose action acts on `sequence`. */
   val permutableBaseGroup: Group[F]
   /* The permutation subgroup to use in the computations. */
-  val permutableSubgroup: permutableBaseGroup.Subgroup = permutableBaseGroup.subgroup
+  def permutableSubgroup: permutableBaseGroup.Subgroup = permutableBaseGroup.subgroup
   /* Returns the symmetry subgroup leaving `sequence` invariant. */
   def permutableSymmetrySubgroup: permutableBaseGroup.Subgroup = permutableSubgroup.fixing(permutableSequence)
   /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
