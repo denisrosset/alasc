@@ -29,10 +29,12 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
   def permutedBy(f: F): P
   /* Returns the sequence associated with the current object. */
   def permutableSequence: IndexedSeq[T]
-  /* The permutation group whose action acts on `sequence`. */
-  val permutableGroup: Group[F]
+  /* The base permutation group whose action acts on `sequence`. */
+  val permutableBaseGroup: Group[F]
+  /* The permutation subgroup to use in the computations. */
+  val permutableSubgroup: permutableBaseGroup.Subgroup = permutableBaseGroup.subgroup
   /* Returns the symmetry subgroup leaving `sequence` invariant. */
-  def permutableSymmetrySubgroup: permutableGroup.Subgroup = permutableGroup.subgroup.fixing(permutableSequence)
+  def permutableSymmetrySubgroup: permutableBaseGroup.Subgroup = permutableSubgroup.fixing(permutableSequence)
   /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
   def findPermutationTo(that: P) = representatives.Block.start.blockForSequence(that.permutableSequence).permutation.inverse
 
@@ -40,15 +42,16 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
 
   /* Big sequence of representatives in the lexicographic order. */
   object representatives extends BigSeq[P] {
+    import permutableBaseGroup.{BSGSChain, Subgroup, identity, act}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
     import Dom.IntOrder.DomOrdering
     
-    def groupBSGSStart = permutableGroup.bsgs.withHeadBasePoint(Dom._0(0))
+    def groupBSGSStart = permutableSubgroup.subBSGS.withHeadBasePoint(Dom._0(0))
     def symmetryBSGS = permutableSymmetrySubgroup.subBSGS
 
     /* Returns the minimal lexicographic representative. */
     def head = permutedBy(
-      findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(permutableGroup.identity), groupBSGSStart, symmetryBSGS).inverse)
+      findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(identity), groupBSGSStart, symmetryBSGS).inverse)
 
     /* Returns an iterator on the lexicographic representatives. */
     def iterator: Iterator[P] = {
@@ -67,7 +70,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
     }
 
     /* Returns the number of lexicographic representatives. */
-    def length = permutableGroup.order / permutableSymmetrySubgroup.order
+    def length = permutableSubgroup.order / permutableSymmetrySubgroup.order
 
     /* Finds the index of the representative `that`. */
     def indexOf(that: P = permutable) = Block.start.indexOfSequence(that.permutableSequence)
@@ -91,14 +94,14 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
      The argument `candidatesAreMinimal` is used internally to avoid looking twice for
      minimal coset representatives when the current transversal is trivial (size = 1).
      */
-    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: permutableGroup.BSGSChain, symChain: permutableGroup.BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
+    @annotation.tailrec final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: BSGSChain, symChain: BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
       import Dom.IntOrder._
 
       val beta = groupChain.beta
 
       def permutedSequence(k: Dom): T = permutedByInverseOf match {
         case None => permutableSequence(k._0)
-        case Some(f) => permutableSequence(permutableGroup.act(f, k)._0)
+        case Some(f) => permutableSequence(act(f, k)._0)
       }
 
       def toMinimal(f: F) = symChain.rightCosetMinimalRepresentativeUsingBSGSBase(f.inverse).inverse
@@ -125,7 +128,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
             val c = candidates(cind)
             while (kind < ksize) {
               val b = Dom._0(keysArray(kind))
-              val betaimage = permutableGroup.act(c, b)
+              val betaimage = act(c, b)
               val value = permutedSequence(betaimage)
               if (first || permutableOrdering.compare(value, minimumValue) == -1) {
                 possibleCandidatesF.clear
@@ -168,7 +171,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
     }
 
     object Block {
-      def start = Block(groupBSGSStart, Seq( (permutableGroup.identity, symmetryBSGS) ))
+      def start = Block(groupBSGSStart, Seq( (identity, symmetryBSGS) ))
     }
 
     /*
@@ -181,13 +184,13 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
      points of `chain`. 
      */
 
-    case class Block(chain: permutableGroup.BSGSChain, candidates: Seq[(F, permutableGroup.BSGSChain)]) {
+    case class Block(chain: BSGSChain, candidates: Seq[(F, BSGSChain)]) {
       lazy val chainTail = chain.lexicographicTail
       /* New possible candidates grouped by the permuted sequence value at `chain`.beta. */
       protected lazy val candidatesForValue = {
-        val map = new MutableHashMap[T, MutableSet[((F, permutableGroup.BSGSChain), Dom)]] with MultiMap[T, ((F, permutableGroup.BSGSChain), Dom)]
+        val map = new MutableHashMap[T, MutableSet[((F, BSGSChain), Dom)]] with MultiMap[T, ((F, BSGSChain), Dom)]
         for (cSym <- candidates; b <- chain.transversal.keysIterator) {
-          val betaImage = permutableGroup.act(cSym._1, b)
+          val betaImage = act(cSym._1, b)
           val value = permutableSequence(betaImage._0)
           map.addBinding(value, ((cSym, b)))
         }
@@ -211,7 +214,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
 
       /* Return the block where all permuted sequences have value `value` at `chain`.beta. */
       def blockForValue(value: T) = {
-        val newCandidates = new MutableHashMap[F, permutableGroup.BSGSChain]
+        val newCandidates = new MutableHashMap[F, BSGSChain]
         if (chain.transversal.size == 1)
           for (((c, sym), b) <- candidatesForValue(value))
             newCandidates(c) = sym.withHeadBasePoint(chain.beta).tail
