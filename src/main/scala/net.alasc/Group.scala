@@ -1019,6 +1019,16 @@ object PGroup {
     fromGenerators(identity, generators, Nil)
   }
 
+  def fromPermGroup[P <: PermElement[P]](
+    permGroup: PermGroup[P],
+    myBase: List[Dom] = Nil,
+    myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
+    case true =>
+      fromRandomElementsAndOrder(permGroup.identity, permGroup.randomElement, permGroup.order, myBase, myOptions)
+    case false =>
+      fromGenerators(permGroup.identity, permGroup.generators.toList, myBase, myOptions)
+  }
+
   def fromGenerators[P <: PermElement[P]](
     myIdentity: P,
     myGenerators: List[P],
@@ -1086,6 +1096,17 @@ abstract class FGroup[F <: FiniteElement[F]](
 }
 
 object FGroup {
+  def fromFiniteGroup[F <: FiniteElement[F]](
+    finiteGroup: FiniteGroup[F],
+    myAction: Action[F],
+    myBase: List[Dom] = Nil,
+    myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
+    case true =>
+      fromRandomElementsAndOrder(finiteGroup.identity, myAction, finiteGroup.randomElement, finiteGroup.order, myBase, myOptions)
+    case false =>
+      fromGenerators(finiteGroup.identity, myAction, finiteGroup.generators.toList, myBase, myOptions)
+  }
+
   def fromGenerators[F <: FiniteElement[F]](
     myIdentity: F,
     myAction: Action[F],
