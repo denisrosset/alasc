@@ -564,6 +564,8 @@ The method `check` throws an exception if an inconsistency is found.
     def subgroupSearch(predicate: Predicate[F], test: BaseImageTest = TrivialBaseImageTest): BSGSChain = this match {
       case terminal: BSGSTerminal => terminal
       case node: BSGSNode => {
+        if (node.order == 1)
+          return this
         val cons = BSGSChain.mutableFromBaseAndGeneratingSet(base, Nil)
         val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, test, identity, 0, length, cons, cons)
         assert(levelCompleted == 0)
@@ -630,12 +632,9 @@ The method `check` throws an exception if an inconsistency is found.
           findCandidate
         }
         toRemove match {
-          case Some(h) => { // TODO: remove assert
-            assert( makeOrbit(beta, strongGeneratingSet).size == transversal.size )
+          case Some(h) =>
             node.strongGeneratingSet = strongGeneratingSet.filterNot(_ == h)
-            assert( makeOrbit(beta, strongGeneratingSet).size == transversal.size )
             Some(h)
-          }
           case None => None
         }
       }
