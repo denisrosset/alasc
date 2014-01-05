@@ -899,6 +899,13 @@ Lexicographic order is a total order according to the following rule:
   }
 
   class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] {
+    def canEqual(other: Any): Boolean =
+      other.isInstanceOf[Subgroup] && (other.asInstanceOf[Subgroup].group eq group)
+    override def equals(other: Any) = other match {
+      case that: Subgroup => (this eq that) || ((that canEqual this) && ((this intersection that).order == order))
+      case _ => false
+    }
+    override def hashCode = sys.error("No implementation of hashCode for Subgroup yet.")
     def group = containingGroup
     def order = subBSGS.order
     def randomElement(gen: Random) = subBSGS.randomElement(gen)
