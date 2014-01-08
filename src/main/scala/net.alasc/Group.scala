@@ -592,17 +592,49 @@ The method `check` throws an exception if an inconsistency is found.
         subgroupSearch(hWithBase.contains(_), IntersectionTest(hWithBase, identity))
       }
     }
+
+    def stabilizesCurrentBasePoint(f: F): Boolean = (act(f, beta) != beta)
+/*
+Returns a strong generating set for this stabilizer chain, preserving the
+provided generators list `given`.
+*/
+    def strongGeneratingSetGiven(given: List[F]): List[F] = this match {
+      case terminal: BSGSTerminal => Nil
+      case node: BSGSNode =>
+        val nextGiven = given.filter(stabilizesCurrentBasePoint)
+        val tailGiven = tail.strongGeneratingSetGiven(nextGiven)
+        val thisGiven = given.toSet ++ tailGiven
+        val strongGeneratingAsSet = strongGeneratingSet.toSet
+        var additionalGenerators = strongGeneratingAsSet diff thisGiven
+        var generators = strongGeneratingAsSet ++ thisGiven
+        val orbitSize = transversal.size
+        val startingOrbit = makeOrbit(beta, tailGiven)
+        var removed = true
+        while (removed) {
+          removed = false
+          for (c <- additionalGenerators) {
+            val newGens = additionalGenerators - c
+            val gens = generators - c
+            val newOrbitSize = startingOrbit.updated(newGens, gens).size
+            if (newOrbitSize == orbitSize) {
+              additionalGenerators -= c
+              generators -= c
+              removed = true
+            }
+          }
+        }
+        additionalGenerators.toList ++ thisGiven.toList
+    }
 /*
 #### Mutable methods used in the construction of the BSGS chain
 */
     def isImmutable: Boolean
 
     def makeImmutable: Unit = this match {
-      case terminal: BSGSTerminal => { }
-      case node: BSGSNode => {
+      case terminal: BSGSTerminal =>
+      case node: BSGSNode =>
         node.isImmutable = true
         tail.makeImmutable
-      }
     }
 
     def removeRedundantGenerators {
@@ -619,7 +651,7 @@ The method `check` throws an exception if an inconsistency is found.
         assert(!isImmutable)
         val orbitSize = transversal.size
         val toRemove = tail.tryToRemoveGenerator.orElse {
-          val candidatesToRemoval: List[F] = strongGeneratingSet.filter(g => act(g, beta) != beta)
+          val candidatesToRemoval: List[F] = strongGeneratingSet.filter(stabilizesCurrentBasePoint)
           def findCandidate: Option[F] = {
             for (h <- candidatesToRemoval) {
               val newGenerators: List[F] = strongGeneratingSet.filterNot(_ == h)
@@ -909,12 +941,38 @@ Lexicographic order is a total order according to the following rule:
     def group = containingGroup
     def order = subBSGS.order
     def randomElement(gen: Random) = subBSGS.randomElement(gen)
+/*
+The method `generators` returns the strong generating set of the underlying
+stabilizer chain, while the method `generatorsAccordingTo` returns a strong
+generating set according to the `subgroups` sequence and pre-existing `givenGenerators`.
+
+In this last case, `subgroups` is a list of `n` `Subgroup`s.
+The returned list will be composed of:
+`addGenerators ++ newGenerators(n-1) ++ ... ++ newGenerators(0) ++ givenGenerators`
+so that `newGenerators(j)` are generators of `this intersection subgroups(j)`,
+`addGenerators` are possible additional generators so that the returned sequence
+is a strong generating set for `this` subgroup.
+*/
     def generators = subBSGS.strongGeneratingSet
+    def generatorsAccordingTo(subgroups: List[Subgroup], givenGenerators: List[F] = Nil): List[F] =
+      subgroups match {
+        case Nil =>
+          require(givenGenerators.forall(this.contains(_)))
+          val newGiven = subBSGS.strongGeneratingSetGiven(givenGenerators)
+          newGiven
+        case hd :: tl =>
+          val interSubgroup = this intersection hd
+          val newGenerators = interSubgroup.subBSGS.withBase(subBSGS.base).
+            strongGeneratingSetGiven(givenGenerators.filter(interSubgroup.contains))
+          val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
+          generatorsAccordingTo(tl, newGivenGenerators ++ givenGenerators)
+      }
     def elements = subBSGS.elements
     def identity = containingGroup.identity
     def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
-
+    def supunion(that: Subgroup): Subgroup = 
+      Subgroup(generators ++ that.generators:_*)
     def intersection(that: Subgroup): Subgroup = {
       val newBSGS = subBSGS.intersection(that.subBSGS)
       new Subgroup(newBSGS)
