@@ -949,17 +949,22 @@ generating set according to the `subgroups` sequence and pre-existing `givenGene
 In this last case, `subgroups` is a list of `n` `Subgroup`s.
 The returned list will be composed of:
 `addGenerators ++ newGenerators(n-1) ++ ... ++ newGenerators(0) ++ givenGenerators`
-so that `newGenerators(j)` are generators of `this intersection subgroups(j)`,
+so that `newGenerators(j)` are (new) generators of `this intersection subgroups(j)`,
 `addGenerators` are possible additional generators so that the returned sequence
 is a strong generating set for `this` subgroup.
+
+This function is used to provide a readable list of generators for this subgroup of 
+a group, by considering first the intersection of this subgroup with 
+remarkable subgroups of the underlying group.
 */
     def generators = subBSGS.strongGeneratingSet
     def generatorsAccordingTo(subgroups: List[Subgroup], givenGenerators: List[F] = Nil): List[F] =
       subgroups match {
         case Nil =>
           require(givenGenerators.forall(this.contains(_)))
-          val newGiven = subBSGS.strongGeneratingSetGiven(givenGenerators)
-          newGiven
+          val newGenerators = subBSGS.strongGeneratingSetGiven(givenGenerators)
+          val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
+          newGivenGenerators ++ givenGenerators
         case hd :: tl =>
           val interSubgroup = this intersection hd
           val newGenerators = interSubgroup.subBSGS.withBase(subBSGS.base).
