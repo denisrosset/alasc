@@ -10,9 +10,8 @@ trait PermParserLike extends RegexParsers {
   def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm(sz, cycles) }
 }
 
-sealed abstract class Perm extends PermElement[Perm] with Dumpable {
-  def toText = "Perm("+size+")"+cyclesToText
-  override def toString = toText
+sealed abstract class Perm extends PermElement[Perm] {
+  override def toString = "Perm("+size+")"+cyclesToText
   def apply(s: String): Perm = {
     val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     val list = s.map( c => Dom._0(points.indexOf(c)) )
@@ -67,11 +66,7 @@ object Perm21 extends Perm {
   }
 }
 
-object Perm extends DumpableCompanion[Perm] {
-  val parser = new DumpParser with PermParserLike {
-    def dump = (("Perm(" ~> size) <~ ")") >> ( sz => cycles(sz) )
-  }
-
+object Perm {
   def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
   def apply(n: Int): Perm = n match {
     case 2 => Perm12
