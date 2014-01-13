@@ -937,7 +937,6 @@ Lexicographic order is a total order according to the following rule:
       case that: Subgroup => (this eq that) || ((that canEqual this) && ((this intersection that).order == order))
       case _ => false
     }
-    override def hashCode = sys.error("No implementation of hashCode for Subgroup yet.")
     def group = containingGroup
     def order = subBSGS.order
     def randomElement(gen: Random) = subBSGS.randomElement(gen)
@@ -1033,10 +1032,20 @@ Lexicographic order is a total order according to the following rule:
 
 (see also the comment above for `rightCosetMinimalRepresentativeUsingBSGSBase`).
 */
-    def rightCosetMinimalRepresentative(f: F): F =
-      subBSGS.withFullLexicographicBase.rightCosetMinimalRepresentativeUsingBSGSBase(f)(Dom.IntOrder.DomOrdering)
+    def rightCosetMinimalRepresentative(f: F): F = subBSGS.withFullLexicographicBase.
+      rightCosetMinimalRepresentativeUsingBSGSBase(f)(Dom.IntOrder.DomOrdering)
 
-
+/*
+The method `cosetIterator` enumerate coset representatives for the Subgroup `bySubgroup`.
+The algorithm can probably be improved a lot.
+*/ 
+    def cosetIterator(bySubgroup: Subgroup): Iterator[F] = {
+      // TODO: prove that you do not need a particular basis
+      val bySubgroupLexicographicBase = new Subgroup(bySubgroup.subBSGS.withFullLexicographicBase)
+      assert(bySubgroup.generators.forall(Subgroup.this.contains(_)))
+      for (e <- elements if bySubgroupLexicographicBase.rightCosetMinimalRepresentative(e) == e)
+      yield e
+    }
   }
 }
 

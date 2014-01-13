@@ -61,6 +61,14 @@ trait PermElementLike extends FiniteElementLike {
 trait PermElement[E <: PermElement[E]] extends PermElementLike with FiniteElement[E] {
   self: E =>
   def permMul(that: PermElementLike) = this*(that.asInstanceOf[E])
+  def powers: List[E] = {
+    def powerRec(listOfPowers: List[E]): List[E] = listOfPowers match {
+      case hd :: tl if hd.isIdentity => listOfPowers
+      case hd :: tl => powerRec(self * hd :: listOfPowers)
+      case Nil => sys.error("Should not happen")
+    }
+    powerRec(self :: Nil)
+  }
 }
 
 trait PermGroup[E <: PermElement[E]] extends FiniteGroup[E] {

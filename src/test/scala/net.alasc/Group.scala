@@ -30,6 +30,14 @@ class GroupSuite extends FunSuite {
     val g = PGroup(Perm(8)(1,2),Perm(8)(2,3),Perm(8)(3,4,5,6),Perm(8)(3,4,7,8))
     assert(g.order == 40320)
   }
+
+  test("Enumeration of coset representatives has the right size") {
+    import Dom.OneBased._
+    val g = PGroup.fromPermGroup(Sym(6))
+    val s = g.Subgroup(Perm(6)(1,2,3), Perm(6)(4,5,6))
+    val numberOfCosets = g.subgroup.cosetIterator(s).size
+    assert(numberOfCosets == g.order / s.order)
+  }
 }
 
 /*

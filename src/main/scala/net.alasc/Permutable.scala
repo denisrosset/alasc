@@ -2,7 +2,7 @@ package net.alasc
 
 trait OrderedPermutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] 
     extends Ordered[P] {
-  selfPermutable: P =>
+  selfPermutable: P with Permutable[P, F, T] =>
   def compare(that: P): Int = {
     val n = permutableSequence.length
     var i = 0
