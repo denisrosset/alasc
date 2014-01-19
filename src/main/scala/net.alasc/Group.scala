@@ -829,12 +829,16 @@ Lexicographic order is a total order according to the following rule:
 ### Algorithms for the construction of a BSGS chain
 */
   object BSGSChain {
-    def randomSchreierSims(base: List[Dom], randomElement: Random => F, knownOrder: BigInt): BSGSChain = {
+    def randomSchreierSims(base: List[Dom], randomElement: Random => F, knownOrder: BigInt, startingGeneratingSet: List[F] = Nil): BSGSChain = {
       def findBaseElement: Dom = {
         val f = randomElement(options.randomGenerator)
         actionDomain.find(b => act(f, b) != b).getOrElse(Dom._1(1))
       }
-      val chain = mutableFromBase(if(base.isEmpty) List(findBaseElement) else base)
+      val chain = ((base.isEmpty, startingGeneratingSet.isEmpty)) match {
+        case (false, _) => mutableFromBaseAndGeneratingSet(base, startingGeneratingSet)
+        case (true, false) => mutableFromGenerators(startingGeneratingSet)
+        case (true, true) => mutableFromBaseAndGeneratingSet(List(findBaseElement), startingGeneratingSet)
+      }
       while (chain.order < knownOrder)
         chain.addElement(randomElement(options.randomGenerator))
       chain.cleanupGenerators
@@ -864,6 +868,22 @@ Lexicographic order is a total order according to the following rule:
       chain.makeImmutable
       chain
     }
+    def mutableFromGenerators(genSet: List[F], startingBasePoint: Dom = Dom._1(1)): BSGSChain = 
+      genSet.isEmpty match {
+        case true => new BSGSTerminal
+        case false =>
+            (startingBasePoint._1 to actionDimension).map(Dom._1).find(k => genSet.exists(
+              g => act(g, k) != k)) match {
+              case None =>
+                new BSGSTerminal
+              case Some(beta) =>
+                val transversal = makeTransversal(beta, genSet)
+                val tailGenSet = genSet.filter(g => act(g, beta) == beta)
+                val tail = mutableFromGenerators(tailGenSet, Dom._1(startingBasePoint._1 + 1))
+                new BSGSNode(transversal, genSet, tail, false)
+            }
+      }
+
     def mutableFromBaseAndGeneratingSet(base: List[Dom], genSet: List[F]): BSGSChain = base match {
       case Nil => new BSGSTerminal
       case beta :: tailBase => {
@@ -873,6 +893,7 @@ Lexicographic order is a total order according to the following rule:
         new BSGSNode(transversal, genSet, tail, false)
       }
     }
+
     def mutableFromBase(base: List[Dom]): BSGSChain = base match {
       case Nil => new BSGSTerminal
       case beta :: tailBase => {
@@ -911,21 +932,21 @@ Lexicographic order is a total order according to the following rule:
     def apply(myGenerators: F*) = {
       require_(myGenerators.forall(f => containingGroup.contains(f)))
       require_(myGenerators.forall(f => !f.isIdentity))
-      val subBSGS = BSGSChain.deterministicSchreierSims(bsgs.base, myGenerators.toList)
+      val subBSGS = BSGSChain.deterministicSchreierSims(Nil, myGenerators.toList)
       new Subgroup(subBSGS)
     }
 
     def fromGeneratorsAndOrder(myGenerators: List[F], myOrder: BigInt) = {
       if (options.useRandomizedAlgorithms) {
         val bag = RandomBag(myGenerators, identity, max(10, myGenerators.length), 50, options.randomGenerator)
-        val subBSGS = BSGSChain.randomSchreierSims(bsgs.base, bag.randomElement, myOrder)
+        val subBSGS = BSGSChain.randomSchreierSims(Nil, bag.randomElement, myOrder, myGenerators)
         new Subgroup(subBSGS)
       } else apply(myGenerators:_*)
     }
 
     def fromRandomAndOrder(myRandomElement: Random => F, myOrder: BigInt) = {
       require_(options.useRandomizedAlgorithms == true)
-      val subBSGS = BSGSChain.randomSchreierSims(bsgs.base, myRandomElement, myOrder)
+      val subBSGS = BSGSChain.randomSchreierSims(Nil, myRandomElement, myOrder)
       new Subgroup(subBSGS)
     }
   }
@@ -1033,7 +1054,7 @@ Lexicographic order is a total order according to the following rule:
 (see also the comment above for `rightCosetMinimalRepresentativeUsingBSGSBase`).
 */
     def rightCosetMinimalRepresentative(f: F): F = subBSGS.withFullLexicographicBase.
-      rightCosetMinimalRepresentativeUsingBSGSBase(f)(Dom.IntOrder.DomOrdering)
+      rightCosetMinimalRepresentativeUsingBSGSBase(f)(DomOrdering)
 
 /*
 The method `cosetIterator` enumerate coset representatives for the Subgroup `bySubgroup`.
