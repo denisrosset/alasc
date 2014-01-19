@@ -21,6 +21,10 @@ sealed abstract class Perm extends PermElement[Perm] {
   def withSwap(i: Dom, j: Dom): Perm
   def compatible(that: Perm) = size == that.size
   def toExplicit = this
+  def ++(that: Perm): Perm = {
+    val n = size
+    Perm(DomArray._0(images._0 ++ that.images._0.map(_ + n)))
+  }
 }
 
 object Perm12 extends Perm {
