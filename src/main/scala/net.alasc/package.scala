@@ -29,6 +29,14 @@ package object alasc {
 
   type Predicate[F <: FiniteElement[F]] = (F => Boolean)
 
+  implicit object DomOrdering extends Ordering[Dom] {
+    def compare(a: Dom, b: Dom) = a.zeroBased.compare(b.zeroBased)
+  }
+
+  implicit class DomIndexing[T](seq: Seq[T]) {
+    def apply(index: Dom) = seq(index._0)
+  }
+
   import scala.annotation.elidable
   import scala.annotation.elidable._
 

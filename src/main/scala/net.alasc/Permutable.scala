@@ -1,8 +1,9 @@
 package net.alasc
 
-trait OrderedPermutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] 
+trait OrderedPermutable[P <: OrderedPermutable[P, T], T] 
     extends Ordered[P] {
-  selfPermutable: P with Permutable[P, F, T] =>
+  val permutableOrdering: Ordering[T]
+  def permutableSequence: IndexedSeq[T]
   def compare(that: P): Int = {
     val n = permutableSequence.length
     var i = 0
@@ -49,7 +50,6 @@ trait MinimalPermutable[P <: MinimalPermutable[P, F, T], F <: FiniteElement[F], 
 
   import permutableBaseGroup.{BSGSChain, Subgroup, identity, act}
   import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
-  import Dom.IntOrder.DomOrdering
     
 /* Finds the minimal lexicographic representative.
 
@@ -151,7 +151,6 @@ trait BigSeqPermutable[P <: BigSeqPermutable[P, F, T], F <: FiniteElement[F], T]
   object representatives extends BigSeq[P] {
     import permutableBaseGroup.{BSGSChain, Subgroup, identity, act}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
-    import Dom.IntOrder.DomOrdering
     
     def groupBSGSStart = permutableSubgroup.subBSGS.withHeadBasePoint(Dom._0(0))
     def symmetryBSGS = permutableSymmetrySubgroup.subBSGS
@@ -205,8 +204,6 @@ The method `headPermutation` returns a group element `g` such that
      minimal coset representatives when the current transversal is trivial (size = 1).
      */
     @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: BSGSChain, symChain: BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
-      import Dom.IntOrder._
-
       val beta = groupChain.beta
 
       def permutedSequence(k: Dom): T = permutedByInverseOf match {

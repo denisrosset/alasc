@@ -25,7 +25,6 @@ trait PermElementLike extends FiniteElementLike {
   }
 
   def cycles: List[List[Dom]] = {
-    import Dom.IntOrder._
     var checked = scala.collection.mutable.BitSet(size)
     var i = Dom(size)
     var cycleList = List.empty[List[Dom]]
@@ -49,7 +48,6 @@ trait PermElementLike extends FiniteElementLike {
   }
   def isDefinedAt(k: Dom) = (k._0 >= 0 && k._0 < size)
   def intCompare(that: PermElementLike) = {
-    import Dom.IntOrder._
     val firstNotEqual = domain.find(k => image(k) != that.image(k))
     firstNotEqual match {
       case None => 0

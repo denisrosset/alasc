@@ -56,7 +56,6 @@ trait TransversalBuilder {
 */
 
 case class TransversalExplicit[F <: FiniteElement[F]](beta: Dom, action: Action[F], treeMap: TreeMap[Dom, WithInverse[F]]) extends Transversal[F] {
-  import Dom.IntOrder._
 
   def builder = TransversalExplicit
 
@@ -109,6 +108,5 @@ case class TransversalExplicit[F <: FiniteElement[F]](beta: Dom, action: Action[
 }
 
 object TransversalExplicit extends TransversalBuilder {
-  import Dom.IntOrder._
   def empty[F <: FiniteElement[F]](beta: Dom, identity: F, action: Action[F]) = TransversalExplicit(beta, action, TreeMap((beta, WithInverse(identity, identity))))
 }
