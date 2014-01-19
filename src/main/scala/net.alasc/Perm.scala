@@ -38,7 +38,7 @@ object Perm12 extends Perm {
   val cachedHashCode = scala.util.hashing.MurmurHash3.arrayHash(Array(0, 1))
   final override def hashCode() = cachedHashCode
   final def ===(that: Perm) = this eq that
-  final def withSwap(i: Dom, j: Dom) = Perm21
+  final def withSwap(i: Dom, j: Dom) = (if(i == j) this else Perm21)
   final def apply(cycle: Dom*): Perm = cycle.size match {
     case 1 => this
     case 2 => Perm21
@@ -62,7 +62,7 @@ object Perm21 extends Perm {
   val cachedHashCode = scala.util.hashing.MurmurHash3.arrayHash(Array(1, 0))
   final override def hashCode() = cachedHashCode
   final def ===(that: Perm) = this eq that
-  final def withSwap(i: Dom, j: Dom) = Perm12
+  final def withSwap(i: Dom, j: Dom) = (if(i == j) this else Perm12)
   final def apply(cycle: Dom*): Perm = cycle.size match {
     case 1 => this
     case 2 => Perm12
