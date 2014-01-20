@@ -13,7 +13,7 @@ class PermutableSuite extends FunSuite {
     val g = PGroup.fromGenerators(id, List(g1, g2), List(8,7,6,5,4,3,2,1))
     case class PermutableIntSeq(val permutableSequence: IndexedSeq[Int]) 
         extends BigSeqPermutable[PermutableIntSeq, Perm, Int]
-        with OrderedPermutable[PermutableIntSeq, Perm, Int] {
+        with OrderedPermutable[PermutableIntSeq, Int] {
       def permutedBy(p: Perm) = {
         val inv = p.inverse
         PermutableIntSeq(

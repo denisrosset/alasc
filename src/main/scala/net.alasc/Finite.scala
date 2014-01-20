@@ -3,14 +3,14 @@ package net.alasc
 import scala.util.Random
 import scala.reflect.ClassTag
 
-trait FiniteElementLike {
+trait FiniteElementLike extends Any {
   def isIdentity: Boolean
   def compatible(that: FiniteElementLike): Boolean
   def inverse: FiniteElementLike
   def finiteMul(that: FiniteElementLike): FiniteElementLike
 }
 
-trait FiniteElement[E <: FiniteElement[E]] extends FiniteElementLike {
+trait FiniteElement[E <: FiniteElement[E]] extends Any with FiniteElementLike {
   self: E =>
   def compatible(that: FiniteElementLike) = try {
     compatible(that.asInstanceOf[E])
