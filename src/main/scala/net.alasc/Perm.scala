@@ -2,16 +2,38 @@ package net.alasc
 
 import scala.util.parsing.combinator._
 import scala.util.Random
+import scala.util.hashing.MurmurHash3
 
 trait PermParserLike extends RegexParsers {
   def cycle = "(" ~> (repsep(oneBasedDom, ",") <~ ")")
   def oneBasedDom: Parser[Dom] = """\d+""".r ^^ { i => Dom._1(i.toInt) }
   def size: Parser[Int] = """\d+""".r ^^ { _.toInt }
-  def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm(sz, cycles) }
+  def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm.fromCycles(sz, cycles) }
+}
+
+sealed abstract class Perm {
+
 }
 
 sealed abstract class Perm extends PermElement[Perm] {
-//  def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
+  def toByteArray = {
+    require_(size <= Byte.MaxValue)
+    Array.tabulate[Byte](size)(i => image(Dom._0(i))._0.toByte)
+  }
+  def toShortArray = {
+    require_(size <= Short.MaxValue)
+    Array.tabulate[Short](size)(i => image(Dom._0(i))._0.toShort)
+  }
+  def toIntArray =
+    Array.tabulate[Int](size)(i => image(Dom._0(i))._0)
+  def optimized: Perm = size match {
+    // small cases
+//    case x if x <= Byte.MaxValue => new BytePerm(toByteArray)
+//    case x if x <= Short.MaxValue => new ShortPerm(toShortArray)
+    case _ => new GenericPerm(toIntArray)
+  }
+  def unoptimized: Perm = new GenericPerm(toIntArray)
+  //  def toTeX = TeX("{}^"+arr.size)+TeX(cycles.filter(_.size>1).map(_.mkString("(",",",")")).mkString(""))
   def isIdentity: Boolean = {
     val n = size
     var i = 0
@@ -62,6 +84,77 @@ sealed abstract class Perm extends PermElement[Perm] {
   final def images: DomArray = DomArray((0 until size).map(i => image(Dom._0(i))):_*)
 }
 
+trait PermCompanion[P <: Perm] {
+  def withImage(f: Dom => Dom): P
+  def withPreimage(f: Dom => Dom): P
+}
+
+
+object Perm {
+  def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
+  def apply(n: Int): Perm = n match {
+//    case 2 => Perm12
+//    case x if x < byteMaxSize => new ByteArrayPerm((0 until n).map(_.toByte).toArray)
+    case _ => new ShortArrayPerm((0 until n).map(_.toShort).toArray)
+  }
+  def fromCycles(n: Int, cycles: Seq[Seq[Dom]]): Perm = (Perm(n) /: cycles)( Perm.addCycle )
+  def apply(images: DomArray): Perm = images.size match {
+//    case 2 if images(0)._0 == 0 => Perm12
+//    case 2 => Perm21
+//    case x if x < byteMaxSize => new ByteArrayPerm(images.array.map(_.toByte))
+    case _ => new ShortArrayPerm(images.array.map(_.toShort))
+  }
+  def fromImages(imgs: Dom*) = imgs.size match {
+//    case 2 if imgs(0)._0 == 0 => Perm12
+//    case 2 => Perm21
+//    case x if x < byteMaxSize => new ByteArrayPerm(imgs.map(_._0.toByte).toArray)
+    case _ => new ShortArrayPerm(imgs.map(_._0.toShort).toArray)
+  }
+}
+
+abstract class GenericPerm extends Perm {
+  def companion: MutablePerm
+  // note that the image of b under the product g*h is given by:
+  // b^(g*h) = (b^g)^h
+  def *(that: Perm): GenericPerm = 
+    companion.withImage(k => that.image(image(k)))
+  def inverse: GenericPerm =
+    companion.withPreimage(k => image(k))
+  def withSwap(i: Dom, j: Dom) = companion.withImage {
+    k =>
+    if (k == i) j
+    else if (k == j) i
+    else k
+  }
+
+  final def apply(cycle: Dom*): Perm = {
+    val newArray = array.clone
+    val a0 = newArray(cycle(0)._0)
+    for (i <- 0 until cycle.size - 1)
+      newArray(cycle(i)._0) = newArray(cycle(i + 1)._0)
+    newArray(cycle(cycle.size-1)._0) = a0
+    new GenericPerm(newArray)
+  }
+}
+
+class MutablePerm private[alasc](val array: Array[Int]) extends GenericPerm {
+  def this(newSize: Int) = this(new Array[Int](newSize))
+  def make = new MutablePerm(size)
+  def image(e: Dom): Dom = Dom._0(array(e._0))
+  def image_=(e: Dom, i: Dom) {
+    array(e._0) = i._0
+  }
+}
+
+trait OptimizedPerm extends Perm {
+  final def apply(cycle: Dom*): Perm = unoptimized.apply(cycle:_*).optimized
+  final def withSwap(i: Dom, j: Dom): Perm = unoptimized.withSwap(i, j).optimized
+}
+
+class IdentityPerm(val size: Int) extends OptimizedPerm {
+
+}
+/*
 object Perm12 extends Perm {
   final def size = 2
   final def image(k: Dom) = k
@@ -118,78 +211,43 @@ object PermUnsafe {
   }
   def toArray(p: ByteArrayPerm): Array[Byte] = p.arr
 }
-
-object Perm {
-  val byteMaxSize = 128 
-  def addCycle(p: Perm, c: Seq[Dom]) = p.apply(c:_*)
-  def apply(n: Int): Perm = n match {
-    case 2 => Perm12
-    case x if x < byteMaxSize => new ByteArrayPerm((0 until n).map(_.toByte).toArray)
-    case _ => new ShortArrayPerm((0 until n).map(_.toShort).toArray)
-  }
-  def apply(n: Int, cycles: List[List[Dom]]): Perm = (Perm(n) /: cycles)( Perm.addCycle )
-  def apply(images: DomArray): Perm = images.size match {
-    case 2 if images(0)._0 == 0 => Perm12
-    case 2 => Perm21
-    case x if x < byteMaxSize => new ByteArrayPerm(images.array.map(_.toByte))
-    case _ => new ShortArrayPerm(images.array.map(_.toShort))
-  }
-  def fromImages(imgs: Dom*) = imgs.size match {
-    case 2 if imgs(0)._0 == 0 => Perm12
-    case 2 => Perm21
-    case x if x < byteMaxSize => new ByteArrayPerm(imgs.map(_._0.toByte).toArray)
-    case _ => new ShortArrayPerm(imgs.map(_._0.toShort).toArray)
-  }
+ */
+sealed abstract class ArrayPerm[T] extends Perm {
+  val array: Array[T]
+  final def size = array.length
+  final override def hashCode() = MurmurHash3.arrayHash(array)
 }
 
-final class ShortArrayPerm private[alasc](val arr: Array[Short]) extends Perm {
-  require_(arr.length > Perm.byteMaxSize)
-  final override def hashCode() = scala.util.hashing.MurmurHash3.arrayHash(arr)
-  final def size = arr.length
-  final def image(k: Dom) = Dom._0(arr(k._0))
+final class ShortArrayPerm private[alasc](val array: Array[Short]) extends ArrayPerm[Short] with OptimizedPerm {
+  final def image(k: Dom) = Dom._0(array(k._0))
   // note that the image of b under the product g*h is given by:
   // b^(g*h) = (b^g)^h
-  final def *(thatgen: Perm): Perm = {
-    val that = thatgen.asInstanceOf[ShortArrayPerm]
-    require_(compatible(that))
-    val a = new Array[Short](size)
-    var i = 0
-    val n = arr.length
-    while (i < n) {
-      a(i) = that.arr(arr(i))
-      i += 1
-    }
-    new ShortArrayPerm(a)
+  final def *(perm: Perm): ShortArrayPerm = perm match {
+    case that: ShortArrayPerm =>
+      require_(compatible(that))
+      val newArray = new Array[Short](size)
+      var i = 0
+      val n = size
+      while (i < n) {
+        newArray(i) = that.array(array(i))
+          i += 1
+      }
+      new ShortArrayPerm(newArray)
+    case _ => sys.error("")
   }
   final def inverse: Perm = {
-    val a = new Array[Short](size)
-    val n = arr.length
+    val newArray = new Array[Short](size)
+    val n = size
     var i = 0
     while (i < n) {
-      a(arr(i)) = i.toShort
+      newArray(array(i)) = i.toShort
       i += 1
     }
-    new ShortArrayPerm(a)
-  }
-  final def withSwap(i: Dom, j: Dom): Perm = {
-    require_(isDefinedAt(i) && isDefinedAt(j))
-    val a = arr.clone
-    val k = a(i._0)
-    a(i._0) = a(j._0)
-    a(j._0) = k
-    new ShortArrayPerm(a)
-  }
-  final def apply(cycle: Dom*): Perm = {
-    val a = arr.clone
-    val a0 = a(cycle(0)._0)
-    for (i <- 0 until cycle.size - 1)
-      a(cycle(i)._0) = a(cycle(i + 1)._0)
-    a(cycle(cycle.size-1)._0) = a0
-    new ShortArrayPerm(a)
+    new ShortArrayPerm(newArray)
   }
 }
-
-final class ByteArrayPerm private[alasc](val arr: Array[Byte]) extends Perm {
+/*
+final class ByteArrayPerm private[alasc](val array: Array[Byte]) extends ArrayPerm {
   require_(arr.length > 2 && arr.length <= Perm.byteMaxSize)
   final override def hashCode() = scala.util.hashing.MurmurHash3.arrayHash(arr)
   final def size = arr.length
@@ -235,3 +293,4 @@ final class ByteArrayPerm private[alasc](val arr: Array[Byte]) extends Perm {
     new ByteArrayPerm(a)
   }
 }
+*/

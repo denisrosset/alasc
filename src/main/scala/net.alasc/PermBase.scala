@@ -2,6 +2,10 @@ package net.alasc
 
 import scala.util.Random
 
+implicit class RichPerm(val perm: Perm) {
+
+}
+
 trait PermElementLike extends FiniteElementLike {
   def cyclesToTextUsingSymbols(symbols: Seq[String]) = cycles.filter(_.length > 1).map(_.map( d => symbols(d._0) ).mkString("(",",",")")).mkString("")
   def cyclesToText = cycles.filter(_.length > 1).map(_.map(_._1).mkString("(",",",")")).mkString("")
