@@ -15,6 +15,21 @@ import scala.collection.IndexedSeqLike
 import scala.collection.mutable.{Builder, ArrayBuffer}
 import scala.collection.generic.CanBuildFrom
 
+trait DomTrait extends Any with Ordered[DomTrait] {
+  def compare(that: DomTrait): Int
+  def _0: Int
+  def _1: Int
+  def **(g: Perm): DomTrait
+  def ===(that: DomTrait)
+  def hash: Int
+  def next: DomTrait
+}
+
+trait DomImplicits {
+  implicit def +(dom: Dom, shift: Int): Dom
+  def -(otherDom: Dom): Int
+}
+
 /*
 ## `Dom` class for domain elements.
 
@@ -22,82 +37,40 @@ Value class for Domain elements, allowing the user to retrieve 0- or 1-based int
 indices.
 
 Note: never use ==, but instead === to compare a `Dom` value to an `Int`,
-because === will apply implicit conversions, and == will not.
+because == could apply implicit conversions, and === will not.
 */
 
-class Dom private[alasc] (val zeroBased: Int) extends AnyVal with Ordered[Dom] {
+class Dom private[alasc] (val zeroBased: Int) extends AnyVal with DomTrait {
+  def compare(that: DomTrait) = zeroBased.compare(that._0)
   def compare(that: Dom) = zeroBased.compare(that.zeroBased)
   override def toString = (zeroBased + Dom.startIndex).toString
   def _1: Int = zeroBased + 1
   def _0: Int = zeroBased
-  def **[P <: PermElement[P]](p: P) = p.image(this)
+  def **(g: Perm): Dom = g.image(this)
+// TODO  def **[P <: PermElement[P]](p: P) = p.image(this)
   def ===(that: Dom) = zeroBased == that.zeroBased
+  def ===(that: DomTrait) = zeroBased == that._0
   def next = new Dom(zeroBased + 1)
   def +(shift: Int): Dom = new Dom(zeroBased + shift)
   def -(otherDom: Dom): Int = zeroBased - otherDom.zeroBased
+  def hash = zeroBased
 }
 
 object Dom {
+  def domain(size: Int): Iterable[Dom] = (0 until size).map(Dom._0(_))
   def first = Dom._1(1)
   def _0(zeroBased: Int) = new Dom(zeroBased)
   def _1(oneBased: Int) = new Dom(oneBased - 1)
-  def apply(oneBased: Int) = new Dom(oneBased - startIndex)
+  def apply(startIndexBased: Int) = new Dom(startIndexBased - startIndex)
   var startIndex = 1
   object ZeroBased {
     import scala.language.implicitConversions
     implicit def intToDom(k: Int) = Dom._0(k)
+    implicit def domToInt(k: Dom) = k._0
   }
   object OneBased {
     import scala.language.implicitConversions
     implicit def intToDom(k: Int) = Dom._1(k)
+    implicit def domToInt(k: Dom) = k._1
   }
-}
-
-/*
-## Array of `Dom` elements
-
-This class avoids boxing the `Dom` elements in a collection.
-*/
-
-final class DomArray private[alasc] (val array: Array[Int]) extends IndexedSeq[Dom] with IndexedSeqLike[Dom, DomArray] {
-  import DomArray._
-
-  override protected[this] def newBuilder: Builder[Dom, DomArray] = DomArray.newBuilder
-
-  def apply(i0: Int): Dom = Dom._0(array(i0))
-
-  override def foreach[U](f: Dom => U): Unit =
-    array.map(Dom._0(_)).foreach(f)
-
-  def length = array.length
-  def _0 = zeroBased
-  def _1 = oneBased
-  def zeroBased = array
-  def oneBased: Array[Int] = array.map(_+1)
-  override def toList = array.toList.map(Dom._0(_))
-}
-
-object DomArray {
-  def fromSeq(images: Seq[Dom]): DomArray = new DomArray(images.map(_._0).toArray)
-
-  def apply(images: Dom*) = fromSeq(images)
-
-  def newBuilder: Builder[Dom, DomArray] =
-    new ArrayBuffer mapResult fromSeq
-
-  implicit def canBuildFrom: CanBuildFrom[DomArray, Dom, DomArray] =
-    new CanBuildFrom[DomArray, Dom, DomArray] {
-      def apply(): Builder[Dom, DomArray] = newBuilder
-      def apply(from: DomArray): Builder[Dom, DomArray] = newBuilder
-    }
-  def _0(arr: Array[Int]): DomArray = fromZeroBasedArray(arr)
-  def _1(arr: Array[Int]): DomArray = fromOneBasedArray(arr)
-  def _0(seq: Seq[Int]): DomArray = fromZeroBasedSeq(seq)
-  def _1(seq: Seq[Int]): DomArray = fromOneBasedSeq(seq)
-
-  def fromZeroBasedArray(arr: Array[Int]) = new DomArray(arr.clone)
-  def fromOneBasedArray(arr: Array[Int]) = new DomArray(arr.map(_-1))
-
-  def fromZeroBasedSeq(seq: Seq[Int]) = new DomArray(seq.toArray)
-  def fromOneBasedSeq(seq: Seq[Int]) = new DomArray(seq.map(_-1).toArray)
 }

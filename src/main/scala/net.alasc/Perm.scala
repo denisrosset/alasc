@@ -4,15 +4,197 @@ import scala.util.parsing.combinator._
 import scala.util.Random
 import scala.util.hashing.MurmurHash3
 
+/*
+## `Perm`
+
+These permutations are backed by an image array, and describe a right action on elements
+of the domain \\( \beta \\) :
+
+\\[ \beta^(g h) = (\beta^g)^h \\].
+
+The implementation is organized as follows:
+
+- the interface trait `Perm` without implementation methods,
+- an implementation trait `PermLike` with generic implementations of
+  non-speed critical methods,
+- a specification for `PermBuilder` to create `Perm` instances from
+  images or pre-images,
+- a RichPerm extension with several helper methods.
+
+`Perm` has several optimized implementations for speed. Small sizes are implemented
+using table lookups, while bigger permutations are implemented using `Byte`, `Short`
+or `Int` primitive `Array`s.
+*/
+
+/** Describes a permutation of n elements. */
+trait Perm {
+  /** Builder associated with the permutation implementation. */
+  def builder: PermBuilder
+  /** Hashes this perm using a MurmurHash3 ordered hash with seed Perm.hashSeed. */
+  def hash: Int
+  /** Tests for equality with another Perm. */
+  def ===(that: Perm): Boolean
+  /** Size of the current permutation. */
+  def size: Int
+  /** Image of a domain element. */
+  def image(k: Dom): Dom
+  /** Tests if this permutation is the identity. */
+  def isIdentity: Boolean
+  /** Returns the inverse of this permutation. */
+  def inverse: Perm
+  /** Returns the product of this permutation with another permutation. */
+  def *(that: Perm): Perm
+}
+
+/** Specification of a factory for permutations. */
+trait PermBuilder {
+  /** Builds a permutation from images.
+    * 
+    * Constructs a permutation of given size from a 
+    * function computing images.
+    * 
+    * @param  size The size of the new permutation
+    * @param  f    function returning for k the image of k
+    *              f: k --> k^g
+    * @return the new permutation built
+    */
+  def fromImages(size: Int, f: Dom => Dom): Perm
+  /** Builds a permutation from preimages.
+    * 
+    * Constructs a permutation of given size from a
+    * function computing preimages.
+    * 
+    * @param  size The size of the new permutation
+    * @param  f    function returning for k the image of k
+    *              f: k --> k^(g^-1)
+    * @return the new permutation built
+    */
+  def fromPreimages(size: Int, f: Dom => Dom): Perm
+}
+
+object Perm extends PermBuilder {
+  final val hashSeed = "Perm".hashCode
+  def identity(size: Int) = fromImages(size, k => k)
+  def fromImages(size: Int, f: Dom => Dom) = IntPerm.fromImages(size, f) // TODO dispatch using size
+  def fromPreimages(size: Int, f: Dom => Dom) = IntPerm.fromPreimages(size, f)
+}
+
+trait PermApply extends Perm {
+  def apply(cycle: Dom*): Perm = {
+    import Dom.ZeroBased._
+    def rotateRight[T](seq: Seq[T]) = cycle.last +: cycle.tail
+    val map = Map(rotateRight(cycle) zip cycle: _*)
+    builder.fromImages(size, k => image(map.getOrElse(k, k)))
+  }
+}
+
+trait PermLike extends PermApply {
+  def builder: PermBuilder
+  def size: Int
+  def image(k: Dom): Dom
+
+  def hash = MurmurHash3.orderedHash(Dom.domain(size).map(i => image(i)._0), Perm.hashSeed)
+  def *(that: Perm) = builder.fromImages(size, k => that.image(image(k)))
+  def ===(that: Perm) = Dom.domain(size).forall( k => image(k) === that.image(k) )
+  def isIdentity = Dom.domain(size).forall( k => k === image(k) )
+  def inverse = builder.fromPreimages(size, k => image(k))
+}
+
+/*
+Implementation of `Perm` written for code clarity. Used in tests to check correctness of
+the optimized implementations.
+*/
+class GenericPerm(images: Seq[Dom]) extends PermLike {
+  import Dom.ZeroBased._
+  def builder = GenericPerm
+  def size = images.size
+  def image(k: Dom) = images(k)
+}
+
+object GenericPerm extends PermBuilder {
+  def fromImages(size: Int, f: Dom => Dom) = new GenericPerm(Dom.domain(size).map(f).toIndexedSeq)
+  def fromPreimages(size: Int, f: Dom => Dom) = {
+    import Dom.ZeroBased._
+    val images = scala.collection.mutable.ArrayBuffer.fill(size)(0)
+    images.indices.foreach ( i => images(f(i)) = i )
+    fromImages(size, images(_))
+  }
+}
+
+final class IntPerm private[alasc](val images: Array[Int]) extends PermApply {
+  import Dom.ZeroBased._
+  def builder = IntPerm
+  final def size = images.size
+  final def image(k: Dom) = images(k)
+
+  final def hash = MurmurHash3.orderedHash(images, Perm.hashSeed)
+  final def *(perm: Perm): Perm = perm match {
+    case that: IntPerm =>
+      val n = size
+      val newArray = new Array[Int](n)
+      var i = 0
+      while (i < n) {
+        newArray(i) = that.images(images(i))
+        i += 1
+      }
+      new IntPerm(newArray)
+    case  _ => builder.fromImages(size, k => perm.image(image(k)))
+  }
+  final def inverse: Perm = {
+    val n = size
+    val newArray = new Array[Int](n)
+    var i = 0
+    while (i < n) {
+      newArray(images(i)) = i
+      i += 1
+    }
+    new IntPerm(newArray)
+  }
+  def ===(perm: Perm): Boolean = perm match {
+    case that: IntPerm =>
+      val n = size
+      var i = 0
+      while (i < n) {
+        if (images(i) != that.images(i))
+          return false
+      i += 1
+      }
+      true
+    case _ => (0 until size).forall( k => image(k) == perm.image(k) )
+  }
+  def isIdentity: Boolean = {
+    val n = size
+    var i = 0
+    while (i < n) {
+      if (images(i) != i)
+        return false
+      i += 1
+    }
+    true
+  }
+}
+
+object IntPerm extends PermBuilder {
+  def fromImages(size: Int, f: Dom => Dom) = {
+    import Dom.ZeroBased._
+    new IntPerm(Array.tabulate(size)(k => f(k)))
+  }
+  def fromPreimages(size: Int, f: Dom => Dom) = {
+    import Dom.ZeroBased._
+    val array = new Array[Int](size)
+    array.indices.foreach( i => array(f(i)) = i )
+    new IntPerm(array)
+  }
+}
+
+/*
+implicit class RichPerm(perm: Perm) {
+}
 trait PermParserLike extends RegexParsers {
   def cycle = "(" ~> (repsep(oneBasedDom, ",") <~ ")")
   def oneBasedDom: Parser[Dom] = """\d+""".r ^^ { i => Dom._1(i.toInt) }
   def size: Parser[Int] = """\d+""".r ^^ { _.toInt }
   def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm.fromCycles(sz, cycles) }
-}
-
-sealed abstract class Perm {
-
 }
 
 sealed abstract class Perm extends PermElement[Perm] {
@@ -85,8 +267,6 @@ sealed abstract class Perm extends PermElement[Perm] {
 }
 
 trait PermCompanion[P <: Perm] {
-  def withImage(f: Dom => Dom): P
-  def withPreimage(f: Dom => Dom): P
 }
 
 
@@ -114,27 +294,6 @@ object Perm {
 
 abstract class GenericPerm extends Perm {
   def companion: MutablePerm
-  // note that the image of b under the product g*h is given by:
-  // b^(g*h) = (b^g)^h
-  def *(that: Perm): GenericPerm = 
-    companion.withImage(k => that.image(image(k)))
-  def inverse: GenericPerm =
-    companion.withPreimage(k => image(k))
-  def withSwap(i: Dom, j: Dom) = companion.withImage {
-    k =>
-    if (k == i) j
-    else if (k == j) i
-    else k
-  }
-
-  final def apply(cycle: Dom*): Perm = {
-    val newArray = array.clone
-    val a0 = newArray(cycle(0)._0)
-    for (i <- 0 until cycle.size - 1)
-      newArray(cycle(i)._0) = newArray(cycle(i + 1)._0)
-    newArray(cycle(cycle.size-1)._0) = a0
-    new GenericPerm(newArray)
-  }
 }
 
 class MutablePerm private[alasc](val array: Array[Int]) extends GenericPerm {
@@ -294,3 +453,4 @@ final class ByteArrayPerm private[alasc](val array: Array[Byte]) extends ArrayPe
   }
 }
 */
+ */
