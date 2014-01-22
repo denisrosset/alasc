@@ -82,9 +82,24 @@ trait PermBuilder {
     * @return the new permutation built
     */
   def fromPreimages(n: Int)(f: Dom => Dom): Perm
+  /** Builds a permutation from cycles.
+    * 
+    * Constructs a permutation of given size from a
+    * product of cycles.
+    * 
+    * @param  n       The size of the new permutation
+    * @param  cycles  Sequence of cycles
+    * 
+    * @return the new permutation built
+    */
+  def fromCycles(n: Int, cycles: Seq[Dom]*): Perm
 }
 
-object Perm extends PermBuilder {
+trait PermBuilderLike extends PermBuilder {
+  def fromCycles(n: Int, cycles: Seq[Dom]*) = cycles.foldLeft(apply(n))(_.apply(_:_*))
+}
+
+object Perm extends PermBuilder with PermBuilderLike {
   final val hashSeed = "Perm".hashCode
   def apply(n: Int) = fromImages(n)(k => k)
   def fromImages(n: Int)(f: Dom => Dom) = n match {
@@ -170,7 +185,7 @@ class GenericPerm(images: Seq[Dom]) extends PermLike with PermLikeExtended {
   def image(k: Dom) = images(k)
 }
 
-object GenericPerm extends PermBuilder {
+object GenericPerm extends PermBuilder with PermBuilderLike {
   def fromImages(n: Int)(f: Dom => Dom) = 
     new GenericPerm(Dom.domain(n).map(f).toIndexedSeq)
   def fromPreimages(n: Int)(f: Dom => Dom) = {
