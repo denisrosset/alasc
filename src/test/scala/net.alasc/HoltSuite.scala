@@ -16,7 +16,7 @@ class HoltSuite extends FunSuite {
     assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.bsgs.ElementOrdering.compare(a,b) < 0 ) ) )
     val printed = List("123456", "123465", "143256", "143265", "214356", "214365", "234156", "234165",
       "321456", "321465", "341256", "341265", "412356", "412365", "432156", "432165")
-    assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
+    assert( els.map(_.imagesSeq.map(_._1).mkString("")).sameElements(printed) )
   }
 
   test("Example in 4.6.2") {
@@ -40,11 +40,11 @@ class HoltSuite extends FunSuite {
     def predicate(k: Perm) = (k.image(1) === 1 || k.image(1) === 3) && k.image(2) === 2
     val printed = List("123456", "123465", "321456", "321465")
     val els = g.bsgs.generalSearch(predicate, Test(0)).toList
-    assert( els.map(_.images.oneBased.mkString("")).sameElements(printed) )
+    assert( els.map(_.imagesSeq.map(_._1).mkString("")).sameElements(printed) )
   }
   test("Example 4.6") {
     import Dom.OneBased._
-    val group = Sym(8).toGroup
+    val group = PGroup.fromPermutingGroup(Sym(8))
     val g1 = Perm(8)(1,2,3)
     val g2 = Perm(8)(4,5,6)
     val g3 = Perm(8)(1,4)(2,5)(3,6)(7,8)

@@ -33,7 +33,7 @@ class GroupSuite extends FunSuite {
 
   test("Enumeration of coset representatives has the right size") {
     import Dom.OneBased._
-    val g = PGroup.fromPermGroup(Sym(6))
+    val g = PGroup.fromPermutingGroup(Sym(6))
     val s = g.Subgroup(Perm(6)(1,2,3), Perm(6)(4,5,6))
     val numberOfCosets = g.subgroup.cosetIterator(s).size
     assert(numberOfCosets == g.order / s.order)

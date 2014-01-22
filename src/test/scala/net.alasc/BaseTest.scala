@@ -27,7 +27,7 @@ object BaseSpec extends Properties("GroupBSGSBase") {
       modified.check
       val comingBack = modified.withBase(start.base)
       comingBack.check
-      start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit))
+      start.transversals.map(_.orbitSet).sameElements(comingBack.transversals.map(_.orbitSet))
     }
   }
 }
@@ -44,7 +44,7 @@ class BaseSuite extends FunSuite {
     modified.check
     val comingBack = modified.withBase(start.base)
     comingBack.check
-    assert(start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit)))
+    assert(start.transversals.map(_.orbitSet).sameElements(comingBack.transversals.map(_.orbitSet)))
   }
   test("Explicit test for bug discovered by BaseSpec 1") {
     import net.alasc._
@@ -57,7 +57,7 @@ class BaseSuite extends FunSuite {
     modified.check
     val comingBack = modified.withBase(start.base)
     comingBack.check
-    assert(start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit)))
+    assert(start.transversals.map(_.orbitSet).sameElements(comingBack.transversals.map(_.orbitSet)))
   }
   test("Explicit test for bug discovered by BaseSpec 2") {
     import Dom.OneBased._
@@ -83,6 +83,6 @@ class BaseSuite extends FunSuite {
     start.check
     val modified = start.withBase(newBase)
     val comingBack = modified.withBase(start.base)
-    assert(start.transversals.map(_.orbit).sameElements(comingBack.transversals.map(_.orbit)))
+    assert(start.transversals.map(_.orbitSet).sameElements(comingBack.transversals.map(_.orbitSet)))
   }
 }
