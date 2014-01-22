@@ -2,20 +2,26 @@ package net.alasc
 
 import scala.util.Random
 
-class Sym(val degree: Int) extends PermGroup[Perm] {
-//  def toTeX = TeX("{S_"+degree+"}")
+class Sym private(val degree: Int) extends PermutingGroup[Perm] {
   override def toString = "S" + degree
   def identity = Perm(degree)
   def order = (1 to degree).foldLeft(BigInt(1))(_*_)
-  def compatible(p: Perm) = p.size == degree
-  def contains(p: Perm) = {
-    require_(compatible(p))
-    true
+  def contains(p: Perm) = (p.size == degree)
+  protected def identitySequence = (0 until degree).toBuffer
+  def random(implicit gen: Random) = {
+    import Dom.ZeroBased._
+    val images = gen.shuffle(identitySequence)
+    Perm.fromImages(degree)(k => images(k))
   }
-  def randomElement(gen: Random) = Perm(DomArray.fromZeroBasedArray(gen.shuffle((0 until degree).toBuffer).toArray))
-  def elements = (0 until degree).toArray.permutations.map(arr => Perm(DomArray.fromZeroBasedArray(arr)))
-  def generators = (0 to degree - 2).map(k => identity.withSwap(Dom._0(k), Dom._0(k+1)))
-  def fromExplicit(p: Perm) = if (p.size == degree) Some(p) else None
+  def elements = new Iterable[Perm] {
+    import Dom.ZeroBased._
+    def iterator =
+      identitySequence.permutations.map(images => Perm.fromImages(degree)(k => images(k)))
+  }
+  def generators = {
+    import Dom.ZeroBased._
+    (0 to degree - 2).map(k => identity(k, k + 1))
+  }
 }
 
 object Sym {

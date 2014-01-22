@@ -27,7 +27,7 @@ package object alasc {
   def sub2ind(N: Seq[Int], I: Seq[Int]): Int =
     (N zip I).foldLeft((0, 1)) { case ((tot, mul), (n, i)) => (tot + mul * i, mul * n) }._1
 
-  type Predicate[F <: FiniteElement[F]] = (F => Boolean)
+  type Predicate[F <: Finite[F]] = (F => Boolean)
 
   implicit object DomOrdering extends Ordering[Dom] {
     def compare(a: Dom, b: Dom) = a.zeroBased.compare(b.zeroBased)

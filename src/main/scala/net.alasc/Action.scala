@@ -2,17 +2,31 @@ package net.alasc
 
 import scala.util.Random
 
-trait Action[F <: FiniteElementLike] {
+/** Action: represents a finite group by its action on a permutation domain. */
+trait Action[F <: GenFinite] {
+  /** Is the action faithful, i.e. two different group elements always have the same action. */
   def faithful: Boolean
+  /** Dimension/degree of the permutation representation. */
   def dimension: Int
+  /** Identity element of the group represented by the action. */ 
   def identity: F
-  def domain: Iterable[Dom] = (0 until dimension).map(Dom._0(_))
+  /** Iterable over the domain of the permutation representation. */
+  def domain: Iterable[Dom]
+  /** Compute the image of the domain element k under the action of an element f. */
   def apply(f: F, k: Dom): Dom
-  def toPerm(f: F): Perm = Perm.fromImages((0 until dimension).map(k => apply(f, Dom._0(k))):_*)
+  /** Computes the permutation corresponding to the element f. */
+  def toPerm(f: F): Perm
 }
 
-case class TrivialAction[E <: PermElement[E]](val identity: E) extends Action[E] {
+trait ActionLike[F <: GenFinite] extends Action[F] {
+  def domain: Iterable[Dom] = Dom.domain(dimension)
+  def apply(f: F, k: Dom): Dom
+  def toPerm(f: F): Perm = Perm.fromImages(dimension)(k => apply(f, k))
+}
+
+/** Trivial action for finite elements that are permutations themselves. */
+case class TrivialAction[P <: Permuting[P]](val identity: P) extends Action[P] with ActionLike[P] {
   def faithful = true
   def dimension = identity.size
-  def apply(f: E, k: Dom) = f.image(k)
+  def apply(p: P, k: Dom) = p.image(k)
 }

@@ -6,44 +6,60 @@ import Arbitrary.arbitrary
 import scala.collection.mutable.ArrayBuffer
 
 object PermGenerators {
-  def sortingSeq(seq: Seq[Int])(implicit builder: PermBuilder): Perm = {
-    import Dom.ZeroBased._
-    val images = ArrayBuffer(seq.view.zipWithIndex:_*)
-    images.sortBy(_._1)
-    builder.fromImages( seq.size, images(_)._2 )
-  }
-
   val genSmallSize = Gen.choose(1, 100)
 
-  val genSize = Gen.oneOf(1, 20) // TODO: replace by limits between Byte and Short, Short and Int
+  val genSize = Gen.oneOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
+  255,256,65535,65536) // TODO: replace by limits between Byte and Short, Short and Int
+
+  def perm(n: Int) = Gen.parameterized { params =>
+    import Dom.ZeroBased._
+    val seq = params.rng.shuffle((0 until n).toBuffer)
+    Gen.const(Perm.fromImages(n)(seq(_)))
+  }
 
   val genPerm = for {
     n <- genSize
-    a <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
-  } yield sortingSeq(a)(Perm)
+    p <- perm(n)
+  } yield p
 
   val genPermPerm = for {
     n <- genSize
-    a1 <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
-    a2 <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
-  } yield (sortingSeq(a1)(Perm), sortingSeq(a2)(Perm))
+    p1 <- perm(n)
+    p2 <- perm(n)
+  } yield (p1, p2)
 
   val genPermDomain = for {
     n <- genSize
-    a <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
+    p <- perm(n)
     i <- Gen.choose(1, n)
-  } yield (sortingSeq(a)(Perm), Dom._1(i))
+  } yield (p, Dom._1(i))
 
   val genPermPermDomain = for {
     n <- genSize
-    a1 <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
-    a2 <- Gen.containerOfN[IndexedSeq, Int](n, arbitrary[Int])
+    p1 <- perm(n)
+    p2 <- perm(n)
     i <- Gen.choose(1, n)
-  } yield (sortingSeq(a1)(Perm), sortingSeq(a2)(Perm), Dom._1(i))
+  } yield (p1, p2, Dom._1(i))
 }
 
 object PermSpec extends Properties("Perm") {
   import PermGenerators._
+
+  property("hash") = Prop.forAll(genPerm) {
+    p => p.toOptimized.hash == p.hash && p.hash == p.toGeneric.hashSpec
+  }
+
+  property("imagesSeq") = Prop.forAll(genPerm) {
+    p => p.toOptimized.imagesSeq == p.toGeneric.imagesSeq
+  }
+
+  property("fromImages") = Prop.forAll(genPerm) {
+    p => Perm.fromImages(p.size)(p.image) === GenericPerm.fromImages(p.size)(p.image)
+  }
+
+  property("fromPreimages") = Prop.forAll(genPerm) {
+    p => Perm.fromPreimages(p.size)(p.image) === GenericPerm.fromPreimages(p.size)(p.image)
+  }
 
   property("(g * g^-1) is identity") = Prop.forAll(genPerm) {
     g => (g*g.inverse).isIdentity
@@ -65,6 +81,16 @@ object PermSpec extends Properties("Perm") {
 
   property("k^{g h} = {k^g}^h (right action)") = Prop.forAll(genPermPermDomain) {
     case (g, h, k) => (k ** (g * h)) === ((k ** g) ** h)
+  }
+}
+
+class PermSuite extends FunSuite {
+  test("Perm product with cycle") {
+    import Dom.OneBased._
+    val p = Perm(3)(1,2,3)
+    assert(p.image(1) === 2)
+    assert(p.image(2) === 3)
+    assert(p.image(3) === 1)
   }
 }
 

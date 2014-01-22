@@ -89,7 +89,7 @@ object TrivialBaseImageTest extends BaseImageTest {
   def apply(baseImage: Dom) = (true, this)
 }
 
-abstract class Group[F <: FiniteElement[F]] extends FiniteGroup[F] {
+abstract class Group[F <: Finite[F]] extends FiniteGroup[F] {
   containingGroup =>
 
   val identity: F
@@ -196,7 +196,7 @@ The method `check` throws an exception if an inconsistency is found.
           assert(act(uinv, b) == beta)
         }
         val o = makeOrbit(beta, strongGeneratingSet)
-        assert(o.orbit == transversal.orbit)
+        assert(o.orbitSet == transversal.orbitSet)
         tail.checkNode
       }
       case _ => { }
@@ -214,16 +214,16 @@ The method `check` throws an exception if an inconsistency is found.
       } yield rest * transversal(b).u
     }
 
-    def randomElement(gen: scala.util.Random): F = this.isTerminal match {
+    def random(implicit gen: scala.util.Random): F = this.isTerminal match {
       case true => identity
-      case false => tail.randomElement(gen) * transversal.randomElement(gen)
+      case false => tail.random(gen) * transversal.random(gen)
     }
 
 /*
 #### Sifting through the chain
 */
 
-    case class SiftResult[F <: FiniteElement[F]](val transversalIndices: List[Dom], val remaining: F) {
+    case class SiftResult[F <: Finite[F]](val transversalIndices: List[Dom], val remaining: F) {
       def prepend(b: Dom) = SiftResult(b :: transversalIndices, remaining)
     }
 
@@ -314,7 +314,7 @@ The method `check` throws an exception if an inconsistency is found.
 
     def withBaseFromScratch(newBase: List[Dom]): BSGSChain = options.useRandomizedAlgorithms match {
       case true =>
-        BSGSChain.randomSchreierSims(newBase, randomElement, order)
+        BSGSChain.randomSchreierSims(newBase, random(_), order)
       case false =>
         BSGSChain.deterministicSchreierSims(newBase, generators)
     }
@@ -418,7 +418,7 @@ The method `check` throws an exception if an inconsistency is found.
         val (x, xinv) = (transversal(gamma).u, transversal(gamma).uinv)
         if (!tail.transversal.isDefinedAt(act(xinv, beta1))) {
           var o = makeOrbit(gamma, tList)
-          gammaSet = gammaSet diff o.orbit
+          gammaSet = gammaSet diff o.orbitSet
         } else {
           val y = tail.transversal(act(xinv, beta1)).u
           val yx = y*x
@@ -426,7 +426,7 @@ The method `check` throws an exception if an inconsistency is found.
             tList = yx :: tList
             betaT = betaT.updated(List(yx), tList)
             betaT1 = betaT1.updated(List(yx), tList)
-            gammaSet = gammaSet diff betaT.orbit
+            gammaSet = gammaSet diff betaT.orbitSet
           }
         }
       }
@@ -453,7 +453,7 @@ The method `check` throws an exception if an inconsistency is found.
       var nTrv1 = makeTransversal(nBeta1, nS1)
       val siz = (transversal.size*tail.transversal.size)/nTrv.size
       while (nTrv1.size < siz) {
-        val g = chain.randomElement(r)
+        val g = chain.random(r)
         val h = g * nTrv(act(g, nBeta)).uinv
         if (!nTrv1.isDefinedAt(act(h, nBeta1))) {
           nS = h :: nS
@@ -921,10 +921,14 @@ Lexicographic order is a total order according to the following rule:
   }
 
   def order = bsgs.order
-  def randomElement(gen: Random) = bsgs.randomElement(gen)
-  def elements = bsgs.elements
+  def random(implicit gen: Random) = bsgs.random(gen)
+  def elements = new Iterable[F] {
+    override def size = (if (order.isValidInt) order.toInt else
+      throw new IllegalArgumentException("Order of the group is " + order.toString + " which is not a valid iterator size of type Int.")
+    )
+    def iterator = bsgs.elements
+  }
   def generators = bsgs.strongGeneratingSet
-  def compatible(f: F) = identity.compatible(f)
   def contains(f: F) = bsgs.contains(f)
   def subgroup = new Subgroup(bsgs)
 
@@ -960,7 +964,7 @@ Lexicographic order is a total order according to the following rule:
     }
     def group = containingGroup
     def order = subBSGS.order
-    def randomElement(gen: Random) = subBSGS.randomElement(gen)
+    def random(implicit gen: Random) = subBSGS.random(gen)
 /*
 The method `generators` returns the strong generating set of the underlying
 stabilizer chain, while the method `generatorsAccordingTo` returns a strong
@@ -992,9 +996,13 @@ remarkable subgroups of the underlying group.
           val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
           generatorsAccordingTo(tl, newGivenGenerators ++ givenGenerators)
       }
-    def elements = subBSGS.elements
+    def elements = new Iterable[F] {
+      override def size = (if (subBSGS.order.isValidInt) subBSGS.order.toInt else
+        throw new IllegalArgumentException("Order of the group is " + subBSGS.order.toString + " which is not a valid iterator size of type Int.")
+      )
+      def iterator = subBSGS.elements
+    }
     def identity = containingGroup.identity
-    def compatible(f: F) = identity.compatible(f)
     def contains(f: F) = subBSGS.contains(f)
     def supunion(that: Subgroup): Subgroup = 
       Subgroup(generators ++ that.generators:_*)
@@ -1064,13 +1072,13 @@ The algorithm can probably be improved a lot.
       // TODO: prove that you do not need a particular basis
       val bySubgroupLexicographicBase = new Subgroup(bySubgroup.subBSGS.withFullLexicographicBase)
       assert(bySubgroup.generators.forall(Subgroup.this.contains(_)))
-      for (e <- elements if bySubgroupLexicographicBase.rightCosetMinimalRepresentative(e) == e)
+      for (e <- elements.iterator if bySubgroupLexicographicBase.rightCosetMinimalRepresentative(e) == e)
       yield e
     }
   }
 }
 
-abstract class PGroup[P <: PermElement[P]](val identity: P, val options: GroupOptions = GroupOptions.default) extends Group[P] with PermGroup[P] {
+abstract class PGroup[P <: Permuting[P]](val identity: P, val options: GroupOptions = GroupOptions.default) extends Group[P] with PermutingGroup[P] {
 
   val action = TrivialAction(identity)
 
@@ -1095,7 +1103,7 @@ abstract class PGroup[P <: PermElement[P]](val identity: P, val options: GroupOp
       if (!chain.transversal.isDefinedAt(b))
         (product, remaining)
       else {
-        val nextRemaining = remaining * chain.transversal(b).uinv.toExplicit
+        val nextRemaining = remaining * chain.transversal(b).uinv.toPerm
         val nextProduct = chain.transversal(b).u * product
         explicitSift(nextProduct, nextRemaining, chain.tail)
       }
@@ -1108,7 +1116,7 @@ abstract class PGroup[P <: PermElement[P]](val identity: P, val options: GroupOp
 }
 
 object PGroup {
-  def apply[P <: PermElement[P]](elements: P*) = {
+  def apply[P <: Permuting[P]](elements: P*) = {
     assert(!elements.isEmpty)
     val identity = elements.find(_.isIdentity) match {
       case Some(id) => id
@@ -1118,17 +1126,17 @@ object PGroup {
     fromGenerators(identity, generators, Nil)
   }
 
-  def fromPermGroup[P <: PermElement[P]](
-    permGroup: PermGroup[P],
+  def fromPermutingGroup[P <: Permuting[P]](
+    permGroup: PermutingGroup[P],
     myBase: List[Dom] = Nil,
     myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
     case true =>
-      fromRandomElementsAndOrder(permGroup.identity, permGroup.randomElement, permGroup.order, myBase, myOptions)
+      fromRandomElementsAndOrder(permGroup.identity, permGroup.random(_), permGroup.order, myBase, myOptions)
     case false =>
       fromGenerators(permGroup.identity, permGroup.generators.toList, myBase, myOptions)
   }
 
-  def fromGenerators[P <: PermElement[P]](
+  def fromGenerators[P <: Permuting[P]](
     myIdentity: P,
     myGenerators: List[P],
     myBase: List[Dom] = Nil,
@@ -1136,7 +1144,7 @@ object PGroup {
     lazy val bsgs = BSGSChain.deterministicSchreierSims(myBase, myGenerators)
   }
 
-  def fromGeneratorsAndOrder[P <: PermElement[P]](
+  def fromGeneratorsAndOrder[P <: Permuting[P]](
     myIdentity: P,
     myGenerators: List[P],
     myOrder: BigInt,
@@ -1151,7 +1159,7 @@ object PGroup {
     }
   }
 
-  def fromRandomElementsAndOrder[P <: PermElement[P]](
+  def fromRandomElementsAndOrder[P <: Permuting[P]](
     myIdentity: P,
     myRandomElement: Random => P,
     myOrder: BigInt,
@@ -1161,7 +1169,7 @@ object PGroup {
     lazy val bsgs = BSGSChain.randomSchreierSims(myBase, myRandomElement, myOrder)
   }
 
-  def fromBSGS[P <: PermElement[P]](
+  def fromBSGS[P <: Permuting[P]](
     myIdentity: P,
     myBase: List[Dom],
     myStrongGeneratingSet: List[P],
@@ -1174,7 +1182,7 @@ object PGroup {
   }
 }
 
-abstract class FGroup[F <: FiniteElement[F]](
+abstract class FGroup[F <: Finite[F]](
   val identity: F,
   val action: Action[F],
   val options: GroupOptions = GroupOptions.default) extends Group[F] {
@@ -1195,18 +1203,18 @@ abstract class FGroup[F <: FiniteElement[F]](
 }
 
 object FGroup {
-  def fromFiniteGroup[F <: FiniteElement[F]](
+  def fromFiniteGroup[F <: Finite[F]](
     finiteGroup: FiniteGroup[F],
     myAction: Action[F],
     myBase: List[Dom] = Nil,
     myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
     case true =>
-      fromRandomElementsAndOrder(finiteGroup.identity, myAction, finiteGroup.randomElement, finiteGroup.order, myBase, myOptions)
+      fromRandomElementsAndOrder(finiteGroup.identity, myAction, finiteGroup.random(_), finiteGroup.order, myBase, myOptions)
     case false =>
       fromGenerators(finiteGroup.identity, myAction, finiteGroup.generators.toList, myBase, myOptions)
   }
 
-  def fromGenerators[F <: FiniteElement[F]](
+  def fromGenerators[F <: Finite[F]](
     myIdentity: F,
     myAction: Action[F],
     myGenerators: List[F],
@@ -1215,7 +1223,7 @@ object FGroup {
     lazy val bsgs = BSGSChain.deterministicSchreierSims(myBase, myGenerators)
   }
 
-  def fromGeneratorsAndOrder[F <: FiniteElement[F]](
+  def fromGeneratorsAndOrder[F <: Finite[F]](
     myIdentity: F,
     myAction: Action[F],
     myGenerators: List[F],
@@ -1225,13 +1233,13 @@ object FGroup {
     lazy val bsgs = myOptions.useRandomizedAlgorithms match {
       case true => {
         val bag = RandomBag(myGenerators, myIdentity, max(10, myGenerators.length), 50, myOptions.randomGenerator)
-        BSGSChain.randomSchreierSims(myBase, bag.randomElement, myOrder)
+        BSGSChain.randomSchreierSims(myBase, bag.random(_), myOrder)
       }
       case false => BSGSChain.deterministicSchreierSims(myBase, myGenerators)
     }
   }
 
-  def fromRandomElementsAndOrder[F <: FiniteElement[F]](
+  def fromRandomElementsAndOrder[F <: Finite[F]](
     myIdentity: F,
     myAction: Action[F],
     myRandomElement: Random => F,
@@ -1242,7 +1250,7 @@ object FGroup {
     lazy val bsgs = BSGSChain.randomSchreierSims(myBase, myRandomElement, myOrder)
   }
 
-  def fromBSGS[F <: FiniteElement[F]](
+  def fromBSGS[F <: Finite[F]](
     myIdentity: F,
     myAction: Action[F],
     myBase: List[Dom],

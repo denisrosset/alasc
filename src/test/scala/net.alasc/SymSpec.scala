@@ -20,8 +20,11 @@ object SymGenerators {
 
 object SymSpec extends Properties("Sym") {
   import SymGenerators._
-  property("contains/identity") = Prop.forAll(genSym) { s: Sym => s.contains(s.identity) }
-  property("fromExplicit/equal") = Prop.forAll(genSymAndElement) {
-    case (s, e) => s.fromExplicit(e.toExplicit).get === e
+  def fact(n: Int): BigInt = n match {
+    case 0 => 1
+    case 1 => 1
+    case _ => fact(n - 1) * n
   }
+  property("order") = Prop.forAll(genSym) { s => s.order == fact(s.degree) }
+  property("contains/identity") = Prop.forAll(genSym) { s: Sym => s.contains(s.identity) }
 }

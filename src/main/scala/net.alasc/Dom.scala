@@ -47,7 +47,9 @@ class Dom private[alasc] (val zeroBased: Int) extends AnyVal with DomTrait {
   def _1: Int = zeroBased + 1
   def _0: Int = zeroBased
   def **(g: Perm): Dom = g.image(this)
-// TODO  def **[P <: PermElement[P]](p: P) = p.image(this)
+  def **[P <: Permuting[P]](p: P) = p.image(this)
+  def !==(that: Dom) = zeroBased != that.zeroBased
+  def !==(that: DomTrait) = zeroBased != that._0
   def ===(that: Dom) = zeroBased == that.zeroBased
   def ===(that: DomTrait) = zeroBased == that._0
   def next = new Dom(zeroBased + 1)
@@ -59,6 +61,7 @@ class Dom private[alasc] (val zeroBased: Int) extends AnyVal with DomTrait {
 object Dom {
   def domain(size: Int): Iterable[Dom] = (0 until size).map(Dom._0(_))
   def first = Dom._1(1)
+  def last(size: Int) = Dom._1(size)
   def _0(zeroBased: Int) = new Dom(zeroBased)
   def _1(oneBased: Int) = new Dom(oneBased - 1)
   def apply(startIndexBased: Int) = new Dom(startIndexBased - startIndex)

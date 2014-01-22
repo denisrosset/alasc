@@ -3,18 +3,21 @@
 */
 package net.alasc
 
-trait Orbit[F <: FiniteElementLike] {
+trait GenOrbit {
   def builder: OrbitBuilder
-
-  def action: Action[F]
   def beta: Dom
-
-  def size: Int
-  def contains(k: Dom) = isDefinedAt(k)
   def isDefinedAt(k: Dom): Boolean
+  def contains(k: Dom): Boolean
+  def size: Int
+  def orbitSet: Set[Dom]
+}
 
-  def orbit: Set[Dom]
+trait GenOrbitLike extends GenOrbit {
+  def contains(k: Dom) = isDefinedAt(k)
+}
 
+trait Orbit[F <: GenFinite] extends GenOrbit {
+  def action: Action[F]
   /** Add the new generators newGen to the orbit.
     * 
     * @param newGen   New generators to add to the orbit.
@@ -26,17 +29,16 @@ trait Orbit[F <: FiniteElementLike] {
 }
 
 trait OrbitBuilder {
-  def empty[F <: FiniteElementLike](beta: Dom, action: Action[F]): Orbit[F]
-  def fromSet[F <: FiniteElementLike](beta: Dom, action: Action[F], set: Iterable[F]): Orbit[F] =
+  def empty[F <: GenFinite](beta: Dom, action: Action[F]): Orbit[F]
+  def fromSet[F <: GenFinite](beta: Dom, action: Action[F], set: Iterable[F]): Orbit[F] =
     empty(beta, action).updated(set, set)
 }
 
 /*
 ## Implementation of `Orbit` using a `Set`
 */
-
-case class OrbitSet[F <: FiniteElementLike](beta: Dom, action: Action[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] {
-  def orbit = intOrbit.map(k => Dom._0(k))
+case class OrbitSet[F <: GenFinite](beta: Dom, action: Action[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] with GenOrbitLike {
+  def orbitSet = intOrbit.map(k => Dom._0(k))
   def builder = OrbitSet
   def size = intOrbit.size
   def isDefinedAt(k: Dom) = intOrbit(k._0)
@@ -66,6 +68,6 @@ case class OrbitSet[F <: FiniteElementLike](beta: Dom, action: Action[F], intOrb
 }
 
 object OrbitSet extends OrbitBuilder {
-  def empty[F <: FiniteElementLike](beta: Dom, action: Action[F]) = 
+  def empty[F <: GenFinite](beta: Dom, action: Action[F]) = 
     OrbitSet(beta, action, collection.immutable.BitSet(beta._0))
 }

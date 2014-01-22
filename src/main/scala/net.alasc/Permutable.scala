@@ -25,7 +25,7 @@ These objects are represented by a sequence of T, and T is any type with an
 ordering `permutableOrdering`.
 F is the type of the finite group elements.
 */
-trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
+trait Permutable[P <: Permutable[P, F, T], F <: Finite[F], T] {
   val permutableOrdering: Ordering[T]
 
   /* The base permutation group whose action acts on `sequence`. */
@@ -42,7 +42,7 @@ trait Permutable[P <: Permutable[P, F, T], F <: FiniteElement[F], T] {
   def subgroupBSGSStart = permutableSubgroup.subBSGS.withHeadBasePoint(Dom._0(0))
 }
 
-trait MinimalPermutable[P <: MinimalPermutable[P, F, T], F <: FiniteElement[F], T]
+trait MinimalPermutable[P <: MinimalPermutable[P, F, T], F <: Finite[F], T]
     extends Permutable[P, F, T] {
   permutable: P =>
 
@@ -131,7 +131,7 @@ of the BSGS chain, and they will be filtered using the remaining subgroup given 
 }
 
 
-trait BigSeqPermutable[P <: BigSeqPermutable[P, F, T], F <: FiniteElement[F], T]
+trait BigSeqPermutable[P <: BigSeqPermutable[P, F, T], F <: Finite[F], T]
     extends Permutable[P, F, T] {
   permutable: P =>
 

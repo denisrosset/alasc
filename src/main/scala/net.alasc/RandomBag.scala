@@ -1,7 +1,6 @@
 package net.alasc
 
 import scala.util.Random
-import scala.reflect.ClassTag
 import scala.annotation.tailrec
 import scala.collection.mutable.ArraySeq
 
@@ -16,7 +15,7 @@ import scala.collection.mutable.ArraySeq
   * @note Straight-forward implementation of PRINITIALIZE and PRRANDOM of 
   *       section 3.2.2, pp. 70-71 of Holt
   */
-class RandomBag[F <: FiniteElement[F]] private[alasc](private var x0: F, private var x: ArraySeq[F], val gen: Random) {
+class RandomBag[F <: Finite[F]] private[alasc](private var x0: F, private var x: ArraySeq[F], val gen: Random) {
   def random(implicit gen: Random) = randomElement(gen)
   def randomElement(newGen: Random) = {
     require_(gen eq newGen)
@@ -49,7 +48,7 @@ class RandomBag[F <: FiniteElement[F]] private[alasc](private var x0: F, private
 }
 
 object RandomBag {
-  def apply[F <: FiniteElement[F]](xseq: Seq[F], id: F, r: Int, n: Int = 50, gen: Random = Random): RandomBag[F] = {
+  def apply[F <: Finite[F]](xseq: Seq[F], id: F, r: Int, n: Int = 50, gen: Random = Random): RandomBag[F] = {
     val k = xseq.length
     require_(r >= k)
     require_(r >= 10)
