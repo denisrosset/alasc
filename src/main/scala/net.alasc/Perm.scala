@@ -35,6 +35,8 @@ trait Perm extends Permuting[Perm] {
   def toString: String
   /** Returns the product of this permutation with a cycle. */
   def apply(cycle: Dom*): Perm
+  /** Returns the product of this permutation with a cycle specified by a string. */
+  def apply(s: String): Perm
   /** Returns this permutation as a specialized IndexPerm. */
   def toIndexPerm: IndexPerm
   /** Returns this permutation as a specialized CompactPerm. */
@@ -140,6 +142,13 @@ trait PermLike extends Perm with GenPermutingLike with FiniteLike[Perm] with Per
     val map = Map(cycle zip rotateLeft(cycle): _*)
     builder.fromImages(size)(k => image(map.getOrElse(k, k)))
   }
+
+  def apply(s: String): Perm = {
+    val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    val list: Seq[Dom] = s.map( c => Dom._0(points.indexOf(c)) )
+    apply(list:_*)
+  }
+
   def toIndexPerm =
     IndexPerm.fromImages(size)(image)
   def toCompactPerm =
