@@ -44,7 +44,7 @@ trait GenPermutingLike extends GenPermuting {
   def compare(that: GenPermuting): Int = {
     import Dom.ZeroBased._
     for (i <- 0 until size)
-      (image(i).compare(that.image(i))).signum match {
+      java.lang.Math.signum(image(i).compare(that.image(i))) match {
         case -1 =>
           return -1
         case 1 =>
