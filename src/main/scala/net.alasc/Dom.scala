@@ -25,11 +25,6 @@ trait DomTrait extends Any with Ordered[DomTrait] {
   def next: DomTrait
 }
 
-trait DomImplicits {
-  implicit def +(dom: Dom, shift: Int): Dom
-  def -(otherDom: Dom): Int
-}
-
 /*
 ## `Dom` class for domain elements.
 
