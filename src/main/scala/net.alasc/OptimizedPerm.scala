@@ -68,7 +68,7 @@ abstract class ArrayPerm[@specialized(Int, Short, Byte) T] extends PermLike {
   }
 }
 
-trait ArrayPermBuilder extends PermBuilder {
+trait ArrayPermBuilder extends PermBuilder with PermBuilderLike {
   val maxSize: Int
 }
 
@@ -220,7 +220,7 @@ final class CompactPerm private[alasc](val size: Int, val images: Long) extends 
   def isIdentity = CompactPerm.apply(size).images == images
 }
 
-object CompactPerm extends PermBuilder {
+object CompactPerm extends PermBuilder with PermBuilderLike {
   val maxSize = 16
   val cachedIdentity: Array[Long] = (1 to 16).map( size => fromImages(size)(k => k).images ).toArray
   def apply(n: Int) = new CompactPerm(n, cachedIdentity(n - 1))
@@ -280,7 +280,7 @@ final class IndexPerm private[alasc](val size: Int, val index: Int, val byteArra
   val isIdentity = BytePerm.unsafe(byteArray).isIdentity
 }
 
-object IndexPerm extends PermBuilder {
+object IndexPerm extends PermBuilder with PermBuilderLike {
   import Dom.ZeroBased._
 
   val maxSize = 5
