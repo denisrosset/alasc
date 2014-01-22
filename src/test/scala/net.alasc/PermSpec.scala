@@ -105,4 +105,10 @@ class MurmurHash3Test extends FunSuite {
     assert(arrayHash(intArray) == arrayHash(byteArray))
     assert(arrayHash(intArray) == arrayHash(shortArray))
   }
+  test("Perm concatenation ++") {
+    import Dom.OneBased._
+    val p1 = Perm(3)(1,2)
+    val p2 = Perm(2)(1,2)
+    assert(p1 ++ p2 === Perm(5)(1,2)(4,5))
+  }
 }

@@ -51,6 +51,11 @@ trait Perm extends Permuting[Perm] {
   def toGeneric: GenericPerm
   /** Returns the fastest specialization of this permutation. */
   def toOptimized: Perm
+  /** Returns the concatenation of this permutation and another permutation.
+    * 
+    * For example Perm(3)(1,2) ++ Perm(2)(1,2) === Perm(5)(1,2)(4,5)
+    */
+  def ++(that: Perm): Perm
 }
 
 /** Specification of a factory for permutations. */
@@ -169,9 +174,18 @@ trait PermLike extends Perm with GenPermutingLike with FiniteLike[Perm] with Per
   def toPerm = toOptimized
 
   override def hashCode = hash
+
   override def equals(any: Any) = any match {
     case that: Perm => this === that
     case _ => false
+  }
+
+  def ++(that: Perm) = {
+    val n = size
+    Perm.fromImages(n + that.size) {
+      case k if k._0 < n => image(k)
+      case k => that.image(k + (-n)) + n
+    }
   }
 }
 
