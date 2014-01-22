@@ -28,6 +28,8 @@ trait GenPermuting extends GenFinite with Ordered[GenPermuting] {
   def cyclesToText: String
   /** Return an Iterable over the elements of the domain of this permutation. */
   def domain: Iterable[Dom]
+  /** Returns the support of this permutation. */
+  def support: Iterable[Dom]
 }
 
 trait Permuting[P <: Permuting[P]] extends Finite[P] with GenPermuting {
@@ -94,6 +96,7 @@ trait GenPermutingLike extends GenPermuting {
   def cyclesToText =
     cycles.map(_.map(_._1).mkString("(",",",")")).mkString("")
   def domain = Dom.domain(size)
+  def support = domain.filter( k => image(k) !== k )
 }
 
 trait PermutingLike[P <: Permuting[P]] extends Permuting[P] {
