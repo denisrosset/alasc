@@ -7,10 +7,11 @@ trait GenPermutingGroup extends GenFiniteGroup {
   def domain: Iterable[Dom]
 }
 
-trait PermutingGroup[P <: Permuting[P]] extends FiniteGroup[P]
+trait PermutingGroup[P <: Permuting[P]] extends FiniteGroup[P] with GenPermutingGroup
 
 trait GenPermutingGroupLike extends GenPermutingGroup {
   def domain = Dom.domain(degree)
 }
 
-trait PermutingGroupLike[P <: Permuting[P]] extends PermutingGroup[P]
+trait PermutingGroupLike[P <: Permuting[P]] extends PermutingGroup[P] with GenPermutingGroupLike
+

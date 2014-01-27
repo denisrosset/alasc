@@ -1,6 +1,6 @@
 package net.alasc
 
-trait GenPermuting extends GenFinite with Ordered[GenPermuting] {
+trait GenPermuting extends Any with GenFinite with Ordered[GenPermuting] {
   /** Size of the current permutation. */
   def size: Int
   /** Image of a domain element. */
@@ -32,7 +32,7 @@ trait GenPermuting extends GenFinite with Ordered[GenPermuting] {
   def support: Iterable[Dom]
 }
 
-trait Permuting[P <: Permuting[P]] extends Finite[P] with GenPermuting {
+trait Permuting[P <: Permuting[P]] extends Any with Finite[P] with GenPermuting {
   self: P =>
   /** Tests for equality with another Permuting. */
   def ===(that: Perm): Boolean
@@ -42,7 +42,7 @@ trait Permuting[P <: Permuting[P]] extends Finite[P] with GenPermuting {
   def *(that: P): P
 }
 
-trait GenPermutingLike extends GenPermuting {
+trait GenPermutingLike extends Any with GenPermuting {
   def compare(that: GenPermuting): Int = {
     import Dom.ZeroBased._
     for (i <- 0 until size)
@@ -99,6 +99,6 @@ trait GenPermutingLike extends GenPermuting {
   def support = domain.filter( k => image(k) !== k )
 }
 
-trait PermutingLike[P <: Permuting[P]] extends Permuting[P] {
+trait PermutingLike[P <: Permuting[P]] extends Any with Permuting[P] {
   self: P =>
 }

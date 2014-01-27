@@ -89,7 +89,7 @@ object TrivialBaseImageTest extends BaseImageTest {
   def apply(baseImage: Dom) = (true, this)
 }
 
-abstract class Group[F <: Finite[F]] extends FiniteGroup[F] {
+abstract class Group[F <: Finite[F]] extends FiniteGroup[F] with FiniteGroupLike[F] {
   containingGroup =>
 
   val identity: F
@@ -1078,7 +1078,7 @@ The algorithm can probably be improved a lot.
   }
 }
 
-abstract class PGroup[P <: Permuting[P]](val identity: P, val options: GroupOptions = GroupOptions.default) extends Group[P] with PermutingGroup[P] {
+abstract class PGroup[P <: Permuting[P]](val identity: P, val options: GroupOptions = GroupOptions.default) extends Group[P] with PermutingGroup[P] with PermutingGroupLike[P] {
 
   val action = TrivialAction(identity)
 
@@ -1263,4 +1263,3 @@ object FGroup {
     }
   }
 }
-

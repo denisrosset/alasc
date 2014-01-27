@@ -33,4 +33,4 @@ trait FiniteGroup[F <: Finite[F]] extends GenFiniteGroup {
 
 trait GenFiniteGroupLike extends GenFiniteGroup
 
-trait FiniteGroupLike[F <: Finite[F]] extends FiniteGroup[F]
+trait FiniteGroupLike[F <: Finite[F]] extends FiniteGroup[F] with GenFiniteGroupLike

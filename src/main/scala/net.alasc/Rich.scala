@@ -23,7 +23,7 @@ At the last iteration, we return the form with minimal cost.
       cost: F => Int,
       maximumProducts: Int = 10000,
       maximumForms: Int = 100,
-      iterations: Int = 3) {
+      iterations: Int = 3) = {
       val m: Int = math.min(maximumForms, maximumProducts / (2 * generators.size))
       findMinimal(Seq(f), generators, cost, m, iterations)
     }

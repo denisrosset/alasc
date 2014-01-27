@@ -5,7 +5,7 @@ package net
 
 import scala.language.implicitConversions
 
-package object alasc {
+package object alasc extends FiniteImplicits {
   /* Cartesian product of traversable. */
   def combine[A](xs: Traversable[Traversable[A]]): Seq[Seq[A]] =
     xs.foldLeft(Seq(Seq.empty[A])){

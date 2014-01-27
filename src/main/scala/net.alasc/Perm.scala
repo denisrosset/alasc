@@ -125,7 +125,7 @@ object Perm extends PermBuilder with PermBuilderLike {
   }
 }
 
-trait PermLike extends Perm with GenPermutingLike with FiniteLike[Perm] with PermutingLike[Perm] {
+trait PermLike extends AnyRef with Perm with GenPermutingLike with FiniteLike[Perm] with PermutingLike[Perm] {
   override def toString = "Perm("+size+")"+this.cyclesToText
   
   def hashSpec = MurmurHash3.orderedHash(Dom.domain(size).map(i => image(i)._0), Perm.hashSeed)
@@ -173,8 +173,9 @@ trait PermLike extends Perm with GenPermutingLike with FiniteLike[Perm] with Per
   }
   def toPerm = toOptimized
 
-  override def hashCode = hash
 
+  def dontForgetToOverrideHashCodeAndEquals = true // this trait extends AnyRef so that these will be used
+  override def hashCode = hash
   override def equals(any: Any) = any match {
     case that: Perm => this === that
     case _ => false

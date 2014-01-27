@@ -23,8 +23,9 @@ trait GenFinite extends Any {
   def power(k: Int): GenFinite
 }
 
-trait Finite[F <: Finite[F]] extends GenFinite {
+trait Finite[F <: Finite[F]] extends Any with GenFinite {
   self: F =>
+  def dontForgetToOverrideHashCodeAndEquals: Boolean
   def inverse: F
   def *(that: F): F
   def ===(that: F): Boolean
@@ -34,7 +35,7 @@ trait Finite[F <: Finite[F]] extends GenFinite {
 
 trait GenFiniteLike extends GenFinite
 
-trait FiniteLike[F <: Finite[F]] extends Finite[F] {
+trait FiniteLike[F <: Finite[F]] extends Any with Finite[F] {
   self: F =>
   def power(k: Int) = k match {
     case 0 => this*inverse

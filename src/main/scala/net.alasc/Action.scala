@@ -16,6 +16,8 @@ trait Action[F <: GenFinite] {
   def apply(f: F, k: Dom): Dom
   /** Computes the permutation corresponding to the element f. */
   def toPerm(f: F): Perm
+  /** Flag: implementation have to override hashCode and equals. */
+  def dontForgetToOverrideHashCodeAndEquals: Boolean
 }
 
 trait ActionLike[F <: GenFinite] extends Action[F] {
@@ -26,6 +28,7 @@ trait ActionLike[F <: GenFinite] extends Action[F] {
 
 /** Trivial action for finite elements that are permutations themselves. */
 case class TrivialAction[P <: Permuting[P]](val identity: P) extends Action[P] with ActionLike[P] {
+  def dontForgetToOverrideHashCodeAndEquals = true // by the case class
   def faithful = true
   def dimension = identity.size
   def apply(p: P, k: Dom) = p.image(k)
