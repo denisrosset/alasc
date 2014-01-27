@@ -540,22 +540,23 @@ The method `check` throws an exception if an inconsistency is found.
       }
       case node: BSGSNode => {
         var newLevelCompleted = levelCompleted
-        val sortedOrbit = transversal.keysIterator.toList.sorted(ImageOrdering(uPrev))
+        val sortedOrbit = (transversal.keysIterator.map(_._0).toArray).sortBy(k => k)(ImageOrdering(uPrev).on(Dom._0(_)))
         var sPrune = transversal.size
-        for {
-          deltaP <- sortedOrbit
-          delta = act(uPrev, deltaP)
-          (takeIt, newTest) = test(delta) if takeIt
-          uThis = transversal(deltaP).u * uPrev
-        } {
-          if (sPrune < partialSubgroup.transversal.size)
-            return SubgroupSearchResult(level - 1, level)
-          val SubgroupSearchResult(subRestartFrom, subLevelCompleted) =
-            tail.subgroupSearchRec(predicate, newTest, uThis, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
-          newLevelCompleted = subLevelCompleted
-          if (subRestartFrom < level)
-            return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
-          sPrune -= 1
+        sortedOrbit.foreach { i =>
+          val deltaP = Dom._0(i)
+          val delta = act(uPrev, deltaP)
+          val (takeIt, newTest) = test(delta)
+          if (takeIt) {
+            val uThis = transversal(deltaP).u * uPrev
+            if (sPrune < partialSubgroup.transversal.size)
+              return SubgroupSearchResult(level - 1, level)
+            val SubgroupSearchResult(subRestartFrom, subLevelCompleted) =
+              tail.subgroupSearchRec(predicate, newTest, uThis, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
+            newLevelCompleted = subLevelCompleted
+            if (subRestartFrom < level)
+              return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
+            sPrune -= 1
+          }
         }
         SubgroupSearchResult(level - 1, level)
       }
