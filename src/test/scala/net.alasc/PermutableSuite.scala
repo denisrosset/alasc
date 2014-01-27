@@ -11,20 +11,41 @@ class PermutableSuite extends FunSuite {
     val g2 = Perm(8)(1,3,5,7)(2,4,6,8)
     val id = Perm(8)
     val g = PGroup.fromGenerators(id, List(g1, g2), List(8,7,6,5,4,3,2,1))
-    case class PermutableIntSeq(val permutableSequence: IndexedSeq[Int]) 
-        extends BigSeqPermutable[PermutableIntSeq, Perm, Int]
-        with OrderedPermutable[PermutableIntSeq, Int] {
+    case class PermutableIntSeq(val integerSeq: IndexedSeq[Int])
+        extends Permutable[PermutableIntSeq, Perm] with PermutableLike[PermutableIntSeq, Perm] with Ordered[PermutableIntSeq] {
+
+      def compare(that: PermutableIntSeq): Int = {
+        integerSeq.indices.foreach { i =>
+          val c = integerSeq(i).compare(that.integerSeq(i))
+          if (c != 0)
+            return c
+        }
+        0
+      }
+
       def permutedBy(p: Perm) = {
         val inv = p.inverse
         PermutableIntSeq(
-          IndexedSeq((0 until seq.size).map(k => seq(inv.image(Dom._0(k))._0)):_*))
+          IndexedSeq((0 until integerSeq.size).map(k => integerSeq(inv.image(Dom._0(k))._0)):_*))
       }
-      val permutableBaseGroup = g
-      val permutableOrdering = scala.math.Ordering.Int
+
+      object BruteForcePerms extends BruteForcePermutations {
+        val baseGroup = g
+      }
+      object WithoutSymmetrySubgroupPerms extends WithoutSymmetrySubgroupPermutations {
+        val baseGroup = g
+      }
+      object BigSeqPerms extends BigSeqPermutations {
+        val baseGroup = g
+      }
     }
     val p = PermutableIntSeq(seq)
-    val reps = (0 until p.representatives.size.toInt).map(p.representatives(_))
-    val iter = p.representatives.iterator.toSeq
+    assert (p.BruteForcePerms.minimalRepresentative == 
+      p.WithoutSymmetrySubgroupPerms.minimalRepresentative)
+    assert (p.BruteForcePerms.minimalRepresentative == 
+      p.BigSeqPerms.minimalRepresentative)
+    val reps = (0 until p.BigSeqPerms.size.toInt).map(p.BigSeqPerms(_))
+    val iter = p.BigSeqPerms.iterator.toSeq
     assert(reps == iter)
     assert((reps zip reps.tail).forall {
       case (a, b) => a < b

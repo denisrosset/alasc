@@ -1,166 +1,292 @@
 package net.alasc
 
-trait OrderedPermutable[P <: OrderedPermutable[P, T], T] 
-    extends Ordered[P] {
-  val permutableOrdering: Ordering[T]
-  def permutableSequence: IndexedSeq[T]
-  def compare(that: P): Int = {
-    val n = permutableSequence.length
-    var i = 0
-    while (i < n) {
-      val compareValue = permutableOrdering.compare(permutableSequence(i),
-        that.permutableSequence(i))
-      if (compareValue != 0)
-        return compareValue
-      i += 1
-    }
-    0
-  }
+/*
+ Trait for objects that can be permuted by the action of a finite group.
+
+ These objects are represented by a sequence of T, and T is any type with an
+ ordering `elementsOrdering`.
+ F is the type of the finite group elements.
+ */
+object Permutable {
+  val hashSeed = "Permutable".hashCode
 }
 
-/*
-Trait for objects that can be permuted by the action of a finite group.
+trait Permutable[P <: Permutable[P, F], F <: Finite[F]] {
 
-These objects are represented by a sequence of T, and T is any type with an
-ordering `permutableOrdering`.
-F is the type of the finite group elements.
-*/
-trait Permutable[P <: Permutable[P, F, T], F <: Finite[F], T] {
-  val permutableOrdering: Ordering[T]
+  /* Returns the sequence of elements associated with the current object. */
+  def integerSeq: IndexedSeq[Int]
 
-  /* The base permutation group whose action acts on `sequence`. */
-  val permutableBaseGroup: Group[F]
-  /* The permutation subgroup to use in the computations. */
-  def permutableSubgroup: permutableBaseGroup.Subgroup = permutableBaseGroup.subgroup
   /* Returns the current object permuted by f. */
   def permutedBy(f: F): P
-  /* Returns the sequence associated with the current object. */
-  def permutableSequence: IndexedSeq[T]
 
-  def firstLexicographicRepresentative: (P, F)
+  trait Permutations {
+    /* The base permutation group whose action acts on `elements`. */
+    val baseGroup: Group[F]
 
-  def subgroupBSGSStart = permutableSubgroup.subBSGS.withHeadBasePoint(Dom._0(0))
+    /*
+     The permutation subgroup to use in the computations. 
+     Default is `baseGroup` itself if not overridden.
+     */
+    def permutationSubgroup: baseGroup.Subgroup = baseGroup.subgroup
+
+    def minimalRepresentative: P
+
+    def minimalPermutation: F
+
+    def minimal: (P, F)
+  }
 }
 
-trait MinimalPermutable[P <: MinimalPermutable[P, F, T], F <: Finite[F], T]
-    extends Permutable[P, F, T] {
+trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
   permutable: P =>
 
-  def domainEnd = Dom._1(permutableSequence.size)
+  trait PermutationsLike extends Permutations {
+    import Dom.ZeroBased._
+    import baseGroup.{BSGSChain, Subgroup, identity, act}
 
-  import permutableBaseGroup.{BSGSChain, Subgroup, identity, act}
-  import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
+    def permutationSubgroupBSGS = permutationSubgroup.subBSGS.withHeadBasePoint(Dom.first)
     
-/* Finds the minimal lexicographic representative.
+    def minimalRepresentative: P =
+      permutedBy(minimalPermutation)
 
-Returns the minimal lexicographic representative and the permutation `p` such that
-`this.permutedBy(p) == this.firstLexicographicRepresentative._1`
-*/
+    def minimal: (P, F) = {
+      val p = minimalPermutation
+      (permutedBy(p), p)
+    }
 
-  def firstLexicographicRepresentative: (P, F) = {
-    val id = permutableBaseGroup.identity
-    val permutation = firstLexicographicRepresentativeRec(
-      ArrayBuffer(id), subgroupBSGSStart).inverse
-    ((permutedBy(permutation), permutation))
+    def domainEnd = Dom.last(integerSeq.length)
+
+    final case class PermutedBy(finv: F) extends Ordered[PermutedBy] {
+      def permutation: F = finv.inverse
+      def length = integerSeq.length
+      def apply(k: Int) = integerSeq(act(finv, k))
+      def get: P = permutedBy(finv.inverse)
+      def compare(that: PermutedBy): Int = {
+        var k = 0
+        while (k < integerSeq.length) {
+          val c = apply(k) - that.apply(k)
+          if (c != 0)
+            return c
+          k += 1
+        }
+        0
+      }
+      override def hashCode: Int = {
+        import scala.util.hashing.MurmurHash3
+        var h = Permutable.hashSeed
+        var k = 0
+        while (k < integerSeq.length) {
+          h = MurmurHash3.mix(h, apply(k))
+          k += 1
+        }
+        MurmurHash3.finalizeHash(h, integerSeq.length)
+      }
+      override def equals(any: Any): Boolean = any match {
+        case that: PermutedBy =>
+          var k = 0
+          while (k < integerSeq.length) {
+            if (this(k) != that(k))
+              return false
+            k += 1
+          }
+          true
+        case _ => false
+      }
+    }
   }
 
-/*
-The candidate permutations `candidates` have been selected at the previous levels
-of the BSGS chain, and they will be filtered using the remaining subgroup given by
-`groupChain`.
-*/
+  trait BruteForcePermutations extends PermutationsLike {
+    import Dom.ZeroBased._
+    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
-  def firstLexicographicRepresentativeRec(candidates: ArrayBuffer[F], groupChain: BSGSChain): F = {
-    groupChain.isTerminal match {
-      case true => candidates.head
-      case false => {
-        val beta = groupChain.beta
-        var first = true
-        var minimumValue: T = permutableSequence(0)
-        val keysArray = groupChain.transversal.keysIterator.map(_._0).toArray
-        var possibleCandidatesF = ArrayBuffer.empty[F]
-        var possibleCandidatesDom0 = ArrayBuffer.empty[Short]
-        var cind = 0
-        val csize = candidates.size
-        val ksize = keysArray.size
-        while (cind < csize) {
-          var kind = 0
-          val c = candidates(cind)
-          while (kind < ksize) {
-            val b = Dom._0(keysArray(kind))
-            val betaimage = act(c, b)
-            val value = permutableSequence(betaimage._0)
-            if (first || permutableOrdering.compare(value, minimumValue) == -1) {
-              possibleCandidatesF.clear
-              possibleCandidatesDom0.clear
-              minimumValue = value
-              first = false
+    /* Finds the minimal lexicographic representative.
+
+     Returns the minimal lexicographic representative and the permutation `p` such that
+     `this.permutedBy(p) == this.firstLexicographicRepresentative._1`
+     */
+
+    def minimalPermutation: F =
+      firstLexicographicRepresentativeRec(ArrayBuffer(identity), permutationSubgroupBSGS).inverse
+
+    /*
+     The candidate permutations `candidates` have been selected at the previous levels
+     of the BSGS chain, and they will be filtered using the remaining subgroup given by
+     `groupChain`.
+     */
+    class ShortBuffer(var array: Array[Short], var length: Int) extends IndexedSeq[Short] {
+      def grow {
+        val newArray = new Array[Short](length * 2)
+        Array.copy(array, 0, newArray, 0, length)
+        array = newArray
+      }
+      def +=(i: Short) {
+        if (length == array.length)
+          grow
+        array(length) = i
+        length += 1
+      }
+      def apply(ind: Int): Short = array(ind)
+      def update(ind: Int, elem: Short) = {
+        while (length >= array.length)
+          grow
+        array(ind) = elem
+        if (ind >= length)
+          length = ind + 1
+      }
+      def clear {
+        length = 0
+      }
+    }
+
+    object ShortBuffer {
+      def empty = new ShortBuffer(new Array[Short](16), 0)
+    }
+
+    def firstLexicographicRepresentativeRec(candidates: ArrayBuffer[F], groupChain: BSGSChain): F = {
+      groupChain.isTerminal match {
+        case true => candidates.head
+        case false => {
+          val beta = groupChain.beta
+          var minimumValue = Int.MaxValue
+          val keysArray = groupChain.transversal.keysIterator.map(_._0).toArray
+          var possibleCandidatesF = ArrayBuffer.empty[F]
+          var possibleCandidatesDom0 = ShortBuffer.empty
+          var cind = 0
+          val csize = candidates.size
+          val ksize = keysArray.size
+          while (cind < csize) {
+            var kind = 0
+            val c = candidates(cind)
+            while (kind < ksize) {
+              val b = Dom._0(keysArray(kind))
+              val betaimage = act(c, b)
+              val value = integerSeq(betaimage)
+              if (value < minimumValue) {
+                possibleCandidatesF.clear
+                possibleCandidatesDom0.clear
+                minimumValue = value
+              }
+              if (value == minimumValue) {
+                possibleCandidatesF += c
+                possibleCandidatesDom0 += b._0.toShort
+              }
+              kind += 1
             }
-            if (value == minimumValue) {
-              possibleCandidatesF += c
-              possibleCandidatesDom0 += b._0.toShort
+            cind += 1
+          }
+
+          val nextBeta = beta + 1
+
+          if (groupChain.transversal.size == 1)
+            firstLexicographicRepresentativeRec(possibleCandidatesF, groupChain.lexicographicTail)
+          else {
+            val newCandidates = ArrayBuffer.empty[F]
+            var i = 0
+            val n = possibleCandidatesF.size
+            while (i < n) {
+              val c = possibleCandidatesF(i)
+              val b = Dom._0(possibleCandidatesDom0(i))
+              if (b == beta)
+                newCandidates += c
+              else
+                newCandidates += groupChain.transversal(b).u * c
+              i += 1
             }
-            kind += 1
+            firstLexicographicRepresentativeRec(newCandidates,
+              groupChain.lexicographicTail)
           }
-          cind += 1
-        }
-
-        val nextBeta = Dom._0(beta._0 + 1)
-
-        if (groupChain.transversal.size == 1)
-          firstLexicographicRepresentativeRec(possibleCandidatesF, groupChain.lexicographicTail)
-        else {
-          val newCandidates = MutableSet.empty[F]
-          var i = 0
-          val n = possibleCandidatesF.size
-          while (i < n) {
-            val c = possibleCandidatesF(i)
-            val b = Dom._0(possibleCandidatesDom0(i))
-            if (b == beta)
-              newCandidates += c
-            else
-              newCandidates += groupChain.transversal(b).u * c
-            i += 1
-          }
-          firstLexicographicRepresentativeRec(ArrayBuffer.empty[F] ++ newCandidates, 
-            groupChain.lexicographicTail)
         }
       }
     }
   }
-}
 
+  trait WithoutSymmetrySubgroupPermutations extends PermutationsLike {
+    import Dom.ZeroBased._
+    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
-trait BigSeqPermutable[P <: BigSeqPermutable[P, F, T], F <: Finite[F], T]
-    extends Permutable[P, F, T] {
-  permutable: P =>
+    /* Finds the minimal lexicographic representative.
 
-  /* Returns the symmetry subgroup leaving `sequence` invariant. */
-  def permutableSymmetrySubgroup: permutableBaseGroup.Subgroup = permutableSubgroup.fixing(permutableSequence)
-  /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
-  def findPermutationTo(that: P) = representatives.Block.start.blockForSequence(that.permutableSequence).permutation.inverse
+     Returns the minimal lexicographic representative and the permutation `p` such that
+     `this.permutedBy(p) == this.firstLexicographicRepresentative._1`
+     */
 
-  def domainEnd = Dom._1(permutableSequence.size)
+    def minimalPermutation: F =
+      firstLexicographicRepresentativeRec(Seq(PermutedBy(identity)), permutationSubgroupBSGS).inverse
 
-  def firstLexicographicRepresentative: (P, F) = {
-    val permutation = representatives.headPermutation
-    ((permutedBy(permutation), permutation))
+    /*
+     The candidate permutations `candidates` have been selected at the previous levels
+     of the BSGS chain, and they will be filtered using the remaining subgroup given by
+     `groupChain`.
+     */
+
+    def firstLexicographicRepresentativeRec(candidates: Seq[PermutedBy], groupChain: BSGSChain): F = {
+      groupChain.isTerminal match {
+        case true =>
+          assert(candidates.length == 1)
+          candidates.head.finv
+        case false => {
+          val beta = groupChain.beta
+          var minimumValue = Int.MaxValue
+          val possibleCandidates = ArrayBuffer.empty[(PermutedBy, Dom)]
+          for (b <- groupChain.transversal.keysIterator; c <- candidates) {
+            val value = c(b)
+            if (value < minimumValue) {
+              possibleCandidates.clear
+              minimumValue = value
+            }
+            if (value == minimumValue)
+              possibleCandidates += (c -> b)
+          }
+          val nextBeta = beta + 1
+
+          if (groupChain.transversal.size == 1)
+            firstLexicographicRepresentativeRec(possibleCandidates.map(_._1),
+              groupChain.lexicographicTail)
+          else {
+            val newCandidates = MutableSet.empty[PermutedBy]
+            for ((c, b) <- possibleCandidates) {
+              if (b == beta)
+                newCandidates += c
+              else
+                newCandidates += PermutedBy(groupChain.transversal(b).u * c.finv)
+            }
+            firstLexicographicRepresentativeRec(newCandidates.toSeq,
+              groupChain.lexicographicTail)
+          }
+        }
+      }
+    }
   }
 
-  /* Big sequence of representatives in the lexicographic order. */
-  object representatives extends BigSeq[P] {
-    import permutableBaseGroup.{BSGSChain, Subgroup, identity, act}
+    /* Big sequence of representatives in the lexicographic order. */
+  trait BigSeqPermutations extends PermutationsLike with BigSeq[P] {
+    representatives =>
+    import Dom.ZeroBased._
+    import baseGroup.{BSGSChain, Subgroup, identity, act}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
-    
-    def groupBSGSStart = permutableSubgroup.subBSGS.withHeadBasePoint(Dom._0(0))
+
+    /* Returns the symmetry subgroup leaving `sequence` invariant. */
+    def permutableSymmetrySubgroup: baseGroup.Subgroup =
+      permutationSubgroup.fixing(integerSeq)
+
+    /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
+    def findPermutationTo(that: P) = Block.start
+      .blockForSequence(that.integerSeq).permutation.inverse
+
+    /*
+     The method `minimalPermutation` returns a group element `f` such that
+     `this.permutedBy(f) == apply(0)`.
+     */
+    def minimalPermutation: F =
+      findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(identity),
+        permutationSubgroupBSGS, symmetryBSGS).inverse
+
     def symmetryBSGS = permutableSymmetrySubgroup.subBSGS
-/*
-The method `headPermutation` returns a group element `g` such that
-`this.permutedBy(g) == this.representatives.head`.
-*/
-    def headPermutation = findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(identity), groupBSGSStart, symmetryBSGS).inverse
+
     /* Returns the minimal lexicographic representative. */
-    def head = permutedBy(headPermutation)
+    def head = minimalRepresentative
 
     /* Returns an iterator on the lexicographic representatives. */
     def iterator: Iterator[P] = {
@@ -179,10 +305,10 @@ The method `headPermutation` returns a group element `g` such that
     }
 
     /* Returns the number of lexicographic representatives. */
-    def length = permutableSubgroup.order / permutableSymmetrySubgroup.order
+    def length = permutationSubgroup.order / permutableSymmetrySubgroup.order
 
     /* Finds the index of the representative `that`. */
-    def indexOf(that: P = permutable) = Block.start.indexOfSequence(that.permutableSequence)
+    def indexOf(that: P = permutable) = Block.start.indexOfSequence(that.integerSeq)
 
     /* Finds the lexicographic representative with index `index`. */
     def apply(index: BigInt): P = {
@@ -206,27 +332,24 @@ The method `headPermutation` returns a group element `g` such that
     @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: BSGSChain, symChain: BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
       val beta = groupChain.beta
 
-      def permutedSequence(k: Dom): T = permutedByInverseOf match {
-        case None => permutableSequence(k._0)
-        case Some(f) => permutableSequence(act(f, k)._0)
+      def permutedSequence(k: Dom): Int = permutedByInverseOf match {
+        case None => integerSeq(k._0)
+        case Some(f) => integerSeq(act(f, k)._0)
       }
 
       def toMinimal(f: F) = symChain.rightCosetMinimalRepresentativeUsingBSGSBase(f.inverse).inverse
 
       (beta == domainEnd) match {
         case true => {
-          assert(candidates.size == 1)
-          if (!candidatesAreMinimal)
-            toMinimal(candidates.head)
-          else
-            candidates.head
+          val minimalCandidates = candidates.map(toMinimal).toSet
+          assert(minimalCandidates.size == 1)
+          minimalCandidates.head
         }
         case false => {
-          var first = true
-          var minimumValue: T = permutableSequence(0)
+          var minimumValue = Int.MaxValue
           val keysArray = groupChain.transversal.keysIterator.map(_._0).toArray
           var possibleCandidatesF = ArrayBuffer.empty[F]
-          var possibleCandidatesDom0 = ArrayBuffer.empty[Short]
+          var possibleCandidatesDom0 = ArrayBuffer.empty[Int]
           var cind = 0
           val csize = candidates.size
           val ksize = keysArray.size
@@ -237,15 +360,14 @@ The method `headPermutation` returns a group element `g` such that
               val b = Dom._0(keysArray(kind))
               val betaimage = act(c, b)
               val value = permutedSequence(betaimage)
-              if (first || permutableOrdering.compare(value, minimumValue) == -1) {
+              if (value < minimumValue) {
                 possibleCandidatesF.clear
                 possibleCandidatesDom0.clear
                 minimumValue = value
-                first = false
               }
               if (value == minimumValue) {
                 possibleCandidatesF += c
-                possibleCandidatesDom0 += b._0.toShort
+                possibleCandidatesDom0 += b
               }
               kind += 1
             }
@@ -253,7 +375,7 @@ The method `headPermutation` returns a group element `g` such that
             cind += 1
           }
 
-          val nextBeta = Dom._0(beta._0 + 1)
+          val nextBeta = beta + 1
 
           if (groupChain.transversal.size == 1 && candidatesAreMinimal)
             findSequenceMinimalRepresentativeSubgroup(possibleCandidatesF, groupChain.lexicographicTail, symChain, permutedByInverseOf, true)
@@ -264,9 +386,9 @@ The method `headPermutation` returns a group element `g` such that
             while (i < n) {
               val c = possibleCandidatesF(i)
               val b = Dom._0(possibleCandidatesDom0(i))
-              if (b == beta && candidatesAreMinimal)
-                newCandidates += c 
-              else 
+              if (b === beta && candidatesAreMinimal)
+                newCandidates += c
+              else
                 newCandidates += toMinimal(groupChain.transversal(b).u * c)
               possibleCandidatesF(i) = possibleCandidatesF(0)
               i += 1
@@ -278,7 +400,7 @@ The method `headPermutation` returns a group element `g` such that
     }
 
     object Block {
-      def start = Block(groupBSGSStart, Seq( (identity, symmetryBSGS) ))
+      def start = Block(permutationSubgroupBSGS, Seq( (identity, symmetryBSGS) ))
     }
 
     /*
@@ -295,10 +417,10 @@ The method `headPermutation` returns a group element `g` such that
       lazy val chainTail = chain.lexicographicTail
       /* New possible candidates grouped by the permuted sequence value at `chain`.beta. */
       protected lazy val candidatesForValue = {
-        val map = new MutableHashMap[T, MutableSet[((F, BSGSChain), Dom)]] with MultiMap[T, ((F, BSGSChain), Dom)]
+        val map = new MutableHashMap[Int, MutableSet[((F, BSGSChain), Dom)]] with MultiMap[Int, ((F, BSGSChain), Dom)]
         for (cSym <- candidates; b <- chain.transversal.keysIterator) {
           val betaImage = act(cSym._1, b)
-          val value = permutableSequence(betaImage._0)
+          val value = integerSeq(betaImage._0)
           map.addBinding(value, ((cSym, b)))
         }
         map
@@ -311,16 +433,16 @@ The method `headPermutation` returns a group element `g` such that
       }
 
       /* Sorted possible values for the permuted sequence at `chain`.beta. */
-      lazy val sortedValues = candidatesForValue.keys.toSeq.sorted(permutableOrdering)
+      lazy val sortedValues = candidatesForValue.keys.toSeq.sorted
 
       /* When the block is trivial, returns the associated permutation. */
       def permutation = {
-        assert(size == 1)
+        assert(candidates.size == 1)
         candidates.head._1
       }
 
       /* Return the block where all permuted sequences have value `value` at `chain`.beta. */
-      def blockForValue(value: T) = {
+      def blockForValue(value: Int) = {
         val newCandidates = new MutableHashMap[F, BSGSChain]
         if (chain.transversal.size == 1)
           for (((c, sym), b) <- candidatesForValue(value))
@@ -340,11 +462,11 @@ The method `headPermutation` returns a group element `g` such that
 
       /* Return the index of the first representative of the block corresponding to
        the permuted sequence value `value` at `chain`.beta. */
-      def indexOfValue(value: T) =
-        sortedValues.view.filter(permutableOrdering.compare(_, value) == -1).map(blockForValue(_).size).sum
+      def indexOfValue(value: Int) =
+        sortedValues.view.filter(_ < value).map(blockForValue(_).size).sum
 
       /* Returns the block corresponding to the sequence `seq`. */
-      @annotation.tailrec final def blockForSequence(seq: IndexedSeq[T] = permutableSequence): Block = {
+      @annotation.tailrec final def blockForSequence(seq: IndexedSeq[Int] = integerSeq): Block = {
         if (chain.isTerminal)
           this
         else {
@@ -356,7 +478,7 @@ The method `headPermutation` returns a group element `g` such that
       }
 
       /* Returns the index of the representative with sequence `seq`. */
-      @annotation.tailrec final def indexOfSequence(seq: IndexedSeq[T] = permutableSequence, currentIndex: BigInt = 0): BigInt = {
+      @annotation.tailrec final def indexOfSequence(seq: IndexedSeq[Int] = integerSeq, currentIndex: BigInt = 0): BigInt = {
         if (chain.isTerminal)
           currentIndex
         else {
