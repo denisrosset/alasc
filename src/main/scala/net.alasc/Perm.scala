@@ -78,6 +78,25 @@ trait PermBuilder {
     * @return the new permutation built
     */
   def fromImages(n: Int)(f: Dom => Dom): Perm
+  /** Builds a permutation from images.
+    * 
+    * Constructs a permutation from a sequence of images.
+    * 
+    * @param  seq  Sequence of images
+    *
+    * @return the new permutation built
+    */
+  def fromImages(seq: Seq[Dom]): Perm
+  /** Builds a permutation from images.
+    * 
+    * Constructs a permutation from a sequence of images.
+    * 
+    * @param  seq  Sequence of images
+    * @param  base Base of conversion (zero- or one-based)
+    *
+    * @return the new permutation built
+    */
+  def fromImages(seq: Seq[Int])(implicit base: Int => Dom): Perm
   /** Builds a permutation from preimages.
     * 
     * Constructs a permutation of given size from a
@@ -89,6 +108,25 @@ trait PermBuilder {
     * @return the new permutation built
     */
   def fromPreimages(n: Int)(f: Dom => Dom): Perm
+  /** Builds a permutation from images.
+    * 
+    * Constructs a permutation from a sequence of preimages.
+    * 
+    * @param  seq  Sequence of preimages
+    *
+    * @return the new permutation built
+    */
+  def fromPreimages(seq: Seq[Dom]): Perm
+  /** Builds a permutation from images.
+    * 
+    * Constructs a permutation from a sequence of preimages.
+    * 
+    * @param  seq  Sequence of preimages
+    * @param  base Base of conversion (zero- or one-based)
+    *
+    * @return the new permutation built
+    */
+  def fromPreimages(seq: Seq[Int])(implicit base: Int => Dom): Perm
   /** Builds a permutation from cycles.
     * 
     * Constructs a permutation of given size from a
@@ -104,6 +142,18 @@ trait PermBuilder {
 
 trait PermBuilderLike extends PermBuilder {
   def fromCycles(n: Int, cycles: Seq[Dom]*) = cycles.foldLeft(apply(n))(_.apply(_:_*))
+  def fromImages(seq: Seq[Dom]) = {
+    import Dom.ZeroBased._
+    fromImages(seq.size)( seq(_) )
+  }
+  def fromImages(seq: Seq[Int])(implicit base: Int => Dom) = 
+    fromImages(seq.size)( k => seq(k._0) )
+  def fromPreimages(seq: Seq[Dom]) = {
+    import Dom.ZeroBased._
+    fromPreimages(seq.size)( seq(_) )
+  }
+  def fromPreimages(seq: Seq[Int])(implicit base: Int => Dom) =
+    fromPreimages(seq.size)( k => seq(k._0) )
 }
 
 object Perm extends PermBuilder with PermBuilderLike {
