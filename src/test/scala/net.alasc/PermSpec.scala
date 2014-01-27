@@ -45,6 +45,26 @@ object PermGenerators {
 object PermSpec extends Properties("Perm") {
   import PermGenerators._
 
+  property("equals") = Prop.forAll(genPerm) {
+    p1 => {
+      val p2 = p1.toOptimized
+      val p3 = p1.toGeneric
+      val p4 = p1.toIntPerm
+      p1 == p1 && p1 == p2 && p1 == p3 && p1 == p4 &&
+      p2 == p2 && p2 == p2 && p2 == p3 && p2 == p4 &&
+      p3 == p2 && p3 == p2 && p3 == p3 && p3 == p4 &&
+      p4 == p2 && p4 == p2 && p4 == p3 && p4 == p4
+    }
+  }
+  property("hashCode") = Prop.forAll(genPerm) {
+    p1 => {
+      val p2 = p1.toOptimized
+      val p3 = p1.toGeneric
+      val p4 = p1.toIntPerm
+      val seq = Seq(p1, p2, p3, p4)
+      seq.forall(p1.hashCode == _.hashCode) && seq.forall(p => p.hash == p.hashCode)
+    }
+  }
   property("hash") = Prop.forAll(genPerm) {
     p => p.toOptimized.hash == p.hash && p.hash == p.toGeneric.hashSpec
   }
