@@ -602,29 +602,22 @@ provided generators list `given`.
     def strongGeneratingSetGiven(given: List[F]): List[F] = this match {
       case terminal: BSGSTerminal => Nil
       case node: BSGSNode =>
-        val nextGiven = given.filter(stabilizesCurrentBasePoint)
-        val tailGiven = tail.strongGeneratingSetGiven(nextGiven)
-        val thisGiven = given.toSet ++ tailGiven
-        val strongGeneratingAsSet = strongGeneratingSet.toSet
-        var additionalGenerators = strongGeneratingAsSet diff thisGiven
-        var generators = strongGeneratingAsSet ++ thisGiven
-        val orbitSize = transversal.size
-        val startingOrbit = makeOrbit(beta, tailGiven)
-        var removed = true
-        while (removed) {
-          removed = false
-          for (c <- additionalGenerators) {
-            val newGens = additionalGenerators - c
-            val gens = generators - c
-            val newOrbitSize = startingOrbit.updated(newGens, gens).size
-            if (newOrbitSize == orbitSize) {
-              additionalGenerators -= c
-              generators -= c
-              removed = true
-            }
+        val (thisGiven, tailGiven) = given.partition(stabilizesCurrentBasePoint)
+        val tailGeneratingSet = tail.strongGeneratingSetGiven(tailGiven)
+        assert((thisGiven.toSet intersect tailGeneratingSet.toSet).isEmpty) // TODO remove
+        val thisFixed = thisGiven ++ tailGeneratingSet
+        val fixedOrbit = makeOrbit(beta, thisFixed)
+        val orbitSizeGoal = transversal.size
+        def removeRedundant(additionalGenerators: Set[F]): Set[F] = {
+          additionalGenerators.foreach { gen =>
+            val newAdditional = additionalGenerators - gen
+            val newOrbit = fixedOrbit.updated(newAdditional ++ thisFixed, thisFixed)
+            if (newOrbit.size == orbitSizeGoal)
+              return removeRedundant(newAdditional)
           }
+          additionalGenerators
         }
-        additionalGenerators.toList ++ thisGiven.toList
+        removeRedundant(strongGeneratingSet.toSet diff thisFixed.toSet).toList ++ thisFixed
     }
 /*
 #### Mutable methods used in the construction of the BSGS chain
