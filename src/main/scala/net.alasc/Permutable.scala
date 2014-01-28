@@ -11,7 +11,7 @@ object Permutable {
   val hashSeed = "Permutable".hashCode
 }
 
-trait Permutable[P <: Permutable[P, F], F <: Finite[F]] {
+trait Permutable[+P <: Permutable[P, F], F <: Finite[F]] {
 
   /* Returns the sequence of elements associated with the current object. */
   def integerSeq: IndexedSeq[Int]
