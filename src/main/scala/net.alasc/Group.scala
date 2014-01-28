@@ -957,6 +957,8 @@ Lexicographic order is a total order according to the following rule:
   }
 
   class Subgroup(val subBSGS: BSGSChain) extends FiniteGroup[F] {
+    override def toString = "Subgroup of order " + order
+
     def canEqual(other: Any): Boolean =
       other.isInstanceOf[Subgroup] && (other.asInstanceOf[Subgroup].group eq group)
     override def equals(other: Any) = other match {
