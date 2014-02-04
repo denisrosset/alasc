@@ -16,7 +16,7 @@ Similar projects include:
 * The open source C program [GAP System](http://www.gap-system.org/)
 * The closed source program [Magma](http://magma.maths.usyd.edu.au/magma/)
 
-This software is licensed under the terms of the New BSD License.
+This software is licensed under the terms of the [GNU Public License version 3](http://www.gnu.org/licenses/gpl-3.0.html).
 
 YourKit is kindly supporting AlaSc open source project with its full-featured Java Profiler.
 YourKit, LLC is the creator of innovative and intelligent tools for profiling
