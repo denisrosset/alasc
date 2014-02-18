@@ -63,5 +63,5 @@ case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], int
 }
 
 object TransversalExplicit extends TransversalBuilder {
-  def empty[F <: Finite[F]](beta: Dom, identity: F, action: Action[F]) = TransversalExplicit(beta, action, IntMap(beta._0 -> WithInverse(identity, identity)))
+  def empty[F <: Finite[F]](beta: Dom, action: Action[F]) = TransversalExplicit(beta, action, IntMap(beta._0 -> WithInverse(action.identity, action.identity)))
 }

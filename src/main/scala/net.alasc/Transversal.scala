@@ -51,5 +51,5 @@ trait TransversalLike[F <: Finite[F]] extends Transversal[F] with GenTransversal
 }
 
 trait TransversalBuilder {
-  def empty[F <: Finite[F]](beta: Dom, identity: F, action: Action[F]): Transversal[F]
+  def empty[F <: Finite[F]](beta: Dom, action: Action[F]): Transversal[F]
 }

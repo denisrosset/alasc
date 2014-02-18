@@ -1086,7 +1086,7 @@ abstract class PGroup[P <: Permuting[P]](val identity: P, val options: GroupOpti
     PGroup.fromBSGS(identity, bsgs.base, bsgs.strongGeneratingSet, newOptions)
 
   def makeTransversal(newBeta: Dom, genSet: List[P] = Nil) =
-    options.transversalBuilder.empty(newBeta, identity, action).updated(genSet, genSet)
+    options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
 
   def makeOrbit(newBeta: Dom, genSet: List[P] = Nil) =
     options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
@@ -1192,7 +1192,7 @@ abstract class FGroup[F <: Finite[F]](
     FGroup.fromBSGS(identity, action, bsgs.base, bsgs.strongGeneratingSet, newOptions)
 
   def makeTransversal(newBeta: Dom, genSet: List[F] = Nil) =
-    options.transversalBuilder.empty(newBeta, identity, action).updated(genSet, genSet)
+    options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
 
   def makeOrbit(newBeta: Dom, genSet: List[F] = Nil) =
     options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
