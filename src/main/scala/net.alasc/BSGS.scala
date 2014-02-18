@@ -1,5 +1,4 @@
 package net.alasc
-package bsgs
 
 import scala.util.Random
 

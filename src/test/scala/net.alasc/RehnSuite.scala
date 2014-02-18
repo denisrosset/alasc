@@ -13,7 +13,7 @@ class RehnSuite extends FunSuite {
     val a = Perm(5)(1,2,5)
     val b = Perm(5)(1,4)(3,5)
     val e = Perm(5)
-    val t = TransversalExplicit.empty(1, e, TrivialAction(e)).updated(List(a,b), List(a,b))
+    val t = TransversalExplicit.empty(1, TrivialAction(e)).updated(List(a,b), List(a,b))
     assert(t(1).u === e)
     assert(t(2).u === a)
     assert(t(3).u === a*a*b)

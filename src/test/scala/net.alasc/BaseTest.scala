@@ -21,6 +21,7 @@ object BaseSpec extends Properties("GroupBSGSBase") {
 
   property("After changing base and changing back, transversal orbits should be the same") = Prop.forAll(groupAndBase) {
     case (group, newBase, dim, method, seed, useRandom) => {
+      implicit val options = group.options
       val start = group.bsgs
       start.check
       val modified = start.withBase(newBase)
@@ -36,7 +37,7 @@ class BaseSuite extends FunSuite {
   test("Explicit test for bug discovered by BaseSpec 4") {
     import net.alasc._
     import Dom.OneBased._
-    val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapAndConjugation, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
+    implicit val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapAndConjugation, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
     val group = M11.g.withOptions(newOptions)
     val newBase = List(10, 1, 4, 9, 2).map(Dom._1(_))
     val start = group.bsgs
@@ -49,7 +50,7 @@ class BaseSuite extends FunSuite {
   test("Explicit test for bug discovered by BaseSpec 1") {
     import net.alasc._
     import Dom.OneBased._
-    val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
+    implicit val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(1), useRandomizedAlgorithms = true)
     val group = M24.g.withOptions(newOptions)
     val newBase = List(6, 18, 22).map(Dom._1(_))
     val start = group.bsgs
@@ -61,22 +62,21 @@ class BaseSuite extends FunSuite {
   }
   test("Explicit test for bug discovered by BaseSpec 2") {
     import Dom.OneBased._
-    val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = true)
+    implicit val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = true)
     val g = M11.g.withOptions(newOptions)
-
     val g1 = List(Perm(11)(2,7,6)(4,11,8)(5,9,10), Perm(11)(4,6,10,7)(5,11,8,9), Perm(11)(4,8,10,5)(6,11,7,9))
     val g2 = List(Perm(11)(4,6,10,7)(5,11,8,9), Perm(11)(4,8,10,5)(6,11,7,9))
     val g3 = Nil
     val trv1 = g.makeTransversal(2, g1)
     val trv2 = g.makeTransversal(6, g2)
     val trv3 = g.makeTransversal(4, g3)
-    val bsgs = new g.BSGSNode(trv1, g1, new g.BSGSNode(trv2, g2, new g.BSGSNode(trv3, g3, new g.BSGSTerminal)))
+    val bsgs = new BSGSNode(g.action, trv1, g1, new BSGSNode(g.action, trv2, g2, new BSGSNode(g.action, trv3, g3, new BSGSTerminal(g.action))))
     val swapped = bsgs.baseSwap
     swapped.check
   }
 
   test("Explicit test for bug discovered by BaseSpec 3") {
-    val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = false)
+    implicit val newOptions = GroupOptions.default.copy(baseChangeStrategy = BaseSwapOnly, randomGenerator = new scala.util.Random(10), useRandomizedAlgorithms = false)
     val group = M11.g.withOptions(newOptions)
     val newBase = List(6, 4, 9, 2).map(Dom._1(_))
     val start = group.bsgs

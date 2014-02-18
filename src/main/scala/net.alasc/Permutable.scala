@@ -42,7 +42,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait PermutationsLike extends Permutations {
     import Dom.ZeroBased._
-    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import baseGroup.{Subgroup, identity, act, options}
 
     def permutationSubgroupBSGS = permutationSubgroup.subBSGS.withHeadBasePoint(Dom.first)
     
@@ -97,7 +97,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait BruteForcePermutations extends PermutationsLike {
     import Dom.ZeroBased._
-    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import baseGroup.{Subgroup, identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Finds the minimal lexicographic representative.
@@ -143,7 +143,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
       def empty = new ShortBuffer(new Array[Short](16), 0)
     }
 
-    def firstLexicographicRepresentativeRec(candidates: ArrayBuffer[F], groupChain: BSGSChain): F = {
+    def firstLexicographicRepresentativeRec(candidates: ArrayBuffer[F], groupChain: BSGSChain[F]): F = {
       groupChain.isTerminal match {
         case true => candidates.head
         case false => {
@@ -203,7 +203,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait WithoutSymmetrySubgroupPermutations extends PermutationsLike {
     import Dom.ZeroBased._
-    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import baseGroup.{Subgroup, identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Finds the minimal lexicographic representative.
@@ -221,7 +221,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      `groupChain`.
      */
 
-    def firstLexicographicRepresentativeRec(candidates: Seq[PermutedBy], groupChain: BSGSChain): F = {
+    def firstLexicographicRepresentativeRec(candidates: Seq[PermutedBy], groupChain: BSGSChain[F]): F = {
       groupChain.isTerminal match {
         case true =>
           assert(candidates.length == 1)
@@ -264,7 +264,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
   trait BigSeqPermutations extends PermutationsLike with BigSeq[P] {
     representatives =>
     import Dom.ZeroBased._
-    import baseGroup.{BSGSChain, Subgroup, identity, act}
+    import baseGroup.{Subgroup, identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Returns the symmetry subgroup leaving `sequence` invariant. */
@@ -329,7 +329,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      The argument `candidatesAreMinimal` is used internally to avoid looking twice for
      minimal coset representatives when the current transversal is trivial (size = 1).
      */
-    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: BSGSChain, symChain: BSGSChain, permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
+    @annotation.tailrec protected final def findSequenceMinimalRepresentativeSubgroup(candidates: ArrayBuffer[F], groupChain: BSGSChain[F], symChain: BSGSChain[F], permutedByInverseOf: Option[F] = None, candidatesAreMinimal: Boolean = false): F = {
       val beta = groupChain.beta
 
       def permutedSequence(k: Dom): Int = permutedByInverseOf match {
@@ -413,11 +413,11 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      points of `chain`. 
      */
 
-    case class Block(chain: BSGSChain, candidates: Seq[(F, BSGSChain)]) {
+    case class Block(chain: BSGSChain[F], candidates: Seq[(F, BSGSChain[F])]) {
       lazy val chainTail = chain.lexicographicTail
       /* New possible candidates grouped by the permuted sequence value at `chain`.beta. */
       protected lazy val candidatesForValue = {
-        val map = new MutableHashMap[Int, MutableSet[((F, BSGSChain), Dom)]] with MultiMap[Int, ((F, BSGSChain), Dom)]
+        val map = new MutableHashMap[Int, MutableSet[((F, BSGSChain[F]), Dom)]] with MultiMap[Int, ((F, BSGSChain[F]), Dom)]
         for (cSym <- candidates; b <- chain.transversal.keysIterator) {
           val betaImage = act(cSym._1, b)
           val value = integerSeq(betaImage._0)
@@ -443,7 +443,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
       /* Return the block where all permuted sequences have value `value` at `chain`.beta. */
       def blockForValue(value: Int) = {
-        val newCandidates = new MutableHashMap[F, BSGSChain]
+        val newCandidates = new MutableHashMap[F, BSGSChain[F]]
         if (chain.transversal.size == 1)
           for (((c, sym), b) <- candidatesForValue(value))
             newCandidates(c) = sym.withHeadBasePoint(chain.beta).tail

@@ -27,6 +27,7 @@ class HoltSuite extends FunSuite {
     val id = Perm(6)
     val base = List[Dom](1,2,3,4,5,6)
     val g = PGroup.fromGenerators(id, List(g1, g2, g3), base)
+    implicit val options = g.options
     assert(g.order == 16)
     case class Test(level: Int) extends BaseImageTest {
       def apply(b: Dom): (Boolean, BaseImageTest) = {
