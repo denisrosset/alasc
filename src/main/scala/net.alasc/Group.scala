@@ -62,7 +62,7 @@ our software always returns exact results.
 */
 
 object GroupOptions {
-  var default = GroupOptions(
+  implicit var default = GroupOptions(
     useRandomizedAlgorithms = true,
     randomGenerator = scala.util.Random,
     transversalBuilder = TransversalExplicit,
@@ -73,12 +73,7 @@ object GroupOptions {
 /*
 ## `Group`: a base class for groups
 
-This base class implements the main CGT algorithms used in `alasc`. 
-Two subclasses of `Group` are provided below:
-
-- the `PGroup` subclass represents a permutation group using a BSGS chain,
-- the `FGroup` subclass represents a finite group using a BSGS chain by internally
-  using a faithful action to perform the CGT algorithms.
+This base class implements the main CGT algorithms used in `alasc`.
 */
 
 trait BaseImageTest {
@@ -89,21 +84,23 @@ object TrivialBaseImageTest extends BaseImageTest {
   def apply(baseImage: Dom) = (true, this)
 }
 
-abstract class Group[F <: Finite[F]] extends FiniteGroup[F] with FiniteGroupLike[F] {
+abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupOptions.default) extends FiniteGroup[F] with FiniteGroupLike[F] {
   containingGroup =>
+  def action: Action[F]
+  def identity = action.identity
 
-  val identity: F
-  implicit val options: GroupOptions
-  val action: Action[F]
+  def act(f: F, k: Dom) = action(f, k)
+  def actionDomain = action.domain
+  def actionDimension = action.dimension
 
-  def act(f: F, k: Dom): Dom
-  def actionDomain: Iterable[Dom]
-  def actionDimension: Int
+  def withOptions(newOptions: GroupOptions) =
+    Group.fromBaseAndStrongGeneratingSet(action, bsgs.base, bsgs.strongGeneratingSet)(newOptions)
 
-  def withOptions(newOptions: GroupOptions): Group[F]
+  def makeTransversal(newBeta: Dom, genSet: List[F] = Nil): Transversal[F] =
+    options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
 
-  def makeTransversal(newBeta: Dom, genSet: List[F] = Nil): Transversal[F]
-  def makeOrbit(newBeta: Dom, genSet: List[F] = Nil): Orbit[F]
+  def makeOrbit(newBeta: Dom, genSet: List[F] = Nil): Orbit[F] =
+    options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
 
   def bsgs: BSGSChain[F]
   def order = bsgs.order
@@ -114,9 +111,8 @@ abstract class Group[F <: Finite[F]] extends FiniteGroup[F] with FiniteGroupLike
     )
     def iterator = bsgs.elements
   }
-  def generators = bsgs.strongGeneratingSet
+  def generators: Seq[F]
   def contains(f: F) = bsgs.contains(f)
-  def subgroup = new Subgroup(bsgs)
 
   def canEqual(any: Any): Boolean = any match {
     case that: Group[_] => action == that.action
@@ -128,41 +124,8 @@ abstract class Group[F <: Finite[F]] extends FiniteGroup[F] with FiniteGroupLike
     case _ => false
   }
 
-  object Subgroup {
-    def apply(myGenerators: F*) = {
-      require_(myGenerators.forall(f => containingGroup.contains(f)))
-      require_(myGenerators.forall(f => !f.isIdentity))
-      val subBSGS = BSGSChain.deterministicSchreierSims(action, Nil, myGenerators.toList)
-      new Subgroup(subBSGS)
-    }
+  override def toString = "Group of order " + order
 
-    def fromGeneratorsAndOrder(myGenerators: List[F], myOrder: BigInt) = {
-      if (options.useRandomizedAlgorithms) {
-        val bag = RandomBag(myGenerators, identity, max(10, myGenerators.length), 50, options.randomGenerator)
-        val subBSGS = BSGSChain.randomSchreierSims(action, Nil, bag.randomElement, myOrder, myGenerators)
-        new Subgroup(subBSGS)
-      } else apply(myGenerators:_*)
-    }
-
-    def fromRandomAndOrder(myRandomElement: Random => F, myOrder: BigInt) = {
-      require_(options.useRandomizedAlgorithms == true)
-      val subBSGS = BSGSChain.randomSchreierSims(action, Nil, myRandomElement, myOrder)
-      new Subgroup(subBSGS)
-    }
-  }
-
-  class Subgroup(val subBSGS: BSGSChain[F]) extends FiniteGroup[F] {
-    override def toString = "Subgroup of order " + order
-
-    def canEqual(other: Any): Boolean =
-      other.isInstanceOf[Subgroup] && (other.asInstanceOf[Subgroup].group eq group)
-    override def equals(other: Any) = other match {
-      case that: Subgroup => (this eq that) || ((that canEqual this) && ((this intersection that).order == order))
-      case _ => false
-    }
-    def group = containingGroup
-    def order = subBSGS.order
-    def random(implicit gen: Random) = subBSGS.random(gen)
 /*
 The method `generators` returns the strong generating set of the underlying
 stabilizer chain, while the method `generatorsAccordingTo` returns a strong
@@ -179,62 +142,59 @@ This function is used to provide a readable list of generators for this subgroup
 a group, by considering first the intersection of this subgroup with 
 remarkable subgroups of the underlying group.
 */
-    def generators = subBSGS.strongGeneratingSet
-    def generatorsAccordingTo(subgroups: List[Subgroup], givenGenerators: List[F] = Nil): List[F] =
-      subgroups match {
-        case Nil =>
-          require(givenGenerators.forall(this.contains(_)))
-          val newGenerators = subBSGS.strongGeneratingSetGiven(givenGenerators)
-          val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
-          newGivenGenerators ++ givenGenerators
-        case hd :: tl =>
-          val interSubgroup = this intersection hd
-          val newGenerators = interSubgroup.subBSGS.withBase(subBSGS.base).
-            strongGeneratingSetGiven(givenGenerators.filter(interSubgroup.contains))
-          val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
-          generatorsAccordingTo(tl, newGivenGenerators ++ givenGenerators)
-      }
-    def elements = new Iterable[F] {
-      override def size = (if (subBSGS.order.isValidInt) subBSGS.order.toInt else
-        throw new IllegalArgumentException("Order of the group is " + subBSGS.order.toString + " which is not a valid iterator size of type Int.")
-      )
-      def iterator = subBSGS.elements
-    }
-    def identity = containingGroup.identity
-    def contains(f: F) = subBSGS.contains(f)
-    def supunion(that: Subgroup): Subgroup = 
-      Subgroup(generators ++ that.generators:_*)
-    def intersection(that: Subgroup): Subgroup = {
-      val newBSGS = subBSGS.intersection(that.subBSGS)
-      new Subgroup(newBSGS)
-    }
-    def &(that: Subgroup) = intersection(that)
-    def conjugatedBy(f: F): Subgroup = {
-      val newBSGS = subBSGS.conjugatedBy(f)
-      new Subgroup(newBSGS)
-    }
-    def isSubgroup(potentialSubgroup: Subgroup) = potentialSubgroup.subBSGS.strongGeneratingSet.forall(g => Subgroup.this.contains(g))
-    def stabilizer(k: Dom) = subBSGS.isTerminal match {
-      case true => this
-      case false => new Subgroup(subBSGS.withHeadBasePoint(k).tail)
+  def generatorsAccordingTo(subgroups: List[Group[F]], givenGenerators: List[F] = Nil): List[F] =
+    subgroups match {
+      case Nil =>
+        require(givenGenerators.forall(this.contains(_)))
+        val newGenerators = bsgs.strongGeneratingSetGiven(givenGenerators)
+        val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
+        newGivenGenerators ++ givenGenerators
+      case hd :: tl =>
+        val interSubgroup = this intersection hd
+        val newGenerators = interSubgroup.bsgs.withBase(bsgs.base).
+          strongGeneratingSetGiven(givenGenerators.filter(interSubgroup.contains))
+        val newGivenGenerators = (newGenerators.toSet diff givenGenerators.toSet).toList
+        generatorsAccordingTo(tl, newGivenGenerators ++ givenGenerators)
     }
 
-    /** Returns subgroup fixing a given sequence. */
-    def fixing[O](s: Seq[O]) = {
-      require_(s.size == actionDimension)
-      def leaveInvariant(f: F) =
-        (0 until s.size).forall( i => s(act(f, Dom._0(i))._0) == s(i) )
+  def isSubgroup(potentialSubgroup: Group[F]) = potentialSubgroup.generators.forall(contains)
 
-      case class Test(remainingBase: List[Dom]) extends BaseImageTest {
-        def apply(baseImage: Dom) = {
-          val takeIt = s(remainingBase.head._0) == s(baseImage._0)
-          (takeIt, Test(remainingBase.tail))
-        }
+  def supunion(that: Group[F]): Group[F] = Group.fromGenerators(action, (generators ++ that.generators).toList)
+
+  def intersection(that: Group[F]): Group[F] = {
+    val newBSGS = bsgs.intersection(that.bsgs)
+    Group(newBSGS)
+  }
+
+  def &(that: Group[F]): Group[F] = intersection(that)
+
+  def conjugatedBy(f: F): Group[F] = {
+    val newBSGS = bsgs.conjugatedBy(f)
+    Group(newBSGS)
+  }
+
+  def stabilizer(k: Dom) = bsgs match {
+    case terminal: BSGSTerminal[F] => this
+    case node: BSGSNode[F] => Group(node.withHeadBasePoint(k).tail)
+  }
+
+  def fixing[O](s: Seq[O]) = {
+    import Dom.ZeroBased._
+    require_(s.size == actionDimension)
+    def leaveInvariant(f: F) =
+      (0 until s.size).forall( i => s(act(f, i)) == s(i) )
+
+    case class Test(remainingBase: List[Dom]) extends BaseImageTest {
+      def apply(baseImage: Dom) = {
+        val takeIt = s(remainingBase.head) == s(baseImage)
+        (takeIt, Test(remainingBase.tail))
       }
-      val fullBase = subBSGS.fullLexicographicBase
-      val newBSGS = subBSGS.withBase(fullBase).subgroupSearch( leaveInvariant, Test(fullBase) ).removingRedundantBasePoints
-      new Subgroup(newBSGS)
     }
+    val fullBase = bsgs.fullLexicographicBase
+    val newBSGS = bsgs.withBase(fullBase).subgroupSearch( leaveInvariant, Test(fullBase) ).removingRedundantBasePoints
+    Group(newBSGS)
+  }
+
 /*
 #### Coset algorithms
 
@@ -259,195 +219,132 @@ Lexicographic order is a total order according to the following rule:
 
 (see also the comment above for `rightCosetMinimalRepresentativeUsingBSGSBase`).
 */
-    def rightCosetMinimalRepresentative(f: F): F = subBSGS.withFullLexicographicBase.
-      rightCosetMinimalRepresentativeUsingBSGSBase(f)(DomOrdering)
+  def rightCosetMinimalRepresentative(f: F): F = bsgs.withFullLexicographicBase.
+    rightCosetMinimalRepresentativeUsingBSGSBase(f)(DomOrdering)
 
 /*
 The method `cosetIterator` enumerate coset representatives for the Subgroup `bySubgroup`.
 The algorithm can probably be improved a lot.
 */ 
-    def cosetIterator(bySubgroup: Subgroup): Iterator[F] = {
-      // TODO: prove that you do not need a particular basis
-      val bySubgroupLexicographicBase = new Subgroup(bySubgroup.subBSGS.withFullLexicographicBase)
-      assert(bySubgroup.generators.forall(Subgroup.this.contains(_)))
-      for (e <- elements.iterator if bySubgroupLexicographicBase.rightCosetMinimalRepresentative(e) == e)
-      yield e
-    }
+  def cosetIterator(bySubgroup: Group[F]): Iterator[F] = {
+    // TODO: prove that you do not need a particular basis
+    // very inefficient
+    val bySubgroupLexicographicBase = Group(bySubgroup.bsgs.withFullLexicographicBase)
+    assert(bySubgroup.generators.forall(contains))
+    for (e <- elements.iterator if bySubgroupLexicographicBase.rightCosetMinimalRepresentative(e) == e)
+    yield e
   }
 }
 
-abstract class PGroup[P <: Permuting[P]](val identity: P, val options: GroupOptions = GroupOptions.default) extends Group[P] with PermutingGroup[P] with PermutingGroupLike[P] {
+class ChainGroup[F <: Finite[F]](val bsgs: BSGSChain[F])(implicit options: GroupOptions) extends Group[F] {
+  def action = bsgs.action
+  def generators = bsgs.strongGeneratingSet
+}
 
-  val action = TrivialAction(identity)
-
-  def act(p: P, k: Dom) = p.image(k)
-  def actionDomain = identity.domain
-  def actionDimension = degree
-
-  def withOptions(newOptions: GroupOptions) =
-    PGroup.fromBSGS(identity, bsgs.base, bsgs.strongGeneratingSet)(newOptions)
-
-  def makeTransversal(newBeta: Dom, genSet: List[P] = Nil) =
-    options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
-
-  def makeOrbit(newBeta: Dom, genSet: List[P] = Nil) =
-    options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
-
-  def degree = identity.size
-  def explicitSift(product: P, remaining: Perm, chain: BSGSChain[P]): (P, Perm) = chain.isTerminal match {
-    case true => (product, remaining)
-    case false => {
-      val b = remaining.image(chain.beta)
-      if (!chain.transversal.isDefinedAt(b))
-        (product, remaining)
-      else {
-        val nextRemaining = remaining * chain.transversal(b).uinv.toPerm
-        val nextProduct = chain.transversal(b).u * product
-        explicitSift(nextProduct, nextRemaining, chain.tail)
+abstract class LazyGroup[F <: Finite[F]](bsgsOption: Option[BSGSChain[F]]) extends Group[F] {
+  @volatile var knownBSGS: Option[BSGSChain[F]] = bsgsOption
+  def computeBSGS: BSGSChain[F]
+  def bsgs = knownBSGS match {
+    case None =>
+      this.synchronized {
+        knownBSGS match {
+          case None =>
+            val b = computeBSGS
+            knownBSGS = Some(b)
+            b
+          case Some(b) => b
+        }
       }
-    }
-  }
-  def fromExplicit(perm: Perm): Option[P] = explicitSift(identity, perm, bsgs) match {
-    case (p, remaining) if remaining.isIdentity => Some(p)
-    case _ => None
+    case Some(b) => b
   }
 }
 
-object PGroup {
-  def apply[P <: Permuting[P]](elements: P*)(implicit myOptions: GroupOptions = GroupOptions.default) = {
-    assert(!elements.isEmpty)
-    val identity = elements.find(_.isIdentity) match {
-      case Some(id) => id
-      case None => elements.head * elements.head.inverse
-    }
-    val generators = elements.filterNot(_.isIdentity).toList
-    fromGenerators(identity, generators, Nil)
+class GeneratorsGroup[F <: Finite[F]](val action: Action[F], val generators: Seq[F], prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  def computeBSGS = BSGSChain.deterministicSchreierSims(action, prescribedBase, generators.toList)
+  override def conjugatedBy(f: F) = {
+    val finv = f.inverse
+    new GeneratorsGroup(action,
+      generators.map(x => finv * x * f), 
+      prescribedBase.map(beta => action(f, beta)), 
+      bsgsOption.map(b => b.conjugatedBy(f)) )
   }
+}
 
-  def fromPermutingGroup[P <: Permuting[P]](
-    permGroup: PermutingGroup[P],
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
+class GeneratorsAndOrderGroup[F <: Finite[F]](val action: Action[F], val generators: Seq[F], givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  def computeBSGS = options.useRandomizedAlgorithms match {
     case true =>
-      fromRandomElementsAndOrder(permGroup.identity, permGroup.random(_), permGroup.order, myBase)
+      val bag = RandomBag(generators, action.identity, max(10, generators.length), 50,
+        options.randomGenerator)
+      BSGSChain.randomSchreierSims(action, prescribedBase, bag.random(_), givenOrder)
     case false =>
-      fromGenerators(permGroup.identity, permGroup.generators.toList, myBase)
+      val b = BSGSChain.deterministicSchreierSims(action, prescribedBase, generators.toList)
+      assert(b.order == givenOrder)
+      b
   }
-
-  def fromGenerators[P <: Permuting[P]](
-    myIdentity: P,
-    myGenerators: List[P],
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new PGroup(myIdentity) {
-    lazy val bsgs = BSGSChain.deterministicSchreierSims(TrivialAction(myIdentity), myBase, myGenerators)
-  }
-
-  def fromGeneratorsAndOrder[P <: Permuting[P]](
-    myIdentity: P,
-    myGenerators: List[P],
-    myOrder: BigInt,
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new PGroup(myIdentity, myOptions) {
-    lazy val bsgs = myOptions.useRandomizedAlgorithms match {
-      case true => {
-        val bag = RandomBag(myGenerators, myIdentity, max(10, myGenerators.length), 50, myOptions.randomGenerator)
-        BSGSChain.randomSchreierSims(action, myBase, bag.randomElement, myOrder)
-      }
-      case false => BSGSChain.deterministicSchreierSims(TrivialAction(myIdentity), myBase, myGenerators)
-    }
-  }
-
-  def fromRandomElementsAndOrder[P <: Permuting[P]](
-    myIdentity: P,
-    myRandomElement: Random => P,
-    myOrder: BigInt,
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new PGroup(myIdentity, myOptions) {
-    require_(myOptions.useRandomizedAlgorithms == true)
-    lazy val bsgs = BSGSChain.randomSchreierSims(TrivialAction(myIdentity), myBase, myRandomElement, myOrder)
-  }
-
-  def fromBSGS[P <: Permuting[P]](
-    myIdentity: P,
-    myBase: List[Dom],
-    myStrongGeneratingSet: List[P])(implicit myOptions: GroupOptions = GroupOptions.default) = new PGroup(myIdentity, myOptions) {
-    val bsgs = {
-      val chain = BSGSChain.mutableFromBaseAndGeneratingSet(TrivialAction(myIdentity), myBase, myStrongGeneratingSet)
-      chain.makeImmutable
-      chain
-    }
+  override def conjugatedBy(f: F) = {
+    val finv = f.inverse
+    new GeneratorsAndOrderGroup(action,
+      generators.map(x => finv * x * f),
+      givenOrder,
+      prescribedBase.map(beta => action(f, beta)), 
+      bsgsOption.map(b => b.conjugatedBy(f)) )
   }
 }
 
-abstract class FGroup[F <: Finite[F]](
-  val identity: F,
-  val action: Action[F],
-  val options: GroupOptions = GroupOptions.default) extends Group[F] {
-  require_(action.faithful)
-
-  def act(f: F, k: Dom) = action(f, k)
-  def actionDomain = action.domain
-  def actionDimension = action.dimension
-
-  def withOptions(newOptions: GroupOptions) =
-    FGroup.fromBSGS(identity, action, bsgs.base, bsgs.strongGeneratingSet)(newOptions)
-
-  def makeTransversal(newBeta: Dom, genSet: List[F] = Nil) =
-    options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
-
-  def makeOrbit(newBeta: Dom, genSet: List[F] = Nil) =
-    options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
+class RandomElementsAndOrderGroup[F <: Finite[F]](val action: Action[F], randomElement: Random => F,  givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  def generators = bsgs.strongGeneratingSet
+  def computeBSGS = {
+    assert(options.useRandomizedAlgorithms)
+    BSGSChain.randomSchreierSims(action, prescribedBase, randomElement, givenOrder)
+  }
 }
 
-object FGroup {
-  def fromFiniteGroup[F <: Finite[F]](
-    finiteGroup: FiniteGroup[F],
-    myAction: Action[F],
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = myOptions.useRandomizedAlgorithms match {
-    case true =>
-      fromRandomElementsAndOrder(finiteGroup.identity, myAction, finiteGroup.random(_), finiteGroup.order, myBase)
-    case false =>
-      fromGenerators(finiteGroup.identity, myAction, finiteGroup.generators.toList, myBase)
+object Group {
+  def apply[F <: Finite[F]](bsgs: BSGSChain[F])(implicit myOptions: GroupOptions = GroupOptions.default): Group[F] = new ChainGroup(bsgs)
+
+  def apply[F <: Finite[F]](generators: F*)(implicit myOptions: GroupOptions, actionBuilder: F => Action[F]): Group[F] = {
+    assert(!generators.isEmpty)
+    val action = actionBuilder(generators.head)
+    new GeneratorsGroup(action, generators)
   }
+
+  def apply[F <: Finite[F]](finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions, actionBuilder: F => Action[F]): Group[F] =
+    fromFiniteGroup(actionBuilder(finiteGroup.identity), finiteGroup)
+
+  def fromFiniteGroup[F <: Finite[F]](action: Action[F], finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions) =
+    myOptions.useRandomizedAlgorithms match {
+      case true =>
+        new RandomElementsAndOrderGroup(action, finiteGroup.random(_), finiteGroup.order)
+      case false =>
+        new GeneratorsAndOrderGroup(action, finiteGroup.generators, finiteGroup.order)
+    }
 
   def fromGenerators[F <: Finite[F]](
-    myIdentity: F,
-    myAction: Action[F],
-    myGenerators: List[F],
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new FGroup(myIdentity, myAction, myOptions) {
-    lazy val bsgs = BSGSChain.deterministicSchreierSims(myAction, myBase, myGenerators)
-  }
+    action: Action[F],
+    generators: List[F],
+    prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = 
+    new GeneratorsGroup(action, generators, prescribedBase)
 
   def fromGeneratorsAndOrder[F <: Finite[F]](
-    myIdentity: F,
-    myAction: Action[F],
-    myGenerators: List[F],
-    myOrder: BigInt,
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new FGroup(myIdentity, myAction, myOptions) {
-    lazy val bsgs = myOptions.useRandomizedAlgorithms match {
-      case true => {
-        val bag = RandomBag(myGenerators, myIdentity, max(10, myGenerators.length), 50, myOptions.randomGenerator)
-        BSGSChain.randomSchreierSims(myAction, myBase, bag.random(_), myOrder)
-      }
-      case false => BSGSChain.deterministicSchreierSims(myAction, myBase, myGenerators)
-    }
-  }
+    action: Action[F],
+    generators: List[F],
+    order: BigInt,
+    prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) =
+    new GeneratorsAndOrderGroup(action, generators, order, prescribedBase)
 
   def fromRandomElementsAndOrder[F <: Finite[F]](
-    myIdentity: F,
-    myAction: Action[F],
-    myRandomElement: Random => F,
-    myOrder: BigInt,
-    myBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = new FGroup(myIdentity, myAction, myOptions) {
-    require_(myOptions.useRandomizedAlgorithms == true)
-    lazy val bsgs = BSGSChain.randomSchreierSims(myAction, myBase, myRandomElement, myOrder)
-  }
+    action: Action[F],
+    randomElement: Random => F,
+    order: BigInt,
+    prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = 
+    new RandomElementsAndOrderGroup(action, randomElement, order, prescribedBase)
 
-  def fromBSGS[F <: Finite[F]](
-    myIdentity: F,
-    myAction: Action[F],
-    myBase: List[Dom],
-    myStrongGeneratingSet: List[F])(implicit myOptions: GroupOptions = GroupOptions.default) = new FGroup(myIdentity, myAction, myOptions) {
-    val bsgs = {
-      val chain = BSGSChain.mutableFromBaseAndGeneratingSet(myAction, myBase, myStrongGeneratingSet)
-      chain.makeImmutable
-      chain
-    }
+  def fromBaseAndStrongGeneratingSet[F <: Finite[F]](
+    action: Action[F],
+    base: List[Dom],
+    strongGeneratingSet: List[F])(implicit myOptions: GroupOptions = GroupOptions.default) = {
+    val chain = BSGSChain.mutableFromBaseAndGeneratingSet(action, base, strongGeneratingSet)
+    chain.makeImmutable
+    new ChainGroup(chain)
   }
 }

@@ -10,7 +10,7 @@ class PermutableSuite extends FunSuite {
     val g1 = Perm(8)(1,3)
     val g2 = Perm(8)(1,3,5,7)(2,4,6,8)
     val id = Perm(8)
-    val g = PGroup.fromGenerators(id, List(g1, g2), List(8,7,6,5,4,3,2,1))
+    val g = Group.fromGenerators(TrivialAction(id), List(g1, g2), List(8,7,6,5,4,3,2,1))
     case class PermutableIntSeq(val integerSeq: IndexedSeq[Int])
         extends Permutable[PermutableIntSeq, Perm] with PermutableLike[PermutableIntSeq, Perm] with Ordered[PermutableIntSeq] {
 

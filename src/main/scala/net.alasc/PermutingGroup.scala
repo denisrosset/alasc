@@ -14,4 +14,3 @@ trait GenPermutingGroupLike extends GenPermutingGroup {
 }
 
 trait PermutingGroupLike[P <: Permuting[P]] extends PermutingGroup[P] with GenPermutingGroupLike
-

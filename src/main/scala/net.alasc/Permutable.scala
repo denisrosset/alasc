@@ -20,14 +20,11 @@ trait Permutable[+P <: Permutable[P, F], F <: Finite[F]] {
   def permutedBy(f: F): P
 
   trait Permutations {
-    /* The base permutation group whose action acts on `elements`. */
-    val baseGroup: Group[F]
-
     /*
      The permutation subgroup to use in the computations. 
      Default is `baseGroup` itself if not overridden.
      */
-    def permutationSubgroup: baseGroup.Subgroup = baseGroup.subgroup
+    val baseGroup: Group[F]
 
     def minimalRepresentative: P
 
@@ -42,9 +39,9 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait PermutationsLike extends Permutations {
     import Dom.ZeroBased._
-    import baseGroup.{Subgroup, identity, act, options}
+    import baseGroup.{identity, act, options}
 
-    def permutationSubgroupBSGS = permutationSubgroup.subBSGS.withHeadBasePoint(Dom.first)
+    def baseGroupBSGS = baseGroup.bsgs.withHeadBasePoint(Dom.first)
     
     def minimalRepresentative: P =
       permutedBy(minimalPermutation)
@@ -82,7 +79,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
         MurmurHash3.finalizeHash(h, integerSeq.length)
       }
       override def equals(any: Any): Boolean = any match {
-        case that: PermutedBy =>
+        case that: PermutableLike[P, F]#PermutationsLike#PermutedBy =>
           var k = 0
           while (k < integerSeq.length) {
             if (this(k) != that(k))
@@ -97,7 +94,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait BruteForcePermutations extends PermutationsLike {
     import Dom.ZeroBased._
-    import baseGroup.{Subgroup, identity, act, options}
+    import baseGroup.{identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Finds the minimal lexicographic representative.
@@ -107,7 +104,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      */
 
     def minimalPermutation: F =
-      firstLexicographicRepresentativeRec(ArrayBuffer(identity), permutationSubgroupBSGS).inverse
+      firstLexicographicRepresentativeRec(ArrayBuffer(identity), baseGroupBSGS).inverse
 
     /*
      The candidate permutations `candidates` have been selected at the previous levels
@@ -203,7 +200,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
 
   trait WithoutSymmetrySubgroupPermutations extends PermutationsLike {
     import Dom.ZeroBased._
-    import baseGroup.{Subgroup, identity, act, options}
+    import baseGroup.{identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Finds the minimal lexicographic representative.
@@ -213,7 +210,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      */
 
     def minimalPermutation: F =
-      firstLexicographicRepresentativeRec(Seq(PermutedBy(identity)), permutationSubgroupBSGS).inverse
+      firstLexicographicRepresentativeRec(Seq(PermutedBy(identity)), baseGroupBSGS).inverse
 
     /*
      The candidate permutations `candidates` have been selected at the previous levels
@@ -264,12 +261,14 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
   trait BigSeqPermutations extends PermutationsLike with BigSeq[P] {
     representatives =>
     import Dom.ZeroBased._
-    import baseGroup.{Subgroup, identity, act, options}
+    import baseGroup.{identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
 
     /* Returns the symmetry subgroup leaving `sequence` invariant. */
-    def permutableSymmetrySubgroup: baseGroup.Subgroup =
-      permutationSubgroup.fixing(integerSeq)
+    def permutableSymmetrySubgroup: Group[F] =
+      baseGroup.fixing(integerSeq)
+
+    def symmetryBSGS = permutableSymmetrySubgroup.bsgs
 
     /* Given an object `that`, finds a permutation p such that this.permutedBy(p) = `that`. */
     def findPermutationTo(that: P) = Block.start
@@ -281,9 +280,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
      */
     def minimalPermutation: F =
       findSequenceMinimalRepresentativeSubgroup(ArrayBuffer(identity),
-        permutationSubgroupBSGS, symmetryBSGS).inverse
-
-    def symmetryBSGS = permutableSymmetrySubgroup.subBSGS
+        baseGroupBSGS, symmetryBSGS).inverse
 
     /* Returns the minimal lexicographic representative. */
     def head = minimalRepresentative
@@ -305,7 +302,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
     }
 
     /* Returns the number of lexicographic representatives. */
-    def length = permutationSubgroup.order / permutableSymmetrySubgroup.order
+    def length = baseGroup.order / permutableSymmetrySubgroup.order
 
     /* Finds the index of the representative `that`. */
     def indexOf(that: P = permutable) = Block.start.indexOfSequence(that.integerSeq)
@@ -400,7 +397,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
     }
 
     object Block {
-      def start = Block(permutationSubgroupBSGS, Seq( (identity, symmetryBSGS) ))
+      def start = Block(baseGroupBSGS, Seq( (identity, symmetryBSGS) ))
     }
 
     /*

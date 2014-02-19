@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 class RehnSuite extends FunSuite {
   test("Example 2.2 of Thomas Rehn diploma thesis") {
     import Dom.OneBased._
-    val g = PGroup(Perm(4)(1,2), Perm(4)(2,3), Perm(4)(3,4))
+    val g = Group(Perm(4)(1,2), Perm(4)(2,3), Perm(4)(3,4))
     assert(g.order == 24)
   }
   test("Example 2.6 of Thomas Rehn diploma thesis") {

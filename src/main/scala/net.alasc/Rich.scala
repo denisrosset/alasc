@@ -1,5 +1,18 @@
 package net.alasc
 
+trait GroupImplicits {
+  implicit class PGroup[P <: Permuting[P]](val group: Group[P]) extends PermutingGroup[P] {
+    def contains(p: P) = group.contains(p)
+    def elements = group.elements
+    def generators = group.generators
+    def identity = group.identity
+    def random(implicit gen: scala.util.Random) = group.random(gen)
+    def order = group.order
+    def degree = group.identity.size
+    def domain = group.identity.domain
+  }
+}
+
 trait FiniteImplicits {
   implicit class RichFinite[F <: Finite[F]](val f: F) {
 /*

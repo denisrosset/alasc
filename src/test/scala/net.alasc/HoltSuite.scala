@@ -10,7 +10,7 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List(1, 2, 5).map(Dom._1(_))
-    val g = PGroup.fromGenerators(id, List(g1, g2, g3), base)
+    val g = Group.fromGenerators(TrivialAction(id), List(g1, g2, g3), base)
     assert(g.order == 16)
     val els: List[Perm] = g.bsgs.orderedIterator().toList
     assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.bsgs.ElementOrdering.compare(a,b) < 0 ) ) )
@@ -26,7 +26,7 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List[Dom](1,2,3,4,5,6)
-    val g = PGroup.fromGenerators(id, List(g1, g2, g3), base)
+    val g = Group.fromGenerators(TrivialAction(id), List(g1, g2, g3), base)
     implicit val options = g.options
     assert(g.order == 16)
     case class Test(level: Int) extends BaseImageTest {
@@ -45,15 +45,15 @@ class HoltSuite extends FunSuite {
   }
   test("Example 4.6") {
     import Dom.OneBased._
-    val group = PGroup.fromPermutingGroup(Sym(8))
+    val group = Group(Sym(8))
     val g1 = Perm(8)(1,2,3)
     val g2 = Perm(8)(4,5,6)
     val g3 = Perm(8)(1,4)(2,5)(3,6)(7,8)
     val h1 = Perm(8)(1,6)(2,4)(3,5)(7,8)
     val h2 = Perm(8)(1,2)(3,7)(4,6)(5,8)
     val h3 = Perm(8)(2,3,7)(4,5,8)
-    val g = group.Subgroup(g1,g2,g3)
-    val h = group.Subgroup(h1,h2,h3)
+    val g = Group(g1,g2,g3)
+    val h = Group(h1,h2,h3)
     assert(g.order == 18)
     assert(h.order == 24)
     val ginterh = g.intersection(h)
