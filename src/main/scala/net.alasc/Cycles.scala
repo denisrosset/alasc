@@ -46,7 +46,7 @@ class Cycles(val seq: Seq[Cycle]) extends FiniteLike[Cycles] {
   def dontForgetToOverrideHashCodeAndEquals = true
   override def hashCode = hash
   override def equals(any: Any) = any match {
-    case that: Cycles => this == that
+    case that: Cycles => this === that
     case _ => false
   }
 }
