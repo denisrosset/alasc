@@ -52,5 +52,6 @@ class Cycles(val seq: Seq[Cycle]) extends FiniteLike[Cycles] {
 }
 
 object Cycles {
+  def identity = new Cycles(Seq.empty[Cycle])
   def apply(seq: Dom*): Cycles = new Cycles(Seq(Cycle(seq)))
 }
