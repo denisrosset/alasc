@@ -52,22 +52,3 @@ package object alasc extends FiniteImplicits with GroupImplicits {
   }
   implicit def permActionBuilder[P <: Permuting[P]](p: P) = TrivialAction(p * p.inverse)
 }
-
-/*
-MasterDocument
-Include: Dom.scala
-Include: Group.scala
-Include: Orbit.scala
-Include: Transversal.scala
-
-# Unconverted code #
-Include: Action.scala
-Include: BigSeq.scala
-Include: Dumpable.scala
-Include: Finite.scala
-Include: Perm.scala
-Include: PermBase.scala
-Include: Permutable.scala
-Include: RandomBag.scala
-Include: Sym.scala
-*/

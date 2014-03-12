@@ -14,18 +14,11 @@ trait GenPermuting extends Any with GenFinite with Ordered[GenPermuting] {
   /** Returns the image of this permutation as a sequence of Dom elements. */
   def imagesSeq: IndexedSeq[Dom]
   /** Return the cycle of this permutation starting at a given domain element. */
-  def cycle[P](start: Dom): Seq[Dom]
+  def cycle[P](start: Dom): Cycle
   /** Returns a representation of this permutation as a product of cycles. */
-  def cycles: Seq[Seq[Dom]]
+  def cycles: Cycles
   /** Returns an explicit representation of this permutation. */
   def toPerm: Perm
-  /** Returns a Text representation of the cycles of this permutation using symbols. */
-  def cyclesToTextUsingSymbols(symbols: Seq[String]): String
-  /** Returns a Text representation of the cycles of this permutation.
-    * 
-    * @note Domain elements are represented one-based.
-    */
-  def cyclesToText: String
   /** Return an Iterable over the elements of the domain of this permutation. */
   def domain: Iterable[Dom]
   /** Returns the support of this permutation. */
@@ -62,7 +55,7 @@ trait GenPermutingLike extends Any with GenPermuting {
         Nil
       else
         el :: walk(image(el))
-    start :: walk(image(start))
+    Cycle(start :: walk(image(start)))
   }
   def cycles = {
     import Dom.ZeroBased._
@@ -87,14 +80,8 @@ trait GenPermutingLike extends Any with GenPermuting {
       }
       i = i - 1
     }
-    cycleList.sortBy(_.head._0)
+    new Cycles(cycleList.sortBy(_.head._0).map(Cycle))
   }
-  def cyclesToTextUsingSymbols(symbols: Seq[String]) = {
-    import Dom.ZeroBased._
-    cycles.map(_.map( d => symbols(d) ).mkString("(",",",")")).mkString("")
-  }
-  def cyclesToText =
-    cycles.map(_.map(_._1).mkString("(",",",")")).mkString("")
   def domain = Dom.domain(size)
   def support = domain.filter( k => image(k) !== k )
 }

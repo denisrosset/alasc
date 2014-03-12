@@ -38,10 +38,11 @@ because == could apply implicit conversions, and === will not.
 class Dom private[alasc] (val zeroBased: Int) extends AnyVal with DomTrait {
   def compare(that: DomTrait) = zeroBased.compare(that._0)
   def compare(that: Dom) = zeroBased.compare(that.zeroBased)
-  override def toString = (zeroBased + Dom.startIndex).toString
+  override def toString = (zeroBased + Dom.displayIndex).toString
   def _1: Int = zeroBased + 1
   def _0: Int = zeroBased
   def **(g: Perm): Dom = g.image(this)
+  def **(g: Cycles): Dom = g.image(this)
   def **[P <: Permuting[P]](p: P) = p.image(this)
   def !==(that: Dom) = zeroBased != that.zeroBased
   def !==(that: DomTrait) = zeroBased != that._0
@@ -59,16 +60,15 @@ object Dom {
   def last(size: Int) = Dom._1(size)
   def _0(zeroBased: Int) = new Dom(zeroBased)
   def _1(oneBased: Int) = new Dom(oneBased - 1)
-  def apply(startIndexBased: Int) = new Dom(startIndexBased - startIndex)
-  var startIndex = 1
+  var displayIndex = 1
   object ZeroBased {
     import scala.language.implicitConversions
-    implicit def intToDom(k: Int) = Dom._0(k)
+    implicit def dom(k: Int) = Dom._0(k)
     implicit def domToInt(k: Dom) = k._0
   }
   object OneBased {
     import scala.language.implicitConversions
-    implicit def intToDom(k: Int) = Dom._1(k)
+    implicit def dom(k: Int) = Dom._1(k)
     implicit def domToInt(k: Dom) = k._1
   }
 }

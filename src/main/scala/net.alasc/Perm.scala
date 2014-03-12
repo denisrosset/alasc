@@ -35,6 +35,10 @@ trait Perm extends Permuting[Perm] {
   def toString: String
   /** Returns the product of this permutation with a cycle. */
   def apply(cycle: Dom*): Perm
+  /** Returns the product of this permutation with a cycle. */
+  def apply(cycle: Cycle): Perm
+  /** Returns the product of this permutation with a product of cycles. */
+  def apply(cycles: Cycles): Perm
   /** Returns the product of this permutation with a cycle specified by a string. */
   def apply(s: String): Perm
   /** Returns this permutation as a specialized IndexPerm. */
@@ -176,7 +180,7 @@ object Perm extends PermBuilder with PermBuilderLike {
 }
 
 trait PermLike extends AnyRef with Perm with GenPermutingLike with FiniteLike[Perm] with PermutingLike[Perm] {
-  override def toString = "Perm("+size+")"+this.cyclesToText
+  override def toString = "Perm(" + size + ")" + this.cycles.toString
   
   def hashSpec = MurmurHash3.orderedHash(Dom.domain(size).map(i => image(i)._0), Perm.hashSeed)
 
@@ -197,6 +201,9 @@ trait PermLike extends AnyRef with Perm with GenPermutingLike with FiniteLike[Pe
     val map = Map(cycle zip rotateLeft(cycle): _*)
     builder.fromImages(size)(k => image(map.getOrElse(k, k)))
   }
+
+  def apply(cycle: Cycle): Perm = apply(cycle.seq: _*)
+  def apply(cycles: Cycles): Perm = (Perm(size) /: cycles.seq)( (perm: Perm, cycle: Cycle) => perm(cycle) )
 
   def apply(s: String): Perm = {
     val points = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
