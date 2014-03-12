@@ -99,6 +99,10 @@ object PermSpec extends Properties("Perm") {
     case (g, k) => ((k ** g) ** (g.inverse)) === k
   }
 
+  property("k^g = k^{g.cycles}") = Prop.forAll(genPermDomain) {
+    case (g, k) => ((k ** g) === (k ** g.cycles))
+  }
+
   property("k^{g h} = {k^g}^h (right action)") = Prop.forAll(genPermPermDomain) {
     case (g, h, k) => (k ** (g * h)) === ((k ** g) ** h)
   }
