@@ -6,10 +6,7 @@ import Arbitrary.arbitrary
 import scala.collection.mutable.ArrayBuffer
 
 object CyclesGenerators {
-  val genSmallSize = Gen.choose(1, 100)
-
-  val genSize = Gen.oneOf(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
-  255,256,65535,65536) // TODO: replace by limits between Byte and Short, Short and Int
+  val genSize = Gen.choose(1, 60)
 
   def cycles(n: Int) = Gen.parameterized { params =>
     import Dom.ZeroBased._
