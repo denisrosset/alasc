@@ -278,9 +278,12 @@ object GenericPerm extends PermBuilder with PermBuilderLike {
   def apply(n: Int) = fromImages(n)(k => k)
 }
 
-trait PermParserLike extends RegexParsers {
-  def cycle = "(" ~> (repsep(oneBasedDom, ",") <~ ")")
-  def oneBasedDom: Parser[Dom] = """\d+""".r ^^ { i => Dom._1(i.toInt) }
-  def size: Parser[Int] = """\d+""".r ^^ { _.toInt }
-  def cycles(sz: Int) = rep(cycle) ^^ { cycles => Perm.fromCycles(sz, cycles:_*) }
+trait PermParserTrait extends CyclesParserTrait {
+  def perm1: Parser[Perm] = perm(Dom._1)
+  def permHeader: Parser[Int] = ("Perm(" ~> int) <~ ")"
+  def perm(intToDom: Int => Dom): Parser[Perm] = permHeader ~ cycles(intToDom) ^^ {
+    case size ~ c => Perm(size)(c)
+  }
 }
+
+object PermParser extends PermParserTrait

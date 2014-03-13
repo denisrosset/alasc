@@ -1,8 +1,11 @@
 package net.alasc
+import scala.util.parsing.combinator._
 
 case class Cycle(seq: Seq[Dom]) {
   /** Returns a text representation of this cycle, using `Dom.displayIndex`. */
-  override def toString = seq.mkString("(", ",", ")")
+  override def toString: String = seq.mkString("(", ",", ")")
+  /** Returns a text representation of these cycles, using the Dom to Int conversion given. */
+  def toString(domToInt: Dom => Int): String = seq.map(k => domToInt(k).toString).mkString("(", ",", ")")
   /** Returns a text representation of this cycle, using the given symbols. */
   def toStringUsingSymbols(symbols: Seq[String]) = {
     import Dom.ZeroBased._
@@ -12,7 +15,9 @@ case class Cycle(seq: Seq[Dom]) {
 
 class Cycles(val seq: Seq[Cycle]) extends FiniteLike[Cycles] {
   /** Returns a text representation of these cycles, using `Dom.displayIndex`. */
-  override def toString = seq.mkString
+  override def toString: String = seq.mkString
+  /** Returns a text representation of these cycles, using the Dom to Int conversion given. */
+  def toString(domToInt: Dom => Int): String = seq.map(_.toString(domToInt)).mkString
   /** Returns a text representation of these cycles, using the given symbols. */
   def toStringUsingSymbols(symbols: Seq[String]) = seq.map(_.toStringUsingSymbols(symbols)).mkString
   lazy val minimalSize = {
@@ -55,3 +60,12 @@ object Cycles {
   def identity = new Cycles(Seq.empty[Cycle])
   def apply(seq: Dom*): Cycles = new Cycles(Seq(Cycle(seq)))
 }
+
+trait CyclesParserTrait extends RegexParsers {
+  def int: Parser[Int] = """\d+""".r ^^ { t => t.toInt }
+  def dom(intToDom: Int => Dom): Parser[Dom] = int ^^ intToDom
+  def cycle(intToDom: Int => Dom): Parser[Cycle] = "(" ~> (repsep(dom(intToDom), ",") <~ ")") ^^ Cycle
+  def cycles(intToDom: Int => Dom) = rep(cycle(intToDom)) ^^ { seq => new Cycles(seq) }
+}
+
+object CyclesParser extends CyclesParserTrait
