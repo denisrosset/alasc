@@ -438,9 +438,12 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     }
     case node: BSGSNode[F] => {
       var newLevelCompleted = levelCompleted
-      val sortedOrbit = (transversal.keysIterator.map(_._0).toArray).sortBy(k => k)(ImageOrdering(uPrev).on(Dom._0(_)))
+      val sortedOrbit: Array[Int] = (transversal.keysIterator.map(_._0).toArray).sortBy(k => k)(ImageOrdering(uPrev).on(Dom._0(_)))
       var sPrune = transversal.size
-      sortedOrbit.foreach { i =>
+      val n = sortedOrbit.length
+      var ind = 0
+      while (ind < n) {
+        val i = sortedOrbit(ind)
         val deltaP = Dom._0(i)
         val delta = act(uPrev, deltaP)
         val (takeIt, newTest) = test(delta)
@@ -455,6 +458,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
             return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
           sPrune -= 1
         }
+        ind += 1
       }
       SubgroupSearchResult(level - 1, level)
     }
@@ -469,7 +473,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
       val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, test, identity, 0, length, cons, cons)
       assert(levelCompleted == 0)
       cons.cleanupGenerators
-      cons.removeRedundantGenerators
+//      cons.removeRedundantGenerators
       cons.makeImmutable
       cons
     }
