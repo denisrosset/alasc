@@ -179,19 +179,36 @@ remarkable subgroups of the underlying group.
   }
 
   def fixing[O](s: Seq[O]) = {
+    val mapping = s.distinct.zipWithIndex.toMap
+    val indices = s.map(mapping)
     import Dom.ZeroBased._
     require_(s.size == actionDimension)
-    def leaveInvariant(f: F) =
-      (0 until s.size).forall( i => s(act(f, i)) == s(i) )
+    val n = s.size
+    def leaveInvariant(f: F): Boolean = {
+      var i = 0
+      while (i < n) {
+        if (indices(act(f, i)) != indices(i))
+          return false
+        i += 1
+      }
+      return true
+    }
 
     case class Test(remainingBase: List[Dom]) extends BaseImageTest {
       def apply(baseImage: Dom) = {
-        val takeIt = s(remainingBase.head) == s(baseImage)
+        val takeIt = indices(remainingBase.head) == indices(baseImage)
         (takeIt, Test(remainingBase.tail))
       }
     }
-    val fullBase = bsgs.fullLexicographicBase
-    val newBSGS = bsgs.withBase(fullBase).subgroupSearch( leaveInvariant, Test(fullBase) ).removingRedundantBasePoints
+
+    val seqBase: List[Dom] = 
+      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList
+
+    val orderedBSGS = bsgs.withBase(seqBase)
+
+    val newBSGS =
+      orderedBSGS.subgroupSearch( leaveInvariant, Test(orderedBSGS.base) ).removingRedundantBasePoints
+
     Group(newBSGS)
   }
 
