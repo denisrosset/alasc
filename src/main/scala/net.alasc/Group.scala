@@ -77,10 +77,14 @@ This base class implements the main CGT algorithms used in `alasc`.
 */
 
 trait BaseImageTest {
+  def check(baseImage: Dom): Boolean
+  def nextTest(baseImage: Dom): BaseImageTest
   def apply(baseImage: Dom): (Boolean, BaseImageTest)
 }
 
 object TrivialBaseImageTest extends BaseImageTest {
+  def check(baseImage: Dom) = true
+  def nextTest(baseImage: Dom) = this
   def apply(baseImage: Dom) = (true, this)
 }
 
@@ -180,7 +184,7 @@ remarkable subgroups of the underlying group.
 
   def fixing[O](s: Seq[O]) = {
     val mapping = s.distinct.zipWithIndex.toMap
-    val indices = s.map(mapping)
+    val indices = s.map(mapping).toArray
     import Dom.ZeroBased._
     require_(s.size == actionDimension)
     val n = s.size
@@ -195,6 +199,8 @@ remarkable subgroups of the underlying group.
     }
 
     case class Test(remainingBase: List[Dom]) extends BaseImageTest {
+      def check(baseImage: Dom) = indices(remainingBase.head) == indices(baseImage)
+      def nextTest(baseImage: Dom) = Test(remainingBase.tail)
       def apply(baseImage: Dom) = {
         val takeIt = indices(remainingBase.head) == indices(baseImage)
         (takeIt, Test(remainingBase.tail))
