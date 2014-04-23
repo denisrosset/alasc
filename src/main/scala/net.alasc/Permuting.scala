@@ -35,7 +35,7 @@ trait Permuting[P <: Permuting[P]] extends Any with Finite[P] with GenPermuting 
   def *(that: P): P
 }
 
-trait GenPermutingLike extends Any with GenPermuting {
+trait GenPermutingImpl extends Any with GenPermuting {
   def compare(that: GenPermuting): Int = {
     import Dom.ZeroBased._
     for (i <- 0 until size)
@@ -86,6 +86,6 @@ trait GenPermutingLike extends Any with GenPermuting {
   def support = domain.filter( k => image(k) !== k )
 }
 
-trait PermutingLike[P <: Permuting[P]] extends Any with Permuting[P] {
+trait PermutingImpl[P <: Permuting[P]] extends Any with Permuting[P] {
   self: P =>
 }

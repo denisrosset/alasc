@@ -33,9 +33,9 @@ trait Finite[F <: Finite[F]] extends Any with GenFinite {
   def conjugatedBy(f: F): F
 }
 
-trait GenFiniteLike extends GenFinite
+trait GenFiniteImpl extends GenFinite
 
-trait FiniteLike[F <: Finite[F]] extends Any with Finite[F] {
+trait FiniteImpl[F <: Finite[F]] extends Any with Finite[F] {
   self: F =>
   def power(k: Int) = k match {
     case 0 => this*inverse

@@ -13,7 +13,7 @@ case class Cycle(seq: Seq[Dom]) {
   }
 }
 
-class Cycles(val seq: Seq[Cycle]) extends FiniteLike[Cycles] {
+class Cycles(val seq: Seq[Cycle]) extends FiniteImpl[Cycles] {
   /** Returns a text representation of these cycles, using `Dom.displayIndex`. */
   override def toString: String = seq.mkString
   /** Returns a text representation of these cycles, using the Dom to Int conversion given. */

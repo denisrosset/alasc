@@ -20,14 +20,13 @@ trait Action[F <: GenFinite] {
   def dontForgetToOverrideHashCodeAndEquals: Boolean
 }
 
-trait ActionLike[F <: GenFinite] extends Action[F] {
+trait ActionImpl[F <: GenFinite] extends Action[F] {
   def domain: Iterable[Dom] = Dom.domain(dimension)
-  def apply(f: F, k: Dom): Dom
   def toPerm(f: F): Perm = Perm.fromImages(dimension)(k => apply(f, k))
 }
 
 /** Trivial action for finite elements that are permutations themselves. */
-case class TrivialAction[P <: Permuting[P]](val identity: P) extends Action[P] with ActionLike[P] {
+case class TrivialAction[P <: Permuting[P]](val identity: P) extends Action[P] with ActionImpl[P] {
   def dontForgetToOverrideHashCodeAndEquals = true // by the case class
   def faithful = true
   def dimension = identity.size

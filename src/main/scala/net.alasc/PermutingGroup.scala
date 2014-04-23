@@ -9,8 +9,8 @@ trait GenPermutingGroup extends GenFiniteGroup {
 
 trait PermutingGroup[P <: Permuting[P]] extends FiniteGroup[P] with GenPermutingGroup
 
-trait GenPermutingGroupLike extends GenPermutingGroup {
+trait GenPermutingGroupImpl extends GenPermutingGroup {
   def domain = Dom.domain(degree)
 }
 
-trait PermutingGroupLike[P <: Permuting[P]] extends PermutingGroup[P] with GenPermutingGroupLike
+trait PermutingGroupImpl[P <: Permuting[P]] extends PermutingGroup[P] with GenPermutingGroupImpl

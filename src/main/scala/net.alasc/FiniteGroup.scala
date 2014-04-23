@@ -31,6 +31,6 @@ trait FiniteGroup[F <: Finite[F]] extends GenFiniteGroup {
   def random(implicit gen: Random = Random): F
 }
 
-trait GenFiniteGroupLike extends GenFiniteGroup
+trait GenFiniteGroupImpl extends GenFiniteGroup
 
-trait FiniteGroupLike[F <: Finite[F]] extends FiniteGroup[F] with GenFiniteGroupLike
+trait FiniteGroupImpl[F <: Finite[F]] extends FiniteGroup[F] with GenFiniteGroupImpl

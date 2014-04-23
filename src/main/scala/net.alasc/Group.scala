@@ -84,7 +84,7 @@ object TrivialBaseImageTest extends BaseImageTest {
   def apply(baseImage: Dom) = (true, this)
 }
 
-abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupOptions.default) extends FiniteGroup[F] with FiniteGroupLike[F] {
+abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupOptions.default) extends FiniteGroup[F] with FiniteGroupImpl[F] {
   containingGroup =>
   def action: Action[F]
   def identity = action.identity

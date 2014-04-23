@@ -34,10 +34,10 @@ trait Permutable[+P <: Permutable[P, F], F <: Finite[F]] {
   }
 }
 
-trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
+trait PermutableImpl[P <: Permutable[P, F], F <: Finite[F]] {
   permutable: P =>
 
-  trait PermutationsLike extends Permutations {
+  trait PermutationsImpl extends Permutations {
     import Dom.ZeroBased._
     import baseGroup.{identity, act, options}
 
@@ -79,7 +79,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
         MurmurHash3.finalizeHash(h, integerSeq.length)
       }
       override def equals(any: Any): Boolean = any match {
-        case that: PermutableLike[P, F]#PermutationsLike#PermutedBy =>
+        case that: PermutableImpl[P, F]#PermutationsImpl#PermutedBy =>
           var k = 0
           while (k < integerSeq.length) {
             if (this(k) != that(k))
@@ -92,7 +92,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
     }
   }
 
-  trait BruteForcePermutations extends PermutationsLike {
+  trait BruteForcePermutations extends PermutationsImpl {
     import Dom.ZeroBased._
     import baseGroup.{identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
@@ -198,7 +198,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
     }
   }
 
-  trait WithoutSymmetrySubgroupPermutations extends PermutationsLike {
+  trait WithoutSymmetrySubgroupPermutations extends PermutationsImpl {
     import Dom.ZeroBased._
     import baseGroup.{identity, act, options}
     import collection.mutable.{ HashMap => MutableHashMap, MultiMap, Set => MutableSet, ArrayBuffer, WeakHashMap }
@@ -258,7 +258,7 @@ trait PermutableLike[P <: Permutable[P, F], F <: Finite[F]] {
   }
 
     /* Big sequence of representatives in the lexicographic order. */
-  trait BigSeqPermutations extends PermutationsLike with BigSeq[P] {
+  trait BigSeqPermutations extends PermutationsImpl with BigSeq[P] {
     representatives =>
     import Dom.ZeroBased._
     import baseGroup.{identity, act, options}

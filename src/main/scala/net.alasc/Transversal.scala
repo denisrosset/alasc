@@ -31,12 +31,12 @@ trait Transversal[F <: Finite[F]] extends ReadOnlyMap[Dom, WithInverse[F]] with 
   def orbitSet: Set[Dom]
 }
 
-trait GenTransversalLike extends GenTransversal {
+trait GenTransversalImpl extends GenTransversal {
   def contains(k: Dom) = isDefinedAt(k)
 }
 
 
-trait TransversalLike[F <: Finite[F]] extends Transversal[F] with GenTransversalLike with ReadOnlyMapLike[Dom, WithInverse[F]] {
+trait TransversalImpl[F <: Finite[F]] extends Transversal[F] with GenTransversalImpl with ReadOnlyMapImpl[Dom, WithInverse[F]] {
   def conjugatedBy(f: F): Transversal[F] = conjugatedBy(f, f.inverse)
   /** Returns a random element of the transversal. */
   def random(implicit gen: Random): F = {

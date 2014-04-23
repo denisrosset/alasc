@@ -12,7 +12,7 @@ class PermutableSuite extends FunSuite {
     val id = Perm(8)
     val g = Group.fromGenerators(TrivialAction(id), List(g1, g2), List(8,7,6,5,4,3,2,1))
     case class PermutableIntSeq(val integerSeq: IndexedSeq[Int])
-        extends Permutable[PermutableIntSeq, Perm] with PermutableLike[PermutableIntSeq, Perm] with Ordered[PermutableIntSeq] {
+        extends Permutable[PermutableIntSeq, Perm] with PermutableImpl[PermutableIntSeq, Perm] with Ordered[PermutableIntSeq] {
 
       def compare(that: PermutableIntSeq): Int = {
         integerSeq.indices.foreach { i =>

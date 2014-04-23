@@ -12,7 +12,7 @@ trait GenOrbit {
   def orbitSet: Set[Dom]
 }
 
-trait GenOrbitLike extends GenOrbit {
+trait GenOrbitImpl extends GenOrbit {
   def contains(k: Dom) = isDefinedAt(k)
 }
 
@@ -37,7 +37,7 @@ trait OrbitBuilder {
 /*
 ## Implementation of `Orbit` using a `Set`
 */
-case class OrbitSet[F <: GenFinite](beta: Dom, action: Action[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] with GenOrbitLike {
+case class OrbitSet[F <: GenFinite](beta: Dom, action: Action[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] with GenOrbitImpl {
   def orbitSet = intOrbit.map(k => Dom._0(k))
   def builder = OrbitSet
   def size = intOrbit.size

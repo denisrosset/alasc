@@ -11,7 +11,7 @@ trait ReadOnlyMap[A, +B] extends PartialFunction[A, B] with Iterable[(A, B)] {
   def valuesIterator: Iterator[B]
 }
 
-trait ReadOnlyMapLike[A, +B] extends ReadOnlyMap[A, B] {
+trait ReadOnlyMapImpl[A, +B] extends ReadOnlyMap[A, B] {
   def get(key: A) = isDefinedAt(key) match {
     case true => Some(apply(key))
     case false => None

@@ -8,7 +8,7 @@ import scala.collection.immutable.IntMap
 ## Implementation of `Transversal` using an explicit representation of group elements
 */
 
-case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], intMap: IntMap[WithInverse[F]]) extends Transversal[F] with TransversalLike[F] {
+case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], intMap: IntMap[WithInverse[F]]) extends Transversal[F] with TransversalImpl[F] {
   import Dom.ZeroBased._
 
   def builder = TransversalExplicit

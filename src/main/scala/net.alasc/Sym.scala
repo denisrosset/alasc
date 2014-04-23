@@ -2,7 +2,7 @@ package net.alasc
 
 import scala.util.Random
 
-class Sym private(val degree: Int) extends PermutingGroup[Perm] with PermutingGroupLike[Perm] {
+class Sym private(val degree: Int) extends PermutingGroup[Perm] with PermutingGroupImpl[Perm] {
   override def toString = "S" + degree
   def identity = Perm(degree)
   def order = (1 to degree).foldLeft(BigInt(1))(_*_)

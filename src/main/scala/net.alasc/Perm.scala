@@ -15,7 +15,7 @@ of the domain \\( \beta \\) :
 The implementation is organized as follows:
 
 - the interface trait `Perm` without implementation methods,
-- an implementation trait `PermLike` with generic implementations of
+- an implementation trait `PermImpl` with generic implementations of
   non-speed critical methods,
 - a specification for `PermBuilder` to create `Perm` instances from
   images or pre-images,
@@ -144,7 +144,7 @@ trait PermBuilder {
   def fromCycles(n: Int, cycles: Seq[Dom]*): Perm
 }
 
-trait PermBuilderLike extends PermBuilder {
+trait PermBuilderImpl extends PermBuilder {
   def fromCycles(n: Int, cycles: Seq[Dom]*) = cycles.foldLeft(apply(n))(_.apply(_:_*))
   def fromImages(seq: Seq[Dom]) = {
     import Dom.ZeroBased._
@@ -160,7 +160,7 @@ trait PermBuilderLike extends PermBuilder {
     fromPreimages(seq.size)( k => seq(k._0) )
 }
 
-object Perm extends PermBuilder with PermBuilderLike {
+object Perm extends PermBuilder with PermBuilderImpl {
   final val hashSeed = "Perm".hashCode
   def apply(n: Int) = fromImages(n)(k => k)
   def fromImages(n: Int)(f: Dom => Dom) = n match {
@@ -179,7 +179,7 @@ object Perm extends PermBuilder with PermBuilderLike {
   }
 }
 
-trait PermLike extends AnyRef with Perm with GenPermutingLike with FiniteLike[Perm] with PermutingLike[Perm] {
+trait PermImpl extends AnyRef with Perm with GenPermutingImpl with FiniteImpl[Perm] with PermutingImpl[Perm] {
   override def toString = "Perm(" + size + ")" + this.cycles.toString
   
   def hashSpec = MurmurHash3.orderedHash(Dom.domain(size).map(i => image(i)._0), Perm.hashSeed)
@@ -247,7 +247,7 @@ trait PermLike extends AnyRef with Perm with GenPermutingLike with FiniteLike[Pe
   }
 }
 
-trait PermLikeExtended extends PermLike {
+trait PermImplExtended extends PermImpl {
   def *(that: Perm) = builder.fromImages(size)(k => that.image(image(k)))
   def ===(that: Perm) = Dom.domain(size).forall( k => image(k) === that.image(k) )
   def isIdentity = Dom.domain(size).forall( k => k === image(k) )
@@ -258,7 +258,7 @@ trait PermLikeExtended extends PermLike {
 Implementation of `Perm` written for code clarity. Used in tests to check correctness of
 the optimized implementations.
 */
-class GenericPerm(images: Seq[Dom]) extends PermLike with PermLikeExtended {
+class GenericPerm(images: Seq[Dom]) extends PermImpl with PermImplExtended {
   import Dom.ZeroBased._
 
   def builder = GenericPerm
@@ -266,7 +266,7 @@ class GenericPerm(images: Seq[Dom]) extends PermLike with PermLikeExtended {
   def image(k: Dom) = images(k)
 }
 
-object GenericPerm extends PermBuilder with PermBuilderLike {
+object GenericPerm extends PermBuilder with PermBuilderImpl {
   def fromImages(n: Int)(f: Dom => Dom) = 
     new GenericPerm(Dom.domain(n).map(f).toIndexedSeq)
   def fromPreimages(n: Int)(f: Dom => Dom) = {
