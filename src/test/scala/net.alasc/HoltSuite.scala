@@ -29,13 +29,17 @@ class HoltSuite extends FunSuite {
     val g = Group.fromGenerators(TrivialAction(id), List(g1, g2, g3), base)
     implicit val options = g.options
     assert(g.order == 16)
-    case class Test(level: Int) extends BaseImageTest {
-      def apply(b: Dom): (Boolean, BaseImageTest) = {
-        if (level == 0)
-          return (b === 1 || b === 3, Test(1))
-        if (level == 1)
-          return (b === 2, Test(2))
-        return (true, Test(level + 1))
+    case class Test(level: Int) extends SubgroupSearchTest[Perm] {
+      def apply(b: Dom, deltaP: Dom, act: Action[Perm], uPrev: Perm, transversal: Transversal[Perm]): Option[Test] = {
+        val take = level match {
+          case 0 => b === 1 || b === 3
+          case 1 => b === 2
+          case _ => true
+        }
+        take match {
+          case true => Some(Test(level + 1))
+          case false => None
+        }
       }
     }
     def predicate(k: Perm) = (k.image(1) === 1 || k.image(1) === 3) && k.image(2) === 2

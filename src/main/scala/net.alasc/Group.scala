@@ -76,18 +76,6 @@ object GroupOptions {
 This base class implements the main CGT algorithms used in `alasc`.
 */
 
-trait BaseImageTest {
-  def check(baseImage: Dom): Boolean
-  def nextTest(baseImage: Dom): BaseImageTest
-  def apply(baseImage: Dom): (Boolean, BaseImageTest)
-}
-
-object TrivialBaseImageTest extends BaseImageTest {
-  def check(baseImage: Dom) = true
-  def nextTest(baseImage: Dom) = this
-  def apply(baseImage: Dom) = (true, this)
-}
-
 abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupOptions.default) extends FiniteGroup[F] with FiniteGroupImpl[F] {
   containingGroup =>
   def action: Action[F]
@@ -182,6 +170,51 @@ remarkable subgroups of the underlying group.
     case node: BSGSNode[F] => Group(node.withHeadBasePoint(k).tail)
   }
 
+  def fixing1[O](s: Seq[O]) = {
+    val mapping = s.distinct.zipWithIndex.toMap
+    val indices = s.map(mapping).toArray
+    import Dom.ZeroBased._
+    require_(s.size == actionDimension)
+    val n = s.size
+    def leaveInvariant(f: F): Boolean = {
+      var i = 0
+      while (i < n) {
+        if (indices(act(f, i)) != indices(i))
+          return false
+        i += 1
+      }
+      return true
+    }
+
+    case class Test(remainingGroups: List[Array[Int]]) extends SubgroupSearchTest[F] {
+      def apply(baseImage: Dom, deltaP: Dom, action: Action[F], uPrev: F, transversal: Transversal[F]): Option[Test] = {
+        val group = remainingGroups.head
+        if (indices(group(0)) != indices(baseImage))
+          return None
+        if (group.length > 1) {
+          val uThis = transversal(deltaP).u * uPrev
+          var i = 1
+          while (i < group.length) {
+            val k = group(i)
+            if (indices(k) != indices(action(uThis, k)))
+              return None
+            i += 1
+          }
+        }
+        Some(Test(remainingGroups.tail))
+      }
+    }
+
+    val seqBase: List[Dom] = 
+      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList
+
+    val orderedBSGS = bsgs.withBase(seqBase)
+
+    val (reducedBSGS, groups) = orderedBSGS.removingRedundantBasePointsGrouped
+    val groupArrays = groups.map(_.map(_._0).toArray)
+    Group(reducedBSGS.subgroupSearch( leaveInvariant, Test(groupArrays) ).removingRedundantBasePoints)
+  }
+
   def fixing[O](s: Seq[O]) = {
     val mapping = s.distinct.zipWithIndex.toMap
     val indices = s.map(mapping).toArray
@@ -198,13 +231,12 @@ remarkable subgroups of the underlying group.
       return true
     }
 
-    case class Test(remainingBase: List[Dom]) extends BaseImageTest {
-      def check(baseImage: Dom) = indices(remainingBase.head) == indices(baseImage)
-      def nextTest(baseImage: Dom) = Test(remainingBase.tail)
-      def apply(baseImage: Dom) = {
-        val takeIt = indices(remainingBase.head) == indices(baseImage)
-        (takeIt, Test(remainingBase.tail))
-      }
+    case class Test(remainingBase: List[Dom]) extends SubgroupSearchTest[F] {
+      def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]) =
+        (indices(remainingBase.head) == indices(baseImage)) match {
+          case false => None
+          case true => Some(Test(remainingBase.tail))
+        }
     }
 
     val seqBase: List[Dom] = 

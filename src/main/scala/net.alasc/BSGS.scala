@@ -76,7 +76,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
 
   def checkFixBase(partialBase: List[Dom])(implicit options: GroupOptions): Unit = this match {
     case node: BSGSNode[F] => {
-      for (WithInverse(u, uinv) <- transversal.valuesIterator; b <- partialBase)
+      for (TEntry(u, uinv, _, _) <- transversal.valuesIterator; b <- partialBase)
         assert(act(u, b) == b)
       for (g <- strongGeneratingSet; b <- partialBase)
         assert(act(g, b) == b)
@@ -89,7 +89,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case node: BSGSNode[F] => {
       assert(strongGeneratingSet.toSet.size == strongGeneratingSet.size) // no duplicates
       assert(tail.strongGeneratingSet.toSet.subsetOf(strongGeneratingSet.toSet))
-      for ((b, WithInverse(u, uinv)) <- transversal) {
+      for ((b, TEntry(u, uinv, _, _)) <- transversal) {
         assert(act(u, beta) == b)
         assert(act(uinv, b) == beta)
       }
@@ -150,16 +150,31 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
       new BSGSNode[F](action, transversal.conjugatedBy(f, finv), strongGeneratingSet.map(x => finv*x*f), tail.conjugatedBy(f, finv))
   }
 
+  def removingRedundantBasePointsGrouped: (BSGSChain[F], List[List[Dom]]) = this match {
+    case terminal: BSGSTerminal[F] => (terminal, Nil)
+    case node: BSGSNode[F] =>
+      def whileOne(tl: BSGSChain[F]): (BSGSChain[F], List[Dom]) = tl match {
+        case t: BSGSTerminal[F] => (t, Nil)
+        case n: BSGSNode[F] if n.transversal.size > 1 => (n, Nil)
+        case n: BSGSNode[F] =>
+          val (finalNode, chain) = whileOne(n.tail)
+          (finalNode, n.beta :: chain)
+      }
+      val (nextNode, thisNodeList) = whileOne(node.tail)
+      val thisList = node.beta :: thisNodeList
+      val (newTail, tailList) = nextNode.removingRedundantBasePointsGrouped
+      (new BSGSNode[F](action, transversal, strongGeneratingSet, newTail), thisList :: tailList)
+  }
+
   def removingRedundantBasePoints: BSGSChain[F] = this match {
     case terminal: BSGSTerminal[F] => terminal
     case node: BSGSNode[F] if transversal.size == 1 => tail.removingRedundantBasePoints
-    case node: BSGSNode[F] => {
+    case node: BSGSNode[F] =>
       val newTail = tail.removingRedundantBasePoints
       if (newTail eq tail)
         this
       else
         new BSGSNode[F](action, transversal, strongGeneratingSet, newTail)
-    }
   }
   /** Changes the current base. The base of the returned BSGSChain[F] will start
     * with newBase, but can be longer if needed. No redundant base points will be 
@@ -411,12 +426,13 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     } yield u
   }
 
-  def generalSearch(predicate: Predicate[F], test: BaseImageTest = TrivialBaseImageTest, uPrev: F = identity)(implicit options: GroupOptions): Iterator[F] = this match {
+  def generalSearch(predicate: Predicate[F], test: SubgroupSearchTest[F] = TrivialSubgroupSearchTest[F](),
+    uPrev: F = identity)(implicit options: GroupOptions): Iterator[F] = this match {
     case terminal: BSGSTerminal[F] => if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
     case node: BSGSNode[F] => for {
       b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
       baseImage = act(uPrev, b)
-      (takeIt, newTest) = test(baseImage) if takeIt
+      newTest <- test(baseImage, b, action, uPrev, transversal).toIterator
       uThis = transversal(b).u * uPrev
       u <- tail.generalSearch(predicate, newTest, uThis)
     } yield u
@@ -425,8 +441,11 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
   /** Recursive exploration of the elements of this group to build the subgroup.
     * 
     * @return The subgroup new generators and the level to restart the exploration from.
+    * 
+    * @note Implementation of Algorithm 3.3 of
+    *       http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf
     */
-  def subgroupSearchRec(predicate: Predicate[F], orbits: Array[Array[Int]], ordering: Array[Int], test: BaseImageTest, uPrev: F, level: Int, levelCompleted: Int, partialSubgroup: BSGSChain[F], startSubgroup: BSGSChain[F])(implicit options: GroupOptions): SubgroupSearchResult = this match {
+  def subgroupSearchRec(predicate: Predicate[F], orbits: Array[Array[Int]], ordering: Array[Int], test: SubgroupSearchTest[F], uPrev: F, level: Int, levelCompleted: Int, partialSubgroup: BSGSChain[F], startSubgroup: BSGSChain[F])(implicit options: GroupOptions): SubgroupSearchResult = this match {
     case terminal: BSGSTerminal[F] => {
       if (predicate(uPrev) && !uPrev.isIdentity) {
         startSubgroup.addStrongGeneratorsInChain(List(uPrev))
@@ -471,26 +490,26 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
 /*      def imageOrdering(a: Int, b: Int) = // true if a < b
         domainOrder(act(uPrev, Dom._0(a))._0) < domainOrder(act(uPrev, Dom._0(b))._0)
       scala.util.Sorting.stableSort[Int](sortedOrbit, imageOrdering(_,_))*/
-      var sPrune = transversal.size
+      var sPrune = orbit.length // transversal.size
       var n = orbit.length
       ind = 0
       while (ind < n) {
         val i = orbit(ind)
         val deltaP = Dom._0(i)
         val delta = act(uPrev, deltaP)
-        val takeIt = test.check(delta)
-        if (takeIt) {
-          val uThis = transversal(deltaP).u * uPrev
-          if (sPrune < partialSubgroup.transversal.size)
-            return SubgroupSearchResult(level - 1, level)
-          val newTest = test.nextTest(delta)
-          val ssr = tail.subgroupSearchRec(predicate, orbits, ordering, newTest, uThis, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
-          val subRestartFrom = ssr.restartFrom
-          val subLevelCompleted = ssr.levelCompleted
-          newLevelCompleted = subLevelCompleted
-          if (subRestartFrom < level)
-            return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
-          sPrune -= 1
+        test(delta, deltaP, action, uPrev, transversal) match {
+          case Some(newTest) =>
+            val uThis = transversal(deltaP).u * uPrev
+            if (sPrune < partialSubgroup.transversal.size)
+              return SubgroupSearchResult(level - 1, level)
+            val ssr = tail.subgroupSearchRec(predicate, orbits, ordering, newTest, uThis, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
+            val subRestartFrom = ssr.restartFrom
+            val subLevelCompleted = ssr.levelCompleted
+            newLevelCompleted = subLevelCompleted
+            if (subRestartFrom < level)
+              return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
+            sPrune -= 1
+          case None =>
         }
         ind += 1
       }
@@ -498,7 +517,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     }
   }
 
-  def subgroupSearch(predicate: Predicate[F], test: BaseImageTest = TrivialBaseImageTest)(implicit options: GroupOptions): BSGSChain[F] = this match {
+  def subgroupSearch(predicate: Predicate[F], test: SubgroupSearchTest[F] = TrivialSubgroupSearchTest[F]())(implicit options: GroupOptions): BSGSChain[F] = this match {
     case terminal: BSGSTerminal[F] => terminal
     case node: BSGSNode[F] => {
       if (node.order == 1)
@@ -519,22 +538,13 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case terminal: BSGSTerminal[F] => terminal
     case node: BSGSNode[F] => {
       val hWithBase = h.withBase(base)
-      case class IntersectionTest(hSubgroup: BSGSChain[F], hPrev: F) extends BaseImageTest {
-        def check(baseImage: Dom) = {
+      case class IntersectionTest(hSubgroup: BSGSChain[F], hPrev: F) extends SubgroupSearchTest[F] {
+        def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]): Option[IntersectionTest] = {
           val b = act(hPrev.inverse, baseImage)
-          hSubgroup.transversal.isDefinedAt(b)
-        }
-        def nextTest(baseImage: Dom) = {
-          val b = act(hPrev.inverse, baseImage)
-          val uh = hSubgroup.transversal(b).u
-          IntersectionTest(hSubgroup.tail, uh * hPrev)
-        }
-        def apply(baseImage: Dom): (Boolean, BaseImageTest) = {
-          val b = act(hPrev.inverse, baseImage)
-          if (!hSubgroup.transversal.isDefinedAt(b))
-            return (false, null)
-          val uh = hSubgroup.transversal(b).u
-          return (true, IntersectionTest(hSubgroup.tail, uh * hPrev))
+          hSubgroup.transversal.get(b).map { el =>
+            val uh = el.u
+            IntersectionTest(hSubgroup.tail, uh * hPrev)
+          }
         }
       }
       subgroupSearch(hWithBase.contains(_), IntersectionTest(hWithBase, identity))
