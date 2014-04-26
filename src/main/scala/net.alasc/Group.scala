@@ -206,7 +206,7 @@ remarkable subgroups of the underlying group.
     }
 
     val seqBase: List[Dom] = 
-      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList
+      s.zipWithIndex.groupBy(_._1).toSeq.sortBy(_._2.length).flatMap(_._2).map(pair => Dom._0(pair._2)).toList
 
     val orderedBSGS = bsgs.withBase(seqBase)
 
@@ -241,7 +241,9 @@ remarkable subgroups of the underlying group.
 
     val seqBase: List[Dom] = 
       s.zipWithIndex.groupBy(_._1).toSeq.sortBy(_._2.length).flatMap(_._2).map(pair => Dom._0(pair._2)).toList
-    println(seqBase)
+/*    val seqBase: List[Dom] = 
+      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList*/
+
     val orderedBSGS = bsgs.withBase(seqBase)
 
     val newBSGS =
