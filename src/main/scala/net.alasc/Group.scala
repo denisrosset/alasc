@@ -187,21 +187,21 @@ remarkable subgroups of the underlying group.
     }
 
     case class Test(remainingGroups: List[Array[Int]]) extends SubgroupSearchTest[F] {
-      def apply(baseImage: Dom, deltaP: Dom, action: Action[F], uPrev: F, transversal: Transversal[F]): Option[Test] = {
+      def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] = {
         val group = remainingGroups.head
         if (indices(group(0)) != indices(baseImage))
-          return None
+          return null
         if (group.length > 1) {
-          val uThis = transversal(deltaP).u * uPrev
+          val uThisChain = transversal(deltaP) * new TChain(uPrevChain)
           var i = 1
           while (i < group.length) {
             val k = group(i)
-            if (indices(k) != indices(action(uThis, k)))
-              return None
+            if (indices(k) != indices(uThisChain.action(k)))
+              return null
             i += 1
           }
         }
-        Some(Test(remainingGroups.tail))
+        Test(remainingGroups.tail)
       }
     }
 
@@ -232,16 +232,16 @@ remarkable subgroups of the underlying group.
     }
 
     case class Test(remainingBase: List[Dom]) extends SubgroupSearchTest[F] {
-      def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]) =
+      def test(baseImage: Dom, deltaP: Dom, act: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] =
         (indices(remainingBase.head) == indices(baseImage)) match {
-          case false => None
-          case true => Some(Test(remainingBase.tail))
+          case false => null
+          case true => Test(remainingBase.tail)
         }
     }
 
     val seqBase: List[Dom] = 
-      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList
-
+      s.zipWithIndex.groupBy(_._1).toSeq.sortBy(_._2.length).flatMap(_._2).map(pair => Dom._0(pair._2)).toList
+    println(seqBase)
     val orderedBSGS = bsgs.withBase(seqBase)
 
     val newBSGS =

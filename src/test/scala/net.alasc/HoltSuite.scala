@@ -30,15 +30,15 @@ class HoltSuite extends FunSuite {
     implicit val options = g.options
     assert(g.order == 16)
     case class Test(level: Int) extends SubgroupSearchTest[Perm] {
-      def apply(b: Dom, deltaP: Dom, act: Action[Perm], uPrev: Perm, transversal: Transversal[Perm]): Option[Test] = {
+      def test(b: Dom, deltaP: Dom, action: Action[Perm], uPrevChain: List[TEntry[Perm]], transversal: Transversal[Perm]): Test = {
         val take = level match {
           case 0 => b === 1 || b === 3
           case 1 => b === 2
           case _ => true
         }
         take match {
-          case true => Some(Test(level + 1))
-          case false => None
+          case true => Test(level + 1)
+          case false => null
         }
       }
     }

@@ -1,9 +1,9 @@
 package net.alasc
 
-trait SubgroupSearchTest[F <: Finite[F]] extends AnyRef {
-  def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]): Option[SubgroupSearchTest[F]]
+abstract class SubgroupSearchTest[F <: Finite[F]] {
+  def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F]
 }
 
 case class TrivialSubgroupSearchTest[F <: Finite[F]]() extends SubgroupSearchTest[F] {
-  def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]) = Some(this)
+  def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] = this
 }

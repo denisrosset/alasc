@@ -414,6 +414,10 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     def compare(a: Dom, b: Dom) = DomainOrdering.compare(act(u, a), act(u, b))
   }
 
+  case class ImageOrderingTChain(u: TChain[F]) extends Ordering[Dom] {
+    def compare(a: Dom, b: Dom) = DomainOrdering.compare(u.action(a), u.action(b))
+  }
+
   /** Iterates through the elements of the represented group using the order
     * defined in Holt pp. 109-111
     */
@@ -427,14 +431,16 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
   }
 
   def generalSearch(predicate: Predicate[F], test: SubgroupSearchTest[F] = TrivialSubgroupSearchTest[F](),
-    uPrev: F = identity)(implicit options: GroupOptions): Iterator[F] = this match {
-    case terminal: BSGSTerminal[F] => if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
+    uPrevChain: TChain[F] = TChain.empty[F])(implicit options: GroupOptions): Iterator[F] = this match {
+    case terminal: BSGSTerminal[F] =>
+      val uPrev = uPrevChain.compute(identity)
+      if (predicate(uPrev)) Iterator(uPrev) else Iterator.empty
     case node: BSGSNode[F] => for {
-      b <- transversal.keysIterator.toList.sorted(ImageOrdering(uPrev)).toIterator
-      baseImage = act(uPrev, b)
-      newTest <- test(baseImage, b, action, uPrev, transversal).toIterator
-      uThis = transversal(b).u * uPrev
-      u <- tail.generalSearch(predicate, newTest, uThis)
+      b <- transversal.keysIterator.toList.sorted(ImageOrderingTChain(uPrevChain)).toIterator
+      baseImage = uPrevChain.action(b)
+      newTest = test.test(baseImage, b, action, uPrevChain.chain, transversal) if newTest ne null
+      uThisChain = transversal(b) * uPrevChain
+      u <- tail.generalSearch(predicate, newTest, uThisChain)
     } yield u
   }
 
@@ -445,8 +451,9 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     * @note Implementation of Algorithm 3.3 of
     *       http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf
     */
-  def subgroupSearchRec(predicate: Predicate[F], orbits: Array[Array[Int]], ordering: Array[Int], test: SubgroupSearchTest[F], uPrev: F, level: Int, levelCompleted: Int, partialSubgroup: BSGSChain[F], startSubgroup: BSGSChain[F])(implicit options: GroupOptions): SubgroupSearchResult = this match {
+  def subgroupSearchRec(predicate: Predicate[F], orbits: Array[Array[Int]], test: SubgroupSearchTest[F], uPrevChain: TChain[F], level: Int, levelCompleted: Int, partialSubgroup: BSGSChain[F], startSubgroup: BSGSChain[F])(implicit options: GroupOptions): SubgroupSearchResult = this match {
     case terminal: BSGSTerminal[F] => {
+      val uPrev = uPrevChain.compute(identity)
       if (predicate(uPrev) && !uPrev.isIdentity) {
         startSubgroup.addStrongGeneratorsInChain(List(uPrev))
         return SubgroupSearchResult(levelCompleted - 1, levelCompleted)
@@ -456,60 +463,28 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case node: BSGSNode[F] => {
       var newLevelCompleted = levelCompleted
       val orbit = orbits(level)
-      var ind = 0
-      while (ind < orbit.length) {
-        ordering(ind) = domainOrder(act(uPrev, Dom._0(orbit(ind)))._0)
-        ind += 1
-      }
-
-      def bubbleSort(intArray: Array[Int], orderArray: Array[Int]) {
-        def swap(i: Int, j: Int) {
-          var temp = intArray(j)
-          intArray(j) = intArray(i)
-          intArray(i) = temp
-          temp = orderArray(j)
-          orderArray(j) = orderArray(i)
-          orderArray(i) = temp
-        }
-        var swapped = true
-        var n = intArray.length
-        while (swapped) {
-          swapped = false
-          var i = 1
-          while (i < n) {
-            if (orderArray(i - 1) > orderArray(i)) {
-              swap(i - 1, i)
-              swapped = true
-            }
-            i += 1
-          }
-          n -= 1
-        }
-      }
-      bubbleSort(orbit, ordering)
-/*      def imageOrdering(a: Int, b: Int) = // true if a < b
-        domainOrder(act(uPrev, Dom._0(a))._0) < domainOrder(act(uPrev, Dom._0(b))._0)
-      scala.util.Sorting.stableSort[Int](sortedOrbit, imageOrdering(_,_))*/
+      def imageOrdering(a: Int, b: Int) = // true if a < b
+        domainOrder(uPrevChain.action(Dom._0(a))._0) < domainOrder(uPrevChain.action(Dom._0(b))._0)
+      scala.util.Sorting.stableSort[Int](orbit, imageOrdering(_,_))
       var sPrune = orbit.length // transversal.size
       var n = orbit.length
-      ind = 0
+      var ind = 0
       while (ind < n) {
         val i = orbit(ind)
         val deltaP = Dom._0(i)
-        val delta = act(uPrev, deltaP)
-        test(delta, deltaP, action, uPrev, transversal) match {
-          case Some(newTest) =>
-            val uThis = transversal(deltaP).u * uPrev
-            if (sPrune < partialSubgroup.transversal.size)
-              return SubgroupSearchResult(level - 1, level)
-            val ssr = tail.subgroupSearchRec(predicate, orbits, ordering, newTest, uThis, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
-            val subRestartFrom = ssr.restartFrom
-            val subLevelCompleted = ssr.levelCompleted
-            newLevelCompleted = subLevelCompleted
-            if (subRestartFrom < level)
-              return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
-            sPrune -= 1
-          case None =>
+        val delta = uPrevChain.action(deltaP)
+        val newTest = test.test(delta, deltaP, action, uPrevChain.chain, transversal)
+        if (newTest ne null) {
+          val uThisChain = transversal(deltaP) * uPrevChain
+          if (sPrune < partialSubgroup.transversal.size)
+            return SubgroupSearchResult(level - 1, level)
+          val ssr = tail.subgroupSearchRec(predicate, orbits, newTest, uThisChain, level + 1, newLevelCompleted, partialSubgroup.tail, startSubgroup)
+          val subRestartFrom = ssr.restartFrom
+          val subLevelCompleted = ssr.levelCompleted
+          newLevelCompleted = subLevelCompleted
+          if (subRestartFrom < level)
+            return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
+          sPrune -= 1
         }
         ind += 1
       }
@@ -523,9 +498,8 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
       if (node.order == 1)
         return this
       val orbits = transversals.map(_.keysIterator.map(_._0).toArray).toArray
-      val ordering = Array.ofDim[Int](transversals.map(_.size).max)
       val cons = BSGSChain.mutableFromBaseAndGeneratingSet[F](action, base, Nil)
-      val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, orbits, ordering, test, identity, 0, length, cons, cons)
+      val SubgroupSearchResult(restartFrom, levelCompleted) = subgroupSearchRec(predicate, orbits, test, TChain.empty[F], 0, length, cons, cons)
       assert(levelCompleted == 0)
       cons.cleanupGenerators
 //      cons.removeRedundantGenerators
@@ -539,12 +513,14 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case node: BSGSNode[F] => {
       val hWithBase = h.withBase(base)
       case class IntersectionTest(hSubgroup: BSGSChain[F], hPrev: F) extends SubgroupSearchTest[F] {
-        def apply(baseImage: Dom, deltaP: Dom, act: Action[F], uPrev: F, transversal: Transversal[F]): Option[IntersectionTest] = {
-          val b = act(hPrev.inverse, baseImage)
-          hSubgroup.transversal.get(b).map { el =>
+        def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] = {
+          val b = action(hPrev.inverse, baseImage)
+          if (hSubgroup.transversal.isDefinedAt(b)) {
+            val el = hSubgroup.transversal(b)
             val uh = el.u
             IntersectionTest(hSubgroup.tail, uh * hPrev)
-          }
+          } else
+            null
         }
       }
       subgroupSearch(hWithBase.contains(_), IntersectionTest(hWithBase, identity))
