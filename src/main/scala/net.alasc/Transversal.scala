@@ -37,7 +37,7 @@ trait GenTransversal {
   def isDefinedAt(k: Dom): Boolean
 }
 
-trait Transversal[F <: Finite[F]] extends ReadOnlyMap[Dom, TEntry[F]] with GenTransversal {
+trait Transversal[F <: Finite[F]] extends ReadOnlyMapDom[TEntry[F]] with GenTransversal {
   def action: Action[F]
   def identity: F
   /** Returns a new transversal extended with s added to its generators. */
@@ -56,7 +56,7 @@ trait GenTransversalImpl extends GenTransversal {
   def contains(k: Dom) = isDefinedAt(k)
 }
 
-trait TransversalImpl[F <: Finite[F]] extends Transversal[F] with GenTransversalImpl with ReadOnlyMapImpl[Dom, TEntry[F]] {
+trait TransversalImpl[F <: Finite[F]] extends Transversal[F] with GenTransversalImpl with ReadOnlyMapDomImpl[TEntry[F]] {
   def conjugatedBy(f: F): Transversal[F] = conjugatedBy(f, f.inverse)
   /** Returns a random element of the transversal. */
   def random(implicit gen: Random): F = {
