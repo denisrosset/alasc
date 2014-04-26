@@ -7,22 +7,27 @@ import scala.annotation.tailrec
 import scala.util.Random
 import scala.collection.immutable.TreeMap
 
-class TEntryChain[F <: Finite[F]](val chain: List[TEntry[F]]) extends AnyVal {
-  def compute: F = chain.map(_.u).reduce(_*_)
-  def action(k: Dom) = (k /: chain) {
-    case (el, te) => te.uAction.image(el)
+class TChain[F <: Finite[F]](val chain: List[TEntry[F]]) extends AnyVal {
+  import Dom.ZeroBased._
+  def compute(identity: F): F = (identity /: chain) { case (el, te) => el * te.u }
+  def action(k: Dom): Dom = TChain.recEval(chain, k)
+}
+
+object TChain {
+  import Dom.ZeroBased._
+  def empty[F <: Finite[F]]: TChain[F] = new TChain[F](Nil)
+  @tailrec def recEval[F <: Finite[F]](chain: List[TEntry[F]], k: Dom): Dom = chain match {
+    case Nil => k
+    case hd :: tl => recEval(tl, hd.uAction(k))
   }
 }
 
-object TEntryChain {
-  def empty[F <: Finite[F]]: TEntryChain[F] = new TEntryChain[F](Nil)
-}
-
 case class TEntry[F <: Finite[F]](u: F, uinv: F, action: Action[F], isIdentity: Boolean) {
-  lazy val uAction = action.toPerm(u)
-  def *(tec: TEntryChain[F]): TEntryChain[F] = isIdentity match {
+  import Dom.ZeroBased._
+  val uAction: Array[Int] = Array.tabulate(action.dimension)(k => action(u, k)._0)
+  def *(tec: TChain[F]): TChain[F] = isIdentity match {
     case true => tec
-    case false => new TEntryChain(this :: tec.chain)
+    case false => new TChain(this :: tec.chain)
   }
 }
 
