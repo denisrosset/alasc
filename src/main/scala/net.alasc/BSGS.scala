@@ -76,7 +76,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
 
   def checkFixBase(partialBase: List[Dom])(implicit options: GroupOptions): Unit = this match {
     case node: BSGSNode[F] => {
-      for (TEntry(u, uinv, _, _) <- transversal.valuesIterator; b <- partialBase)
+      for (TEntry(u, uinv) <- transversal.valuesIterator; b <- partialBase)
         assert(act(u, b) == b)
       for (g <- strongGeneratingSet; b <- partialBase)
         assert(act(g, b) == b)
@@ -89,7 +89,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case node: BSGSNode[F] => {
       assert(strongGeneratingSet.toSet.size == strongGeneratingSet.size) // no duplicates
       assert(tail.strongGeneratingSet.toSet.subsetOf(strongGeneratingSet.toSet))
-      for ((b, TEntry(u, uinv, _, _)) <- transversal) {
+      for ((b, TEntry(u, uinv)) <- transversal) {
         assert(act(u, beta) == b)
         assert(act(uinv, b) == beta)
       }

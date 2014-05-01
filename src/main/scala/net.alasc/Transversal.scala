@@ -7,33 +7,7 @@ import scala.annotation.tailrec
 import scala.util.Random
 import scala.collection.immutable.TreeMap
 
-class TChain[F <: Finite[F]](val chain: List[TEntry[F]]) extends AnyVal {
-  import Dom.ZeroBased._
-  def compute(identity: F): F = (identity /: chain) { case (el, te) => el * te.u }
-  def action(k: Dom): Dom = TChain.recEval(chain, k)
-}
-
-object TChain {
-  import Dom.ZeroBased._
-  def empty[F <: Finite[F]]: TChain[F] = new TChain[F](Nil)
-  @tailrec def recEval[F <: Finite[F]](chain: List[TEntry[F]], k: Dom): Dom = chain match {
-    case Nil => k
-    case hd :: tl => recEval(tl, hd.uAction(k))
-  }
-}
-
-case class TEntry[F <: Finite[F]](u: F, uinv: F, action: Action[F], isIdentity: Boolean) {
-  import Dom.ZeroBased._
-  val uAction: Array[Int] = Array.tabulate(action.dimension)(k => action(u, k)._0)
-  def *(tec: TChain[F]): TChain[F] = isIdentity match {
-    case true => tec
-    case false => new TChain(this :: tec.chain)
-  }
-}
-
-object TEntry {
-  def apply[F <: Finite[F]](u: F, uinv: F, action: Action[F]): TEntry[F] = TEntry(u, uinv, action, u.isIdentity)
-}
+case class TEntry[F <: Finite[F]](u: F, uinv: F)
 
 trait GenTransversal {
   def builder: TransversalBuilder
