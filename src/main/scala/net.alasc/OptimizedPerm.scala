@@ -43,8 +43,6 @@ abstract class ArrayPerm[@specialized(Int, Short, Byte) T] extends PermImpl {
     true
   }
 
-  final def image(k: Dom) = toInt(array(k))
-
   final override def hash = {
     var h = Perm.hashSeed
     var i = 0
@@ -83,6 +81,7 @@ final class IntPerm private[alasc](val array: Array[Int]) extends ArrayPerm[Int]
   final def makeArray(n: Int) = new Array[Int](n)
   final def toInt(k: Int) = k
   final def fromInt(k: Int) = k
+  final def image(k: Dom) = array(k)
 
   final def *(perm: Perm) = perm match {
     case that: IntPerm => new IntPerm(arrayProduct(that.array))
@@ -118,6 +117,7 @@ final class ShortPerm private[alasc](val array: Array[Short]) extends ArrayPerm[
   final def makeArray(n: Int) = new Array[Short](n)
   final def toInt(k: Short) = k & 0xFFFF
   final def fromInt(k: Int) = k.toShort
+  final def image(k: Dom): Dom = array(k) & 0xFFFF
 
   final def *(perm: Perm) = perm match {
     case that: ShortPerm => new ShortPerm(arrayProduct(that.array))
@@ -147,13 +147,14 @@ object ShortPerm extends ArrayPermBuilderImpl {
   }
 }
 
-final class BytePerm private[alasc](val array: Array[Byte])  extends ArrayPerm[Byte] {
+final class BytePerm private[alasc](val array: Array[Byte]) extends ArrayPerm[Byte] {
   import Dom.ZeroBased._
   def builder = BytePerm
 
   final def makeArray(n: Int) = new Array[Byte](n)
   final def toInt(k: Byte) = k & 0xFF
   final def fromInt(k: Int) = k.toByte
+  final def image(k: Dom): Dom = array(k) & 0xFF
 
   final def *(perm: Perm) = perm match {
     case that: BytePerm => new BytePerm(arrayProduct(that.array))
