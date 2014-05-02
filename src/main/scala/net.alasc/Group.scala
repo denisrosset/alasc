@@ -170,86 +170,60 @@ remarkable subgroups of the underlying group.
     case node: BSGSNode[F] => Group(node.withHeadBasePoint(k).tail)
   }
 
-  def fixing1[O](s: Seq[O]) = {
-    val mapping = s.distinct.zipWithIndex.toMap
-    val indices = s.map(mapping).toArray
+  case class FixingTest(pointSetsToTest: List[Array[Int]], indices: Array[Int]) extends SubgroupSearchTest[F] {
     import Dom.ZeroBased._
-    require_(s.size == actionDimension)
-    val n = s.size
-    def leaveInvariant(f: F): Boolean = {
-      var i = 0
-      while (i < n) {
-        if (indices(act(f, i)) != indices(i))
-          return false
-        i += 1
-      }
-      return true
-    }
-
-    case class Test(remainingGroups: List[Array[Int]]) extends SubgroupSearchTest[F] {
-      def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] = {
-        val group = remainingGroups.head
-        if (indices(group(0)) != indices(baseImage))
-          return null
-        if (group.length > 1) {
-          val uThisChain = transversal(deltaP) * new TChain(uPrevChain)
-          var i = 1
-          while (i < group.length) {
-            val k = group(i)
-            if (indices(k) != indices(uThisChain.action(k)))
-              return null
-            i += 1
-          }
+    def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrev: F, transversal: Transversal[F]): SubgroupSearchTest[F] = {
+      val pointSet = pointSetsToTest.head
+      if (indices(pointSet(0)) != indices(baseImage))
+        return null
+      if (pointSet.length > 1) {
+        val uThis = transversal(deltaP).u * uPrev
+        var i = 1
+        while (i < pointSet.length) {
+          val k = pointSet(i)
+          if (indices(k) != indices(act(uThis, k)))
+            return null
+          i += 1
         }
-        Test(remainingGroups.tail)
       }
+      FixingTest(pointSetsToTest.tail, indices)
     }
-
-    val seqBase: List[Dom] = 
-      s.zipWithIndex.groupBy(_._1).toSeq.sortBy(_._2.length).flatMap(_._2).map(pair => Dom._0(pair._2)).toList
-
-    val orderedBSGS = bsgs.withBase(seqBase)
-
-    val (reducedBSGS, groups) = orderedBSGS.removingRedundantBasePointsGrouped
-    val groupArrays = groups.map(_.map(_._0).toArray)
-    Group(reducedBSGS.subgroupSearch( leaveInvariant, Test(groupArrays) ).removingRedundantBasePoints)
   }
 
-  def fixing[O](s: Seq[O]) = {
-    val mapping = s.distinct.zipWithIndex.toMap
-    val indices = s.map(mapping).toArray
+  def fixing[O](s: Seq[O], usePointSets: Boolean = true, reorderBase: Boolean = true): Group[F] = {
+    val seqValueToInt = s.distinct.zipWithIndex.toMap
+    val seqInteger = s.map(seqValueToInt).toArray
     import Dom.ZeroBased._
-    require_(s.size == actionDimension)
     val n = s.size
+    require_(n == actionDimension)
     def leaveInvariant(f: F): Boolean = {
       var i = 0
       while (i < n) {
-        if (indices(act(f, i)) != indices(i))
+        if (seqInteger(act(f, i)) != seqInteger(i))
           return false
         i += 1
       }
       return true
     }
-
-    case class Test(remainingBase: List[Dom]) extends SubgroupSearchTest[F] {
-      def test(baseImage: Dom, deltaP: Dom, act: Action[F], uPrevChain: List[TEntry[F]], transversal: Transversal[F]): SubgroupSearchTest[F] =
-        (indices(remainingBase.head) == indices(baseImage)) match {
-          case false => null
-          case true => Test(remainingBase.tail)
-        }
+    val bsgsToUse = reorderBase match {
+      case true =>
+        val newBase: List[Dom] = // reorder the base such that rare elements of s are tested first
+          s.zipWithIndex.groupBy(_._1).toSeq // pair each element with its index, and group by value
+            .sortBy(_._2.length).flatMap(_._2) // sort by frequence of value
+            .map(pair => Dom._0(pair._2)).toList // get index and transform as domain
+        val newOptions = options.copy(baseChangeStrategy = BaseFromScratch)
+        bsgs.withBase(newBase)(newOptions).removingRedundantBasePoints
+      case false =>
+        bsgs
     }
-
-    val seqBase: List[Dom] = 
-      s.zipWithIndex.groupBy(_._1).toSeq.sortBy(_._2.length).flatMap(_._2).map(pair => Dom._0(pair._2)).toList
-/*    val seqBase: List[Dom] = 
-      s.zipWithIndex.sortBy(pair => mapping(pair._1)).map(pair => Dom._0(pair._2)).toList*/
-
-    val orderedBSGS = bsgs.withBase(seqBase)
-
-    val newBSGS =
-      orderedBSGS.subgroupSearch( leaveInvariant, Test(orderedBSGS.base) ).removingRedundantBasePoints
-
-    Group(newBSGS)
+    val pointSets: List[Array[Int]] = usePointSets match {
+      case false =>
+        bsgsToUse.base.map(b => Array(b._0)).toList
+      case true =>
+        bsgsToUse.basePointGroups.map(_.map(_._0).toArray).toList
+    }
+    val test = FixingTest(pointSets, seqInteger)
+    Group(bsgsToUse.subgroupSearch( leaveInvariant, test).removingRedundantBasePoints)
   }
 
 /*
