@@ -152,13 +152,15 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
 
   // find, for each base point, the additional points that are stabilized (i.e. are
   // not moved by the tail subgroup
-  def basePointGroups = basePointGroupsRec(action.domain.toList).tail
+  // the first element of each group is the original base point
+  def basePointGroups = basePointGroupsRec(action.domain.toList)
 
   def basePointGroupsRec(remaining: List[Dom]): List[List[Dom]] = this match {
     case terminal: BSGSTerminal[F] => List(remaining)
     case node: BSGSNode[F] =>
-      val (fixed, moved) = remaining.partition(k => strongGeneratingSet.forall(s => action(s, k) === k))
-      fixed :: node.tail.basePointGroupsRec(moved)
+      val remainingWithoutBeta = remaining.filterNot(_ === node.beta)
+      val (fixed, moved) = remainingWithoutBeta.partition(k => node.strongGeneratingSet.forall(s => action(s, k) === k))
+      (beta :: fixed) :: node.tail.basePointGroupsRec(moved)
   }
 
   def removingRedundantBasePointsGrouped: (BSGSChain[F], List[List[Dom]]) = this match {
