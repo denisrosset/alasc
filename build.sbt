@@ -1,6 +1,6 @@
 name := "Alasc"
 
-version := "0.9"
+version := "Refactoring"
 
 scalaVersion := "2.10.4"
 
