@@ -1,9 +1,11 @@
 package net.alasc
 
 import scala.util.Random
+import spire.algebra.GroupAction
 
 /** PRepr: represents a finite group by its action on a permutation domain. */
-trait PRepr[F <: Finite[F]] extends Action[Int, F] {
+trait PRepr[F <: Finite[F]] extends GroupAction[Int, F] {
+  implicit def scalar = all.FiniteSemigroup[F]
   /** Is the action faithful, i.e. two different group elements always have the same action. */
   def faithful: Boolean
   /** Dimension/degree of the permutation representation. */
@@ -18,7 +20,10 @@ trait PRepr[F <: Finite[F]] extends Action[Int, F] {
   def toPerm(f: F): Perm
   /** Flag: implementation have to override hashCode and equals. */
   def dontForgetToOverrideHashCodeAndEquals: Boolean
-  def actr(v: Int, f: F): Int = apply(f, Dom._0(v))._0
+
+  def actl(f: F, v: Int) = actr(v, f.inverse)
+
+  override def actr(v: Int, f: F): Int = apply(f, Dom._0(v))._0
 }
 
 trait PReprImpl[F <: Finite[F]] extends PRepr[F] {

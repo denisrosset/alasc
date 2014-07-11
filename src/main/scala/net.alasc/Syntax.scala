@@ -2,10 +2,6 @@ package net.alasc
 
 import scala.language.implicitConversions
 
-trait ActionSyntax {
-  implicit def actionOps[P](p: P) = new ActionOps(p)
-}
-
 trait IndexSyntax {
   implicit def indexOps[T](t: T) = new IndexOps(t)
 }
@@ -19,7 +15,6 @@ trait LexicoSeqSyntax extends LexicoSyntax {
 }
 
 trait AllSyntax extends
-    ActionSyntax with
     IndexSyntax with
     LexicoSyntax with
     LexicoSeqSyntax

@@ -6,12 +6,12 @@ package net
 import scala.language.implicitConversions
 
 package object alasc {
-  object actionSyntax extends ActionSyntax
   object indexSyntax extends IndexSyntax
   object lexicoSyntax extends LexicoSyntax
   object lexicoSeqSyntax extends LexicoSeqSyntax
   object allSyntax extends AllSyntax
 
+  object finiteInstances extends FiniteInstances
   object indexInstances extends IndexInstances
   object permutingInstances extends PermutingInstances
   object allInstances extends AllInstances

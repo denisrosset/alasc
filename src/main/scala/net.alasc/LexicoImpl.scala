@@ -5,7 +5,6 @@ import spire.implicits._
 import spire.syntax.OrderOps
 import permutable.{Permutable, PermutableImpl}
 import indexSyntax._
-import actionSyntax._
 
 trait LexicoImpl[P] extends Lexico[P] {
   self =>
@@ -18,7 +17,7 @@ trait LexicoImpl[P] extends Lexico[P] {
   trait PermutableTrait[PP <: PermutableTrait[PP]] extends Permutable[PP, F] {
     def p: P
     def build(newP: P): PP
-    def permutedBy(f: F): PP = build(p.permutedBy(f))
+    def permutedBy(f: F): PP = build(action.actr(p, f))
     val integerSeq: IndexedSeq[Int] = self.integerSeq(p)
     trait PermutationsTrait extends Permutations {
       val baseGroup: Group[F] = self.baseGroup(p)

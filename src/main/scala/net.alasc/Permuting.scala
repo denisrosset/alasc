@@ -1,6 +1,7 @@
 package net.alasc
 
 import scala.{ specialized => spec }
+import spire.algebra.GroupAction
 
 trait GenPermuting extends Any with GenFinite with Ordered[GenPermuting] {
   /** Size of the current permutation. */
@@ -92,10 +93,15 @@ trait PermutingImpl[P <: Permuting[P]] extends Any with Permuting[P] {
   self: P =>
 }
 
-class IndexedSeqPermutingAction[@spec(Int) A, P <: Permuting[P]] extends Action[IndexedSeq[A], P] {
+class IndexedSeqPermutingAction[@spec(Int) A, P <: Permuting[P]] extends GroupAction[IndexedSeq[A], P] {
+  implicit def scalar = all.FiniteSemigroup[P]
+  def actl(f: P, p: IndexedSeq[A]): IndexedSeq[A] = {
+    import Dom.ZeroBased._
+    IndexedSeq.tabulate(p.length)(i => p(f.image(i)))
+  }
   def actr(p: IndexedSeq[A], f: P): IndexedSeq[A] = {
     import Dom.ZeroBased._
     val finv = f.inverse
-    IndexedSeq.tabulate(p.length)(i => p(f.image(i)))
+    IndexedSeq.tabulate(p.length)(i => p(finv.image(i)))
   }
 }
