@@ -1,6 +1,8 @@
+organization := "net.alasc"
+
 name := "Alasc"
 
-version := "0.9"
+version := "0.91"
 
 scalaVersion := "2.11.1"
 
@@ -12,7 +14,8 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
   "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
-  "org.scalatest" % "scalatest_2.11" % "2.1.6" % "test"
+  "org.scalatest" % "scalatest_2.11" % "2.1.6" % "test",
+  "org.spire-math" %% "spire" % "0.7.6-SNAPSHOT"
 )
 
 scalacOptions ++= Seq("-unchecked", "-feature", "-deprecation") 

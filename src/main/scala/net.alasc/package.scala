@@ -5,7 +5,23 @@ package net
 
 import scala.language.implicitConversions
 
-package object alasc extends FiniteImplicits with GroupImplicits {
+package object alasc {
+  object actionSyntax extends ActionSyntax
+  object indexSyntax extends IndexSyntax
+  object lexicoSyntax extends LexicoSyntax
+  object lexicoSeqSyntax extends LexicoSeqSyntax
+  object allSyntax extends AllSyntax
+
+  object indexInstances extends IndexInstances
+  object permutingInstances extends PermutingInstances
+  object allInstances extends AllInstances
+
+  object groupImplicits extends GroupImplicits
+  object finiteImplicits extends FiniteImplicits
+  object allImplicits extends AllImplicits
+
+  object all extends AllSyntax with AllInstances with AllImplicits
+
   /* Cartesian product of traversable. */
   def combine[A](xs: Traversable[Traversable[A]]): Seq[Seq[A]] =
     xs.foldLeft(Seq(Seq.empty[A])){
@@ -50,5 +66,5 @@ package object alasc extends FiniteImplicits with GroupImplicits {
     if (!requirement)
       throw new IllegalArgumentException("requirement failed: "+ message)
   }
-  implicit def permActionBuilder[P <: Permuting[P]](p: P) = TrivialAction(p * p.inverse)
+  implicit def permActionBuilder[P <: Permuting[P]](p: P) = TrivialPRepr(p * p.inverse)
 }

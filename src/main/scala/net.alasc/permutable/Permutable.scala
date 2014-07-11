@@ -1,4 +1,5 @@
 package net.alasc
+package permutable
 
 /*
  Trait for objects that can be permuted by the action of a finite group.
@@ -22,7 +23,6 @@ trait Permutable[+P <: Permutable[P, F], F <: Finite[F]] {
   trait Permutations {
     /*
      The permutation subgroup to use in the computations. 
-     Default is `baseGroup` itself if not overridden.
      */
     val baseGroup: Group[F]
 
@@ -258,7 +258,7 @@ trait PermutableImpl[P <: Permutable[P, F], F <: Finite[F]] {
   }
 
     /* Big sequence of representatives in the lexicographic order. */
-  trait BigSeqPermutations extends PermutationsImpl with BigSeq[P] {
+  trait BigSeqPermutations extends PermutationsImpl with BigIndexedSeq[P] {
     representatives =>
     import Dom.ZeroBased._
     import baseGroup.{identity, act, options}
@@ -301,6 +301,22 @@ trait PermutableImpl[P <: Permutable[P, F], F <: Finite[F]] {
       iteratorSearch(Block.start).map(f => permutedBy(f.inverse))
     }
 
+    /* Returns an iterator on the lexicographic representatives. */
+    def permutationIterator: Iterator[F] = {
+      def iteratorSearch(block: Block): Iterator[F] = {
+        if (block.size == 1) {
+          val Seq((f, chain)) = block.candidates
+          Iterator(f)
+        } else {
+          for {
+            value <- block.sortedValues.toIterator;
+            f <- iteratorSearch(block.blockForValue(value))
+          } yield f
+        }
+      }
+      iteratorSearch(Block.start).map(_.inverse)
+    }
+
     /* Returns the number of lexicographic representatives. */
     def length = baseGroup.order / permutableSymmetrySubgroup.order
 
@@ -312,6 +328,13 @@ trait PermutableImpl[P <: Permutable[P, F], F <: Finite[F]] {
       if (index < 0 || index >= length)
         throw new IllegalArgumentException("Representative index should be between 0 and " + (size - 1))
       permutedBy(Block.start.blockForIndex(index).permutation.inverse)
+    }
+
+    /* Finds the lexicographic representative with index `index`. */
+    def permutationForIndex(index: BigInt): F = {
+      if (index < 0 || index >= length)
+        throw new IllegalArgumentException("Representative index should be between 0 and " + (size - 1))
+      Block.start.blockForIndex(index).permutation.inverse
     }
 
     /* Finds the minimal lexicographic representative.

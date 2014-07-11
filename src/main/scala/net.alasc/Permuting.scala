@@ -1,5 +1,7 @@
 package net.alasc
 
+import scala.{ specialized => spec }
+
 trait GenPermuting extends Any with GenFinite with Ordered[GenPermuting] {
   /** Size of the current permutation. */
   def size: Int
@@ -88,4 +90,12 @@ trait GenPermutingImpl extends Any with GenPermuting {
 
 trait PermutingImpl[P <: Permuting[P]] extends Any with Permuting[P] {
   self: P =>
+}
+
+class IndexedSeqPermutingAction[@spec(Int) A, P <: Permuting[P]] extends Action[IndexedSeq[A], P] {
+  def actr(p: IndexedSeq[A], f: P): IndexedSeq[A] = {
+    import Dom.ZeroBased._
+    val finv = f.inverse
+    IndexedSeq.tabulate(p.length)(i => p(f.image(i)))
+  }
 }

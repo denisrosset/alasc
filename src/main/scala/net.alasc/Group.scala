@@ -78,7 +78,7 @@ This base class implements the main CGT algorithms used in `alasc`.
 
 abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupOptions.default) extends FiniteGroup[F] with FiniteGroupImpl[F] {
   containingGroup =>
-  def action: Action[F]
+  def action: PRepr[F]
   def identity = action.identity
 
   def act(f: F, k: Dom) = action(f, k)
@@ -172,7 +172,7 @@ remarkable subgroups of the underlying group.
 
   case class FixingTest(pointSetsToTest: List[Array[Int]], indices: Array[Int]) extends SubgroupSearchTest[F] {
     import Dom.ZeroBased._
-    def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrev: F, transversal: Transversal[F]): SubgroupSearchTest[F] = {
+    def test(baseImage: Dom, deltaP: Dom, action: PRepr[F], uPrev: F, transversal: Transversal[F]): SubgroupSearchTest[F] = {
       val pointSet = pointSetsToTest.head
       if (indices(pointSet(0)) != indices(baseImage))
         return null
@@ -290,7 +290,7 @@ abstract class LazyGroup[F <: Finite[F]](bsgsOption: Option[BSGSChain[F]]) exten
   }
 }
 
-class GeneratorsGroup[F <: Finite[F]](val action: Action[F], val generators: Seq[F], prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+class GeneratorsGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[F], prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
   def computeBSGS = BSGSChain.deterministicSchreierSims(action, prescribedBase, generators.toList)
   override def conjugatedBy(f: F) = {
     val finv = f.inverse
@@ -301,7 +301,7 @@ class GeneratorsGroup[F <: Finite[F]](val action: Action[F], val generators: Seq
   }
 }
 
-class GeneratorsAndOrderGroup[F <: Finite[F]](val action: Action[F], val generators: Seq[F], givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+class GeneratorsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[F], givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
   def computeBSGS = options.useRandomizedAlgorithms match {
     case true =>
       val bag = RandomBag(generators, action.identity, max(10, generators.length), 50,
@@ -322,7 +322,7 @@ class GeneratorsAndOrderGroup[F <: Finite[F]](val action: Action[F], val generat
   }
 }
 
-class RandomElementsAndOrderGroup[F <: Finite[F]](val action: Action[F], randomElement: Random => F,  givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+class RandomElementsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], randomElement: Random => F,  givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
   def generators = bsgs.strongGeneratingSet
   def computeBSGS = {
     assert(options.useRandomizedAlgorithms)
@@ -333,16 +333,16 @@ class RandomElementsAndOrderGroup[F <: Finite[F]](val action: Action[F], randomE
 object Group {
   def apply[F <: Finite[F]](bsgs: BSGSChain[F])(implicit myOptions: GroupOptions = GroupOptions.default): Group[F] = new ChainGroup(bsgs)
 
-  def apply[F <: Finite[F]](generators: F*)(implicit myOptions: GroupOptions, actionBuilder: F => Action[F]): Group[F] = {
+  def apply[F <: Finite[F]](generators: F*)(implicit myOptions: GroupOptions, actionBuilder: F => PRepr[F]): Group[F] = {
     assert(!generators.isEmpty)
     val action = actionBuilder(generators.head)
     new GeneratorsGroup(action, generators)
   }
 
-  def apply[F <: Finite[F]](finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions, actionBuilder: F => Action[F]): Group[F] =
+  def apply[F <: Finite[F]](finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions, actionBuilder: F => PRepr[F]): Group[F] =
     fromFiniteGroup(actionBuilder(finiteGroup.identity), finiteGroup)
 
-  def fromFiniteGroup[F <: Finite[F]](action: Action[F], finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions) =
+  def fromFiniteGroup[F <: Finite[F]](action: PRepr[F], finiteGroup: FiniteGroup[F])(implicit myOptions: GroupOptions) =
     myOptions.useRandomizedAlgorithms match {
       case true =>
         new RandomElementsAndOrderGroup(action, finiteGroup.random(_), finiteGroup.order)
@@ -351,27 +351,27 @@ object Group {
     }
 
   def fromGenerators[F <: Finite[F]](
-    action: Action[F],
+    action: PRepr[F],
     generators: List[F],
     prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = 
     new GeneratorsGroup(action, generators, prescribedBase)
 
   def fromGeneratorsAndOrder[F <: Finite[F]](
-    action: Action[F],
+    action: PRepr[F],
     generators: List[F],
     order: BigInt,
     prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) =
     new GeneratorsAndOrderGroup(action, generators, order, prescribedBase)
 
   def fromRandomElementsAndOrder[F <: Finite[F]](
-    action: Action[F],
+    action: PRepr[F],
     randomElement: Random => F,
     order: BigInt,
     prescribedBase: List[Dom] = Nil)(implicit myOptions: GroupOptions = GroupOptions.default) = 
     new RandomElementsAndOrderGroup(action, randomElement, order, prescribedBase)
 
   def fromBaseAndStrongGeneratingSet[F <: Finite[F]](
-    action: Action[F],
+    action: PRepr[F],
     base: List[Dom],
     strongGeneratingSet: List[F])(implicit myOptions: GroupOptions = GroupOptions.default) = {
     val chain = BSGSChain.mutableFromBaseAndGeneratingSet(action, base, strongGeneratingSet)

@@ -13,7 +13,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
   def isTerminal: Boolean
 
   def tail: BSGSChain[F]
-  def action: Action[F]
+  def action: PRepr[F]
   def act(f: F, k: Dom) = action(f, k)
   def actionDomain = action.domain
   def actionDimension = action.dimension
@@ -521,7 +521,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
     case node: BSGSNode[F] => {
       val hWithBase = h.withBase(base)
       case class IntersectionTest(hSubgroup: BSGSChain[F], hPrev: F) extends SubgroupSearchTest[F] {
-        def test(baseImage: Dom, deltaP: Dom, action: Action[F], uPrev: F, transversal: Transversal[F]): SubgroupSearchTest[F] = {
+        def test(baseImage: Dom, deltaP: Dom, action: PRepr[F], uPrev: F, transversal: Transversal[F]): SubgroupSearchTest[F] = {
           val b = action(hPrev.inverse, baseImage)
           if (hSubgroup.transversal.isDefinedAt(b)) {
             val el = hSubgroup.transversal(b)
@@ -764,7 +764,7 @@ sealed abstract class BSGSChain[F <: Finite[F]] {
  ### Algorithms for the construction of a BSGS chain
  */
 object BSGSChain {
-  def randomSchreierSims[F <: Finite[F]](action: Action[F], base: List[Dom], randomElement: Random => F, knownOrder: BigInt, startingGeneratingSet: List[F] = Nil)(implicit options: GroupOptions): BSGSChain[F] = {
+  def randomSchreierSims[F <: Finite[F]](action: PRepr[F], base: List[Dom], randomElement: Random => F, knownOrder: BigInt, startingGeneratingSet: List[F] = Nil)(implicit options: GroupOptions): BSGSChain[F] = {
     def findBaseElement: Dom = {
       val f = randomElement(options.randomGenerator)
       action.domain.find(b => action(f, b) != b).getOrElse(Dom._1(1))
@@ -783,7 +783,7 @@ object BSGSChain {
     chain
   }
 
-  def deterministicSchreierSims[F <: Finite[F]](action: Action[F], base: List[Dom], fromGenerators: List[F])(implicit options: GroupOptions) = {
+  def deterministicSchreierSims[F <: Finite[F]](action: PRepr[F], base: List[Dom], fromGenerators: List[F])(implicit options: GroupOptions) = {
     def findBaseElement: Dom = {
       if (fromGenerators.isEmpty)
         Dom._1(1)
@@ -798,12 +798,12 @@ object BSGSChain {
     chain.makeImmutable
     chain
   }
-  def fromBaseAndGeneratingSet[F <: Finite[F]](action: Action[F], base: List[Dom], genSet: List[F])(implicit options: GroupOptions) = {
+  def fromBaseAndGeneratingSet[F <: Finite[F]](action: PRepr[F], base: List[Dom], genSet: List[F])(implicit options: GroupOptions) = {
     val chain = mutableFromBaseAndGeneratingSet(action, base, genSet)
     chain.makeImmutable
     chain
   }
-  def mutableFromGenerators[F <: Finite[F]](action: Action[F], genSet: List[F], startingBasePoint: Dom = Dom._1(1))(implicit options: GroupOptions): BSGSChain[F] =
+  def mutableFromGenerators[F <: Finite[F]](action: PRepr[F], genSet: List[F], startingBasePoint: Dom = Dom._1(1))(implicit options: GroupOptions): BSGSChain[F] =
     genSet.isEmpty match {
       case true => new BSGSTerminal[F](action)
       case false =>
@@ -819,7 +819,7 @@ object BSGSChain {
         }
     }
 
-  def mutableFromBaseAndGeneratingSet[F <: Finite[F]](action: Action[F], base: List[Dom], genSet: List[F])(implicit options: GroupOptions): BSGSChain[F] = base match {
+  def mutableFromBaseAndGeneratingSet[F <: Finite[F]](action: PRepr[F], base: List[Dom], genSet: List[F])(implicit options: GroupOptions): BSGSChain[F] = base match {
     case Nil => new BSGSTerminal[F](action)
     case beta :: tailBase => {
       val transversal = makeTransversal(action, beta, genSet)
@@ -829,7 +829,7 @@ object BSGSChain {
     }
   }
 
-  def mutableFromBase[F <: Finite[F]](action: Action[F], base: List[Dom])(implicit options: GroupOptions): BSGSChain[F] = base match {
+  def mutableFromBase[F <: Finite[F]](action: PRepr[F], base: List[Dom])(implicit options: GroupOptions): BSGSChain[F] = base match {
     case Nil => new BSGSTerminal[F](action)
     case beta :: tailBase => {
       val transversal = makeTransversal(action, beta)
@@ -838,13 +838,13 @@ object BSGSChain {
     }
   }
 
-  def makeTransversal[F <: Finite[F]](action: Action[F], newBeta: Dom, genSet: List[F] = Nil)(implicit options: GroupOptions): Transversal[F] = options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
+  def makeTransversal[F <: Finite[F]](action: PRepr[F], newBeta: Dom, genSet: List[F] = Nil)(implicit options: GroupOptions): Transversal[F] = options.transversalBuilder.empty(newBeta, action).updated(genSet, genSet)
 
-  def makeOrbit[F <: Finite[F]](action: Action[F], newBeta: Dom, genSet: List[F] = Nil)(implicit options: GroupOptions): Orbit[F] =  options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
+  def makeOrbit[F <: Finite[F]](action: PRepr[F], newBeta: Dom, genSet: List[F] = Nil)(implicit options: GroupOptions): Orbit[F] =  options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
 }
 
 final class BSGSNode[F <: Finite[F]](
-  val action: Action[F],
+  val action: PRepr[F],
   var transversal: Transversal[F],
   var strongGeneratingSet: List[F],
   var tail: BSGSChain[F],
@@ -852,7 +852,7 @@ final class BSGSNode[F <: Finite[F]](
   def isTerminal = false
 }
 
-final class BSGSTerminal[F <: Finite[F]](val action: Action[F]) extends BSGSChain[F] {
+final class BSGSTerminal[F <: Finite[F]](val action: PRepr[F]) extends BSGSChain[F] {
   def isTerminal = true
   def isImmutable = true
   def strongGeneratingSet = List.empty[F]

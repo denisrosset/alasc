@@ -8,7 +8,7 @@ import scala.collection.immutable.IntMap
 ## Implementation of `Transversal` using an explicit representation of group elements
 */
 
-case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], intMap: IntMap[TEntry[F]]) extends Transversal[F] with TransversalImpl[F] {
+case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: PRepr[F], intMap: IntMap[TEntry[F]]) extends Transversal[F] with TransversalImpl[F] {
   import Dom.ZeroBased._
 
   def builder = TransversalExplicit
@@ -23,8 +23,8 @@ case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], int
   override def keysIterator = intMap.keysIterator.map(Dom._0(_))
   override def valuesIterator = intMap.valuesIterator
 
-  def mapValues[G <: Finite[G]](f: F => G, gAction: Action[G]): TransversalExplicit[G] =
-    TransversalExplicit(beta, gAction, IntMap.empty[TEntry[G]] ++ intMap.mapValues( wi => TEntry(f(wi.u), f(wi.uinv))))
+  def mapValues[G <: Finite[G]](f: F => G, gPRepr: PRepr[G]): TransversalExplicit[G] =
+    TransversalExplicit(beta, gPRepr, IntMap.empty[TEntry[G]] ++ intMap.mapValues( wi => TEntry(f(wi.u), f(wi.uinv))))
 
   def updated(newGens: Iterable[F], allGens: Iterable[F]): TransversalExplicit[F] = {
     if (newGens.isEmpty)
@@ -63,5 +63,5 @@ case class TransversalExplicit[F <: Finite[F]](beta: Dom, action: Action[F], int
 }
 
 object TransversalExplicit extends TransversalBuilder {
-  def empty[F <: Finite[F]](beta: Dom, action: Action[F]) = TransversalExplicit(beta, action, IntMap(beta._0 -> TEntry(action.identity, action.identity)))
+  def empty[F <: Finite[F]](beta: Dom, action: PRepr[F]) = TransversalExplicit(beta, action, IntMap(beta._0 -> TEntry(action.identity, action.identity)))
 }

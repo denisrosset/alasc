@@ -10,7 +10,7 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List(1, 2, 5).map(Dom._1(_))
-    val g = Group.fromGenerators(TrivialAction(id), List(g1, g2, g3), base)
+    val g = Group.fromGenerators(TrivialPRepr(id), List(g1, g2, g3), base)
     assert(g.order == 16)
     val els: List[Perm] = g.bsgs.orderedIterator().toList
     assert( (els zip els.tail).forall( Function.tupled( (a,b) => g.bsgs.ElementOrdering.compare(a,b) < 0 ) ) )
@@ -26,11 +26,11 @@ class HoltSuite extends FunSuite {
     val g3 = Perm(6)(5,6)
     val id = Perm(6)
     val base = List[Dom](1,2,3,4,5,6)
-    val g = Group.fromGenerators(TrivialAction(id), List(g1, g2, g3), base)
+    val g = Group.fromGenerators(TrivialPRepr(id), List(g1, g2, g3), base)
     implicit val options = g.options
     assert(g.order == 16)
     case class Test(level: Int) extends SubgroupSearchTest[Perm] {
-      def test(b: Dom, deltaP: Dom, action: Action[Perm], uPrevChain: List[TEntry[Perm]], transversal: Transversal[Perm]): Test = {
+      def test(b: Dom, deltaP: Dom, action: PRepr[Perm], uPrev: Perm, transversal: Transversal[Perm]): Test = {
         val take = level match {
           case 0 => b === 1 || b === 3
           case 1 => b === 2

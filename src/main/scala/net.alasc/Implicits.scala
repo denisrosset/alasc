@@ -62,3 +62,5 @@ At the last iteration, we return the form with minimal cost.
     }
   }
 }
+
+trait AllImplicits extends GroupImplicits with FiniteImplicits

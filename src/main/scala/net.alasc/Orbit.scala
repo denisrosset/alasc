@@ -16,8 +16,8 @@ trait GenOrbitImpl extends GenOrbit {
   def contains(k: Dom) = isDefinedAt(k)
 }
 
-trait Orbit[F <: GenFinite] extends GenOrbit {
-  def action: Action[F]
+trait Orbit[F <: Finite[F]] extends GenOrbit {
+  def action: PRepr[F]
   /** Add the new generators newGen to the orbit.
     * 
     * @param newGen   New generators to add to the orbit.
@@ -29,15 +29,15 @@ trait Orbit[F <: GenFinite] extends GenOrbit {
 }
 
 trait OrbitBuilder {
-  def empty[F <: GenFinite](beta: Dom, action: Action[F]): Orbit[F]
-  def fromSet[F <: GenFinite](beta: Dom, action: Action[F], set: Iterable[F]): Orbit[F] =
+  def empty[F <: Finite[F]](beta: Dom, action: PRepr[F]): Orbit[F]
+  def fromSet[F <: Finite[F]](beta: Dom, action: PRepr[F], set: Iterable[F]): Orbit[F] =
     empty(beta, action).updated(set, set)
 }
 
 /*
 ## Implementation of `Orbit` using a `Set`
 */
-case class OrbitSet[F <: GenFinite](beta: Dom, action: Action[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] with GenOrbitImpl {
+case class OrbitSet[F <: Finite[F]](beta: Dom, action: PRepr[F], intOrbit: collection.immutable.BitSet) extends Orbit[F] with GenOrbitImpl {
   def orbitSet = intOrbit.map(k => Dom._0(k))
   def builder = OrbitSet
   def size = intOrbit.size
@@ -68,6 +68,6 @@ case class OrbitSet[F <: GenFinite](beta: Dom, action: Action[F], intOrbit: coll
 }
 
 object OrbitSet extends OrbitBuilder {
-  def empty[F <: GenFinite](beta: Dom, action: Action[F]) = 
+  def empty[F <: Finite[F]](beta: Dom, action: PRepr[F]) = 
     OrbitSet(beta, action, collection.immutable.BitSet(beta._0))
 }
