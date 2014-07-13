@@ -3,6 +3,7 @@ package net.alasc
 import org.scalatest.FunSuite
 import spire.implicits._
 import spire.algebra.Order
+import net.alasc.all._
 
 class PermutableSuite extends FunSuite {
   test("Simple sequence") {
@@ -18,7 +19,7 @@ class PermutableSuite extends FunSuite {
       type F = Perm
       def baseGroup(p: IndexedSeq[Int]) = g
       implicit val action = IndexedSeqPermutingAction[Int, F]
-      implicit val index: Index[Int, IndexedSeq[Int]] = IndexedSeqIndex[Int]
+      implicit val index: Index[IndexedSeq[Int], Int] = IndexedSeqIndex[Int]
       implicit val order = implicitly[Order[Int]]
     }
 
@@ -28,25 +29,29 @@ class PermutableSuite extends FunSuite {
     object BigSeq extends BaseLexico 
         with BigSeqLexicoImpl[IndexedSeq[Int]]
     val p1 = {
-      implicit val lex = BruteForce
+      implicit val lex: LexicoFirst[IndexedSeq[Int]] = BruteForce
       seq.lexFirst
     }
     val p2 = {
-      implicit val lex = WithoutSymmetrySubgroup
+      implicit val lex: LexicoFirst[IndexedSeq[Int]] = WithoutSymmetrySubgroup
       seq.lexFirst
     }
     val p3 = {
-      implicit val lex = BigSeq
-      seq.lexFirst
+      implicit val lex: LexicoSeq[IndexedSeq[Int]] = BigSeq
+      seq.lexRepresentatives(0)
     }
     assert(p1 == p2)
     assert(p1 == p3)
-/*
-    val reps = (0 until p.BigSeqPerms.size.toInt).map(p.BigSeqPerms(_))
-    val iter = p.BigSeqPerms.iterator.toSeq
-    assert(reps == iter)
-    assert((reps zip reps.tail).forall {
-      case (a, b) => a < b
-    })*/
+
+    {
+      implicit val lexF: LexicoFirst[IndexedSeq[Int]] = WithoutSymmetrySubgroup
+      implicit val lexS: LexicoSeq[IndexedSeq[Int]] = BigSeq
+      val reps = (0 until seq.numberOfRepresentatives.toInt).map(seq.lexRepresentatives(_))
+      val iter = seq.lexRepresentatives.iterator.toSeq
+      assert(reps == iter)
+      assert((reps zip reps.tail).forall {
+        case (a, b) => a < b
+      })
+    }
   }
 }

@@ -35,7 +35,7 @@ trait LexicoImpl[P] extends Lexico[P] {
   }
 }
 
-trait BruteForceLexicoImpl[P] extends LexicoImpl[P] {
+trait BruteForceLexicoImpl[P] extends LexicoImpl[P] with LexicoFirst[P] {
   def permutationToFirst(p: P) = PermutableWrap(p).Perms.minimalPermutation
   case class PermutableWrap(p: P) extends PermutableTrait[PermutableWrap]
       with PermutableImpl[PermutableWrap, F] {
@@ -44,7 +44,7 @@ trait BruteForceLexicoImpl[P] extends LexicoImpl[P] {
   }
 }
 
-trait WithoutSymmetrySubgroupLexicoImpl[P] extends LexicoImpl[P] {
+trait WithoutSymmetrySubgroupLexicoImpl[P] extends LexicoImpl[P] with LexicoFirst[P] {
   def permutationToFirst(p: P) = PermutableWrap(p).Perms.minimalPermutation
   case class PermutableWrap(p: P) extends PermutableTrait[PermutableWrap]
       with PermutableImpl[PermutableWrap, F] {

@@ -7,14 +7,10 @@ trait IndexSyntax {
 }
 
 trait LexicoSyntax {
-  implicit def LexicoOps[P: Lexico](lhs: P) = new LexicoOps(lhs)
-}
-
-trait LexicoSeqSyntax extends LexicoSyntax {
-  implicit def LexicoSeqOps[P: LexicoSeq](lhs: P) = new LexicoSeqOps(lhs)
+  implicit def lexicoFirstOps[P: LexicoFirst](lhs: P) = new LexicoFirstOps(lhs)
+  implicit def lexicoSeqOps[P: LexicoSeq](lhs: P) = new LexicoSeqOps(lhs)
 }
 
 trait AllSyntax extends
     IndexSyntax with
-    LexicoSyntax with
-    LexicoSeqSyntax
+    LexicoSyntax

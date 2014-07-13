@@ -8,7 +8,6 @@ import scala.language.implicitConversions
 package object alasc {
   object indexSyntax extends IndexSyntax
   object lexicoSyntax extends LexicoSyntax
-  object lexicoSeqSyntax extends LexicoSeqSyntax
   object allSyntax extends AllSyntax
 
   object finiteInstances extends FiniteInstances
