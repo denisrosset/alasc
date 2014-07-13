@@ -11,7 +11,7 @@ trait Lexico[P] {
   type A
   type F <: Finite[F]
   implicit def order: Order[A]
-  implicit def index: Index[A, P]
+  implicit def index: Index[P, A]
   implicit def action: GroupAction[P, F]
 
   def baseGroup(p: P): Group[F]

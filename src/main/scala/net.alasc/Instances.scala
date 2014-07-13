@@ -11,8 +11,8 @@ trait FiniteInstances {
 }
 
 trait IndexInstances {
-  implicit def ArrayIndex[@spec(Int) A]: Index[A, Array[A]] = new ArrayIndex[A]
-  implicit def IndexedSeqIndex[@spec(Int) A]: Index[A, IndexedSeq[A]] = new IndexedSeqIndex[A]
+  implicit def ArrayIndex[@spec(Int) A]: Index[Array[A], A] = new ArrayIndex[A]
+  implicit def IndexedSeqIndex[@spec(Int) A]: Index[IndexedSeq[A], A] = new IndexedSeqIndex[A]
 }
 
 trait PermutingInstances {
