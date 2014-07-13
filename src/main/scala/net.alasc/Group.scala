@@ -85,6 +85,8 @@ abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupO
   def actionDomain = action.domain
   def actionDimension = action.dimension
 
+  def groupOption: Option[Group[F]]
+ 
   def withOptions(newOptions: GroupOptions) =
     Group.fromBaseAndStrongGeneratingSet(action, bsgs.base, bsgs.strongGeneratingSet)(newOptions)
 
@@ -95,8 +97,8 @@ abstract class Group[F <: Finite[F]](implicit val options: GroupOptions = GroupO
     options.orbitBuilder.empty(newBeta, action).updated(genSet, genSet)
 
   def bsgs: BSGSChain[F]
-  def order = bsgs.order
-  def random(implicit gen: Random) = bsgs.random(gen)
+  def order: BigInt
+  def random(implicit gen: Random): F
   def elements = new Iterable[F] {
     override def size = (if (order.isValidInt) order.toInt else
       throw new IllegalArgumentException("Order of the group is " + order.toString + " which is not a valid iterator size of type Int.")
@@ -268,12 +270,16 @@ The algorithm can probably be improved a lot.
 }
 
 class ChainGroup[F <: Finite[F]](val bsgs: BSGSChain[F])(implicit options: GroupOptions) extends Group[F] {
+  override def groupOption: Option[Group[F]] = Some(this)
   def action = bsgs.action
   def generators = bsgs.strongGeneratingSet
+  def order = bsgs.order
+  def random(implicit gen: Random) = bsgs.random
 }
 
 abstract class LazyGroup[F <: Finite[F]](bsgsOption: Option[BSGSChain[F]]) extends Group[F] {
   @volatile var knownBSGS: Option[BSGSChain[F]] = bsgsOption
+  override def groupOption: Option[Group[F]] = knownBSGS.map(new ChainGroup(_))
   def computeBSGS: BSGSChain[F]
   def bsgs = knownBSGS match {
     case None =>
@@ -291,6 +297,9 @@ abstract class LazyGroup[F <: Finite[F]](bsgsOption: Option[BSGSChain[F]]) exten
 }
 
 class GeneratorsGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[F], prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  override def groupOption = Some(this)
+  def random(implicit gen: Random) = bsgs.random
+  def order = bsgs.order
   def computeBSGS = BSGSChain.deterministicSchreierSims(action, prescribedBase, generators.toList)
   override def conjugatedBy(f: F) = {
     val finv = f.inverse
@@ -301,32 +310,36 @@ class GeneratorsGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[
   }
 }
 
-class GeneratorsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[F], givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+class GeneratorsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], val generators: Seq[F], val order: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  override def groupOption = Some(this)
+  def random(implicit gen: Random) = bsgs.random
   def computeBSGS = options.useRandomizedAlgorithms match {
     case true =>
       val bag = RandomBag(generators, action.identity, max(10, generators.length), 50,
         options.randomGenerator)
-      BSGSChain.randomSchreierSims(action, prescribedBase, bag.random(_), givenOrder)
+      BSGSChain.randomSchreierSims(action, prescribedBase, bag.random(_), order)
     case false =>
       val b = BSGSChain.deterministicSchreierSims(action, prescribedBase, generators.toList)
-      assert(b.order == givenOrder)
+      assert(b.order == order)
       b
   }
   override def conjugatedBy(f: F) = {
     val finv = f.inverse
     new GeneratorsAndOrderGroup(action,
       generators.map(x => finv * x * f),
-      givenOrder,
+      order,
       prescribedBase.map(beta => action(f, beta)), 
       bsgsOption.map(b => b.conjugatedBy(f)) )
   }
 }
 
-class RandomElementsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], randomElement: Random => F,  givenOrder: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+class RandomElementsAndOrderGroup[F <: Finite[F]](val action: PRepr[F], randomElement: Random => F,  val order: BigInt, prescribedBase: List[Dom] = Nil, bsgsOption: Option[BSGSChain[F]] = None)(implicit options: GroupOptions) extends LazyGroup[F](bsgsOption) {
+  override def groupOption = Some(this)
+  def random(implicit gen: Random) = randomElement(gen)
   def generators = bsgs.strongGeneratingSet
   def computeBSGS = {
     assert(options.useRandomizedAlgorithms)
-    BSGSChain.randomSchreierSims(action, prescribedBase, randomElement, givenOrder)
+    BSGSChain.randomSchreierSims(action, prescribedBase, randomElement, order)
   }
 }
 
