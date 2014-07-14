@@ -14,38 +14,37 @@ class PermutableSuite extends FunSuite {
     val id = Perm(8)
     val g = Group.fromGenerators(TrivialPRepr(id), List(g1, g2), List(8,7,6,5,4,3,2,1))
 
-    trait BaseLexico extends LexicoImpl[IndexedSeq[Int]] {
+    trait BaseLexico extends LexicoImpl[IndexedSeq[Int], Perm] {
       type A = Int
-      type F = Perm
       def baseGroup(p: IndexedSeq[Int]) = g
-      implicit val action = IndexedSeqPermutingAction[Int, F]
+      implicit val action = IndexedSeqPermutingAction[Int, Perm]
       implicit val index: Index[IndexedSeq[Int], Int] = IndexedSeqIndex[Int]
       implicit val order = implicitly[Order[Int]]
     }
 
-    object BruteForce extends BaseLexico with BruteForceLexicoImpl[IndexedSeq[Int]]
+    object BruteForce extends BaseLexico with BruteForceLexicoImpl[IndexedSeq[Int], Perm]
     object WithoutSymmetrySubgroup extends BaseLexico 
-        with WithoutSymmetrySubgroupLexicoImpl[IndexedSeq[Int]]
+        with WithoutSymmetrySubgroupLexicoImpl[IndexedSeq[Int], Perm]
     object BigSeq extends BaseLexico 
-        with BigSeqLexicoImpl[IndexedSeq[Int]]
+        with BigSeqLexicoImpl[IndexedSeq[Int], Perm]
     val p1 = {
-      implicit val lex: LexicoFirst[IndexedSeq[Int]] = BruteForce
+      implicit val lex: LexicoFirst[IndexedSeq[Int], Perm] = BruteForce
       seq.lexFirst
     }
     val p2 = {
-      implicit val lex: LexicoFirst[IndexedSeq[Int]] = WithoutSymmetrySubgroup
+      implicit val lex: LexicoFirst[IndexedSeq[Int], Perm] = WithoutSymmetrySubgroup
       seq.lexFirst
     }
     val p3 = {
-      implicit val lex: LexicoSeq[IndexedSeq[Int]] = BigSeq
+      implicit val lex: LexicoSeq[IndexedSeq[Int], Perm] = BigSeq
       seq.lexRepresentatives(0)
     }
     assert(p1 == p2)
     assert(p1 == p3)
 
     {
-      implicit val lexF: LexicoFirst[IndexedSeq[Int]] = WithoutSymmetrySubgroup
-      implicit val lexS: LexicoSeq[IndexedSeq[Int]] = BigSeq
+      implicit val lexF: LexicoFirst[IndexedSeq[Int], Perm] = WithoutSymmetrySubgroup
+      implicit val lexS: LexicoSeq[IndexedSeq[Int], Perm] = BigSeq
       val reps = (0 until seq.numberOfRepresentatives.toInt).map(seq.lexRepresentatives(_))
       val iter = seq.lexRepresentatives.iterator.toSeq
       assert(reps == iter)

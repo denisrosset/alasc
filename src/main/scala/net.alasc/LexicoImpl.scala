@@ -14,7 +14,7 @@ object LexicoImpl {
   }
 }
 
-trait LexicoImpl[P] extends Lexico[P] {
+trait LexicoImpl[P, F <: Finite[F]] extends Lexico[P, F] {
   self =>
   def symmetryGroup(p: P) = baseGroup(p).fixing(integerSeq(p))
 
@@ -35,7 +35,7 @@ trait LexicoImpl[P] extends Lexico[P] {
   }
 }
 
-trait BruteForceLexicoImpl[P] extends LexicoImpl[P] with LexicoFirst[P] {
+trait BruteForceLexicoImpl[P, F <: Finite[F]] extends LexicoImpl[P, F] with LexicoFirst[P, F] {
   def permutationToFirst(p: P) = PermutableWrap(p).Perms.minimalPermutation
   case class PermutableWrap(p: P) extends PermutableTrait[PermutableWrap]
       with PermutableImpl[PermutableWrap, F] {
@@ -44,7 +44,7 @@ trait BruteForceLexicoImpl[P] extends LexicoImpl[P] with LexicoFirst[P] {
   }
 }
 
-trait WithoutSymmetrySubgroupLexicoImpl[P] extends LexicoImpl[P] with LexicoFirst[P] {
+trait WithoutSymmetrySubgroupLexicoImpl[P, F <: Finite[F]] extends LexicoImpl[P, F] with LexicoFirst[P, F] {
   def permutationToFirst(p: P) = PermutableWrap(p).Perms.minimalPermutation
   case class PermutableWrap(p: P) extends PermutableTrait[PermutableWrap]
       with PermutableImpl[PermutableWrap, F] {
@@ -52,7 +52,7 @@ trait WithoutSymmetrySubgroupLexicoImpl[P] extends LexicoImpl[P] with LexicoFirs
     object Perms extends PermutationsTrait with WithoutSymmetrySubgroupPermutations
   }
 }
-trait BigSeqLexicoImpl[P] extends LexicoImpl[P] with LexicoSeq[P] {
+trait BigSeqLexicoImpl[P, F <: Finite[F]] extends LexicoImpl[P, F] with LexicoSeq[P, F] {
   def permutationToFirst(p: P): F = PermutableWrap(p).Perms.minimalPermutation
   def permutationIterator(p: P): Iterator[F] = PermutableWrap(p).Perms.permutationIterator
   def permutationToIndex(p: P, index: BigInt) = PermutableWrap(p).Perms.permutationForIndex(index)

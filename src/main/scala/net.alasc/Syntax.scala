@@ -7,8 +7,10 @@ trait IndexSyntax {
 }
 
 trait LexicoSyntax {
-  implicit def lexicoFirstOps[P: LexicoFirst](lhs: P) = new LexicoFirstOps(lhs)
-  implicit def lexicoSeqOps[P: LexicoSeq](lhs: P) = new LexicoSeqOps(lhs)
+  implicit def lexicoFirstOps[P, F <: Finite[F]](lhs: P)(implicit lex: LexicoFirst[P, F]) = 
+    new LexicoFirstOps[P, F](lhs)
+  implicit def lexicoSeqOps[P, F <: Finite[F]](lhs: P)(implicit lex: LexicoSeq[P, F]) =
+    new LexicoSeqOps[P, F](lhs)
 }
 
 trait AllSyntax extends
