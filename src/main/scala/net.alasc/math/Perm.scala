@@ -95,7 +95,7 @@ final class PermPermutation extends BuildablePermutation[Perm] {
     case a1: PermArray => a1.signum
   }
 
-  def actl(p: Perm, k: Int) = p.invImage(k)
+  override def actl(p: Perm, k: Int) = p.invImage(k)
   def actr(k: Int, p: Perm) = p.image(k)
 
   def support(a: Perm) = a.support

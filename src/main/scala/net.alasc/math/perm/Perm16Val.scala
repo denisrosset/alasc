@@ -162,7 +162,7 @@ final class Perm16ValPermutation extends BuildablePermutation[Perm16Val] {
   def support(p: Perm16Val) = p.support
   def supportMax(p: Perm16Val) = p.supportMax
   def supportMin(p: Perm16Val) = p.supportMin
-  def actl(g: Perm16Val, i: Int): Int = g.invImage(i)
+  override def actl(g: Perm16Val, i: Int): Int = g.invImage(i)
   def actr(k: Int, g: Perm16Val): Int = g.image(k)
   def minus(p: Perm16Val, n: Int): Perm16Val = p - n
   def plus(p: Perm16Val, n: Int): Perm16Val = p + n

@@ -12,7 +12,7 @@ abstract class PermPermutationBase[P <: SpecPerm[P]] extends BuildablePermutatio
   def signum(p: P) = p.toCycles.signum
   def inverse(p: P) = p.inverse
   def actr(preimage: Int, p: P) = p.image(preimage)
-  def actl(p: P, k: Int) = p.invImage(k)
+  override def actl(p: P, k: Int) = p.invImage(k)
   def minus(p: P, n: Int): P = p.specMinus(n)
   def plus(p: P, n: Int): P = p.specPlus(n)
   def op(x: P, y: P): P = x.specOp(y)

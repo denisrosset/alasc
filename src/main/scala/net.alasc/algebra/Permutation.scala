@@ -10,6 +10,8 @@ import spire.syntax.groupAction._
   * 
   * Combines Eq, Group, Signed and GroupAction[Int, _], along with
   * additional methods.
+  * 
+  * The standard action for the GroupAction[Int, P] is the right action.
   */
 trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int, P] {
   self =>
@@ -25,6 +27,7 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
   def supportMaxElement: Int
   /** Dummy overload for Signed, as one cannot change the sign of a permutation . */
   def abs(p: P): P = if (signum(p) == 1) p else sys.error(s"The permutation $p is odd.")
+  def actl(p: P, k: Int) = actr(k, inverse(p))
 }
 
 trait BuildablePermutation[P] extends Permutation[P] {

@@ -55,7 +55,7 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
   def inverse(a: Cycles) = Cycles.Algebra.fromDisjointCycles(a.seq.map(_.inverse))
 
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
-  def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
+  override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
 
   def signum(c: Cycles) = (1 /: c.seq) { case (sIt, cycle) => sIt * cycle.signum }
 
