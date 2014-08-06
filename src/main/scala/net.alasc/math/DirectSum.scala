@@ -11,6 +11,7 @@ object DirectSum {
   implicit def DirectSumSubgroup[S, G](implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Subgroup[DirectSum[S], G] =
     new DirectSumSubgroup[S, G]
 }
+
 class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Subgroup[DirectSum[S], G] {
   type DS = DirectSum[S]
   def elementsIterator(ds: DS, i: Int): Iterator[G] =
