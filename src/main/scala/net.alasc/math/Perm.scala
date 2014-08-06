@@ -32,6 +32,11 @@ abstract class Perm {
   def toPermArray = PermArray.Algebra.fromSupportAndImages(support, image(_))
 }
 
+object Perm {
+  implicit def permutation: Permutation[Perm] = Algebra
+  implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
+}
+
 final class PermPermutation extends BuildablePermutation[Perm] {
   def id = Perm16.Algebra.id
 

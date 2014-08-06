@@ -48,7 +48,7 @@ class TransversalExplicit[P] private[bsgs](val beta: Int, val intMap: IntMap[Inv
       for (ip@InversePair(g, gInv) <- allGenerators; b <- toCheck) {
         val newB = b <|+| g
         if (!newMap.contains(newB)) {
-          newMap += (newB -> (apply(b) |+| ip))
+          newMap += (newB -> (newMap.apply(b) |+| ip))
           newAdded += newB
         }
       }
