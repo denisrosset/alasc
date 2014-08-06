@@ -17,6 +17,7 @@ case class Conjugate[G: FiniteGroup, T](g: G, t: T, gInv: G) {
 
 object Conjugate {
   def apply[G: FiniteGroup, T](g: G, t: T): Conjugate[G, T] = Conjugate(g, t, g.inverse)
+  def apply[G: FiniteGroup, T](ip: InversePair[G], t: T): Conjugate[G, T] = Conjugate(ip.g, t, ip.gInv)
   implicit def ConjugateSubgroup[G, S](implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Subgroup[Conjugate[G, S], G] = new ConjugateSubgroup[G, S]
   implicit def conjugateSubgroup[G, S](subgroup: S)(implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Conjugate[G, S] =
     Conjugate(algebra.id, subgroup, algebra.id)
