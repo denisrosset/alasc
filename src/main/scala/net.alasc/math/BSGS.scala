@@ -1,7 +1,10 @@
 package net.alasc.math
 
 import net.alasc.algebra._
-
+/** Implementation of a BSGS chain as a single linked list.
+  * 
+  * Inspired by scala.collection.immutable.List.
+  */
 sealed abstract class BSGS[P] {
   implicit def ev: Permutation[P]
   def isTerminal: Boolean

@@ -31,14 +31,14 @@ final class Perm16(val permVal: Perm16Val) extends SpecPerm[Perm16] { lhs =>
   def specMinus(n: Int) = new Perm16(permVal - n)
 }
 
-class Perm16Permutation extends PermPermutationBase[Perm16] {
-  def id = new Perm16(Perm16Val.permutation.id)
+final class Perm16Permutation extends PermPermutationBase[Perm16] {
+  def id = new Perm16(Perm16Val.Algebra.id)
+  def fromImages(images: Seq[Int]) = new Perm16(Perm16Val.Algebra.fromImages(images))
+  def fromSupportAndImages(support: BitSet, image: Int => Int) =
+    new Perm16(Perm16Val.Algebra.fromSupportAndImages(support, image))
+  def supportMaxElement = Perm16Val.Algebra.supportMaxElement
 }
 
-object Perm16 extends PermutationBuilder[Perm16] {
-  implicit val permutation = new Perm16Permutation
-  def fromImages(images: Seq[Int]) = new Perm16(Perm16Val.fromImages(images))
-  def fromSupportAndImages(support: BitSet, image: Int => Int) =
-    new Perm16(Perm16Val.fromSupportAndImages(support, image))
-  def supportMaxElement = Perm16Val.supportMaxElement
+object Perm16 {
+  implicit val Algebra = new Perm16Permutation
 }

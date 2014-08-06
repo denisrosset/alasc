@@ -8,6 +8,5 @@ package object syntax {
   object finiteGroup extends FiniteGroupSyntax
   object permutation extends PermutationSyntax
   object subgroup extends SubgroupSyntax
-  object permutationSubgroup extends PermutationSubgroupSyntax
   object all extends AllSyntax
 }

@@ -21,6 +21,13 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
   def supportMax(p: P): Int
   /** Returns the minimal element in the support of `p`, or -1 if the support is empty. */
   def supportMin(p: P): Int
+  /** Returns an upper bound on the maximal support element (maximum Int.MaxValue). */
+  def supportMaxElement: Int
+  /** Dummy overload for Signed, as one cannot change the sign of a permutation . */
+  def abs(p: P): P = if (signum(p) == 1) p else sys.error(s"The permutation $p is odd.")
+}
+
+trait BuildablePermutation[P] extends Permutation[P] {
   /** Adds `n` to the domain elements acted on by `p`. 
     *
     * Returns `p1` such that `k <|+| p1 = k` for `k < n`, and otherwise `k <|+| p1 = ((k - n) <|+| p) + n`.
@@ -32,15 +39,6 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
     * Returns `p1` such that `k <|+| p1 = ((k + n) <|+| p) - n`.
     */
   def minus(p: P, n: Int): P
-  /** Dummy overload for Signed, as one cannot change the sign of a permutation . */
-  def abs(p: P): P = if (signum(p) == 1) p else sys.error(s"The permutation $p is odd.")
-}
-
-trait PermutationBuilder[P] {
-  self: PermutationBuilder[P] =>
-  implicit def permutation: Permutation[P]
-  implicit def builder: PermutationBuilder[P] = self
-  def supportMaxElement: Int
   def fromImages(images: Seq[Int]): P
   def fromSupportAndImages(support: BitSet, image: Int => Int): P
   def sorting[T: Order](seq: Seq[T]): P = {

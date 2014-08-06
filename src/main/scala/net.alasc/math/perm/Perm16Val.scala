@@ -1,7 +1,7 @@
 package net.alasc.math
 package perm
 
-import net.alasc.algebra.{Permutation, PermutationBuilder}
+import net.alasc.algebra.BuildablePermutation
 import scala.collection.immutable.BitSet
 import net.alasc.syntax.permutation._
 import spire.syntax.groupAction._
@@ -33,18 +33,18 @@ object Perm16Encoding {
   * - for k = 0..15, the image of k is encoded using four bits starting at position 4*k
   * - the value of these 4 bits do not give the image k' itself, rather the shift (k' - k)
   */
-class Perm16Val private[math](val encoding: Long) extends AnyVal { lhs =>
+final class Perm16Val private[math](val encoding: Long) extends AnyVal { lhs =>
   def toPerm32: Perm32 = {
     var k = Perm16Encoding.supportMax(encoding)
     val res = new Perm32
     while (k >= 0) {
-      res.encode(k, Perm16Val.permutation.actr(k, this))
+      res.encode(k, Perm16Val.Algebra.actr(k, this))
       k -= 1
     }
     res
  }
 
-  def toCycles = Cycles.fromPermutation(this)(Perm16Val.permutation).toString
+  def toCycles = Cycles.Algebra.fromPermutation(this)(Perm16Val.Algebra).toString
 
   override def toString = toCycles.toString
 
@@ -128,25 +128,8 @@ class Perm16Val private[math](val encoding: Long) extends AnyVal { lhs =>
     }
 }
 
-class Perm16ValPermutation extends Permutation[Perm16Val] {
-  def eqv(x: Perm16Val, y: Perm16Val): Boolean = x === y
-  def id = new Perm16Val(0L)
-  def op(x: Perm16Val, y: Perm16Val): Perm16Val = x |+| y
-  def signum(a: Perm16Val) = Cycles.fromPermutation(a)(this).signum
-  def inverse(p: Perm16Val) = p.inverse
-  def support(p: Perm16Val) = p.support
-  def supportMax(p: Perm16Val) = p.supportMax
-  def supportMin(p: Perm16Val) = p.supportMin
-  def actl(g: Perm16Val, i: Int): Int = g.invImage(i)
-  def actr(k: Int, g: Perm16Val): Int = g.image(k)
-  def minus(p: Perm16Val, n: Int): Perm16Val = p - n
-  def plus(p: Perm16Val, n: Int): Perm16Val = p + n
-}
-
-object Perm16Val extends PermutationBuilder[Perm16Val] {
+final class Perm16ValPermutation extends BuildablePermutation[Perm16Val] {
   def supportMaxElement = 15
-
-  implicit val permutation = new Perm16ValPermutation
 
   def fromImages(images: Seq[Int]): Perm16Val = {
     var k = 0
@@ -170,4 +153,21 @@ object Perm16Val extends PermutationBuilder[Perm16Val] {
     }
     new Perm16Val(encoding)
   }
+
+  def eqv(x: Perm16Val, y: Perm16Val): Boolean = x === y
+  def id = new Perm16Val(0L)
+  def op(x: Perm16Val, y: Perm16Val): Perm16Val = x |+| y
+  def signum(a: Perm16Val) = Cycles.Algebra.fromPermutation(a)(this).signum
+  def inverse(p: Perm16Val) = p.inverse
+  def support(p: Perm16Val) = p.support
+  def supportMax(p: Perm16Val) = p.supportMax
+  def supportMin(p: Perm16Val) = p.supportMin
+  def actl(g: Perm16Val, i: Int): Int = g.invImage(i)
+  def actr(k: Int, g: Perm16Val): Int = g.image(k)
+  def minus(p: Perm16Val, n: Int): Perm16Val = p - n
+  def plus(p: Perm16Val, n: Int): Perm16Val = p + n
+}
+
+object Perm16Val {
+  implicit val Algebra = new Perm16ValPermutation
 }

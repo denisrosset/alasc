@@ -11,7 +11,6 @@ import spire.syntax.signed._
   * - images(images.length - 1) != images.length - 1.
   */
 final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs =>
-
   protected[alasc] def fastImage(preimage: Int) = images(preimage)
 
   def image(preimage: Int) =
@@ -86,7 +85,7 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
     while (ind >= 0 && img(ind) == ind)
       ind -= 1
     if (ind == -1)
-      PermArray.empty
+      PermArray.Algebra.id
     else {
       val array = new Array[Int](ind + 1)
       while (ind >= 0) {
@@ -128,16 +127,10 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
       }
       new PermArray(array)
     }
-
 }
 
-class PermArrayPermutation extends PermPermutationBase[PermArray] {
-  def id = PermArray.empty
-}
-
-object PermArray extends PermutationBuilder[PermArray] {
-  implicit val permutation = new PermArrayPermutation
-  def empty = new PermArray(Array.empty[Int])
+final class PermArrayPermutation extends PermPermutationBase[PermArray] {
+  val id = new PermArray(Array.empty[Int])
   def supportMaxElement = Int.MaxValue
   def fromImages(images: Seq[Int]): PermArray = {
     var maxSupport = images.length - 1
@@ -146,11 +139,15 @@ object PermArray extends PermutationBuilder[PermArray] {
     new PermArray(Array.tabulate(maxSupport + 1)(k => images(k)))
   }
   @annotation.tailrec def fromSupportAndImages(support: BitSet, image: Int => Int): PermArray =
-    if (support.isEmpty) empty else {
+    if (support.isEmpty) id else {
       val maxSupport = support.max
       if (image(maxSupport) == maxSupport)
         fromSupportAndImages(support - maxSupport, image)
       else
         new PermArray(Array.tabulate(maxSupport + 1)(k => image(k)))
     }
+}
+
+object PermArray {
+  implicit val Algebra = new PermArrayPermutation
 }

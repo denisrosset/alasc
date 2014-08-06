@@ -31,10 +31,6 @@ trait SubgroupSyntax {
   implicit def subgroupSyntax[S, G](s: S)(implicit ev: Subgroup[S, G]) = new SubgroupOps(s)
 }
 
-trait PermutationSubgroupSyntax {
-  implicit def permutationSubgroupSyntax[S, G](s: S)(implicit ev: PermutationSubgroup[S, G]) = new PermutationSubgroupOps(s)
-}
-
 trait AllSyntax
     extends LengthSyntax
     with BigLengthSyntax
@@ -43,4 +39,3 @@ trait AllSyntax
     with FiniteGroupSyntax
     with PermutationSyntax
     with SubgroupSyntax
-    with PermutationSubgroupSyntax

@@ -118,10 +118,10 @@ final class Perm32(
       ((preimage + (long2 >>> ((preimage - long2Start) * maskWidth))) & mask).toInt
 
   def image(preimage: Int) =
-    if (preimage > Perm32.supportMaxElement) preimage else fastImage(preimage)
+    if (preimage > Perm32.Algebra.supportMaxElement) preimage else fastImage(preimage)
 
   def invImage(i: Int): Int = {
-    if ((long2 == 0 && long1 == 0 && long0 == 0) || i > Perm32.supportMaxElement)
+    if ((long2 == 0 && long1 == 0 && long0 == 0) || i > Perm32.Algebra.supportMaxElement)
       return i
     var k = Perm32Encoding.supportMax(long2, long1, long0)
     if (i > k) return i
@@ -148,7 +148,7 @@ final class Perm32(
       ((long0 >>> (preimage * maskWidth)) & mask) != 0
     else if (preimage < long2Start)
       ((long1 >>> ((preimage - long1Start) * maskWidth)) & mask) != 0
-    else if (preimage <= Perm32.supportMaxElement)
+    else if (preimage <= Perm32.Algebra.supportMaxElement)
       ((long2 >>> ((preimage - long2Start) * maskWidth)) & mask) != 0
     else
       false
@@ -181,8 +181,8 @@ final class Perm32(
   }
 
   def specMinus(n: Int): Perm32 =
-    if (n >= Perm32.supportMaxElement)
-      sys.error(s"Does not support shifts of more than ${Perm32.supportMaxElement} positions.")
+    if (n >= Perm32.Algebra.supportMaxElement)
+      sys.error(s"Does not support shifts of more than ${Perm32.Algebra.supportMaxElement} positions.")
     else if (n == 0)
       lhs
     else if (n < 0)
@@ -201,8 +201,8 @@ final class Perm32(
     }
 
   def specPlus(n: Int): Perm32 =
-    if (n >= Perm32.supportMaxElement)
-      sys.error(s"Does not support shifts of more than ${Perm32.supportMaxElement} positions.")
+    if (n >= Perm32.Algebra.supportMaxElement)
+      sys.error(s"Does not support shifts of more than ${Perm32.Algebra.supportMaxElement} positions.")
     else if (n == 0)
       lhs
     else if (n < 0)
@@ -219,13 +219,9 @@ final class Perm32(
     }
 }
 
-class Perm32Permutation extends PermPermutationBase[Perm32] {
-  def id = Perm32.empty
-}
+final class Perm32Permutation extends PermPermutationBase[Perm32] {
+  def id = new Perm32
 
-object Perm32 extends PermutationBuilder[Perm32] {
-  implicit val permutation = new Perm32Permutation
-  def empty = new Perm32
   def supportMaxElement = 31
 
   def fromImages(images: Seq[Int]): Perm32 = {
@@ -250,4 +246,8 @@ object Perm32 extends PermutationBuilder[Perm32] {
     }
     res
   }
+}
+
+object Perm32 {
+  implicit val Algebra = new Perm32Permutation
 }

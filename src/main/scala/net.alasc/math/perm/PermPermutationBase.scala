@@ -2,9 +2,9 @@ package net.alasc.math
 package perm
 
 import spire.syntax.signed._
-import net.alasc.algebra.Permutation
+import net.alasc.algebra.BuildablePermutation
 
-abstract class PermPermutationBase[P <: SpecPerm[P]] extends Permutation[P] {
+abstract class PermPermutationBase[P <: SpecPerm[P]] extends BuildablePermutation[P] {
   def eqv(x: P, y: P): Boolean = x.specEqv(y)
   def support(p: P) = p.support
   def supportMax(p: P) = p.supportMax

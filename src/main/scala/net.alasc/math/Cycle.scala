@@ -76,13 +76,11 @@ class CycleOrder extends Order[Cycle] {
       x.seq.compare(y.seq)
 }
 
-trait CycleInstances {
+object Cycle {
   implicit final val CycleIntAction: GroupAction[Int, Cycle] = new CycleIntAction
   implicit final val CycleSigned: Signed[Cycle] = new CycleSigned
   implicit final val CycleOrder: Order[Cycle] = new CycleOrder
-}
 
-object Cycle extends CycleInstances {
   def id = new Cycle(Seq.empty[Int])
   def apply(seq: Int*): Cycle = seq match {
     case Seq() => id
