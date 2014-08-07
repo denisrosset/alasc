@@ -13,6 +13,10 @@ import spire.syntax.group._
 abstract class Perm {
   def toCycles: Cycles = Cycles.Algebra.fromSupportAndImages(support, image(_))
   override def toString = toCycles.toString
+  override def equals(any: Any) = any match {
+    case that: Perm => Perm.Algebra.eqv(this, that)
+    case _ => false
+  }
 
   protected def fastImage(preimage: Int): Int
 
