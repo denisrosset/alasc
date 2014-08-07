@@ -27,6 +27,11 @@ trait PermutationSyntax extends FiniteGroupSyntax {
   implicit def permutationSyntax[A: Permutation](a: A) = new PermutationOps(a)
 }
 
+trait ShiftablePermutationSyntax extends FiniteGroupSyntax {
+  implicit def shiftablePermutationSyntax[A: ShiftablePermutation](a: A) = new ShiftablePermutationOps(a)
+}
+
+
 trait SubgroupSyntax {
   implicit def subgroupSyntax[S, G](s: S)(implicit ev: Subgroup[S, G]) = new SubgroupOps(s)
 }
@@ -38,4 +43,5 @@ trait AllSyntax
     with BigIndexSyntax
     with FiniteGroupSyntax
     with PermutationSyntax
+    with ShiftablePermutationSyntax
     with SubgroupSyntax

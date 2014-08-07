@@ -28,9 +28,11 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
   /** Dummy overload for Signed, as one cannot change the sign of a permutation . */
   def abs(p: P): P = if (signum(p) == 1) p else sys.error(s"The permutation $p is odd.")
   def actl(p: P, k: Int) = actr(k, inverse(p))
+
+  def to[Q](p: P)(implicit ev: BuildablePermutation[Q]): Q = ev.fromSupportAndImages(support(p), k => actr(k, p))
 }
 
-trait BuildablePermutation[P] extends Permutation[P] {
+trait ShiftablePermutation[P] extends Permutation[P] {
   /** Adds `n` to the domain elements acted on by `p`. 
     *
     * Returns `p1` such that `k <|+| p1 = k` for `k < n`, and otherwise `k <|+| p1 = ((k - n) <|+| p) + n`.
@@ -42,6 +44,9 @@ trait BuildablePermutation[P] extends Permutation[P] {
     * Returns `p1` such that `k <|+| p1 = ((k + n) <|+| p) - n`.
     */
   def minus(p: P, n: Int): P
+}
+
+trait BuildablePermutation[P] extends Permutation[P] {
   def fromImages(images: Seq[Int]): P
   def fromSupportAndImages(support: BitSet, image: Int => Int): P
   def sorting[T: Order](seq: Seq[T]): P = {

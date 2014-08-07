@@ -10,6 +10,7 @@ import scala.collection.immutable.BitSet
 
 /** Represent a cyclic permutation of non-negative indices. */
 class Cycle private[alasc](val seq: Seq[Int]) {
+  def toCycles = new Cycles(Seq(this))
 
   def length = seq.length
 

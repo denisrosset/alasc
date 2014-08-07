@@ -37,16 +37,16 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
     clear()
     while (cursor ne limit) {
       val node = cursor.asInstanceOf[BSGSNode[P]]
-      this += (node.transversal, node.ownGenerators)
+      append(node.transversal, node.ownGenerators)
       cursor = node.tail
     }
   }
 
-  def +=(beta: Int)(implicit tb: TransversalBuilder): this.type =
-    this.+=(tb.empty(beta), Nil)
+  def append(beta: Int)(implicit tb: TransversalBuilder): this.type =
+    append(tb.empty(beta), Nil)
 
-  def +=:(beta: Int)(implicit tb: TransversalBuilder): this.type =
-    this.+=:(tb.empty(beta), Nil)
+  def prepend(beta: Int)(implicit tb: TransversalBuilder): this.type =
+    prepend(tb.empty(beta), Nil)
 
   /** Appends a single transversal to this buffer.
    *
@@ -54,7 +54,7 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
     * @param og  the strong generators to append. 
    *  @return    this BSGSBuffer.
    */
-  def +=(tv: Transversal[P], og: List[P]): this.type = {
+  def append(tv: Transversal[P], og: List[P]): this.type = {
     if (exported) copy()
     if (start.isTerminal) {
       last0 = new BSGSNode(tv, og, start)
@@ -74,7 +74,7 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
    * @param tv  the transversal to prepend.
    * @return    this BSGSBuffer.
    */
-  def +=: (tv: Transversal[P], og: List[P]): this.type = {
+  def prepend(tv: Transversal[P], og: List[P]): this.type = {
     if (exported) copy()
     val newElem = new BSGSNode(tv, og, start)
     if (start.isTerminal) last0 = newElem
@@ -83,7 +83,40 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
     this
   }
 
-  def appendAndExport(bsgs: BSGS[P]) = ???
+  /** Adds the given generators to the BSGS chain, adding base elements
+    * if necessary.
+    * 
+    * @param generators  Sequence of new generators. Must not contain the identity.
+    */
+  def addGenerators(generators: Seq[P])(implicit tb: TransversalBuilder): Unit = {
+    if (generators.isEmpty) return
+    if (exported) copy()
+    @tailrec def rec(node: BSGSNode[P], remaining: Seq[P]): Unit = {
+      val (generatorsThere, newRemaining) = remaining.partition(g => (node.beta <|+| g) != node.beta)
+      node.og ++:= generatorsThere
+
+      if (!newRemaining.isEmpty) {
+        node.tail match {
+          case _: BSGSTerm[P] =>
+            val newBeta: Int = newRemaining.head.supportMin
+            assert(newBeta != -1)
+            append(newBeta)
+            rec(node.tail.asInstanceOf[BSGSNode[P]], newRemaining)
+          case tailNode: BSGSNode[P] =>
+            rec(tailNode, newRemaining)
+        }
+      }
+    }
+    start match {
+      case _: BSGSTerm[P] =>
+        val newBeta = generators.head.supportMin
+        assert(newBeta != -1)
+        append(newBeta)
+        addGenerators(generators)
+      case node: BSGSNode[P] =>
+        rec(node, generators)
+    }
+  }
 
   def addStrongGenerator(node: BSGSNode[P], p: P) {
     if (exported) copy()
@@ -96,7 +129,9 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
     * 
     * Note: assumes that this BSGSBuffer contains `where`.
     */
-  def updateUpTo(where: BSGSNode[P], p: P) {
+    def updateUpTo(where: BSGSNode[P], p: P) {
+      if (exported) copy()
+
     where.og = p :: where.og
     @tailrec def updateRec(node: BSGSNode[P]) {
       node.tv = node.tv.updated(Seq(p), node.strongGeneratingSet)
@@ -128,7 +163,7 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
         case _: BSGSTerm[P] =>
           val newBasePoint = h.supportMin
           assert(newBasePoint != -1) // there is a support for h =!= identity
-          this.+=(newBasePoint)
+          append(newBasePoint)
           Some(node.tail.asInstanceOf[BSGSNode[P]] -> h)
         case tailNode: BSGSNode[P] =>
           rec(tailNode, h)
@@ -141,12 +176,17 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
         if (beta == -1) // p is the identity
           None
         else {
-          this.+=(beta)
+          append(beta)
           siftAndAdd(p)
         }
       case node: BSGSNode[P] =>
         rec(node, p)
     }
+  }
+
+  def putInOrder(bsgs: BSGS[P]): Unit = {
+    if (exported) copy()
+
   }
 
   def toBSGS: BSGS[P] = {

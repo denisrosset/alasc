@@ -30,10 +30,14 @@ final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
 
 final class PermutationOps[A](lhs: A)(implicit ev: Permutation[A]) {
   def support(): BitSet = macro Ops.unop[BitSet]
-  def +(rhs: Int): A = macro Ops.binop[Int, A]
-  def -(rhs: Int): A = macro Ops.binop[Int, A]
   def supportMax(): Int = macro Ops.unop[Int]
   def supportMin(): Int = macro Ops.unop[Int]
+  def to[Q](implicit evQ: BuildablePermutation[Q]): Q = ev.to[Q](lhs)
+}
+
+final class ShiftablePermutationOps[A](lhs: A)(implicit ev: ShiftablePermutation[A]) {
+  def +(rhs: Int): A = macro Ops.binop[Int, A]
+  def -(rhs: Int): A = macro Ops.binop[Int, A]
 }
 
 final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {

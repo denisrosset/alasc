@@ -41,6 +41,10 @@ sealed abstract class BSGS[P] {
   implicit def algebra: Permutation[P]
   def isTerminal: Boolean
 
+  /** If the base is beta(1) -> ... -> beta(m-1) -> beta(m) current base -> tail.beta,
+    * ownGenerators contains all the strong generators g that have beta(i) <|+| g = beta(i) for i < m,
+    * and beta(m) <|+| g =!= beta(m).
+    */
   def ownGenerators: List[P]
 
   def strongGeneratingSet: Iterable[P] = new Iterable[P] {

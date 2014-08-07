@@ -10,17 +10,31 @@ import spire.syntax.signed._
   * 
   * - images(images.length - 1) != images.length - 1.
   */
-final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs =>
-  protected[alasc] def fastImage(preimage: Int) = images(preimage)
+final class PermArray(val images: Array[Int]) extends PermBase {
+  require(images(images.length - 1) != images.length - 1)
+  def isId = {
+    assert(images.length > Perm16Encoding.supportMaxElement + 1)
+    false
+  }
+
+  def inverse: PermArray = {
+    val array = new Array[Int](images.length)
+    var k = supportMax
+    while (k >= 0) {
+      array(images(k)) = k
+      k -= 1
+    }
+    new PermArray(array)
+  }
 
   def image(preimage: Int) =
     if (preimage > supportMax) preimage else images(preimage)
 
   def invImage(i: Int): Int =
-    if (i >= images.length) i else {
+    if (i > supportMax) i else {
       var k = images.length - 1
       while (k >= 0) {
-        if (fastImage(k) == i)
+        if (images(k) == i)
           return k
         k -= 1
       }
@@ -28,12 +42,14 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
     }
 
   @inline def supportMax = images.length - 1
+
   def supportMin = {
     var k = 0
-    while (k < images.length && images(k) == k)
+    while (k <= supportMax && images(k) == k)
       k += 1
     if (k == images.length) -1 else k
   }
+
   def support = {
     var bitset = BitSet.empty
     var k = supportMax
@@ -44,8 +60,38 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
     }
     bitset
   }
-  def isValidPerm16 = images.length <= 16
-  def isValidPerm32 = images.length <= 32
+
+  def isValidPerm32 = supportMax <= Perm32Encoding.supportMaxElement
+
+  override def genEqv(rhs: Perm): Boolean = rhs match {
+    case rhs1: PermArray => images.sameElements(rhs1.images)
+    case _ => super.genEqv(rhs)
+  }
+}
+
+object PermArray {
+  @inline def supportMaxElement = Int.MaxValue - 1
+
+  def fromImages(images: Seq[Int], givenMaxSupport: Int = -1): PermArray = {
+    var maxSupport = givenMaxSupport
+    if (maxSupport == -1) {
+      maxSupport = images.length - 1
+      while (maxSupport >= 0 && images(maxSupport) == maxSupport)
+        maxSupport -= 1
+    }
+    assert(maxSupport > Perm16Encoding.supportMaxElement)
+    new PermArray(images.view.take(maxSupport + 1).toArray)
+  }
+
+  def fromSupportAndImages(support: BitSet, image: Int => Int): PermArray = {
+    assert(!support.isEmpty)
+    val maxSupport = support.max
+    assert(image(maxSupport) != maxSupport)
+    new PermArray(Array.tabulate(maxSupport + 1)(k => image(k)))
+  }
+}
+
+/*
   def toPerm16 = {
     var encoding = 0L
     assert(isValidPerm16)
@@ -56,6 +102,7 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
     }
     new Perm16(new Perm16Val(encoding))
   }
+
   def toPerm32 = {
     var res = new Perm32
     assert(isValidPerm32)
@@ -65,17 +112,32 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
       k -= 1
     }
     res
- }
-
-  def inverse: PermArray = {
-    val array = new Array[Int](images.length)
-    var k = images.length - 1
-    while (k >= 0) {
-      array(fastImage(k)) = k
-      k -= 1
-    }
-    new PermArray(array)
   }
+
+  override def hashCode: Int =
+    if (isValidPerm16) toPerm16.hashCode
+    else if (isValidPerm32) toPerm32.hashCode
+    else {
+      import scala.util.hashing.MurmurHash3.{mix, mixLast, finalizeHash}
+      // TODO: add test that the underlying scala.util.MurmurHash3 implementation did not change
+      var a, b, n = 0
+      var c = 1
+      var k = 0
+      while (k < images.length) {
+        if (images(k) != k) {
+          val hash = pairHash(k)
+          a += hash
+          b ^= hash
+          if (hash != 0) c *= hash
+          n += 1
+        }
+      }
+      var h = PermHash.seed
+      h = mix(h, a)
+      h = mix(h, b)
+      h = mixLast(h, c)
+      finalizeHash(h, n)
+    }
 
   def specOp(rhs: PermArray): PermArray = {
     if (lhs.images.length == 0) return rhs
@@ -97,9 +159,9 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
   }
   def specEqv(rhs: PermArray) = lhs.images.sameElements(rhs.images)
 
-  def specMinus(n: Int): PermArray =
+  def minus(n: Int): PermArray =
     if (n == 0) lhs
-    else if (n < 0) specPlus(-n)
+    else if (n < 0) plus(-n)
     else {
       assert(n <= supportMin)
       val array = new Array[Int](images.length - n)
@@ -111,9 +173,9 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
       new PermArray(array)
     }
 
-  def specPlus(n: Int): PermArray =
+  def plus(n: Int): PermArray =
     if (n == 0) lhs
-    else if (n < 0) specMinus(-n)
+    else if (n < 0) minus(-n)
     else {
       val array = new Array[Int](images.length + n)
       var k = images.length + n - 1
@@ -126,28 +188,6 @@ final class PermArray(val images: Array[Int]) extends SpecPerm[PermArray] { lhs 
         k -= 1
       }
       new PermArray(array)
-    }
-}
+    }*/
 
-final class PermArrayPermutation extends PermPermutationBase[PermArray] {
-  val id = new PermArray(Array.empty[Int])
-  def supportMaxElement = Int.MaxValue
-  def fromImages(images: Seq[Int]): PermArray = {
-    var maxSupport = images.length - 1
-    while (maxSupport >= 0 && images(maxSupport) == maxSupport)
-      maxSupport -= 1
-    new PermArray(Array.tabulate(maxSupport + 1)(k => images(k)))
-  }
-  @annotation.tailrec def fromSupportAndImages(support: BitSet, image: Int => Int): PermArray =
-    if (support.isEmpty) id else {
-      val maxSupport = support.max
-      if (image(maxSupport) == maxSupport)
-        fromSupportAndImages(support - maxSupport, image)
-      else
-        new PermArray(Array.tabulate(maxSupport + 1)(k => image(k)))
-    }
-}
 
-object PermArray {
-  implicit val Algebra = new PermArrayPermutation
-}

@@ -8,7 +8,7 @@ trait EqMatchers {
     def shouldEqv(rhs: T)(implicit ev: Eq[T]) {
       if (!ev.eqv(lhs, rhs)) {
         val (leftee, rightee) = org.scalatest.Suite.getObjectsForFailureMessage(lhs, rhs)
-        throw newTestFailedException(FailureMessages("wasNotEqvTo", leftee, rightee))
+        throw newTestFailedException(FailureMessages("wasNotEqualTo", leftee, rightee))
       }
     }
   }
