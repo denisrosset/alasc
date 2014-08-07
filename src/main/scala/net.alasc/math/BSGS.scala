@@ -101,13 +101,22 @@ final class BSGSTerm[P](implicit val algebra: Permutation[P]) extends BSGS[P] {
 }
 
 object BSGS {
+
   implicit def BSGSSubgroup[P](implicit algebra: Permutation[P]): Subgroup[BSGS[P], P] =
     new BSGSSubgroup[P]
 
+  /* Randomized BSGS Schreier-Sims using the provided subgroup instance, which provides
+   * the known order of the group and a procedure to generate random elements.
+   * 
+   * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
+   */
   def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], tb: TransversalBuilder): BSGS[P] = {
     val buffer = new BSGSBuffer[P]
     while (buffer.chain.order < subgroup.order)
-      buffer.addElement(subgroup.random(gen))
+      buffer.siftAndAdd(subgroup.random(gen)) match {
+        case Some((node,  p)) => buffer.updateUpTo(node, p)
+        case None =>
+      }
     buffer.toBSGS
   }
 }

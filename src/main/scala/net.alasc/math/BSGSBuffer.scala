@@ -91,16 +91,35 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
     node.tv = node.tv.updated(Seq(p), node.strongGeneratingSet)
   }
 
-  /** Adds the element `p` to the BSGS chain, if the element is not already
-    * described.
+  /** Updates the BSGS chain by adding the strong generator `p` at node `where`, and
+    * updating the transversals from `start` to `where` included.
+    * 
+    * Note: assumes that this BSGSBuffer contains `where`.
     */
-  def addElement(p: P)(implicit tb: TransversalBuilder): Option[P] = {
+  def updateUpTo(where: BSGSNode[P], p: P) {
+    where.og = p :: where.og
+    @tailrec def updateRec(node: BSGSNode[P]) {
+      node.tv = node.tv.updated(Seq(p), node.strongGeneratingSet)
+      if (node ne where)
+        updateRec(node.tail.asInstanceOf[BSGSNode[P]])
+    }
+    updateRec(start.asInstanceOf[BSGSNode[P]])
+  }
+
+  /** Sifts the element `p` through the BSGS chain, and returns either:
+    * 
+    * - `None` if `p` can be sifted completely,
+    * - `Some(pair)` where `pair` describes the node and the
+    *   (incompletely) sifted element that should be inserted up to it.
+    * 
+    * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
+    */
+  def siftAndAdd(p: P)(implicit tb: TransversalBuilder): Option[(BSGSNode[P], P)] = {
     if (exported) copy()
-    @tailrec def rec(node: BSGSNode[P], remaining: P): Option[P] = {
+    @tailrec def rec(node: BSGSNode[P], remaining: P): Option[(BSGSNode[P], P)] = {
       val b = node.beta <|+| remaining
       if (!node.transversal.isDefinedAt(b)) {
-        addStrongGenerator(node, remaining)
-        return Some(remaining)
+        return Some(node -> remaining)
       }
       val h = remaining |+| node.transversal(b).gInv
       assert(node.beta <|+| h == node.beta) // TODO remove
@@ -110,8 +129,7 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
           val newBasePoint = h.supportMin
           assert(newBasePoint != -1) // there is a support for h =!= identity
           this.+=(newBasePoint)
-          addStrongGenerator(node.tail.asInstanceOf[BSGSNode[P]], h)
-          Some(h)
+          Some(node.tail.asInstanceOf[BSGSNode[P]] -> h)
         case tailNode: BSGSNode[P] =>
           rec(tailNode, h)
       }
@@ -124,7 +142,7 @@ final class BSGSBuffer[P](implicit val ev: Permutation[P]) {
           None
         else {
           this.+=(beta)
-          addElement(p)
+          siftAndAdd(p)
         }
       case node: BSGSNode[P] =>
         rec(node, p)
