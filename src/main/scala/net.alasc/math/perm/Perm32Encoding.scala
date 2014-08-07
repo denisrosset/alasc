@@ -17,12 +17,12 @@ object Perm32Encoding {
 
   @inline def maskWidth = 5
   //                       FEDCBA9876543210
-  @inline def longMask = 0x0FFFFFFFFFFFFFFFL
+  @inline def longMask: Long = 0x0FFFFFFFFFFFFFFFL
   @inline def numPerLong = 12
   @inline def leftBlank = 64 - numPerLong * maskWidth
   @inline def long1Start = numPerLong
   @inline def long2Start = numPerLong * 2
-  @inline def mask = 0x1FL
+  @inline def mask: Long = 0x1FL
   @inline def supportMaxElement = 31
 
   import java.lang.Long.{numberOfLeadingZeros, numberOfTrailingZeros}

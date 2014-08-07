@@ -63,6 +63,17 @@ final class PermArray(val images: Array[Int]) extends PermBase {
 
   def isValidPerm32 = supportMax <= Perm32Encoding.supportMaxElement
 
+  def toPerm32 = {
+    assert(isValidPerm32)
+    var res = new Perm32
+    var k = images.length - 1
+    while (k >= 0) {
+      Perm32Encoding.encode(res, k, image(k))
+      k -= 1
+    }
+    res
+  }
+
   override def genEqv(rhs: Perm): Boolean = rhs match {
     case rhs1: PermArray => images.sameElements(rhs1.images)
     case _ => super.genEqv(rhs)
@@ -101,17 +112,6 @@ object PermArray {
       k -= 1
     }
     new Perm16(new Perm16Val(encoding))
-  }
-
-  def toPerm32 = {
-    var res = new Perm32
-    assert(isValidPerm32)
-    var k = images.length - 1
-    while (k >= 0) {
-      res.encode(k, images(k))
-      k -= 1
-    }
-    res
   }
 
   override def hashCode: Int =

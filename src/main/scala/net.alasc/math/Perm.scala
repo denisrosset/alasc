@@ -81,11 +81,11 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
 abstract class PermBase extends AbstractPerm {
   def inverse: PermBase
 
-  def genOpLarge(rhs: Perm, supportMax: Int): Perm =
-    new PermArray(Array.tabulate(supportMax + 1)( k => rhs.image(image(k)) ))
+  def genOpLarge(rhs: Perm, givenSupportMax: Int): Perm =
+    new PermArray(Array.tabulate(givenSupportMax + 1)( k => rhs.image(image(k)) ))
 
-  def genRevOpLarge(lhs: Perm, supportMax: Int): Perm =
-    new PermArray(Array.tabulate(supportMax + 1)( k => image(lhs.image(k)) ))
+  def genRevOpLarge(lhs: Perm, givenSupportMax: Int): Perm =
+    new PermArray(Array.tabulate(givenSupportMax + 1)( k => image(lhs.image(k)) ))
 
   def genOp(rhs: Perm): Perm = {
     var k = supportMax.max(rhs.supportMax)
@@ -102,15 +102,17 @@ abstract class PermBase extends AbstractPerm {
             k -= 1
           }
           return new Perm16(encoding)
-        } else if (i <= Perm32Encoding.supportMaxElement) {
+        } else if (k <= Perm32Encoding.supportMaxElement) {
           val res = new Perm32
           Perm32Encoding.encode(res, k, i)
+          k -= 1
           while (k >= low) {
             Perm32Encoding.encode(res, k, img(k))
             k -= 1
           }
           return res
-        } else genOpLarge(rhs, k)
+        } else
+          return genOpLarge(rhs, k)
       }
       k -= 1
     }
@@ -131,8 +133,8 @@ abstract class PermBase extends AbstractPerm {
             encoding |= Perm16Encoding.encode(k, img(k))
             k -= 1
           }
-          new Perm16(encoding)
-        } else if (i <= Perm32Encoding.supportMaxElement) {
+          return new Perm16(encoding)
+        } else if (k <= Perm32Encoding.supportMaxElement) {
           val res = new Perm32
           Perm32Encoding.encode(res, k, i)
           k -= 1
@@ -140,8 +142,9 @@ abstract class PermBase extends AbstractPerm {
             Perm32Encoding.encode(res, k, img(k))
             k -= 1
           }
-          res
-        } else genRevOpLarge(lhs, k)
+          return res
+        } else
+          return genRevOpLarge(lhs, k)
       }
       k -= 1
     }
@@ -197,8 +200,8 @@ final class PermPermutation extends BuildablePermutation[Perm] {
     case (lhs32: Perm32, rhs32: Perm32) => Perm32Encoding.op3232(lhs32, rhs32)
     case (lhs32: Perm32, rhs16: Perm16) => Perm32Encoding.op3216(lhs32, rhs16)
     case (lhs16: Perm16, rhs32: Perm32) => Perm32Encoding.op1632(lhs16, rhs32)
-    case (lhs: PermBase, rhs: Perm) => lhs.genOp(rhs)
     case (lhs: Perm, rhs: PermBase) => rhs.genRevOp(lhs)
+    case (lhs: PermBase, rhs: Perm) => lhs.genOp(rhs)
   }
 
   @inline def support(p: Perm): BitSet = p.support

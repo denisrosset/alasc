@@ -26,4 +26,34 @@ class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] 
       (x |+| y) shouldEqv (x.to[Cycles] |+| y.to[Cycles]).to[Perm]
     }
   }
+
+  property("x.inverse.to[Cycles] === x.to[Cycles].inverse") {
+    forAll { (x: Perm) =>
+      x.support shouldBe x.to[Cycles].support
+    }
+  }
+
+  property("x === x.to[Cycles].support") {
+    forAll { (x: Perm, k: Int) =>
+      x.support shouldBe x.to[Cycles].support
+    }
+  }
+
+  property("x.support === x.to[Cycles].support") {
+    forAll { (x: Perm) =>
+      x.support shouldBe x.to[Cycles].support
+    }
+  }
+
+  property("x.supportMin === x.to[Cycles].supportMin") {
+    forAll { (x: Perm) =>
+      x.support shouldBe x.to[Cycles].support
+    }
+  }
+
+  property("x.supportMax === x.to[Cycles].supportMax") {
+    forAll { (x: Perm) =>
+      x.support shouldBe x.to[Cycles].support
+    }
+  }
 }
