@@ -24,7 +24,6 @@ final class BigIndexOps[A, T](lhs: T)(implicit ev: BigIndex[A, T]) {
 }
 
 final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
-  def isId(): Boolean = macro Ops.unop[Boolean]
   def order(): Int = macro Ops.unop[Int]
 }
 
