@@ -41,17 +41,15 @@ sealed trait Perm extends Any {
 
   def apply(seq: Int*) = this |+| Cycles(seq: _*).to[Perm]
 
-//  def isValidPerm16: Boolean TOREMOVE
   def isValidPerm32: Boolean
-//  def toPerm16: Perm16 TOREMOVE
-//  def toPerm32: Perm32
+  def toPerm32: Perm32
 
 //  def plus(n: Int): Perm
 //  def minus(n: Int): Perm
 }
 
 final case class Perm16 private[math](val encoding: Long) extends AnyVal with Perm { lhs16 =>
-//  def toPerm32 = Perm16Encoding.toPerm32(encoding)
+  def toPerm32 = Perm16Encoding.toPerm32(encoding)
   @inline def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
   @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
   @inline def isId = encoding == 0L
@@ -178,9 +176,8 @@ final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long =
   def supportMin = Perm32Encoding.supportMin(long2, long1, long0)
   def support = Perm32Encoding.support(long2, long1, long0)
   def isValidPerm32 = true
+  def toPerm32 = this
 }
-
-//   protected def fastImage(preimage: Int): Int
 
 final class PermPermutation extends BuildablePermutation[Perm] {
   @inline def eqv(x: Perm, y: Perm): Boolean = (x, y) match {
@@ -244,75 +241,3 @@ object Perm {
   def apply(seq: Int*): Perm = Cycles(seq: _*).to[Perm]
   implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
 }
-
-/*
-
-  def plus(lhs: Perm, n: Int): Perm =
-    if (n < 0)
-      minus(lhs, -n)
-    else if (n == 0)
-      lhs
-    else {
-      var maxSup = lhs.supportMax + n
-      if (maxSup <= Perm16.Algebra.supportMaxElement) {
-        var res = 0L
-        while (maxSup >= n) {
-          res += Perm16Encoding.encode(maxSup, lhs.image(maxSup - n) + n)
-          maxSup -= 1
-        }
-        new Perm16(new Perm16Val(res))
-      } else if (maxSup <= Perm32.Algebra.supportMaxElement) {
-        val res = new Perm32
-        while (maxSup >= n) {
-          res.encode(maxSup, lhs.image(maxSup - n) + n)
-          maxSup -= 1
-        }
-        res
-      } else {
-        val array = new Array[Int](maxSup + 1)
-        while (maxSup >= n) {
-          array(maxSup) = lhs.image(maxSup - n) + n
-          maxSup -= 1
-        }
-        while (maxSup >= 0) {
-          array(maxSup) = maxSup
-          maxSup -= 1
-        }
-        new PermArray(array)
-      }
-    }
-
-  def minus(lhs: Perm, n: Int): Perm =
-    if (n < 0)
-      plus(lhs, -n)
-    else if (n == 0)
-      lhs
-    else {
-      if (n > lhs.supportMin)
-        sys.error(s"Cannot shift down by $n the permutation, because ${lhs.supportMin} is in the support.")
-      var maxSup = lhs.supportMax - n
-      if (maxSup <= Perm16.Algebra.supportMaxElement) {
-        var res = 0L
-        while (maxSup >= 0) {
-          res += Perm16Encoding.encode(maxSup, lhs.image(maxSup + n) - n)
-          maxSup -= 1
-        }
-        new Perm16(new Perm16Val(res))
-      } else if (maxSup <= Perm32.Algebra.supportMaxElement) {
-        val res = new Perm32
-        while (maxSup >= 0) {
-          res.encode(maxSup, lhs.image(maxSup + n) - n)
-          maxSup -= 1
-        }
-        res
-      } else {
-        val array = new Array[Int](maxSup + 1)
-        while (maxSup >= 0) {
-          array(maxSup) = lhs.image(maxSup + n) - n
-          maxSup -= 1
-        }
-        new PermArray(array)
-      }
-    }
-}
- */
