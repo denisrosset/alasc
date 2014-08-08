@@ -25,8 +25,7 @@ import spire.syntax.group._
   * Cycles is such a type.
   */
 sealed trait Perm extends Any {
-  override def toString = super.toString + " : "+ (0 to supportMax).map(image(_)).mkString("(", ",", ")")
-//    this.to[Cycles].toString
+  override def toString = this.to[Cycles].toString
 
   @inline protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
