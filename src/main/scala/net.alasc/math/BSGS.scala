@@ -117,12 +117,20 @@ object BSGS {
   def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], tb: TransversalBuilder): BSGS[P] = {
     val buffer = new BSGSBuffer[P]
     while (buffer.chain.order < subgroup.order)
-      buffer.siftAndAdd(subgroup.random(gen)) match {
+      for ( (node, p) <- buffer.siftAndUpdateBase(subgroup.random(gen)))
+        buffer.updateFromStart(node, p)
+    buffer.toBSGS
+  }
+/*
+  def fromSubgroup[S, P](subgroup: S)(implicit algebra: Permutation[P], sg: Subgroup[S, P], tb: TransversalBuilder): BSGS[P] = {
+    val buffer = new BSGSBuffer[P]
+    while (buffer.chain.order < subgroup.order)
+      buffer.sift(subgroup.random(gen)) match {
         case Some((node,  p)) => buffer.updateUpTo(node, p)
         case None =>
       }
     buffer.toBSGS
-  }
+  }*/
 }
 
 final class BSGSSubgroup[P](implicit val algebra: Permutation[P]) extends Subgroup[BSGS[P], P] {
