@@ -39,7 +39,8 @@ sealed trait Perm extends Any {
   def supportMin: Int
   def support: BitSet
 
-  def apply(seq: Int*) = this |+| Cycles(seq: _*).to[Perm]
+  def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).to[Perm]
+  def apply(cycle: String)(implicit da: DomainAlphabet): Perm = apply(cycle.map(da.map(_)): _*)
 
   def isValidPerm32: Boolean
   def toPerm32: Perm32
@@ -238,6 +239,7 @@ final class PermPermutation extends BuildablePermutation[Perm] {
 }
 
 object Perm {
+  def apply(cycle: String)(implicit da: DomainAlphabet): Perm = apply(cycle.map(da.map(_)): _*)
   def apply(seq: Int*): Perm = Cycles(seq: _*).to[Perm]
   implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
 }

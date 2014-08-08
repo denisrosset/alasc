@@ -23,6 +23,7 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
   def toStringUsing(symbols: Int => String) =
     seq.map(_.toStringUsing(symbols(_))).mkString
   def apply(cycle: Int*) = Cycles.Algebra.op(this, Cycles(cycle: _*))
+  def apply(cycle: String)(implicit da: DomainAlphabet): Cycles = apply(cycle.map(da.map(_)): _*)
 }
 
 class CyclesPermutation extends BuildablePermutation[Cycles] {
@@ -70,9 +71,11 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
 
 object Cycles {
   implicit val Algebra = new CyclesPermutation
-  def apply(seq: Int*) = seq.size match {
+  def apply(seq: Int*): Cycles = seq.size match {
     case 0 | 1 => Algebra.id
     case _ => new Cycles(Seq(Cycle(seq: _*)))
   }
+  def apply(cycle: String)(implicit da: DomainAlphabet): Cycles = apply(cycle.map(da.map(_)): _*)
+
   implicit def cycleToCycles(c: Cycle): Cycles = new Cycles(Seq(c))
 }
