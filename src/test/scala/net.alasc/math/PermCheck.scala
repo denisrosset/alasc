@@ -1,6 +1,4 @@
 package net.alasc.math
-package perm
-
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary._

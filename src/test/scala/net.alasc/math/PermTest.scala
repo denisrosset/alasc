@@ -1,5 +1,4 @@
-package net.alasc
-package math
+package net.alasc.math
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import spire.syntax.eq._
