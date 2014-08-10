@@ -141,7 +141,7 @@ object BSGS {
   }
 
   def fromSubgroup[S, P](subgroup: S)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
-    val builder = BSGSBuilder.fromGenerators[P](subgroup.generators.toSeq)
+    val builder = BSGSBuilder.fromGenerators[P](subgroup.generators)
     builder.completeStrongGenerators
     builder.toBSGS
   }
