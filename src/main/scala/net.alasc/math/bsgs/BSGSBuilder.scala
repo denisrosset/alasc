@@ -54,6 +54,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
 
   def isFullyMutable: Boolean = (lastMutable ne null) && lastMutable.tail.isInstanceOf[BSGSTerm[P]]
 
+  /** Makes the chain fully immutable. */
   def makeImmutable: Unit = if (lastMutable ne null) {
     @tailrec def removePrev(node: BSGSMutableNode[P]): Unit = {
       val prevSave = node.prev
@@ -63,11 +64,13 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     lastMutable = null
   }
 
+  /** Converts the current chain to immutable, and returns it. */
   def toBSGS: BSGS[P] = {
     makeImmutable
     start
   }
 
+  /** Applies a function with side-effects to every mutable node. */
   def foreachMutable[A](f: BSGSMutableNode[P] => A): Unit = {
     @tailrec def rec(node: BSGSMutableNode[P]): Unit = {
       f(node)
@@ -78,6 +81,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       rec(lastMutable)
   }
 
+  /** Conjugates the BSGS chain using the given group element. */
   def conjugate(ip: InversePair[P]): this.type = {
     if (!isEmpty) {
       makeFullyMutable(sys.error("Cannot be empty"))
@@ -86,11 +90,13 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     this
   }
 
+  /** Finds the last node in the chain. */
   @tailrec def findLastNode(node: BSGSNode[P]): BSGSNode[P] = node.tail match {
     case _: BSGSTerm[P] => node
     case tailNode: BSGSNode[P] => findLastNode(tailNode)
   }
 
+  /** Makes the chain mutable up to the given node `upTo`. */
   def makeMutable(upTo: BSGSNode[P])(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = {
     @tailrec def createMutable(at: BSGSNode[P], prev: BSGSMutableNode[P]): BSGSMutableNode[P] =
       at match {
@@ -126,6 +132,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     else upTo.asInstanceOf[BSGSMutableNode[P]]
   }
 
+  /** Makes the chain fully mutable. */
   def makeFullyMutable(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): Unit = start match {
     case _: BSGSTerm[P] =>
       val newStart = builder(beta, None, start)
@@ -166,7 +173,8 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
   /** Adds the given generators to the BSGS chain, adding base elements
     * if necessary, and updates the transversals.
     * 
-    * Not tail recursive.
+    * Not tail recursive. The chain is not completed (either the randomized or the 
+    * deterministic Schreier-Sims algorithm should be used for that purpose).
     * 
     * @param generators  Sequence of generators. Must not contain the identity.
     */
@@ -189,6 +197,8 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     rec(mutableStartNode(generators.head.supportMin.max(0)), generators)
   }
 
+  /** Returns the start element if it is a mutable node, makes the start mutable if it is an immutable node,
+    * or creates a start node with base point `beta`. */
   def mutableStartNode(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = start match {
     case _: BSGSTerm[P] =>
       val newNode = builder(beta, None, start)
@@ -198,11 +208,13 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     case node: BSGSNode[P] => makeMutable(node)
   }
 
+  /** Returns the start element if it is a node, or creates a start node with base point `beta`. */
   def startNode(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSNode[P] = start match {
     case _: BSGSTerm[P] => mutableStartNode(beta)
     case node: BSGSNode[P] => node
   }
 
+  /** Tail-recursive method used by `siftAndUpdateBase`. */
   @tailrec def siftAndUpdateBaseFrom(node: BSGSNode[P], p: P)(implicit builder: BSGSMutableNodeBuilder): Option[(BSGSMutableNode[P], P)] = {
     val b = node.beta <|+| p
     if (!node.inOrbit(b)) return Some(makeMutable(node) -> p)
