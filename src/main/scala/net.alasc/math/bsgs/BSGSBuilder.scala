@@ -322,6 +322,84 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       lastMutable = newBuilder.lastMutable
   }
 
+  def baseChangeSwap(here: BSGSNode[P], newBase: List[Int])(implicit options: BSGSOptions): BSGSNode[P] =
+    if (here.baseEquals(newBase)) here else {
+      val mutableHere = makeMutable(here)
+      @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: List[Int]): Unit = remaining match {
+        case hd :: tl =>
+          changeBasePoint(mutableNode, hd) // mutableNode already mutable, no need to use the return value
+          rec(mutableNode, tl)
+        case Nil =>
+      }
+      rec(mutableHere, newBase)
+      mutableHere
+    }
+
+  @tailrec def findBasePoint(bsgs: BSGS[P], basePoint: Int): Option[BSGSNode[P]] = bsgs match {
+    case _: BSGSTerm[P] => None
+    case node: BSGSNode[P] if node.beta == basePoint => Some(node)
+    case node: BSGSNode[P] => findBasePoint(node.tail, basePoint)
+  }
+
+  def changeBasePoint(here: BSGSNode[P], basePoint: Int)(implicit options: BSGSOptions): BSGSNode[P] =
+    putExistingBasePointHere(here, basePoint).getOrElse {
+      val mutableHere = makeMutable(here)
+      insertBasePoint(mutableHere, basePoint)
+      changeBasePoint(mutableHere, basePoint)
+    }
+
+  /** Used to shift the existing `basePoint` at `node` position, if the chain
+    * already contains `basePoint`.
+    * 
+    * @return The destination node, or None if the chain does not contains `basePoint`.
+    */
+  def putExistingBasePointHere(dest: BSGSNode[P], basePoint: Int)(implicit options: BSGSOptions): Option[BSGSNode[P]] =
+    if (dest.beta == basePoint) Some(dest) else {
+      findBasePoint(dest, basePoint).map { toShift =>
+        val mutableDest = makeMutable(dest)
+        val mutableToShift = makeMutable(toShift)
+        @tailrec def rec(pos: BSGSMutableNode[P]): Unit =
+          if (pos ne mutableDest) {
+            baseSwap(pos.prev)
+            rec(pos.prev)
+          }
+        rec(mutableDest)
+        mutableDest
+      }
+    }
+
+  /** Inserts `basePoint` in the chain starting at `node`.
+    * 
+    * The chain must not already contain `basePoint`.
+    * 
+    * @return The newly inserted node.
+    */
+  @tailrec def insertBasePoint(node: BSGSMutableNode[P], basePoint: Int)(implicit options: BSGSOptions): BSGSMutableNode[P] = {
+    import OrbitInstances._
+    val orbit = ImmutableBitSet(basePoint) <|+| node.strongGeneratingSet
+    if (orbit.size > 1) {
+      node.tail match {
+        case _: BSGSTerm[P] => append(basePoint)
+        case node: BSGSNode[P] => insertBasePoint(makeMutable(node), basePoint)
+      }
+    } else {
+      if (node.prev eq node)
+        prepend(basePoint)
+      else {
+        val prevNode = node.prev
+        val newNode = options.mutableNodeBuilder(basePoint, Some(prevNode), node)
+        prevNode.tail = newNode
+        node.prev = newNode
+        newNode
+      }
+    }
+  }
+
+  def baseSwap(node: BSGSMutableNode[P])(implicit options: BSGSOptions) = options.algorithmType match {
+    case Deterministic => deterministicBaseSwap(node)
+    case Randomized => randomizedBaseSwap(node, options.randomGenerator)
+  }
+
   /** Swaps two adjacent nodes in the BSGS chain, and returns the first node after the swap, its tail
     * and the size goal for the orbit of the tail node.
     */
@@ -352,11 +430,6 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     node2.strongGeneratingSetPairs.foreach { ip => node2.updateTransversal(ip) }
 
     (node1, node2, (sizesProduct / node1.orbitSize).toInt)
-  }
-
-  def baseSwap(node: BSGSMutableNode[P])(implicit options: BSGSOptions) = options.algorithmType match {
-    case Deterministic => deterministicBaseSwap(node)
-    case Randomized => randomizedBaseSwap(node, options.randomGenerator)
   }
 
   /** Deterministic base swap.
