@@ -14,12 +14,12 @@ final class BigLengthOps[A](lhs: A)(implicit ev: BigLength[A]) {
   def bigLength(): BigInt = macro Ops.unop[BigInt]
 }
 
-final class IndexOps[A, T](lhs: T)(implicit ev: Index[A, T]) {
+final class IndexOps[T, A](lhs: T)(implicit ev: Index[T, A]) {
   def element(rhs: Int): A = macro Ops.binop[Int, A]
   def toIndexedSeq(): IndexedSeq[A] = macro Ops.unop[IndexedSeq[A]]
 }
 
-final class BigIndexOps[A, T](lhs: T)(implicit ev: BigIndex[A, T]) {
+final class BigIndexOps[T, A](lhs: T)(implicit ev: BigIndex[T, A]) {
   def bigElement(rhs: BigInt): A = macro Ops.binop[BigInt, A]
 }
 

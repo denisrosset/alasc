@@ -12,11 +12,11 @@ trait BigLengthSyntax {
 }
 
 trait IndexSyntax extends LengthSyntax {
-  implicit def indexSyntax[T, A](t: T)(implicit ev: Index[A, T]) = new IndexOps(t)
+  implicit def indexSyntax[T, A](t: T)(implicit ev: Index[T, A]) = new IndexOps(t)
 }
 
 trait BigIndexSyntax extends BigLengthSyntax {
-  implicit def bigIndexSyntax[T, A](t: T)(implicit ev: BigIndex[A, T]) = new BigIndexOps(t)
+  implicit def bigIndexSyntax[T, A](t: T)(implicit ev: BigIndex[T, A]) = new BigIndexOps(t)
 }
 
 trait FiniteGroupSyntax {
@@ -30,7 +30,6 @@ trait PermutationSyntax extends FiniteGroupSyntax {
 trait ShiftablePermutationSyntax extends FiniteGroupSyntax {
   implicit def shiftablePermutationSyntax[A: ShiftablePermutation](a: A) = new ShiftablePermutationOps(a)
 }
-
 
 trait SubgroupSyntax {
   implicit def subgroupSyntax[S, G](s: S)(implicit ev: Subgroup[S, G]) = new SubgroupOps(s)
