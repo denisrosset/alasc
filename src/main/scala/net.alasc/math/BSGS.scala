@@ -124,23 +124,19 @@ object BSGS {
    * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
    */
   def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
-    val buffer = new BSGSBuilder[P]
-    while (buffer.chain.order < subgroup.order) {
-      for ( (node, p) <- buffer.siftAndUpdateBase(subgroup.random(gen)))
-        buffer.addGenerators(Seq(p))
+    val builder = new BSGSBuilder[P]
+    while (builder.chain.order < subgroup.order) {
+      for ( (node, p) <- builder.siftAndUpdateBase(subgroup.random(gen)) )
+        node.addStrongGeneratorHere(p)
     }
-    buffer.toBSGS
+    builder.toBSGS
   }
-/*
-  def fromSubgroup[S, P](subgroup: S)(implicit algebra: Permutation[P], sg: Subgroup[S, P], tb: TransversalBuilder): BSGS[P] = {
-    val buffer = new BSGSBuffer[P]
-    while (buffer.chain.order < subgroup.order)
-      buffer.sift(subgroup.random(gen)) match {
-        case Some((node,  p)) => buffer.updateUpTo(node, p)
-        case None =>
-      }
-    buffer.toBSGS
-  }*/
+
+  def fromSubgroup[S, P](subgroup: S)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
+    val builder = BSGSBuilder.fromGenerators[P](subgroup.generators.toSeq)
+    builder.completeStrongGenerators
+    builder.toBSGS
+  }
 }
 
 final class BSGSSubgroup[P](implicit val algebra: Permutation[P]) extends Subgroup[BSGS[P], P] {

@@ -9,16 +9,6 @@ import net.alasc.algebra._
 import net.alasc.syntax.permutation._
 import net.alasc.syntax.subgroup._
 
-object BSGSBuilder {
-  /** Constructs a BSGS builder from an immutable BSGS chain. */
-  def apply[P](immutableBSGS: BSGS[P]): BSGSBuilder[P] = {
-    assert(immutableBSGS.isImmutable)
-    val builder = new BSGSBuilder()(immutableBSGS.algebra)
-    builder.start = immutableBSGS
-    builder
-  }
-}
-
 /** Builder for a BSGS chain.
   * 
   * A BSGSBuilder can be in three different states:
@@ -136,7 +126,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     else upTo.asInstanceOf[BSGSMutableNode[P]]
   }
 
-  def makeFullyMutable(beta: Int)(implicit builder: BSGSMutableNodeBuilder): Unit = start match {
+  def makeFullyMutable(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): Unit = start match {
     case _: BSGSTerm[P] =>
       val newStart = builder(beta, None, start)
       start = newStart
@@ -173,44 +163,30 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
         lastMutable = newNode
     }
 
-  /** Prepares the chain such that it starts with mutable base elements such that no generator
-    * stabilizes all of them.
-    * 
-    * @param generators  Non-empty sequence of generators. Must not contain the identity.
-    * @return the node at the end of the mutable base
-    */
-  def mutableBaseForGenerators(generators: Seq[P])(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = {
-    @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: Seq[P]): BSGSMutableNode[P] = {
-      val nextRemaining = remaining.filterNot(g => (mutableNode.beta <|+| g) != mutableNode.beta)
-      if (nextRemaining.isEmpty)
-        mutableNode
-      else mutableNode.tail match {
-        case _: BSGSTerm[P] =>
-          val nextBeta = nextRemaining.head.supportMin
-          assert(nextBeta != -1)
-          rec(append(nextBeta), nextRemaining)
-        case tailNode: BSGSNode[P] =>
-          rec(makeMutable(tailNode), nextRemaining)
-      }
-    }
-    rec(mutableStartNode(generators.head.supportMin), generators)
-  }
-
   /** Adds the given generators to the BSGS chain, adding base elements
     * if necessary, and updates the transversals.
+    * 
+    * Not tail recursive.
     * 
     * @param generators  Sequence of generators. Must not contain the identity.
     */
   def addGenerators(generators: Seq[P])(implicit builder: BSGSMutableNodeBuilder): Unit = {
     if (generators.isEmpty) return
 
-    @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: Seq[P]): Unit = {
-      val (generatorsThere, newRemaining) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
+    def rec(mutableNode: BSGSMutableNode[P], remaining: Seq[P]): Unit = {
+      val (generatorsThere, nextRemaining) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
+      if (!nextRemaining.isEmpty) {
+        mutableNode.tail match {
+          case _: BSGSTerm[P] =>
+            val nextBeta = nextRemaining.head.supportMin
+            assert(nextBeta != -1)
+            rec(append(nextBeta), nextRemaining)
+          case tailNode: BSGSNode[P] => rec(makeMutable(tailNode), nextRemaining)
+        }
+      }
       generatorsThere.foreach( mutableNode.addStrongGeneratorHere(_) )
-      if (mutableNode.prev ne mutableNode)
-        rec(mutableNode.prev, newRemaining)
     }
-    rec(mutableBaseForGenerators(generators), generators)
+    rec(mutableStartNode(generators.head.supportMin.max(0)), generators)
   }
 
   def mutableStartNode(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = start match {
@@ -268,6 +244,8 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       for (x <- node.strongGeneratingSet) {
         val i = b <|+| x
         val ubx = ub |+| x
+        if (!node.inOrbit(i))
+          return Some(makeMutable(node) -> x)
         if (ubx =!= node.u(i)) {
           val schreierGen = ubx |+| node.uInv(i)
           siftAndUpdateBaseFrom(node, schreierGen) match {
@@ -279,14 +257,50 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     }
     None
   }
-/*
-  def completeStrongGenerators(implicit builder: BSGSMutableNodeBuilder): Unit = {
-    def rec(node: BSGSNode[P])(implicit tb: TransversalBuilder): Unit = {
-      findNewStrongGeneratorAt
+
+  /** Deterministic Schreier-Sims algorithm. */
+  def completeStrongGenerators: Unit =
+    if (!isEmpty) {
+      makeFullyMutable(sys.error("Not empty"))
+      completeStrongGeneratorsAt(lastMutable)
     }
-    start match {
-      case _: BSGSTerm[P] =>
-      case node: BSGSNode[P] = rec(findLastNode(node))
+
+  /** Completes the set of strong generators starting at `node`, assuming that `node.tail` is already completed.
+    * 
+    * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
+    */
+  @tailrec def completeStrongGeneratorsAt(node: BSGSMutableNode[P])(implicit builder: BSGSMutableNodeBuilder): Unit =
+    findNewStrongGeneratorAt(node) match {
+      // current node does not have new strong generators, but node has parent that has to be completed
+      case None if node.prev ne node => completeStrongGeneratorsAt(node.prev)
+      // current node does not have new strong generators, and current node starts the chain, we are finished
+      case None if node.prev eq node =>
+      case Some((where, newGenerator)) =>
+        where.addStrongGeneratorHere(newGenerator)
+        completeStrongGeneratorsAt(where)
     }
-  }*/
+}
+
+object BSGSBuilder {
+  def empty[P: Permutation] = new BSGSBuilder
+  /** Constructs a BSGS builder from an immutable BSGS chain. */
+  def apply[P](immutableBSGS: BSGS[P]): BSGSBuilder[P] = {
+    assert(immutableBSGS.isImmutable)
+    implicit def algebra = immutableBSGS.algebra
+    val builder = empty
+    builder.start = immutableBSGS
+    builder
+  }
+
+  def fromBase[P: Permutation](base: Iterable[Int])(implicit nb: BSGSMutableNodeBuilder): BSGSBuilder[P] = {
+    val builder = empty
+    base.foreach( builder.append(_) )
+    builder
+  }
+
+  def fromGenerators[P: Permutation](generators: Seq[P], base: Iterable[Int] = Iterable.empty) = {
+    val builder = fromBase(base)
+    builder.addGenerators(generators)
+    builder
+  }
 }
