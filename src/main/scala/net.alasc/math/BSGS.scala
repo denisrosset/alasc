@@ -63,6 +63,8 @@ sealed trait BSGS[P] {
 
   def base: List[Int] = BSGSRec.base(this)
 
+  def baseEquals(baseToCheck: List[Int]) = BSGSRec.baseEquals(this, baseToCheck)
+
   def basicSift(p: P): (List[Int], P) = BSGSRec.basicSift(this, p)
 
   def conjugatedBy(ip: InversePair[P]): BSGS[P]

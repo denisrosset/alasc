@@ -32,6 +32,12 @@ object BSGSRec {
     case node: BSGSNode[P] => base(node.tail, buffer += node.beta)
   }
 
+  @tailrec final def baseEquals[P](bsgs: BSGS[P], baseToCheck: List[Int]): Boolean = (bsgs, baseToCheck) match {
+    case (_: BSGSTerm[P], Nil) => true
+    case (node: BSGSNode[P], hd :: tl) if node.beta == hd => baseEquals(node.tail, tl)
+    case _ => false
+  }
+
   @tailrec final def length[P](bsgs: BSGS[P], acc: Int = 0): Int = bsgs match {
     case _: BSGSTerm[P] => acc
     case node: BSGSNode[P] => length(node.tail, acc + 1)
