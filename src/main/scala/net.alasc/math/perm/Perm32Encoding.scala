@@ -5,6 +5,7 @@ import net.alasc.algebra._
 import scala.collection.immutable.BitSet
 import spire.syntax.signed._
 import spire.syntax.groupAction._
+import net.alasc.util.LongBits
 
 /** 5 bits per permutation image shift * 32 images = 160 bits.
   * 

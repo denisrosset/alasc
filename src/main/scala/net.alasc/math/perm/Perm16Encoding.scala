@@ -6,6 +6,7 @@ import scala.collection.immutable.BitSet
 import net.alasc.syntax.permutation._
 import spire.syntax.groupAction._
 import spire.syntax.signed._
+import net.alasc.util.LongBits
 
 /** Permutation with domain in [0, 15] encoded in a Long used as a bit string.
   * 
