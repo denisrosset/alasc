@@ -41,7 +41,7 @@ final class ShiftablePermutationOps[A](lhs: A)(implicit ev: ShiftablePermutation
 
 final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def elements(): Iterable[G] = macro Ops.unop[Iterable[G]]
-  def generators(): Seq[G] = macro Ops.unop[Seq[G]]
+  def generators(): Iterable[G] = macro Ops.unop[Iterable[G]]
   def order(): BigInt = macro Ops.unop[BigInt]
   def random(rhs: Random): G = macro Ops.binop[Random, G]
   def contains(rhs: G): Boolean = macro Ops.binop[G, Boolean]
