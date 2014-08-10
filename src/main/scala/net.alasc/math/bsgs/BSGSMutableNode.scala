@@ -46,12 +46,6 @@ import net.alasc.algebra._
     rec(this)
   }
 
-  def orbitSet = {
-    val bitset = MutableBitSet.empty
-    foreachOrbit { bitset += _ }
-    bitset.toImmutable
-  }
-
   def conjugateThisNode(ip: InversePair[P]): Unit
 }
 

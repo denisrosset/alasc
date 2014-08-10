@@ -1,6 +1,7 @@
 package net.alasc.math
 
-import scala.collection.BitSet
+import scala.collection.immutable.{ BitSet => ImmutableBitSet }
+import scala.collection.mutable.{ BitSet => MutableBitSet }
 import scala.util.Random
 import scala.annotation.tailrec
 
@@ -100,10 +101,15 @@ trait BSGSNode[P] extends BSGS[P] {
   def beta: Int
 
   def orbitSize: Int
-  def orbitSet: BitSet
+
   def inOrbit(b: Int): Boolean
   def orbit: Iterable[Int]
   def foreachOrbit[U](f: Int => U): Unit
+  def orbitSet: ImmutableBitSet = {
+    val bitset = MutableBitSet.empty
+    foreachOrbit { bitset += _ }
+    bitset.toImmutable
+  }
   def randomOrbit(rand: Random): Int
 
   def iterable: Iterable[(Int, InversePair[P])]
