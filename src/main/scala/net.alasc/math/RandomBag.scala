@@ -18,16 +18,16 @@ import spire.syntax.group._
   *       section 3.2.2, pp. 70-71 of Holt
   */
 class RandomBag[G: Group] private[math](private var x0: G, private var x: ArraySeq[G]) {
-  def get(implicit gen: Random) = {
+  def random(rand: Random) = {
     val r = x.length
-    val s = gen.nextInt(r)
+    val s = rand.nextInt(r)
     @tailrec def genNotS: Int = {
-      val num = gen.nextInt(r)
+      val num = rand.nextInt(r)
       if (num != s) num else genNotS
     }
     val t = genNotS
-    if (gen.nextBoolean) {
-      if (gen.nextBoolean) { // e = 1
+    if (rand.nextBoolean) {
+      if (rand.nextBoolean) { // e = 1
         x(s) = x(s) |+| x(t)
         x0 = x0 |+| x(s)
       } else { // e = -1
@@ -35,7 +35,7 @@ class RandomBag[G: Group] private[math](private var x0: G, private var x: ArrayS
         x0 = x0 |+| x(s)
       }
     } else {
-      if (gen.nextBoolean) { // e = 1
+      if (rand.nextBoolean) { // e = 1
         x(s) = x(t) |+| x(s)
         x0 = x(s) |+| x0
       } else { // e = -1
@@ -48,17 +48,15 @@ class RandomBag[G: Group] private[math](private var x0: G, private var x: ArrayS
 }
 
 object RandomBag {
-  def apply[G: Group](xseq: Seq[G], r: Int, n: Int = 50, gen: Random = Random): RandomBag[G] = {
-    val k = xseq.length
-    require(r >= k)
-    require(r >= 10)
-    val x = (if (k == 0)
-      ArraySeq.fill(r)(implicitly[Group[G]].id)
+  def apply[G](xiterable: Iterable[G], givenR: Int = -1, n: Int = 50, rand: Random = Random)(implicit algebra: Group[G]): RandomBag[G] = {
+    val k = xiterable.size
+    val r = if (givenR < k || givenR < 10) k.max(10) else givenR
+    val x = if (k == 0)
+      ArraySeq.fill(r)(algebra.id)
     else
-      ArraySeq.tabulate(r)(i => xseq(i % k))
-    )
-    val bag = new RandomBag(implicitly[Group[G]].id, x)
-    for (i <- 0 until n) bag.get(gen)
+      Iterator.continually(xiterable).flatMap(identity).take(r).to[ArraySeq]
+    val bag = new RandomBag(algebra.id, x)
+    for (i <- 0 until n) bag.random(rand)
     bag
   }
 }
