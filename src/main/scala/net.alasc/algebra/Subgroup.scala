@@ -9,8 +9,8 @@ trait Subgroup[S, G] {
   implicit val algebra: FiniteGroup[G]
   /** Iterable through the subgroup elements. */
   def elements(s: S): Iterable[G]
-  /** Sequence of the subgroup generators. */
-  def generators(s: S): Seq[G]
+  /** Iterable of the subgroup generators. */
+  def generators(s: S): Iterable[G]
   /** Order of the subgroup `s`. */
   def order(s: S): BigInt
   /** Generates a random element of the group. */ 
