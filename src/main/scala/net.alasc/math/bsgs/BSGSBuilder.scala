@@ -139,13 +139,13 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     else upTo.asInstanceOf[BSGSMutableNode[P]]
   }
 
-  /** Makes the chain fully mutable. */
-  def makeFullyMutable(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): Unit = start match {
-    case _: BSGSTerm[P] =>
-      val newStart = builder(beta, None, start)
-      start = newStart
-      lastMutable = newStart
-    case node: BSGSNode[P] => if (!isFullyMutable) makeMutable(findLastNode(node))
+  /** Makes the chain fully mutable. Returns the mutable start node. */
+  def makeFullyMutable(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = start match {
+    case _: BSGSTerm[P] => mutableStartNode(beta)
+    case node: BSGSNode[P] =>
+      if (!isFullyMutable)
+        makeMutable(findLastNode(node))
+      start.asInstanceOf[BSGSMutableNode[P]]
   }
 
   /** Appends a new base point to the BSGS chain. */
