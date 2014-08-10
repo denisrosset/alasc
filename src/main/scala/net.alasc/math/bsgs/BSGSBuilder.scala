@@ -99,7 +99,11 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     case tailNode: BSGSNode[P] => findLastNode(tailNode)
   }
 
-  /** Makes the chain mutable up to the given node `upTo`. */
+  /** Makes the chain mutable up to the given node `upTo`.
+    * 
+    * @note A call to `makeMutable` invalidates all references to immutable nodes before
+    *       the node made mutable in the chain.
+    */
   def makeMutable(upTo: BSGSNode[P])(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = {
     @tailrec def createMutable(at: BSGSNode[P], prev: BSGSMutableNode[P]): BSGSMutableNode[P] =
       at match {
