@@ -352,6 +352,18 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     case Randomized => randomizedBaseSwap(node, options.randomGenerator)
   }
 
+  /** Deterministic base swap.
+    * 
+    * @param node First base point to swap with its tail.
+    * 
+    * @return the two swapped mutable nodes.
+    * 
+    * Based on Derek Holt "Handbook of Computational Group Theory", 2005, page 103.
+    * Note that their line 3 is wrong, betaT has to be used instead of betaT1.
+    * 
+    * See also http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf for an alternate
+    * implementation.
+    */
   def deterministicBaseSwap(node: BSGSMutableNode[P])(implicit builder: BSGSMutableNodeBuilder): (BSGSMutableNode[P], BSGSMutableNode[P]) = {
     import OrbitInstances._
     val nodeCopy = builder(node, None)
@@ -382,6 +394,14 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     (node1, node2)
   }
 
+  /** Randomized base swap.
+    * 
+    * @param node First base point to swap with its tail.
+    * 
+    * @return the two swapped mutable nodes.
+    * 
+    * Based on algorithm 2.8 of http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf .
+    */
   def randomizedBaseSwap(node: BSGSMutableNode[P], rand: Random)(implicit builder: BSGSMutableNodeBuilder): (BSGSMutableNode[P], BSGSMutableNode[P]) = {
     val nodeCopy = builder(node, None)
     val (node1, node2, sizeGoal2) = baseSwapBase(node)
