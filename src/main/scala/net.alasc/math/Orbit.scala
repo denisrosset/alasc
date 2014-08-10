@@ -8,8 +8,8 @@ import scala.collection.mutable.{Set => MutableSet, BitSet => MutableBitSet}
 object OrbitInstances {
   implicit def setElementOrbit[P, G](implicit scalarAction: GroupAction[P, G]): GroupAction[Set[P], G] = new SetElementOrbit
   implicit def bitSetElementOrbit[P, G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, G] = new BitSetElementOrbit
-    implicit def setIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]): GroupAction[Set[P], Seq[G]] = new SetIterableOrbit
-  implicit def bitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, Seq[G]] = new BitSetIterableOrbit
+  implicit def setIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]): GroupAction[Set[P], Iterable[G]] = new SetIterableOrbit
+  implicit def bitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, Iterable[G]] = new BitSetIterableOrbit
 }
 
 class SetElementOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends GroupAction[Set[P], G] {
@@ -82,8 +82,8 @@ class BitSetElementOrbit[G](implicit intAction: GroupAction[Int, G]) extends Gro
   }
 }
 
-class SetIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends GroupAction[Set[P], Seq[G]] {
-  def actl(gs: Seq[G], set: Set[P]) = {
+class SetIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends GroupAction[Set[P], Iterable[G]] {
+  def actl(gs: Iterable[G], set: Set[P]) = {
     var res = set
     var toCheck = set
     while (!toCheck.isEmpty) {
@@ -99,7 +99,7 @@ class SetIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends G
     }
     res
   }
-  def actr(set: Set[P], gs: Seq[G]) = {
+  def actr(set: Set[P], gs: Iterable[G]) = {
     var res = set
     var toCheck = set
     while (!toCheck.isEmpty) {
@@ -117,8 +117,8 @@ class SetIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends G
   }
 }
 
-class BitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]) extends GroupAction[BitSet, Seq[G]] {
-  def actl(gs: Seq[G], set: BitSet) = {
+class BitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]) extends GroupAction[BitSet, Iterable[G]] {
+  def actl(gs: Iterable[G], set: BitSet) = {
     var res = MutableBitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
@@ -134,7 +134,7 @@ class BitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]) extends
     }
     res.toImmutable
   }
-  def actr(set: BitSet, gs: Seq[G]) = {
+  def actr(set: BitSet, gs: Iterable[G]) = {
     var res = MutableBitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
