@@ -1,79 +1,70 @@
 package net.alasc.math
 
-import scala.annotation.tailrec
+import scala.collection.BitSet
 import scala.util.Random
+import scala.annotation.tailrec
+
 import spire.syntax.group._
-import spire.syntax.groupAction._
+
+import bsgs.{BSGSRec, BSGSBuilder, BSGSMutableNodeBuilder}
 import net.alasc.algebra._
-import bsgs._
-import scala.collection.mutable.ListBuffer
 import net.alasc.syntax.subgroup._
 
-object BSGSRec {
-  @tailrec final def base[P](bsgs: BSGS[P], buffer: ListBuffer[Int]): List[Int] = bsgs match {
-    case _: BSGSTerm[P] => buffer.toList
-    case node: BSGSNode[P] => base(node.tail, buffer += node.beta)
-  }
-
-  @tailrec final def length[P](bsgs: BSGS[P], acc: Int): Int = bsgs match {
-    case _: BSGSTerm[P] => acc
-    case node: BSGSNode[P] => length(node.tail, acc + 1)
-  }
-
-  @tailrec def basicSift[P: Permutation](bsgs: BSGS[P], remaining: P, transversalIndices: ListBuffer[Int]): (List[Int], P) = bsgs match {
-    case _: BSGSTerm[P] => (transversalIndices.toList, remaining)
-    case node: BSGSNode[P] =>
-      val b = node.beta <|+| remaining
-      if (!node.transversal.isDefinedAt(b))
-        (transversalIndices.toList, remaining)
-      else {
-        val nextRemaining = remaining |+| node.transversal(b).gInv
-        basicSift(node.tail, nextRemaining, transversalIndices += b)
-      }
-    }
-}
-
-/** Implementation of a BSGS chain as a single linked list.
-  * 
-  * Inspired by scala.collection.immutable.List.
-  */
-sealed abstract class BSGS[P] {
+/** Implementation of a BSGS chain as a single linked list. */
+sealed trait BSGS[P] {
   implicit def algebra: Permutation[P]
+
+  /** Tests whether this element terminates the BSGS chain. */
   def isTerminal: Boolean
+
+  def mapOrElse[A](f: BSGSNode[P] => A, default: => A): A = this match {
+    case node: BSGSNode[P] => f(node)
+    case _: BSGSTerm[P] => default
+  }
+
+  /** Tests whether this node is mutable. */
+  def isImmutable: Boolean
 
   /** If the base is beta(1) -> ... -> beta(m-1) -> beta(m) current base -> tail.beta,
     * ownGenerators contains all the strong generators g that have beta(i) <|+| g = beta(i) for i < m,
     * and beta(m) <|+| g =!= beta(m).
     */
-  def ownGenerators: List[P]
+  def ownGenerators: Iterable[P]
+  def ownGeneratorsPairs: Iterable[InversePair[P]]
 
-  def strongGeneratingSet: Iterable[P] = new Iterable[P] {
+  /** Returns the strong generating set for the BSGS chain starting from this node.
+    * 
+    * @note The strong generating set is stored piece by piece by having each
+    *       node storing explicitly only the generators appearing at its level.
+    */
+  def strongGeneratingSet: Iterable[P] = chain.flatMap(_.ownGenerators)
+
+  def strongGeneratingSetPairs: Iterable[InversePair[P]] = chain.flatMap(_.ownGeneratorsPairs)
+
+  /** Iterable for the nodes of the chain. */
+  def chain: Iterable[BSGSNode[P]] = new Iterable[BSGSNode[P]] {
     override def stringPrefix = "Iterable"
-    def iterator: Iterator[P] = for {
-      chain <- BSGS.this.iterator
-      p <- chain.ownGenerators
-    } yield p
-  }
-
-  def iterator: Iterator[BSGSNode[P]] = new Iterator[BSGSNode[P]] {
-    private var cursor: BSGS[P] = BSGS.this
-    def hasNext = !cursor.isTerminal
-    def next = cursor match {
-      case _: BSGSTerm[P] => Iterator.empty.next
-      case node: BSGSNode[P] =>
-        val result = node
-        cursor = node.tail
-        result
+    override def foreach[U](f: BSGSNode[P] ⇒ U): Unit = BSGSRec.foreach(BSGS.this, f)
+    def iterator: Iterator[BSGSNode[P]] = new Iterator[BSGSNode[P]] {
+      private var cursor: BSGS[P] = BSGS.this
+      def hasNext = !cursor.isTerminal
+      def next = cursor match {
+        case _: BSGSTerm[P] => Iterator.empty.next
+        case node: BSGSNode[P] =>
+          val result = node
+          cursor = node.tail
+          result
+      }
     }
   }
 
-  def length: Int
+  def length: Int = BSGSRec.length(this)
 
-  def base: List[Int]
+  def base: List[Int] = BSGSRec.base(this)
 
-  def basicSift(p: P): (List[Int], P) = BSGSRec.basicSift(this, p, ListBuffer.empty[Int])
+  def basicSift(p: P): (List[Int], P) = BSGSRec.basicSift(this, p)
 
-  def conjugatedBy(ip: InversePair[P]): BSGS[P] = ???
+  def conjugatedBy(ip: InversePair[P]): BSGS[P]
 
   def conjugatedBy(p: P): BSGS[P] = conjugatedBy(InversePair(p, p.inverse))
 
@@ -87,38 +78,57 @@ sealed abstract class BSGS[P] {
   def checkFixBase(partialBase: List[Int]): Unit = ???
 }
 
-final class BSGSNode[P](private[alasc] var tv: Transversal[P], private[alasc] var og: List[P], private[alasc] var tl: BSGS[P])(implicit val algebra: Permutation[P]) extends BSGS[P] {
-  def isTerminal = false
-  def tail = tl
-  def transversal = tv
-  def beta = transversal.beta
-  def ownGenerators = og
-  def length: Int = BSGSRec.length(tail, 1)
-  def base = BSGSRec.base(tail, ListBuffer(beta))
-}
-
 final class BSGSTerm[P](implicit val algebra: Permutation[P]) extends BSGS[P] {
   def isTerminal = true
-  def ownGenerators = Nil
-  def length = 0
-  def base = Nil
+  def isImmutable = true
+  def ownGenerators = Seq.empty
+  def ownGeneratorsPairs = Seq.empty
+
+  def conjugatedBy(ip: InversePair[P]) = this
+}
+
+/** Node in a BSGS chain.
+  * 
+  * See `BSGSMutableNode` and `BSGSBuilder` for a discussion of mutable nodes.
+  * 
+  * The set of strong generators is represented by storing with each node only the strong generators that stabilize
+  * the previous base points, but not the node corresponding base point.
+  */
+trait BSGSNode[P] extends BSGS[P] {
+  def isTerminal = false
+  def tail: BSGS[P]
+  def beta: Int
+
+  def orbitSize: Int
+  def orbitSet: BitSet
+  def inOrbit(b: Int): Boolean
+  def orbit: Iterable[Int]
+  def foreachOrbit[U](f: Int => U): Unit
+  def randomOrbit(rand: Random): Int
+
+  def iterable: Iterable[(Int, InversePair[P])]
+  def foreachU[N](f: P => N): Unit
+  def uPair(b: Int): InversePair[P]
+  def u(b: Int): P
+  def uInv(b: Int): P
+  def randomU(rand: Random): P
 }
 
 object BSGS {
 
-  implicit def BSGSSubgroup[P](implicit algebra: Permutation[P]): Subgroup[BSGS[P], P] =
-    new BSGSSubgroup[P]
+  implicit def BSGSSubgroup[P](implicit algebra: Permutation[P]): Subgroup[BSGS[P], P] = new BSGSSubgroup[P]
 
   /* Randomized BSGS Schreier-Sims using the provided subgroup instance, which provides
    * the known order of the group and a procedure to generate random elements.
    * 
    * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
    */
-  def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], tb: TransversalBuilder): BSGS[P] = {
-    val buffer = new BSGSBuffer[P]
-    while (buffer.chain.order < subgroup.order)
+  def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
+    val buffer = new BSGSBuilder[P]
+    while (buffer.chain.order < subgroup.order) {
       for ( (node, p) <- buffer.siftAndUpdateBase(subgroup.random(gen)))
-        buffer.updateFromStart(node, p)
+        buffer.addGenerators(Seq(p))
+    }
     buffer.toBSGS
   }
 /*
@@ -134,35 +144,11 @@ object BSGS {
 }
 
 final class BSGSSubgroup[P](implicit val algebra: Permutation[P]) extends Subgroup[BSGS[P], P] {
-  def elementsIterator(bsgs: BSGS[P]): Iterator[P] = bsgs match {
-    case _: BSGSTerm[P] => Iterator(algebra.id)
-    case node: BSGSNode[P] => for {
-      rest <- elementsIterator(node.tail)
-      b <- node.transversal.keysIterator
-    } yield rest |+| node.transversal(b).g
-  }
-
   def elements(bsgs: BSGS[P]): Iterable[P] = new Iterable[P] {
     override def stringPrefix = "Elements"
-    def iterator = elementsIterator(bsgs)
+    def iterator = BSGSRec.elementsIterator(bsgs)
   }
-
-  @tailrec def orderRec(bsgs: BSGS[P], acc: BigInt): BigInt = bsgs match {
-    case _: BSGSTerm[P] => acc
-    case node: BSGSNode[P] => orderRec(node.tail, acc * node.transversal.size)
-  }
-
-  def order(bsgs: BSGS[P]): BigInt = orderRec(bsgs, BigInt(1))
-
-  def generators(bsgs: BSGS[P]): Seq[P] = bsgs.strongGeneratingSet.toSeq
-
-  @tailrec def randomRec(bsgs: BSGS[P], rand: Random, acc: P): P = bsgs match {
-    case _: BSGSTerm[P] => acc
-    case node: BSGSNode[P] => randomRec(node.tail, rand, node.transversal.random(rand).g |+| acc)
-  }
-
-  def random(bsgs: BSGS[P], rand: Random) = bsgs match {
-    case _: BSGSTerm[P] => algebra.id
-    case node: BSGSNode[P] => randomRec(node.tail, rand, node.transversal.random(rand).g)
-  }
+  def order(bsgs: BSGS[P]): BigInt = BSGSRec.order(bsgs, BigInt(1))
+  def generators(bsgs: BSGS[P]): Iterable[P] = bsgs.strongGeneratingSet
+  def random(bsgs: BSGS[P], rand: Random) = bsgs.mapOrElse(node => BSGSRec.random(node.tail, rand, node.randomU(rand)), algebra.id)
 }
