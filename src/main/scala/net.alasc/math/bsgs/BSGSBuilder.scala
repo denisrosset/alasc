@@ -164,10 +164,12 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     * 
     * @param beta  New base point to prepend, must be fixed by all strong generators
     *              for the chain to stay valid after insertion.
+    * 
+    * @return the new prepended node.
     */
-  def preprend(beta: Int)(implicit builder: BSGSMutableNodeBuilder) =
+  def prepend(beta: Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] =
     if (isEmpty)
-      makeFullyMutable(beta)
+      mutableStartNode(beta)
     else {
       val newNode = builder(beta, None, start)
       if (!start.isImmutable)
@@ -175,6 +177,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       start = newNode
       if (lastMutable eq null)
         lastMutable = newNode
+      newNode
     }
 
   /** Adds the given generators to the BSGS chain, adding base elements
