@@ -1,10 +1,13 @@
 package net.alasc.math
 package bsgs
 
+import scala.annotation.tailrec
+import scala.collection.mutable.{BitSet => MutableBitSet}
+import scala.collection.immutable.{BitSet => ImmutableBitSet}
+import scala.util.Random
 import spire.syntax.groupAction._
 import spire.syntax.group._
 import spire.syntax.eq._
-import scala.annotation.tailrec
 import net.alasc.algebra._
 import net.alasc.syntax.permutation._
 import net.alasc.syntax.subgroup._
@@ -310,6 +313,89 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       }
       start = newBuilder.start
       lastMutable = newBuilder.lastMutable
+  }
+
+  /** Swaps two adjacent nodes in the BSGS chain, and returns the first node after the swap, its tail
+    * and the size goal for the orbit of the tail node.
+    */
+  def baseSwapBase(node1Before: BSGSMutableNode[P]): (BSGSMutableNode[P], BSGSMutableNode[P], Int) = {
+    val node2Before = node1Before.tail.mapOrElse(makeMutable(_), sys.error("Node must have a tail node to be swapped."))
+    val sizesProduct = BigInt(node1Before.orbitSize) * BigInt(node2Before.orbitSize)
+
+    val node1BeforePrevOption = if (node1Before.prev eq node1Before) None else Some(node1Before.prev)
+    val node1Beta = node2Before.beta
+    val node2Beta = node1Before.beta
+    val node2Tail = node2Before.tail
+
+    val node1 = node2Before
+    val node2 = node1Before
+    val node2OwnGenerators = node1Before.ownGeneratorsPairs.filter(g => (node1Beta <|+| g) == node1Beta)
+
+    node1.prev = node1BeforePrevOption.getOrElse(node1)
+    node1.tail = node2
+    node1.beta = node1Beta
+    node1.clearTransversalAndKeepOwnGenerators
+    node2.prev = node1
+    node2.tail = node2Tail
+    if (!node2Tail.isImmutable) { node2Tail.asInstanceOf[BSGSMutableNode[P]].prev = node2 }
+    node2.beta = node2Beta
+    node2.clearTransversalAndReplaceOwnGenerators(node2OwnGenerators)
+
+    node1.strongGeneratingSetPairs.foreach { ip => node1.updateTransversal(ip) }
+    node2.strongGeneratingSetPairs.foreach { ip => node2.updateTransversal(ip) }
+
+    (node1, node2, (sizesProduct / node1.orbitSize).toInt)
+  }
+
+  def baseSwap(node: BSGSMutableNode[P])(implicit options: BSGSOptions) = options.algorithmType match {
+    case Deterministic => deterministicBaseSwap(node)
+    case Randomized => randomizedBaseSwap(node, options.randomGenerator)
+  }
+
+  def deterministicBaseSwap(node: BSGSMutableNode[P])(implicit builder: BSGSMutableNodeBuilder): (BSGSMutableNode[P], BSGSMutableNode[P]) = {
+    import OrbitInstances._
+    val nodeCopy = builder(node, None)
+    val gammaSet = MutableBitSet.empty ++ node.orbit
+    val (node1, node2, sizeGoal2) = baseSwapBase(node)
+    gammaSet -= node1.beta
+    gammaSet -= node2.beta
+    while (node2.orbitSize < sizeGoal2) {
+      val gamma = gammaSet.head
+      val ipx@InversePair(x, xInv) = nodeCopy.uPair(gamma)
+      val b = node2.beta <|+| xInv
+      if (!node2.inOrbit(b))
+        gammaSet --= ImmutableBitSet(gamma) <|+| node1.strongGeneratingSet
+      else {
+        val ipy = node2.uPair(b)
+        val ipyx = ipy |+| ipx
+        if (!node2.inOrbit(node2.beta <|+| ipyx)) {
+          node2.addToOwnGenerators(ipyx)
+          node2.updateTransversal(ipyx)
+          node1.updateTransversal(ipyx)
+          gammaSet --= ImmutableBitSet(node2.beta) <|+| node1.strongGeneratingSet
+        }
+        // TODO: what happens if node2.inOrbit is true ?
+        // gamma will not be removed from gammaSet
+        // and deterministicBaseSwap could loop forever
+      }
+    }
+    (node1, node2)
+  }
+
+  def randomizedBaseSwap(node: BSGSMutableNode[P], rand: Random)(implicit builder: BSGSMutableNodeBuilder): (BSGSMutableNode[P], BSGSMutableNode[P]) = {
+    val nodeCopy = builder(node, None)
+    val (node1, node2, sizeGoal2) = baseSwapBase(node)
+    while (node2.orbitSize < sizeGoal2) {
+      val g = nodeCopy.randomU(rand)
+      val h = g |+| node1.uInv(node1.beta <|+| g)
+      val hPair = InversePair(h, h.inverse)
+      if (!node2.inOrbit(node2.beta <|+| h)) {
+        node2.addToOwnGenerators(hPair)
+        node2.updateTransversal(hPair)
+        node1.updateTransversal(hPair)
+      }
+    }
+    (node1, node2)
   }
 }
 

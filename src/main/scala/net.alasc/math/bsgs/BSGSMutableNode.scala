@@ -47,6 +47,9 @@ import net.alasc.algebra._
   }
 
   def conjugateThisNode(ip: InversePair[P]): Unit
+
+  def clearTransversalAndKeepOwnGenerators: Unit
+  def clearTransversalAndReplaceOwnGenerators(newOG: Iterable[InversePair[P]]): Unit
 }
 
 protected[alasc] trait BSGSMutableNodeBuilder {
@@ -173,5 +176,15 @@ protected[alasc] final class BSGSMutableNodeExplicit[P](
       newTransversal.update(b.toInt <|+| ip, ip.inverse |+| pair |+| ip)
     beta = newBeta
     transversal = newTransversal
+  }
+
+  def clearTransversalAndKeepOwnGenerators = {
+    transversal.clear
+  }
+
+  def clearTransversalAndReplaceOwnGenerators(newOG: Iterable[InversePair[P]]) = {
+    transversal.clear
+    ownGeneratorsPairs.clear
+    ownGeneratorsPairs ++= newOG
   }
 }
