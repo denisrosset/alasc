@@ -133,6 +133,7 @@ object BSGS {
   def randomizedSchreierSims[P: Permutation](randomElement: Random => P, order: BigInt, givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] =
     BSGSBuilder.randomizedSchreierSims(randomElement, order, givenBase).toBSGS
 
+  def fromGenerators[P: Permutation](generators: Iterable[P], givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] = deterministicSchreierSims(generators, givenBase)
 
   def fromGeneratorsAndOrder[P: Permutation](generators: Iterable[P], order: BigInt, givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] = options.algorithmType match {
     case Deterministic =>
