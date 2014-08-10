@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 
 import spire.syntax.group._
 
-import bsgs.{BSGSRec, BSGSBuilder, BSGSMutableNodeBuilder}
+import bsgs._
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
 
@@ -126,25 +126,32 @@ object BSGS {
 
   implicit def BSGSSubgroup[P](implicit algebra: Permutation[P]): Subgroup[BSGS[P], P] = new BSGSSubgroup[P]
 
-  /* Randomized BSGS Schreier-Sims using the provided subgroup instance, which provides
-   * the known order of the group and a procedure to generate random elements.
-   * 
-   * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
-   */
-  def fromSubgroup[S, P](subgroup: S, gen: Random)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
-    val builder = new BSGSBuilder[P]
-    while (builder.chain.order < subgroup.order) {
-      for ( (node, p) <- builder.siftAndUpdateBase(subgroup.random(gen)) )
-        node.addStrongGeneratorHere(p)
-    }
-    builder.toBSGS
+  /** Deterministic Schreier-Sims algorithm. */
+  def deterministicSchreierSims[P: Permutation](generators: Iterable[P], givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] = BSGSBuilder.deterministicSchreierSims(generators, givenBase).toBSGS
+
+  /* Randomized BSGS Schreier-Sims algorithm. */ 
+  def randomizedSchreierSims[P: Permutation](randomElement: Random => P, order: BigInt, givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] =
+    BSGSBuilder.randomizedSchreierSims(randomElement, order, givenBase).toBSGS
+
+
+  def fromGeneratorsAndOrder[P: Permutation](generators: Iterable[P], order: BigInt, givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGS[P] = options.algorithmType match {
+    case Deterministic =>
+      val chain = deterministicSchreierSims(generators, givenBase)
+      assert(chain.order == order)
+      chain
+    case Randomized =>
+      val bag = RandomBag(generators)
+      randomizedSchreierSims(bag.random(_), order, givenBase)
   }
 
-  def fromSubgroup[S, P](subgroup: S)(implicit algebra: Permutation[P], sg: Subgroup[S, P], builder: BSGSMutableNodeBuilder): BSGS[P] = {
-    val builder = BSGSBuilder.fromGenerators[P](subgroup.generators)
-    builder.completeStrongGenerators
-    builder.toBSGS
-  }
+  def fromSubgroup[S, P](subgroup: S, givenBase: Iterable[Int] = Iterable.empty)(implicit algebra: Permutation[P], sg: Subgroup[S, P], options: BSGSOptions): BSGS[P] =
+    options.algorithmType match {
+      case Randomized => randomizedSchreierSims(rand => subgroup.random(rand), subgroup.order, givenBase)
+      case Deterministic =>
+        val chain = deterministicSchreierSims(subgroup.generators, givenBase)
+        assert(chain.order == subgroup.order)
+        chain
+    }
 }
 
 final class BSGSSubgroup[P](implicit val algebra: Permutation[P]) extends Subgroup[BSGS[P], P] {

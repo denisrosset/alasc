@@ -306,20 +306,13 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
         completeStrongGeneratorsAt(where)
     }
 
-  def newBaseFromScratch(newBase: Iterable[Int])(implicit options: BSGSOptions): Unit = options.algorithmType match {
-    case Deterministic =>
-      val newBuilder = BSGSBuilder.fromGenerators(chain.strongGeneratingSet, newBase)
-      newBuilder.completeStrongGenerators
-      start = newBuilder.start
-      lastMutable = newBuilder.lastMutable
-    case Randomized =>
-      val newBuilder = BSGSBuilder.fromBase(newBase)
-      while(newBuilder.chain.order <= chain.order) {
-        for ( (node, p) <- newBuilder.siftAndUpdateBase(chain.random(options.randomGenerator)) )
-          node.addStrongGeneratorHere(p)
-      }
-      start = newBuilder.start
-      lastMutable = newBuilder.lastMutable
+  def newBaseFromScratch(newBase: Iterable[Int])(implicit options: BSGSOptions): Unit = {
+    val newBuilder = options.algorithmType match {
+      case Deterministic => BSGSBuilder.deterministicSchreierSims(chain.strongGeneratingSet, newBase)
+      case Randomized => BSGSBuilder.randomizedSchreierSims(rand => chain.random(rand), chain.order, newBase)
+    }
+    start = newBuilder.start
+    lastMutable = newBuilder.lastMutable
   }
 
   def baseChangeSwap(here: BSGSNode[P], newBase: List[Int])(implicit options: BSGSOptions): BSGSNode[P] =
@@ -510,15 +503,37 @@ object BSGSBuilder {
     builder
   }
 
-  def fromBase[P: Permutation](base: Iterable[Int])(implicit nb: BSGSMutableNodeBuilder): BSGSBuilder[P] = {
+  def withBase[P: Permutation](base: Iterable[Int])(implicit nb: BSGSMutableNodeBuilder): BSGSBuilder[P] = {
     val builder = empty
     base.foreach( builder.append(_) )
     builder
   }
 
-  def fromGenerators[P: Permutation](generators: Iterable[P], base: Iterable[Int] = Iterable.empty) = {
-    val builder = fromBase(base)
+  def withGenerators[P: Permutation](generators: Iterable[P], base: Iterable[Int] = Iterable.empty) = {
+    val builder = withBase(base)
     builder.addGenerators(generators)
+    builder
+  }
+
+  /** Deterministic Schreier-Sims algorithm. */
+  def deterministicSchreierSims[P: Permutation](generators: Iterable[P], givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGSBuilder[P] = {
+    val builder = BSGSBuilder.withGenerators[P](generators, givenBase)
+    builder.completeStrongGenerators
+    builder
+  }
+
+  /* Randomized BSGS Schreier-Sims using the provided procedure to generate
+   * random elements and the known order of the group to terminate the algorithm.
+   * 
+   * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
+   */
+  def randomizedSchreierSims[P: Permutation](randomElement: Random => P, order: BigInt, givenBase: Iterable[Int] = Iterable.empty)(implicit options: BSGSOptions): BSGSBuilder[P] = {
+    require(options.algorithmType == Randomized)
+    val builder = BSGSBuilder.withBase[P](givenBase)
+    while (builder.chain.order < order) {
+      for ( (node, p) <- builder.siftAndUpdateBase(randomElement(options.randomGenerator)) )
+        node.addStrongGeneratorHere(p)
+    }
     builder
   }
 }
