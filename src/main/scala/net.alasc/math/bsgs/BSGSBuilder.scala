@@ -307,6 +307,24 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
         completeStrongGeneratorsAt(where)
     }
 
+  def baseChange(newBase: Iterable[Int])(implicit options: BSGSOptions): BSGSBuilder[P] =
+    if (newBase.isEmpty)
+      return this
+    else options.baseChangeStrategy match {
+      case BaseSwapOnly =>
+        baseChangeSwap(mutableStartNode(newBase.head), newBase.toList)
+        this
+      case BaseFromScratch =>
+        newBaseFromScratch(newBase)
+        this
+      case BaseHeuristic =>  // TODO: real stuff
+        baseChangeSwap(mutableStartNode(newBase.head), newBase.toList)
+        this
+      case BaseSwapAndConjugation =>
+        baseChangeSwap(mutableStartNode(newBase.head), newBase.toList)
+        this
+    }
+
   def newBaseFromScratch(newBase: Iterable[Int])(implicit options: BSGSOptions): Unit = {
     val newBuilder = options.algorithmType match {
       case Deterministic => BSGSBuilder.deterministicSchreierSims(chain.strongGeneratingSet, newBase)
@@ -316,14 +334,63 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
     lastMutable = newBuilder.lastMutable
   }
 
+  @tailrec def existsRedundant(from: BSGS[P]): Boolean = from match {
+    case _: BSGSTerm[P] => false
+    case node: BSGSNode[P] if node.orbitSize == 1 => true
+    case node: BSGSNode[P] => existsRedundant(node)
+  }
+
+  def findStartOfLastNonRedundantChain(checkFrom: BSGS[P]): Option[BSGS[P]] = {
+    @tailrec def rec(bsgs: BSGS[P], lastRedundantOption: Option[BSGSNode[P]]): Option[BSGS[P]] = bsgs match {
+      case term: BSGSTerm[P] => lastRedundantOption.map(_.tail)
+      case node: BSGSNode[P] if node.orbitSize == 1 => rec(node.tail, Some(node))
+      case node: BSGSNode[P] => rec(node.tail, lastRedundantOption)
+    }
+    rec(checkFrom, None)
+  }
+
+  def cutRedundantAfter(after: BSGSMutableNode[P]): Boolean = {
+    val lastNR = findStartOfLastNonRedundantChain(after.tail)
+    if (lastNR.isEmpty)
+      false
+    else {
+      @tailrec def eliminateRedundantTail(node: BSGSMutableNode[P]): Unit =
+        if (node.tail ne lastNR) {
+          node.tail match {
+            case _: BSGSTerm[P] => sys.error("lastNR should happen before")
+            case tailNode: BSGSNode[P] if tailNode.orbitSize == 1 =>
+              val before1 = node
+              val before2 = tailNode
+              val before2tail = tailNode.tail
+
+              val node1 = node
+              val node1tail = before2tail
+              node1.tail = node1tail
+              if (!node1tail.isImmutable) node1tail.asInstanceOf[BSGSMutableNode[P]].prev = node1
+              node1tail match {
+                case _: BSGSTerm[P] =>
+                case node1tailNode: BSGSNode[P] =>
+                  eliminateRedundantTail(makeMutable(node1tailNode))
+              }
+            case tailNode: BSGSNode[P] =>
+              eliminateRedundantTail(makeMutable(tailNode))
+          }
+        }
+      true
+    }
+  }
+
   def baseChangeSwap(here: BSGSNode[P], newBase: List[Int])(implicit options: BSGSOptions): BSGSNode[P] =
     if (here.baseEquals(newBase)) here else {
       val mutableHere = makeMutable(here)
-      @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: List[Int]): Unit = remaining match {
-        case hd :: tl =>
-          changeBasePoint(mutableNode, hd) // mutableNode already mutable, no need to use the return value
-          rec(mutableNode, tl)
+      @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: List[Int]): Unit = remaining match {       
         case Nil =>
+        case hd :: Nil =>
+          changeBasePoint(mutableNode, hd) // mutableNode already mutable, no need to use the return value
+          cutRedundantAfter(mutableNode)
+        case hd :: tl =>
+          changeBasePoint(mutableNode, hd)
+          rec(mutableNode, tl)
       }
       rec(mutableHere, newBase)
       mutableHere
@@ -397,32 +464,19 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
   /** Swaps two adjacent nodes in the BSGS chain, and returns the first node after the swap, its tail
     * and the size goal for the orbit of the tail node.
     */
-  def baseSwapBase(node1Before: BSGSMutableNode[P]): (BSGSMutableNode[P], BSGSMutableNode[P], Int) = {
-    val node2Before = node1Before.tail.mapOrElse(makeMutable(_), sys.error("Node must have a tail node to be swapped."))
-    val sizesProduct = BigInt(node1Before.orbitSize) * BigInt(node2Before.orbitSize)
+  def baseSwapBase(node1: BSGSMutableNode[P]): (BSGSMutableNode[P], BSGSMutableNode[P], Int) = {
+    val node2 = node1.tail.mapOrElse(makeMutable(_), sys.error("Node must have a tail node to be swapped."))    
+    val sizesProduct = BigInt(node1.orbitSize) * BigInt(node2.orbitSize)
 
-    val node1BeforePrevOption = if (node1Before.prev eq node1Before) None else Some(node1Before.prev)
-    val node1Beta = node2Before.beta
-    val node2Beta = node1Before.beta
-    val node2Tail = node2Before.tail
+    val newBeta1 = node2.beta
+    val newBeta2 = node1.beta
 
-    val node1 = node2Before
-    val node2 = node1Before
-    val node2OwnGenerators = node1Before.ownGeneratorsPairs.filter(g => (node1Beta <|+| g) == node1Beta)
-
-    node1.prev = node1BeforePrevOption.getOrElse(node1)
-    node1.tail = node2
-    node1.beta = node1Beta
-    node1.clearTransversalAndKeepOwnGenerators
-    node2.prev = node1
-    node2.tail = node2Tail
-    if (!node2Tail.isImmutable) { node2Tail.asInstanceOf[BSGSMutableNode[P]].prev = node2 }
-    node2.beta = node2Beta
-    node2.clearTransversalAndReplaceOwnGenerators(node2OwnGenerators)
-
-    node1.strongGeneratingSetPairs.foreach { ip => node1.updateTransversal(ip) }
-    node2.strongGeneratingSetPairs.foreach { ip => node2.updateTransversal(ip) }
-
+    node1.changeBasePoint(newBeta1, g => true) // keep all generators for node1
+    val removedOwnGenerators = node2.changeBasePoint(newBeta2, g => (newBeta1 <|+| g) == newBeta1)
+    removedOwnGenerators.foreach { g =>
+      node1.addToOwnGenerators(g)
+      node1.updateTransversal(g)
+    }
     (node1, node2, (sizesProduct / node1.orbitSize).toInt)
   }
 
