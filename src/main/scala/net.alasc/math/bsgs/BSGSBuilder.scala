@@ -64,6 +64,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       node.prev = null
       if (node ne prevSave) removePrev(prevSave)
     }
+    removePrev(lastMutable)
     lastMutable = null
   }
 
