@@ -413,18 +413,26 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
 
   def baseChangeSwap(here: BSGSNode[P], newBase: List[Int])(implicit options: BSGSOptions): BSGSNode[P] =
     if (here.baseEquals(newBase)) here else {
+      @tailrec def rec(node: BSGSNode[P], remaining: List[Int], newHere: BSGSNode[P]): BSGSNode[P] =
+        if (node.baseEquals(remaining))
+          newHere
+        else remaining match {
+          case Nil => newHere
+          case hd :: Nil =>
+            val mutableNode = makeMutable(node)
+            changeBasePoint(mutableNode, hd) // mutableNode already mutable, no need to use the return value
+            cutRedundantAfter(mutableNode)
+            newHere
+          case hd :: tl =>
+            val mutableNode = makeMutable(node)
+            changeBasePoint(mutableNode, hd)
+            mutableNode.tail match {
+              case _: BSGSTerm[P] => rec(append(tl.head), tl, newHere)
+              case tailNode: BSGSNode[P] => rec(tailNode, tl, newHere)
+            }
+        }
       val mutableHere = makeMutable(here)
-      @tailrec def rec(mutableNode: BSGSMutableNode[P], remaining: List[Int]): Unit = remaining match {       
-        case Nil =>
-        case hd :: Nil =>
-          changeBasePoint(mutableNode, hd) // mutableNode already mutable, no need to use the return value
-          cutRedundantAfter(mutableNode)
-        case hd :: tl =>
-          changeBasePoint(mutableNode, hd)
-          rec(mutableNode, tl)
-      }
-      rec(mutableHere, newBase)
-      mutableHere
+      rec(mutableHere, newBase, mutableHere)
     }
 
   @tailrec def findBasePoint(bsgs: BSGS[P], basePoint: Int): Option[BSGSNode[P]] = bsgs match {
@@ -455,7 +463,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
             baseSwap(pos.prev)
             rec(pos.prev)
           }
-        rec(mutableDest)
+        rec(mutableToShift)
         mutableDest
       }
     }
