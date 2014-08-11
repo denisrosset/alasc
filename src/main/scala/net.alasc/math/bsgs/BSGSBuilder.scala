@@ -57,6 +57,37 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
 
   def isFullyMutable: Boolean = (lastMutable ne null) && lastMutable.tail.isInstanceOf[BSGSTerm[P]]
 
+  /** Pretty prints the builder, while doing basic chain consistency checks. */
+  override def toString = start match {
+    case _: BSGSTerm[P] => "()"
+    case node: BSGSNode[P] =>
+      import scala.collection.mutable.StringBuilder
+      var sb = new StringBuilder
+      node.asMutable.foreach { mutable =>
+        assert(mutable.prev eq node)
+        sb ++= ">"
+      }
+      sb ++= s"${node.beta}"
+      @tailrec def rec(prevNode: BSGSNode[P], bsgs: BSGS[P]): Unit = bsgs match {
+        case term: BSGSTerm[P] =>
+          if (!prevNode.isImmutable)
+            assert(lastMutable == prevNode)
+          sb ++= " -> ()"
+        case node: BSGSMutableNode[P] if !node.isImmutable =>
+          assert(node.prev == prevNode)
+          assert(!prevNode.isImmutable)
+          sb ++= s" <-> ${node.beta}(${node.orbitSize})"
+          rec(node, node.tail)
+        case node: BSGSNode[P] =>
+          if (!prevNode.isImmutable)
+            assert(lastMutable == prevNode)
+          sb ++= s" -> ${node.beta}(${node.orbitSize})"
+          rec(node, node.tail)
+      }
+      rec(node, node.tail)
+      sb.mkString
+  }
+
   /** Makes the chain fully immutable. */
   def makeImmutable: Unit = if (lastMutable ne null) {
     @tailrec def removePrev(node: BSGSMutableNode[P]): Unit = {

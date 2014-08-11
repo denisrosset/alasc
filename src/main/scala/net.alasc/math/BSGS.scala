@@ -23,6 +23,7 @@ sealed trait BSGS[P] {
     case _: BSGSTerm[P] => default
   }
 
+  override def toString = chain.map { node => s"${node.beta}(${node.orbitSize})" }.mkString(" -> ")
   /** Tests whether this node is mutable. */
   def isImmutable: Boolean
 
