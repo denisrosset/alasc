@@ -180,7 +180,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
       start.asInstanceOf[BSGSMutableNode[P]]
   }
 
-  /** Appends a new base point to the BSGS chain. */
+  /** Appends a new base point to the BSGS chain, and returns the mutable appended node. */
   def append(beta: Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = {
     if (isEmpty)
       mutableStartNode(beta)
@@ -245,7 +245,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
 
   /** Returns the start element if it is a mutable node, makes the start mutable if it is an immutable node,
     * or creates a start node with base point `beta`. */
-  def mutableStartNode(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = start match {
+  def mutableStartNode(beta: => Int = sys.error("Chain is empty"))(implicit builder: BSGSMutableNodeBuilder): BSGSMutableNode[P] = start match {
     case _: BSGSTerm[P] =>
       val newNode = builder(beta, None, start)
       start = newNode
@@ -255,7 +255,7 @@ final class BSGSBuilder[P](implicit val algebra: Permutation[P]) {
   }
 
   /** Returns the start element if it is a node, or creates a start node with base point `beta`. */
-  def startNode(beta: => Int)(implicit builder: BSGSMutableNodeBuilder): BSGSNode[P] = start match {
+  def startNode(beta: => Int = sys.error("Chain is empty"))(implicit builder: BSGSMutableNodeBuilder): BSGSNode[P] = start match {
     case _: BSGSTerm[P] => mutableStartNode(beta)
     case node: BSGSNode[P] => node
   }
