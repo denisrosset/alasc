@@ -22,7 +22,8 @@ import net.alasc.algebra._
     */
   var prev: BSGSMutableNode[P]
 
-  /** Adds a new generator `g` (given as an `InversePair`) to this node `ownGenerators`.
+  /** Adds a new generator `g` (given as an `InversePair`) to this node `ownGenerators`,
+    * without changing previous nodes or updating any transversals.
     */
   def addToOwnGenerators(g: InversePair[P]): Unit
 
@@ -46,10 +47,16 @@ import net.alasc.algebra._
     rec(this)
   }
 
+  /** Conjugates the current node by the group element `ip`, provided as an input pair
+    * to avoid multiple inverse element computations. */
   def conjugateThisNode(ip: InversePair[P]): Unit
 
-  def clearTransversalAndKeepOwnGenerators: Unit
-  def clearTransversalAndReplaceOwnGenerators(newOG: Iterable[InversePair[P]]): Unit
+  /** Changes the base point of the current node, filters its own generators according to the predicate,
+    * and recomputes the transversal.
+    * 
+    * @return the removed generators.
+    */
+  def changeBasePoint(newBeta: Int, pred: P => Boolean): Iterable[InversePair[P]]
 }
 
 protected[alasc] trait BSGSMutableNodeBuilder {
@@ -109,7 +116,7 @@ object BSGSMutableNodeExplicit extends BSGSMutableNodeBuilder {
 protected[alasc] final class BSGSMutableNodeExplicit[P](
   var beta: Int,
   var transversal: MutableLongMap[InversePair[P]],
-  val ownGeneratorsPairs: UnrolledBuffer[InversePair[P]],
+  var ownGeneratorsPairs: UnrolledBuffer[InversePair[P]],
   var prev: BSGSMutableNode[P],
   var tail: BSGS[P])(implicit val algebra: Permutation[P]) extends BSGSMutableNode[P] {
 
@@ -178,13 +185,13 @@ protected[alasc] final class BSGSMutableNodeExplicit[P](
     transversal = newTransversal
   }
 
-  def clearTransversalAndKeepOwnGenerators = {
+  def changeBasePoint(newBeta: Int, pred: P => Boolean): Iterable[InversePair[P]] = {
+    val (keep, removedPairs) = ownGeneratorsPairs.partition(ip => pred(ip.g))
+    ownGeneratorsPairs = keep
+    beta = newBeta
     transversal.clear
-  }
-
-  def clearTransversalAndReplaceOwnGenerators(newOG: Iterable[InversePair[P]]) = {
-    transversal.clear
-    ownGeneratorsPairs.clear
-    ownGeneratorsPairs ++= newOG
+    transversal.update(newBeta, algebra.id)
+    strongGeneratingSetPairs.foreach { ip => updateTransversal(ip) }
+    removedPairs
   }
 }
