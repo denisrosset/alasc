@@ -23,8 +23,8 @@ import net.alasc.syntax.subgroup._
   * Mutable nodes are identified because their `prev` reference is initialized so that the
   * mutable part of the BSGS chain is a double-linked list.
   * 
-  * If a node is mutable (= is part of a BSGSBuilder, and has not been exported), then its `prev` is not null, and
-  * either points to this node's parent it has one, or to this node itself if this node is the first in the chain.
+  * If a node is mutable, then its `prev` is not null, and either points to this node's parent
+  * if it has one, or to this node itself if this node is the first in the chain.
   *
   * Moreover, if a node is mutable, all its parents must be mutable.
   * 
