@@ -26,6 +26,14 @@ sealed trait BSGS[P] {
   /** Tests whether this node is mutable. */
   def isImmutable: Boolean
 
+  /** If this element is mutable, returns a cast to `BSGSMutableNode`,
+    * else `None`.
+    */
+  def asMutable: Option[BSGSMutableNode[P]]
+
+  /** If this element is a node, returns a cast to `BSGSNode`, else `None`. */
+  def asNode: Option[BSGSNode[P]] = mapOrElse(n => Some(n), None)
+
   /** If the base is beta(1) -> ... -> beta(m-1) -> beta(m) current base -> tail.beta,
     * ownGenerators contains all the strong generators g that have beta(i) <|+| g = beta(i) for i < m,
     * and beta(m) <|+| g =!= beta(m).
@@ -89,7 +97,7 @@ final class BSGSTerm[P](implicit val algebra: Permutation[P]) extends BSGS[P] {
   def isImmutable = true
   def ownGenerators = Seq.empty
   def ownGeneratorsPairs = Seq.empty
-
+  def asMutable = None
   def conjugatedBy(ip: InversePair[P]) = this
 }
 

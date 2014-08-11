@@ -121,6 +121,7 @@ protected[alasc] final class BSGSMutableNodeExplicit[P](
   var tail: BSGS[P])(implicit val algebra: Permutation[P]) extends BSGSMutableNode[P] {
 
   def isImmutable = prev eq null
+  def asMutable = if (isImmutable) None else Some(this)
   def ownGenerators = ownGeneratorsPairs.map(_.g)
 
   def orbitSize = transversal.size
