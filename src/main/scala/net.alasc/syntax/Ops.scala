@@ -1,10 +1,15 @@
 package net.alasc.syntax
 
-import net.alasc.algebra._
 import scala.collection.immutable.BitSet
 import scala.language.experimental.macros
-import machinist.{DefaultOps => Ops}
+
 import scala.util.Random
+
+import machinist.{DefaultOps => Ops}
+
+import net.alasc.algebra._
+import net.alasc.util._
+
 
 final class LengthOps[A](lhs: A)(implicit ev: Length[A]) {
   def length(): Int = macro Ops.unop[Int]
@@ -29,8 +34,8 @@ final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
 
 final class PermutationOps[A](lhs: A)(implicit ev: Permutation[A]) {
   def support(): BitSet = macro Ops.unop[BitSet]
-  def supportMax(): Int = macro Ops.unop[Int]
-  def supportMin(): Int = macro Ops.unop[Int]
+  def supportMax(): NNOption = macro Ops.unop[NNOption]
+  def supportMin(): NNOption = macro Ops.unop[NNOption]
   def to[Q](implicit evQ: BuildablePermutation[Q]): Q = ev.to[Q](lhs)
 }
 
@@ -48,6 +53,6 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
 }
 
 final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
-  def supportMin(): Int = macro Ops.unop[Int]
-  def supportMax(): Int = macro Ops.unop[Int]
+  def supportMin(): NNOption = macro Ops.unop[NNOption]
+  def supportMax(): NNOption = macro Ops.unop[NNOption]
 }

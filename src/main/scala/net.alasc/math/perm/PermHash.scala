@@ -46,7 +46,7 @@ object PermHash {
   }
 
   def hash[P: Permutation](p: P): Int = {
-    val sm = p.supportMax
+    val sm = p.supportMax.getOrElse(-1)
     if (sm <= 15)
       hash16(p)
     else if (sm <= 31)

@@ -1,10 +1,13 @@
 package net.alasc.algebra
 
-import spire.algebra._
 import scala.collection.immutable.BitSet
+
+import spire.algebra._
+import spire.syntax.groupAction._
+
 import net.alasc.math.Cycle
 import net.alasc.syntax.permutation._
-import spire.syntax.groupAction._
+import net.alasc.util._
 
 /** Type class for Permutation-like objects.
   * 
@@ -20,16 +23,17 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
     */
   def support(p: P): BitSet
   /** Returns the maximal element in the support of `p`, or -1 if the support is empty. */ 
-  def supportMax(p: P): Int
+  def supportMax(p: P): NNOption
   /** Returns the minimal element in the support of `p`, or -1 if the support is empty. */
-  def supportMin(p: P): Int
-  /** Returns an upper bound on the maximal support element (maximum Int.MaxValue). */
+  def supportMin(p: P): NNOption
+  /** Returns the value of the maximal support element support by this permutation type. */
   def supportMaxElement: Int
   /** Dummy overload for Signed, as one cannot change the sign of a permutation . */
   def abs(p: P): P = if (signum(p) == 1) p else sys.error(s"The permutation $p is odd.")
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
-  def to[Q](p: P)(implicit ev: BuildablePermutation[Q]): Q = ev.fromSupportAndImages(support(p), k => actr(k, p))
+  def to[Q](p: P)(implicit ev: BuildablePermutation[Q]): Q =
+    ev.fromSupportAndImageFun(support(p), k => actr(k, p))
 }
 
 trait ShiftablePermutation[P] extends Permutation[P] {
@@ -48,11 +52,11 @@ trait ShiftablePermutation[P] extends Permutation[P] {
 
 trait BuildablePermutation[P] extends Permutation[P] {
   def fromImages(images: Seq[Int]): P
-  def fromSupportAndImages(support: BitSet, image: Int => Int): P
+  def fromSupportAndImageFun(support: BitSet, image: Int => Int): P
   def sorting[T: Order](seq: Seq[T]): P = {
     import spire.compat._
     fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))
   }
   def fromPermutation[Q: Permutation](q: Q): P =
-    fromSupportAndImages(q.support, k => k <|+| q)
+    fromSupportAndImageFun(q.support, k => k <|+| q)
 }

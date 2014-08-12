@@ -1,14 +1,17 @@
 package net.alasc.math
 
 import scala.language.implicitConversions
+
+import scala.collection.immutable.BitSet
+import scala.runtime.RichInt
+
 import spire.algebra._
 import spire.syntax.eq._
 import spire.syntax.groupAction._
 import spire.syntax.signed._
-import net.alasc.algebra._
-import scala.runtime.RichInt
 
-import scala.collection.immutable.BitSet
+import net.alasc.algebra._
+import net.alasc.util._
 
 /** Description of a permutation as a product of disjoint cycles in the canonical form.
   * 
@@ -31,8 +34,12 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
 
   def supportMaxElement = Int.MaxValue
 
-  def fromImages(images: Seq[Int]): Cycles = fromSupportAndImages(BitSet(0 until images.size:_*), images(_))
-  def fromSupportAndImages(support: BitSet, image: Int => Int): Cycles = {
+  def fromImages(images: Seq[Int]): Cycles = {
+    val support = BitSet(0 until images.size:_*).filter(k => images(k) != k)
+    fromSupportAndImageFun(support, images(_))
+  }
+
+  def fromSupportAndImageFun(support: BitSet, image: Int => Int): Cycles = {
     @scala.annotation.tailrec def rec(cycles: List[Cycle], remSupport: BitSet): Cycles = 
       remSupport.isEmpty match {
         case true => fromDisjointCycles(cycles)
@@ -43,6 +50,7 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
       }
     rec(Nil, support)
   }
+
   def fromDisjointCycles(cycles: Seq[Cycle]) = {
     import spire.compat._
     new Cycles(cycles.filter(_.length > 1).sorted)
@@ -51,8 +59,10 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
   def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 
   def id = new Cycles(Seq.empty[Cycle])
+
   def op(x: Cycles, y: Cycles) = 
-    Cycles.Algebra.fromSupportAndImages(support(x) ++ support(y), i => actr(actr(i, x), y))
+    Cycles.Algebra.fromSupportAndImageFun(support(x) ++ support(y), i => actr(actr(i, x), y))
+
   def inverse(a: Cycles) = Cycles.Algebra.fromDisjointCycles(a.seq.map(_.inverse))
 
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
@@ -63,8 +73,8 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
   def plus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ + n))
   def minus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ - n))
 
-  def supportMin(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).getOrElse(-1)
-  def supportMax(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).getOrElse(-1)
+  def supportMin(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
+  def supportMax(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))
   def support(c: Cycles): BitSet =
     (BitSet.empty /: c.seq) { case (set, cycle) => set union cycle.support }
 }

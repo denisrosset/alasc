@@ -1,9 +1,12 @@
 package net.alasc.algebra
 
-import spire.algebra.Group
 import scala.util.Random
+
+import spire.algebra.Group
 import spire.syntax.eq._
+
 import net.alasc.syntax.permutation._
+import net.alasc.util._
 
 trait Subgroup[S, G] {
   implicit val algebra: FiniteGroup[G]
@@ -17,14 +20,32 @@ trait Subgroup[S, G] {
   def random(s: S, gen: Random): G
   /** Tests if the element `g` is contained inside `s`. */
   def contains(s: S, g: G): Boolean = elements(s).exists(g === _)
-  /** Returns the minimal domain element which is permuted by `s`.
-    *
-    * If the subgroup `s` is trival = (), returns -1.
+  /** Returns the minimal domain element which is permuted by `s`, or `NNNone` if
+    * `s` is the trivial group = ().
     */
-  def supportMin(s: S)(implicit ev: Permutation[G]): Int = generators(s).map(_.supportMin).reduceOption(_.min(_)).getOrElse(-1)
-  /** Returns the maximal domain element which is permuted by `s`.
-    * 
-    * If the subgroup `s` is trival = (), returns -1.
+  def supportMin(s: S)(implicit ev: Permutation[G]): NNOption = {
+    var res: NNOption = NNNone
+    generators(s).foreach { g =>
+      val gMin = g.supportMin
+      if (res.isEmpty)
+        res = gMin
+      else if (gMin.isDefined)
+        res = NNSome(gMin.get.min(res.get))
+    }
+    res
+  }
+  /** Returns the maximal domain element which is permuted by `s`, or `NNNone` if
+    * `s` is the trivial group = ().
     */
-  def supportMax(s: S)(implicit ev: Permutation[G]): Int = ((-1) /: generators(s)) { case (sm, gen) => sm.max(gen.supportMax) }
+  def supportMax(s: S)(implicit ev: Permutation[G]): NNOption = {
+    var res: NNOption = NNNone
+    generators(s).foreach { g =>
+      val gMin = g.supportMin
+      if (res.isEmpty) 
+        res = gMin
+      else if (gMin.isDefined)
+        res = NNSome(gMin.get.max(res.get))
+    }
+    res
+  }
 }

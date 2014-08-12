@@ -15,6 +15,7 @@ class Cycle private[alasc](val seq: Seq[Int]) {
   def length = seq.length
 
   override def toString: String = seq.mkString("(", ",", ")")
+
   def toStringUsing(symbols: Int => String) =
     seq.map(symbols(_)).mkString("(", ",", ")")
 

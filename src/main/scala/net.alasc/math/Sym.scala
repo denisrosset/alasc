@@ -12,12 +12,11 @@ class Sym[P](val degree: Int) {
 class SymPermutationSubgroup[P](implicit val algebra: BuildablePermutation[P]) extends Subgroup[Sym[P], P] {
   protected def domainSequence(degree: Int): Seq[Int] = (0 until degree).toSeq
   def order(s: Sym[P]) = (BigInt(1) /: (1 to s.degree))(_*_)
-  override def contains(s: Sym[P], p: P) = p.supportMax < s.degree
+  override def contains(s: Sym[P], p: P) = p.supportMax.fold(true)(_ < s.degree)
   def random(s: Sym[P], gen: Random) = algebra.fromImages(gen.shuffle(domainSequence(s.degree)))
-  def generators(s: Sym[P]) = (0 to s.degree - 2).map(k => algebra.fromSupportAndImages(BitSet(k, k + 1),
-    i => if (i == k) k + 1
-    else if (i == k + 1) k
-    else i))
+  def swapFun(i: Int, j: Int): (Int => Int) = (k => if (k == i) j else if (k == j) i else k)
+  def generators(s: Sym[P]) =
+    (0 to s.degree - 2).map(k => algebra.fromSupportAndImageFun(BitSet(k, k + 1), swapFun(k, k + 1)))
   def elements(s: Sym[P]) = new Iterable[P] {
     override def stringPrefix = "Elements"
     def iterator = domainSequence(s.degree).permutations.map(images => algebra.fromImages(images))

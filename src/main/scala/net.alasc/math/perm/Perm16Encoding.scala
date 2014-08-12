@@ -1,12 +1,14 @@
 package net.alasc.math
 package perm
 
-import net.alasc.algebra.BuildablePermutation
 import scala.collection.immutable.BitSet
-import net.alasc.syntax.permutation._
+
 import spire.syntax.groupAction._
 import spire.syntax.signed._
-import net.alasc.util.LongBits
+
+import net.alasc.algebra.BuildablePermutation
+import net.alasc.syntax.permutation._
+import net.alasc.util._
 
 /** Permutation with domain in [0, 15] encoded in a Long used as a bit string.
   * 
@@ -23,18 +25,18 @@ object Perm16Encoding {
     ((image - preimage) & 0xF).toLong << (preimage * 4)
   @inline def decode(encoding: Long, preimage: Int): Int =
     ((preimage + (encoding >>> (preimage*4))) & 0x0F).toInt
-  @inline def supportMin(encoding: Long): Int =
-    if (encoding == 0) -1 else numberOfTrailingZeros(encoding)/4
-  @inline def supportMax(encoding: Long): Int =
-    if (encoding == 0) -1 else 15 - numberOfLeadingZeros(encoding)/4
+  @inline def supportMin(encoding: Long): NNOption =
+    if (encoding == 0) NNNone else NNSome(numberOfTrailingZeros(encoding)/4)
+  @inline def supportMax(encoding: Long): NNOption =
+    if (encoding == 0) NNNone else NNSome(15 - numberOfLeadingZeros(encoding)/4)
 
   @inline def supportMaxElement = 15
   @inline def idEncoding: Long = 0L
   @inline def id: Perm16 = new Perm16(idEncoding)
   @inline def invImage(encoding: Long, i: Int): Int = {
-    val low = supportMin(encoding)
+    val low = supportMin(encoding).getOrElse(-1)
     if (i < low) return i
-    var k = supportMax(encoding)
+    var k = supportMax(encoding).getOrElse(0)
     if (i > k) return i
     while (k >= low) {
       if (decode(encoding, k) == i)
@@ -51,7 +53,7 @@ object Perm16Encoding {
     var bitset = 0L
     var remaining = encoding
     while (remaining != 0) {
-      val preimage = Perm16Encoding.supportMin(remaining)
+      val preimage = Perm16Encoding.supportMin(remaining).get
       val image = Perm16Encoding.decode(remaining, preimage)
       bitset |= 1 << preimage
       bitset |= 1 << image
@@ -62,8 +64,8 @@ object Perm16Encoding {
 
   def inverse(encoding: Long): Long = {
     if (encoding >= 0 && encoding <= 0xFF) return encoding
-    val low = supportMin(encoding)
-    var k = supportMax(encoding)
+    val low = supportMin(encoding).get
+    var k = supportMax(encoding).get
     var res = 0L
     while (k >= low) {
       res |= encode(decode(encoding, k), k)
@@ -89,21 +91,11 @@ object Perm16Encoding {
     // both are either identity or (0,1)
     if (lhs >= 0L && lhs <= 0xFFL && rhs >= 0L && rhs <= 0xFFL) return lhs ^ rhs
 
-    val low = supportMin(lhs | rhs)
-    var k = supportMax(lhs | rhs)
+    val low = supportMin(lhs | rhs).get
+    var k = supportMax(lhs | rhs).get
     var res = 0L
     while (k >= low) {
       res |= encode(k, decode(rhs, decode(lhs, k)))
-      k -= 1
-    }
-    res
-  }
-
-  def toPerm32(encoding: Long): Perm32 = {
-    var k = supportMax(encoding)
-    val res = new Perm32
-    while (k >= 0) {
-      Perm32Encoding.encode(res, k, decode(encoding, k))
       k -= 1
     }
     res
@@ -121,7 +113,7 @@ object Perm16Encoding {
     encoding
   }
 
-  def supportAndImagesEncoding(support: BitSet, image: Int => Int): Long = {
+  def supportAndImageFunEncoding(support: BitSet, image: Int => Int): Long = {
     var encoding = 0L
     support.foreach { k =>
       val i = image(k)
@@ -134,16 +126,6 @@ object Perm16Encoding {
 
 
 /*
-final class Perm16Val private[math](val encoding: Long) extends AnyVal { lhs =>
-
-  def toCycles = Cycles.Algebra.fromPermutation(this)(Perm16Val.Algebra).toString
-
-  override def toString = toCycles.toString
-
-
-  def ===(rhs: Perm16Val): Boolean = lhs.encoding == rhs.encoding
-
-}
 
 final class Perm16ValPermutation extends BuildablePermutation[Perm16Val] {
   def supportMaxElement = 15

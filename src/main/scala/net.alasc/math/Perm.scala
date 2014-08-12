@@ -1,14 +1,17 @@
 package net.alasc.math
 
-import net.alasc.algebra._
-import scala.collection.immutable.BitSet
-import spire.syntax.signed._
-import spire.syntax.groupAction._
-import perm._
 import scala.annotation.tailrec
-import net.alasc.syntax.permutation._
+import scala.collection.immutable.BitSet
+
 import spire.syntax.eq._
+import spire.syntax.signed._
 import spire.syntax.group._
+import spire.syntax.groupAction._
+
+import net.alasc.algebra._
+import net.alasc.syntax.permutation._
+import net.alasc.util._
+import perm._
 
 /** Universal trait at the base of explicit permutation types.
   *
@@ -35,8 +38,8 @@ sealed trait Perm extends Any {
   def isId: Boolean
   def inverse: Perm
 
-  def supportMax: Int
-  def supportMin: Int
+  def supportMax: NNOption
+  def supportMin: NNOption
   def support: BitSet
 
   def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).to[Perm]
@@ -49,8 +52,93 @@ sealed trait Perm extends Any {
 //  def minus(n: Int): Perm
 }
 
+object Perm extends PermCompanion {
+  def supportMaxElement = PermArray.supportMaxElement
+
+  implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
+
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+    if (supportMax <= Perm32Encoding.supportMaxElement)
+      Perm32.fromImagesAndHighSupportMax(images, supportMax)
+    else
+      PermArray.fromImagesAndHighSupportMax(images, supportMax)
+
+  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm =
+    if (supportMax <= Perm32Encoding.supportMaxElement)
+      Perm32.fromHighSupportAndImageFun(support, imageFun, supportMax)
+    else
+      PermArray.fromHighSupportAndImageFun(support, imageFun, supportMax)
+
+}
+
+trait PermCompanion {
+    /** Maximal support element for this permutation type. */
+  def supportMaxElement: Int
+
+  /** Constructs a permutation from a sequence of images, along with 
+    * the computed maximal support element.of the sequence, i.e. for
+    * k = supportMax + 1 ... images.length - 1, images(k) == k.
+    *
+    * @param images     Sequence of images representing the permutation
+    * @param supportMax Maximal support element, must be > `Perm16.supportMaxElement`.
+    */
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm
+
+  /** Constructs a permutation from a sequence of images. */
+  def fromImages(images: Seq[Int]): Perm = {
+    var k = images.length - 1
+    while (k >= 0 && images(k) == k)
+      k -= 1
+    if (k == -1)
+      Perm.Algebra.id
+    else if (k <= Perm16Encoding.supportMaxElement)
+      new Perm16(Perm16Encoding.imagesEncoding(images, k))
+    else
+      fromImagesAndHighSupportMax(images, k)
+  }
+
+  /** Constructs a permutation from its support and an image function, with
+    * supportMax = support.max (given as not to compute it twice). 
+    * 
+    * @param support    Support of the permutation
+    * @param image      Image function
+    * @param supportMax `= support.max`, must be > `Perm16Encoding.supportMaxElement`
+    * 
+    * @note The following must hold for all `k` in `support`: `image(k) != k`.
+    */
+  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm
+
+  /** Constructs a permutation from its support and an image function.
+    *
+    * @param support    Support of the permutation
+    * @param image      Image function
+    * 
+    * @note The following must hold for all `k` in `support`: `image(k) != k`.
+    */
+  def fromSupportAndImageFun(support: BitSet, imageFun: Int => Int): Perm =
+    if (support.isEmpty)
+      Perm.Algebra.id
+    else {
+      val supportMax = support.max
+      if (supportMax <= Perm16Encoding.supportMaxElement)
+        new Perm16(Perm16Encoding.supportAndImageFunEncoding(support, imageFun))
+      else
+        fromHighSupportAndImageFun(support, imageFun, supportMax)
+    }
+
+  /** Constructs a permutation from a cycle represented as a string using the domain
+    * 0..9, A..Z. */
+  def apply(cycle: String): Perm = apply(cycle.map(DomainAlphabet.map(_)): _*)
+
+  /** Constructs a permutatino from a cycle given as a variable number of arguments. */
+  def apply(seq: Int*): Perm = {
+    val map: Map[Int, Int] = (seq zip (seq.tail :+ seq.head)).toMap
+    val support = BitSet.empty ++ seq
+    fromSupportAndImageFun(support, map(_))
+  }
+}
+
 final case class Perm16 private[math](val encoding: Long) extends AnyVal with Perm { lhs16 =>
-  def toPerm32 = Perm16Encoding.toPerm32(encoding)
   @inline def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
   @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
   @inline def isId = encoding == 0L
@@ -58,7 +146,17 @@ final case class Perm16 private[math](val encoding: Long) extends AnyVal with Pe
   @inline def supportMin = Perm16Encoding.supportMin(encoding)
   @inline def supportMax = Perm16Encoding.supportMax(encoding)
   @inline def inverse = new Perm16(Perm16Encoding.inverse(encoding))
-  def isValidPerm32 = true
+  def isValidPerm32 = false
+  def toPerm32 = sys.error("A Perm16 is never a valid Perm32, because all permutation with support <= 15 are Perm16.")
+}
+
+object Perm16 extends PermCompanion {
+  def supportMaxElement = 15
+  def tooBig(supportMax: Int) = sys.error(s"Permutation too big (supportMax = $supportMax) to be encoded in Perm16.")
+  def fromHighSupportAndImageFun(support: BitSet, image: Int => Int, supportMax: Int): Perm =
+    tooBig(supportMax)
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+    tooBig(supportMax)
 }
 
 protected sealed abstract class AbstractPerm extends Perm { lhs =>
@@ -79,16 +177,19 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
 abstract class PermBase extends AbstractPerm {
   def inverse: PermBase
 
+  def genOpLargeDefault(lhs: Perm, rhs: Perm, givenSupportMax: Int): Perm =
+    new PermArray(Array.tabulate(givenSupportMax + 1)( k => rhs.image(lhs.image(k)) ))
+
   def genOpLarge(rhs: Perm, givenSupportMax: Int): Perm =
-    new PermArray(Array.tabulate(givenSupportMax + 1)( k => rhs.image(image(k)) ))
+    genOpLargeDefault(this, rhs, givenSupportMax)
 
   def genRevOpLarge(lhs: Perm, givenSupportMax: Int): Perm =
-    new PermArray(Array.tabulate(givenSupportMax + 1)( k => image(lhs.image(k)) ))
+    genOpLargeDefault(lhs, this, givenSupportMax)
 
-  def genOp(rhs: Perm): Perm = {
-    var k = supportMax.max(rhs.supportMax)
-    val low = supportMin.min(rhs.supportMin)
-    @inline def img(preimage: Int) = rhs.image(image(preimage))
+  def genOpDefaultImpl(lhs: Perm, rhs: Perm, isRev: Boolean): Perm = {
+    var k = lhs.supportMax.reduceMax(rhs.supportMax).getOrElse(-1)
+    val low = lhs.supportMin.reduceMin(rhs.supportMin).getOrElse(0)
+    @inline def img(preimage: Int) = rhs.image(lhs.image(preimage))
     while (k >= low) {
       val i = img(k)
       if (k != i) {
@@ -109,50 +210,27 @@ abstract class PermBase extends AbstractPerm {
             k -= 1
           }
           return res
-        } else
-          return genOpLarge(rhs, k)
+        } else {
+          if (isRev)
+            return genRevOpLarge(lhs, k)
+          else
+            return genOpLarge(rhs, k)
+        }
       }
       k -= 1
     }
     Perm16Encoding.id
   }
 
-  def genRevOp(lhs: Perm): Perm = {
-    var k = supportMax.max(lhs.supportMax)
-    val low = supportMin.min(lhs.supportMin)
-    @inline def img(preimage: Int) = image(lhs.image(preimage))
-    while (k >= low) {
-      val i = img(k)
-      if (i != k) {
-        if (k <= Perm16Encoding.supportMaxElement) {
-          var encoding = Perm16Encoding.encode(k, i)
-          k -= 1
-          while (k >= low) {
-            encoding |= Perm16Encoding.encode(k, img(k))
-            k -= 1
-          }
-          return new Perm16(encoding)
-        } else if (k <= Perm32Encoding.supportMaxElement) {
-          val res = new Perm32
-          Perm32Encoding.encode(res, k, i)
-          k -= 1
-          while (k >= low) {
-            Perm32Encoding.encode(res, k, img(k))
-            k -= 1
-          }
-          return res
-        } else
-          return genRevOpLarge(lhs, k)
-      }
-      k -= 1
-    }
-    Perm16Encoding.id
-  }
+  def genOp(rhs: Perm): Perm = genOpDefaultImpl(this, rhs, false)
+  def genRevOp(lhs: Perm): Perm = genOpDefaultImpl(lhs, this, true)
 
   def genEqv(rhs: Perm): Boolean = {
+    val lhs = this
+    val lhsSM = lhs.supportMax
     val rhsSM = rhs.supportMax
-    if (supportMax != rhsSM) false else {
-      var k = supportMax
+    if (lhsSM != rhsSM) false else {
+      var k = lhsSM.getOrElse(-1)
       while (k >= 0) {
         if (image(k) != rhs.image(k))
           return false
@@ -180,66 +258,12 @@ final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long =
   def toPerm32 = this
 }
 
-final class PermPermutation extends BuildablePermutation[Perm] {
-  @inline def eqv(x: Perm, y: Perm): Boolean = (x, y) match {
-    case (lhs16: Perm16, rhs16: Perm16) => lhs16.encoding == rhs16.encoding
-    case (_: Perm16, _) | (_, _: Perm16) => false // by Perm contract
-    case (lhs32: Perm32, rhs32: Perm32) =>
-      lhs32.long2 == rhs32.long2 && lhs32.long1 == rhs32.long1 && lhs32.long0 == rhs32.long0
-    case (lhs: PermBase, rhs: Perm32) => lhs.genEqv(rhs)
-    case (lhs: Perm32, rhs: PermBase) => rhs.genEqv(lhs)
-    case (lhs: PermBase, rhs: PermBase) => lhs.genEqv(rhs)
-  }
-  @inline def op(x: Perm, y: Perm): Perm = (x, y) match {
-    case (lhs16: Perm16, rhs16: Perm16) => new Perm16(Perm16Encoding.op(lhs16.encoding, rhs16.encoding))
-    case (lhs: Perm, Perm16(0L)) => lhs
-    case (Perm16(0L), rhs: Perm) => rhs
-    case (lhs32: Perm32, rhs32: Perm32) => Perm32Encoding.op3232(lhs32, rhs32)
-    case (lhs32: Perm32, rhs16: Perm16) => Perm32Encoding.op3216(lhs32, rhs16)
-    case (lhs16: Perm16, rhs32: Perm32) => Perm32Encoding.op1632(lhs16, rhs32)
-    case (lhs: Perm, rhs: PermBase) => rhs.genRevOp(lhs)
-    case (lhs: PermBase, rhs: Perm) => lhs.genOp(rhs)
-  }
+object Perm32 extends PermCompanion {
+  def supportMaxElement = Perm32Encoding.supportMaxElement
 
-  @inline def support(p: Perm): BitSet = p.support
-  @inline def supportMin(p: Perm): Int = p.supportMin
-  @inline def supportMax(p: Perm): Int = p.supportMax
-  @inline def actr(preimage: Int, p: Perm): Int = p.image(preimage)
-  @inline override def actl(p: Perm, i: Int): Int = p.invImage(i)
-  @inline def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
-  @inline def inverse(p: Perm): Perm = p.inverse
-  @inline def id = Perm16Encoding.id
-  @inline def supportMaxElement = PermArray.supportMaxElement
-  @inline def fromImages(images: Seq[Int]): Perm = {
-    var k = images.length - 1
-    while (k >= 0 && images(k) == k)
-      k -= 1
-    if (k == -1)
-      id
-    else if (k <= Perm16Encoding.supportMaxElement)
-      new Perm16(Perm16Encoding.imagesEncoding(images, k))
-    else if (k <= Perm32Encoding.supportMaxElement)
-      Perm32Encoding.fromImages(images, k)
-    else
-      PermArray.fromImages(images, k)
-  }
-  @inline def fromSupportAndImages(support: BitSet, image: Int => Int): Perm =
-    if (support.isEmpty)
-      id
-    else {
-      val sm = support.max
-      assert(image(sm) != sm)
-      if (sm <= Perm16Encoding.supportMaxElement)
-        new Perm16(Perm16Encoding.supportAndImagesEncoding(support, image))
-      else if (sm <= Perm32Encoding.supportMaxElement)
-        Perm32Encoding.fromSupportAndImages(support, image)
-      else
-        PermArray.fromSupportAndImages(support, image)
-    }
-}
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+    Perm32Encoding.fromImages(images, supportMax)
 
-object Perm {
-  def apply(cycle: String): Perm = apply(cycle.map(DomainAlphabet.map(_)): _*)
-  def apply(seq: Int*): Perm = Cycles(seq: _*).to[Perm]
-  implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
+  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm =
+    Perm32Encoding.fromSupportAndImageFun(support, imageFun)
 }

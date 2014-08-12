@@ -1,9 +1,12 @@
 package net.alasc.math
 package perm
 
-import net.alasc.algebra._
 import scala.collection.immutable.BitSet
+
 import spire.syntax.signed._
+
+import net.alasc.algebra._
+import net.alasc.util._
 
 /** Permutation represented by an array of images, the array length being minimal with
   * respect to the permutation support, i.e. :
@@ -19,7 +22,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
 
   def inverse: PermArray = {
     val array = new Array[Int](images.length)
-    var k = supportMax
+    var k = supportMax.get
     while (k >= 0) {
       array(images(k)) = k
       k -= 1
@@ -28,10 +31,10 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 
   def image(preimage: Int) =
-    if (preimage > supportMax) preimage else images(preimage)
+    if (preimage > supportMax.get) preimage else images(preimage)
 
   def invImage(i: Int): Int =
-    if (i > supportMax) i else {
+    if (i > supportMax.get) i else {
       var k = images.length - 1
       while (k >= 0) {
         if (images(k) == i)
@@ -41,18 +44,21 @@ final class PermArray(val images: Array[Int]) extends PermBase {
       sys.error("Invalid permutation")
     }
 
-  @inline def supportMax = images.length - 1
+  @inline def supportMax = NNSome(images.length - 1)
 
-  def supportMin = {
+  def supportMin: NNOption = {
     var k = 0
-    while (k <= supportMax && images(k) == k)
+    if (supportMax.isEmpty) return NNNone
+    val sm = supportMax.get
+    while (k <= sm && images(k) == k)
       k += 1
-    if (k == images.length) -1 else k
+    assert(k != images.length)
+    NNSome(k)
   }
 
   def support = {
     var bitset = BitSet.empty
-    var k = supportMax
+    var k = supportMax.getOrElse(-1)
     while (k >= 0) {
       if (image(k) != k)
         bitset += k
@@ -61,7 +67,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
     bitset
   }
 
-  def isValidPerm32 = supportMax <= Perm32Encoding.supportMaxElement
+  def isValidPerm32 = supportMax.getOrElse(-1) <= Perm32Encoding.supportMaxElement
 
   def toPerm32 = {
     assert(isValidPerm32)
@@ -80,39 +86,17 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 }
 
-object PermArray {
+object PermArray extends PermCompanion {
   @inline def supportMaxElement = Int.MaxValue - 1
 
-  def fromImages(images: Seq[Int], givenMaxSupport: Int = -1): PermArray = {
-    var maxSupport = givenMaxSupport
-    if (maxSupport == -1) {
-      maxSupport = images.length - 1
-      while (maxSupport >= 0 && images(maxSupport) == maxSupport)
-        maxSupport -= 1
-    }
-    assert(maxSupport > Perm16Encoding.supportMaxElement)
-    new PermArray(images.view.take(maxSupport + 1).toArray)
-  }
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): PermArray =
+    new PermArray(images.view.take(supportMax + 1).toArray)
 
-  def fromSupportAndImages(support: BitSet, image: Int => Int): PermArray = {
-    assert(!support.isEmpty)
-    val maxSupport = support.max
-    assert(image(maxSupport) != maxSupport)
-    new PermArray(Array.tabulate(maxSupport + 1)(k => image(k)))
-  }
+  def fromHighSupportAndImageFun(support: BitSet, image: Int => Int, supportMax: Int): PermArray =
+    new PermArray(Array.tabulate(supportMax + 1)(k => if (support(k)) image(k) else k))
 }
 
 /*
-  def toPerm16 = {
-    var encoding = 0L
-    assert(isValidPerm16)
-    var k = images.length - 1
-    while (k >= 0) {
-      encoding += Perm16Encoding.encode(k, images(k))
-      k -= 1
-    }
-    new Perm16(new Perm16Val(encoding))
-  }
 
   override def hashCode: Int =
     if (isValidPerm16) toPerm16.hashCode
