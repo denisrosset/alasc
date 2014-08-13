@@ -138,6 +138,10 @@ trait PermCompanion {
   }
 }
 
+/** Class for tiny permutations on domain 0..15. Can be used either standalone as a value class,
+  * or as part of the `Perm` hierarchy, as it extends the universal trait `Perm`. In that case,
+  * the value class will be wrapped.
+  */
 final case class Perm16 private[math](val encoding: Long) extends AnyVal with Perm { lhs16 =>
   @inline def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
   @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
@@ -159,6 +163,9 @@ object Perm16 extends PermCompanion {
     tooBig(supportMax)
 }
 
+/** Base class for non-value class permutations. To have a base class to extend outside alasc,
+  * use `PermBase` instead.
+  */
 protected sealed abstract class AbstractPerm extends Perm { lhs =>
   /** Hash code for permutations: Perm16, Perm32, PermArray subclasses should provide the same
     * hashcode for equivalent permutations.
@@ -174,18 +181,36 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
   }
 }
 
+/** Base class for user-defined permutation types for large permutation. A default type
+  * is provided in alasc as `PermArray`.
+  * 
+  * The user can override the `genOpLarge`, `genRevOpLarge` methods in priority. The methods
+  * `genOp`, `genRevOp` can be override if the user-defined permutations have special structure
+  * that enable fast computation of the support of the result.
+  * 
+  * Have a look at the decision logic in `PermPermutation.op`.
+  */
 abstract class PermBase extends AbstractPerm {
   def inverse: PermBase
 
   def genOpLargeDefault(lhs: Perm, rhs: Perm, givenSupportMax: Int): Perm =
     new PermArray(Array.tabulate(givenSupportMax + 1)( k => rhs.image(lhs.image(k)) ))
 
+  /** Computes `this |+| rhs`, while the maximal element of the result support
+    * has already been computed by `genOp` and is greater than `Perm32.supportMaxElement`.
+    */
   def genOpLarge(rhs: Perm, givenSupportMax: Int): Perm =
     genOpLargeDefault(this, rhs, givenSupportMax)
 
+  /** Computes `lhs |+| this`, while the maximal element of the result support
+    * has already been computed by `genRevOp` and is greater than `Perm32.supportMaxElement`.
+    */
   def genRevOpLarge(lhs: Perm, givenSupportMax: Int): Perm =
     genOpLargeDefault(lhs, this, givenSupportMax)
 
+  /** Default `lhs |+| rhs` product implementation, which constructs a `Perm16` or `Perm32` if possible,
+    * and delegates to `genOpLarge` or `genRevOpLarge` otherwise.
+    */
   def genOpDefaultImpl(lhs: Perm, rhs: Perm, isRev: Boolean): Perm = {
     var k = lhs.supportMax.reduceMax(rhs.supportMax).getOrElse(-1)
     val low = lhs.supportMin.reduceMin(rhs.supportMin).getOrElse(0)
@@ -222,10 +247,20 @@ abstract class PermBase extends AbstractPerm {
     Perm16Encoding.id
   }
 
+  /** Computes the product `this |+| rhs`, where `this` is an user-defined permutation type, and 
+    * `rhs` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
+    */
   def genOp(rhs: Perm): Perm = genOpDefaultImpl(this, rhs, false)
+
+  /** Computes the product `lhs |+| this`, where `this` is an user-defined permutation type, and 
+    * `lhs` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
+    */
   def genRevOp(lhs: Perm): Perm = genOpDefaultImpl(lhs, this, true)
 
-  def genEqv(rhs: Perm): Boolean = {
+  /** Tests for equivalency. Can be overriden for speed; note that `rhs` can be any large permutation type,
+    * such as `PermArray` or `Perm32`, but not `Perm16`, as this possibility is already ruled out
+    * in `PermPermutation.eqv` logic. */
+  def genEqv(rhs: AbstractPerm): Boolean = {
     val lhs = this
     val lhsSM = lhs.supportMax
     val rhsSM = rhs.supportMax

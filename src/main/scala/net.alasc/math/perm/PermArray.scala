@@ -80,7 +80,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
     res
   }
 
-  override def genEqv(rhs: Perm): Boolean = rhs match {
+  override def genEqv(rhs: AbstractPerm): Boolean = rhs match {
     case rhs1: PermArray => images.sameElements(rhs1.images)
     case _ => super.genEqv(rhs)
   }

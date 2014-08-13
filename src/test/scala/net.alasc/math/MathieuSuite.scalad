@@ -15,25 +15,16 @@ object MathieuGroups {
 
 class MathieuSuite extends FunSuite with NonImplicitAssertions with Matchers {
   test("Mathieu group construction is correct for M11, M12 and M24, using deterministic Schreier-Sims") {
-    import BSGSOptions.deterministic
+    import BSGSOptions.deterministic._
     MathieuGroups.all.foreach {
-      case (gens, order) =>
-        val builder = BSGSBuilder.fromGenerators[Perm](gens)
-        builder.completeStrongGenerators
-        builder.chain.order shouldBe order
+      case (gens, order) => BSGS.fromGenerators(gens).order shouldBe order
     }
   }
 
   test("Mathieu group construction works using randomized Schreier-Sims") {
-    import BSGSOptions.randomized
+    import BSGSOptions.randomized._
     MathieuGroups.all.foreach {
-      case (gens, order) =>
-        val builder = new BSGSBuilder[Perm]
-        val bag = RandomBag(gens)
-        while (builder.chain.order < order)
-          for ( (node, p) <- builder.siftAndUpdateBase(bag.random(scala.util.Random)) )
-            node.addStrongGeneratorHere(p)
-        builder.chain.order shouldBe order
+      case (gens, order) => BSGS.fromGeneratorsAndOrder(gens, order).order shouldBe order
     }
   }
 }

@@ -19,10 +19,9 @@ class RubikCubeSuite extends FunSuite with Matchers {
   test("Rubik cube group order (example from GAP system)") {
     // http://www.gap-system.org/Doc/Examples/rubik.html
     val (generators, order) = RubikCube.group
-    val builder = BSGSBuilder.fromGenerators[Perm](generators)
-    builder.completeStrongGenerators
-    builder.chain.order shouldBe order
-
+    import BSGSOptions.deterministic._
+    val chain = BSGS.fromGenerators(generators)
+    chain.order shouldBe order
     val colors = List(0,
       1,1,1,1,1,1,1,1,
       2,2,2,2,2,2,2,2,

@@ -15,7 +15,7 @@ class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] 
 
   property("x === fromImages(x.images)") {
     forAll { (x: Perm) =>
-      Perm.Algebra.fromImages((0 to x.supportMax).map(_ <|+| x)) shouldEqv x
+      Perm.Algebra.fromImages((0 to x.supportMax.getOrElse(16)).map(_ <|+| x)) shouldEqv x
     }
   }
 
