@@ -22,10 +22,12 @@ trait Permutation[P] extends FiniteGroup[P] with Signed[P] with GroupAction[Int,
     * i.e. `S = { k | k <|+| p != k }`.
     */
   def support(p: P): BitSet
-  /** Returns the maximal element in the support of `p`, or -1 if the support is empty. */ 
+  /** Returns the maximal element in the support of `p`, or NNNone if the support is empty. */ 
   def supportMax(p: P): NNOption
-  /** Returns the minimal element in the support of `p`, or -1 if the support is empty. */
+  /** Returns the minimal element in the support of `p`, or NNNone if the support is empty. */
   def supportMin(p: P): NNOption
+  /** Returns an arbitrary element in the support of `p` or NNNone if support empty. */
+  def supportAny(p: P): NNOption = supportMax(p)
   /** Returns the value of the maximal support element support by this permutation type. */
   def supportMaxElement: Int
   /** Dummy overload for Signed, as one cannot change the sign of a permutation . */

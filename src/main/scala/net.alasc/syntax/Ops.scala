@@ -36,6 +36,7 @@ final class PermutationOps[A](lhs: A)(implicit ev: Permutation[A]) {
   def support(): BitSet = macro Ops.unop[BitSet]
   def supportMax(): NNOption = macro Ops.unop[NNOption]
   def supportMin(): NNOption = macro Ops.unop[NNOption]
+  def supportAny(): NNOption = macro Ops.unop[NNOption]
   def to[Q](implicit evQ: BuildablePermutation[Q]): Q = ev.to[Q](lhs)
 }
 
