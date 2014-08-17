@@ -204,15 +204,15 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     */
   def mutable(node: Node[P], after: MutableStartOrNode[P] = start)(
     implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): MutableNode[P] = {
-    @tailrec def rec(current: MutableStartOrNode[P]): MutableNode[P] = current match {
+    @tailrec def rec(prev: MutableStartOrNode[P]): MutableNode[P] = prev.next match {
       case IsMutableNode(mutableNext) =>
         if (mutableNext eq node)
           mutableNext
         else
           rec(mutableNext)
       case next: Node[P] =>
-        immutableToMutable(current, next)
-        rec(current)
+        immutableToMutable(prev, next)
+        rec(prev)
       case _: Term[P] => sys.error("Node cannot be found in the chain.")
     }
     rec(after)
