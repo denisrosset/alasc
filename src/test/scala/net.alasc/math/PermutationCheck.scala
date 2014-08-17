@@ -11,11 +11,11 @@ import spire.syntax.groupAction._
 import spire.syntax.eq._
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 
 
 trait PermutationGenerators[P] {
-  implicit def algebra: BuildablePermutation[P]
+  implicit def algebra: Permutation[P]
   implicit def maximumSize: Int = algebra.supportMaxElement.min(100000)
   implicit def arbitrary: Arbitrary[P] =
     Arbitrary {

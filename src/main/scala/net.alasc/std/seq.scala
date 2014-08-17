@@ -13,7 +13,7 @@ class SeqIndex[SA <: SeqLike[A, SA], A] extends Index[SA, A] {
 }
 
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: Permutation](implicit cbf: CanBuildFrom[Nothing, A, SA]) extends GroupAction[SA, P] {
-  import net.alasc.syntax.permutation._
+  import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.groupAction._
 

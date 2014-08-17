@@ -5,7 +5,7 @@ import scala.util.Random
 import spire.algebra.Group
 import spire.syntax.eq._
 
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 trait Subgroup[S, G] {
@@ -17,13 +17,13 @@ trait Subgroup[S, G] {
   /** Order of the subgroup `s`. */
   def order(s: S): BigInt
   /** Generates a random element of the group. */ 
-  def random(s: S, gen: Random): G
+  def randomElement(s: S, gen: Random): G
   /** Tests if the element `g` is contained inside `s`. */
   def contains(s: S, g: G): Boolean = elements(s).exists(g === _)
   /** Returns the minimal domain element which is permuted by `s`, or `NNNone` if
     * `s` is the trivial group = ().
     */
-  def supportMin(s: S)(implicit ev: Permutation[G]): NNOption = {
+  def supportMin(s: S)(implicit ev: PermutationAction[G]): NNOption = {
     var res: NNOption = NNNone
     generators(s).foreach { g =>
       val gMin = g.supportMin
@@ -37,7 +37,7 @@ trait Subgroup[S, G] {
   /** Returns the maximal domain element which is permuted by `s`, or `NNNone` if
     * `s` is the trivial group = ().
     */
-  def supportMax(s: S)(implicit ev: Permutation[G]): NNOption = {
+  def supportMax(s: S)(implicit ev: PermutationAction[G]): NNOption = {
     var res: NNOption = NNNone
     generators(s).foreach { g =>
       val gMin = g.supportMin

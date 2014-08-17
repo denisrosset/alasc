@@ -3,7 +3,7 @@ package perm
 
 import scala.util.hashing.MurmurHash3.{orderedHash, unorderedHash}
 import spire.syntax.groupAction._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 import net.alasc.algebra.Permutation
 
 /** Permutation hash strategy with optimization for tiny (support in 0..15), small (support in 0..31) permutations.

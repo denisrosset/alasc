@@ -9,7 +9,7 @@ import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import perm._
 
@@ -55,7 +55,7 @@ sealed trait Perm extends Any {
 object Perm extends PermCompanion {
   def supportMaxElement = PermArray.supportMaxElement
 
-  implicit val Algebra: BuildablePermutation[Perm] = new PermPermutation
+  implicit val Algebra: Permutation[Perm] = new PermPermutation
 
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)

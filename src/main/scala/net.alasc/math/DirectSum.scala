@@ -25,11 +25,11 @@ class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G], val algebra: Fini
   }
   def generators(ds: DS) = ds.seq.flatMap(_.generators)
   def order(ds: DS) = (BigInt(1) /: ds.seq) { case (o, s) => o * s.order }
-  def random(ds: DS, gen: Random) = (algebra.id /: ds.seq) { case (g, s) => g |+| s.random(gen) }
+  def randomElement(ds: DS, gen: Random) = (algebra.id /: ds.seq) { case (g, s) => g |+| s.randomElement(gen) }
 }
 
 object FixingSeq {
-  def apply[P](seq: Seq[Any])(implicit algebra: BuildablePermutation[P]): DirectSum[Conjugate[P, Sym[P]]] = {
+  def apply[P](seq: Seq[Any])(implicit algebra: Permutation[P]): DirectSum[Conjugate[P, Sym[P]]] = {
     val degree = seq.size
     val groups: Seq[Conjugate[P, Sym[P]]] = seq.zipWithIndex.groupBy(_._1).flatMap {
       case (_, Seq(one)) => None

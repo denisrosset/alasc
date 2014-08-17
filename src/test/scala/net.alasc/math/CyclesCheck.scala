@@ -9,7 +9,7 @@ import prop._
 import spire.syntax.group._
 import spire.syntax.groupAction._
 import spire.syntax.eq._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 
 class CyclesCheck extends PermutationCheck[Cycles] with PermutationGenerators[Cycles] {
   implicit def algebra = Cycles.Algebra

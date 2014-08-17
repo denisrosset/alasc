@@ -9,11 +9,11 @@ import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import perm._
 
-final class PermPermutation extends BuildablePermutation[Perm] {
+final class PermPermutation extends Permutation[Perm] {
   @inline def eqv(x: Perm, y: Perm): Boolean = (x, y) match {
     case (lhs16: Perm16, rhs16: Perm16) => lhs16.encoding == rhs16.encoding
     case (_: Perm16, _) | (_, _: Perm16) => false // by Perm contract
@@ -39,7 +39,7 @@ final class PermPermutation extends BuildablePermutation[Perm] {
   @inline def supportMax(p: Perm): NNOption = p.supportMax
   @inline def actr(preimage: Int, p: Perm): Int = p.image(preimage)
   @inline override def actl(p: Perm, i: Int): Int = p.invImage(i)
-  @inline def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
+  @inline override def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
   @inline def inverse(p: Perm): Perm = p.inverse
   @inline def id = Perm16Encoding.id
   @inline def supportMaxElement = PermArray.supportMaxElement

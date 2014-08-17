@@ -1,9 +1,12 @@
 package net.alasc.math
 
 import org.scalatest.{FunSuite, Matchers}
+
+import spire.syntax.groupAction._
+
 import net.alasc.syntax.subgroup._
+import net.alasc.std.seq._
 import bsgs._
-import BSGSOptions.randomized
 
 object RubikCube {
   def g1 = Perm( 1, 3, 8, 6)( 2, 5, 7, 4)( 9,33,25,17)(10,34,26,18)(11,35,27,19)
@@ -19,16 +22,16 @@ class RubikCubeSuite extends FunSuite with Matchers {
   test("Rubik cube group order (example from GAP system)") {
     // http://www.gap-system.org/Doc/Examples/rubik.html
     val (generators, order) = RubikCube.group
-    import BSGSOptions.deterministic._
-    val chain = BSGS.fromGenerators(generators)
+    val alg = algorithms.BasicAlgorithms.deterministic[Perm]
+    val chain = alg.completeChainFromGenerators(generators).toChain
     chain.order shouldBe order
-    val colors = List(0,
+    val colors = Seq(0,
       1,1,1,1,1,1,1,1,
       2,2,2,2,2,2,2,2,
       3,3,3,3,3,3,3,3,
       4,4,4,4,4,4,4,4,
       5,5,5,5,5,5,5,5,
       6,6,6,6,6,6,6,6)
-//    assert(g.fixing(colors).order === 1) FIXME: restore
+    chain.generators.exists { g => (colors <|+| g).sameElements(colors) } shouldBe false
   }
 }

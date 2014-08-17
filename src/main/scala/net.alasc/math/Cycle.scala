@@ -2,14 +2,21 @@ package net.alasc
 package math
 
 import scala.language.implicitConversions
+
+import scala.collection.immutable.BitSet
+
 import spire.algebra._
 import spire.syntax.order._
 import spire.syntax.groupAction._
 import spire.syntax.signed._
-import scala.collection.immutable.BitSet
+
+import net.alasc.algebra.PermutationAction
+import net.alasc.util._
 
 /** Represent a cyclic permutation of non-negative indices. */
 class Cycle private[alasc](val seq: Seq[Int]) {
+  require(seq.size > 1)
+
   def toCycles = new Cycles(Seq(this))
 
   def length = seq.length
@@ -49,11 +56,15 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 
 
 class CycleSigned extends Signed[Cycle] {
-  def signum(c: Cycle) = if (c.length % 2 == 0) 1 else -1
-  def abs(c: Cycle): Cycle = if (signum(c) == 1) c else sys.error(s"The cycle $c is odd.")
+  override def signum(c: Cycle) = if (c.length % 2 == 0) 1 else -1
 }
 
-class CycleIntAction extends GroupAction[Int, Cycle] {
+class CyclePermutationAction extends PermutationAction[Cycle] {
+  def support(c: Cycle): BitSet = BitSet(c.seq: _*)
+  def supportMax(c: Cycle) = NNSome(c.seq.max)
+  def supportMin(c: Cycle) = NNSome(c.seq.min)
+  override def supportAny(c: Cycle) = NNSome(c.seq.head)
+  def supportMaxElement = Int.MaxValue
   def actl(c: Cycle, k: Int) = c.seq.indexOf(k) match {
     case -1 => k
     case i => c.seq((c.seq.size + i - 1) % c.seq.size)
@@ -79,7 +90,7 @@ class CycleOrder extends Order[Cycle] {
 }
 
 object Cycle {
-  implicit final val CycleIntAction: GroupAction[Int, Cycle] = new CycleIntAction
+  implicit final val CyclePermutationAction: PermutationAction[Cycle] = new CyclePermutationAction
   implicit final val CycleSigned: Signed[Cycle] = new CycleSigned
   implicit final val CycleOrder: Order[Cycle] = new CycleOrder
 

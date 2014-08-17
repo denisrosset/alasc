@@ -29,7 +29,7 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
   def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
 }
 
-class CyclesPermutation extends BuildablePermutation[Cycles] {
+class CyclesPermutation extends Permutation[Cycles] {
   implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
 
   def supportMaxElement = Int.MaxValue
@@ -68,10 +68,13 @@ class CyclesPermutation extends BuildablePermutation[Cycles] {
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
   override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
 
-  def signum(c: Cycles) = (1 /: c.seq) { case (sIt, cycle) => sIt * cycle.signum }
+  override def signum(g: Cycles) = (1 /: g.seq) { case (sIt, cycle) => sIt * cycle.signum }
 
   def plus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ + n))
   def minus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ - n))
+
+  override def supportAny(c: Cycles) =
+    if (c.seq.isEmpty) NNNone else NNSome(c.seq.head.seq.head)
 
   def supportMin(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
   def supportMax(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))

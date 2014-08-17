@@ -3,6 +3,10 @@ package net.alasc.syntax
 import net.alasc.algebra._
 import scala.language.implicitConversions
 
+trait CheckSyntax {
+  implicit def checkSyntax[A: Check](a: A) = new CheckOps(a)
+}
+
 trait LengthSyntax {
   implicit def lengthSyntax[A: Length](a: A) = new LengthOps(a)  
 }
@@ -23,8 +27,8 @@ trait FiniteGroupSyntax {
   implicit def finiteGroupSyntax[A: FiniteGroup](a: A) = new FiniteGroupOps(a)
 }
 
-trait PermutationSyntax extends FiniteGroupSyntax {
-  implicit def permutationSyntax[A: Permutation](a: A) = new PermutationOps(a)
+trait PermutationActionSyntax extends FiniteGroupSyntax {
+  implicit def permutationActionSyntax[A: PermutationAction](a: A) = new PermutationActionOps(a)
 }
 
 trait ShiftablePermutationSyntax extends FiniteGroupSyntax {
@@ -36,11 +40,12 @@ trait SubgroupSyntax {
 }
 
 trait AllSyntax
-    extends LengthSyntax
+    extends CheckSyntax
+    with LengthSyntax
     with BigLengthSyntax
     with IndexSyntax
     with BigIndexSyntax
     with FiniteGroupSyntax
-    with PermutationSyntax
+    with PermutationActionSyntax
     with ShiftablePermutationSyntax
     with SubgroupSyntax

@@ -8,7 +8,7 @@ import spire.syntax.group._
 import spire.syntax.groupAction._
 import spire.syntax.eq._
 import net.alasc.algebra._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 
 class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] {
   implicit def algebra = Perm.Algebra

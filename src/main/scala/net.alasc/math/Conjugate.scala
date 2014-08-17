@@ -5,7 +5,6 @@ import scala.util.Random
 import spire.algebra.{Group, GroupAction}
 import spire.syntax.group._
 import net.alasc.syntax.subgroup._
-import net.alasc.syntax.permutation._
 import scala.language.implicitConversions
 
 /** Conjugate of an object `t` by a group element `g`. */
@@ -34,5 +33,5 @@ class ConjugateSubgroup[G, S](implicit val sg: Subgroup[S, G], val algebra: Fini
   def elements(conj: C) = conj.t.elements.map(conj.iso)
   def generators(conj: C) = conj.t.generators.map(conj.iso)
   def order(conj: C) = conj.t.order
-  def random(conj: C, gen: Random) = conj.iso(conj.t.random(gen))
+  def randomElement(conj: C, gen: Random) = conj.iso(conj.t.randomElement(gen))
 }

@@ -5,7 +5,7 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
 import spire.syntax.signed._
-import net.alasc.syntax.permutation._
+import net.alasc.syntax.permutationAction._
 
 class CycleSuite extends FunSuite with NonImplicitAssertions with Matchers with EqMatchers {
   test("For g = (1, 2, 3), 1 <* g = 2, 2 <* g = 3, 3 <* g = 1") {

@@ -6,8 +6,8 @@ import scala.collection.immutable.BitSet
 import spire.syntax.groupAction._
 import spire.syntax.signed._
 
-import net.alasc.algebra.BuildablePermutation
-import net.alasc.syntax.permutation._
+import net.alasc.algebra.Permutation
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 /** Permutation with domain in [0, 15] encoded in a Long used as a bit string.
@@ -123,25 +123,3 @@ object Perm16Encoding {
     encoding
   }
 }
-
-
-/*
-
-final class Perm16ValPermutation extends BuildablePermutation[Perm16Val] {
-  def supportMaxElement = 15
-
-  def eqv(x: Perm16Val, y: Perm16Val): Boolean = x === y
-  def id = new Perm16Val(0L)
-  def op(x: Perm16Val, y: Perm16Val): Perm16Val = x |+| y
-  def signum(a: Perm16Val) = Cycles.Algebra.fromPermutation(a)(this).signum
-  def inverse(p: Perm16Val) = p.inverse
-  def support(p: Perm16Val) = p.support
-  def supportMax(p: Perm16Val) = p.supportMax
-  def supportMin(p: Perm16Val) = p.supportMin
-  override def actl(g: Perm16Val, i: Int): Int = g.invImage(i)
-  def actr(k: Int, g: Perm16Val): Int = g.image(k)
-  def minus(p: Perm16Val, n: Int): Perm16Val = p - n
-  def plus(p: Perm16Val, n: Int): Perm16Val = p + n
-}
-
- */
