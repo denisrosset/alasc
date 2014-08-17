@@ -101,11 +101,12 @@ object Cycle {
       val i = seq.indexOf(seq.min)
       new Cycle(seq.drop(i) ++ seq.take(i))
   }
-  def orbit(k: Int, image: Int => Int): Cycle = {
+  def orbit(k: Int, image: Int => Int): Option[Cycle] = {
     @scala.annotation.tailrec def rec(cycle: List[Int]): List[Int] = {
       val i = image(cycle.head)
       if (i == k) cycle.reverse else rec(i :: cycle)
     }
-    Cycle(rec(k :: Nil): _*)
+    val res = rec(k :: Nil)
+    if (res.size == 1) None else Some(Cycle(rec(k :: Nil): _*))
   }
 }

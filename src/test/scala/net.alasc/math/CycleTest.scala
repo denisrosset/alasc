@@ -16,7 +16,7 @@ class CycleSuite extends FunSuite with NonImplicitAssertions with Matchers with 
   }
   test("Cycle construction") {
     val g = Cycle(1, 2, 3)
-    Cycle.orbit(2, _ <|+| g) shouldEqv g
+    Cycle.orbit(2, _ <|+| g).get shouldEqv g
   }
   test("g1 = (1,2,3), g2 = (1,2), g1 g2 = (2,3), g2 g1 = (1,3) -- Holt 2.1.5") {
     val g1 = Cycles(1, 2, 3)

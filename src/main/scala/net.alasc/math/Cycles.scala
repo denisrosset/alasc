@@ -45,8 +45,10 @@ class CyclesPermutation extends Permutation[Cycles] {
         case true => fromDisjointCycles(cycles)
         case false =>
           val k = remSupport.head
-          val newCycle = Cycle.orbit(k, image)
-          rec(newCycle :: cycles, remSupport -- newCycle.seq)
+          Cycle.orbit(k, image) match {
+            case Some(newCycle) => rec(newCycle :: cycles, remSupport -- newCycle.seq)
+            case None => rec(cycles, remSupport - k)
+          }
       }
     rec(Nil, support)
   }

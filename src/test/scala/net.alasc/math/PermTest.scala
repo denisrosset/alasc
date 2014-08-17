@@ -16,7 +16,7 @@ class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with E
   }
   test("Perm conversion and Cycle.orbit") {
     val g = Perm(1, 2, 3)
-    (Cycle.orbit(2, _ <|+| g).toCycles === g.to[Cycles]) shouldBe true
+    (Cycle.orbit(2, _ <|+| g).get.toCycles === g.to[Cycles]) shouldBe true
   }
   test("g1 = (1,2,3), g2 = (1,2), g1 g2 = (2,3), g2 g1 = (1,3) -- Holt 2.1.5") {
     val g1 = Perm(1, 2, 3)
