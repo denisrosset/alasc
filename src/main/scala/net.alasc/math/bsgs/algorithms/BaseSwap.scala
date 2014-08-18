@@ -53,7 +53,8 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
   def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     import OrbitInstances._
     implicit def action = mutableChain.start.action
-    val nodeCopy = nodeBuilder.standaloneClone(node1)
+    val oldNode1 = nodeBuilder.standaloneClone(node1)
+    val oldNode2 = nodeBuilder.standaloneClone(node2)
     val gammaSet = MutableBitSet.empty ++ node1.orbit
     val (newNode1, newNode2, sizeGoal2) = prepareBaseSwap(mutableChain, node1, node2)
     require(newNode1.next eq newNode2)
@@ -61,18 +62,20 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
     gammaSet -= newNode2.beta
     while (newNode2.orbitSize < sizeGoal2) {
       val gamma = gammaSet.head
-      val ipx@InversePair(x, xInv) = nodeCopy.uPair(gamma)
+      val ipx@InversePair(x, xInv) = oldNode1.uPair(gamma)
+      assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
-      if (!newNode1.inOrbit(b))
-        gammaSet --= ImmutableBitSet(gamma) <|+| newNode1.strongGeneratingSet
+      if (!oldNode2.inOrbit(b))
+        gammaSet -= gamma //ImmutableBitSet(gamma) <|+| newNode1.strongGeneratingSet
       else {
-        val ipy = newNode1.uPair(b)
+        val ipy = oldNode2.uPair(b)
         val ipyx = ipy |+| ipx
-        if (!newNode2.inOrbit(node2.beta <|+| ipyx)) {
+        if (!newNode2.inOrbit(node2.beta <|+| ipyx.g)) {
           newNode2.addToOwnGenerators(ipyx)
           newNode2.updateTransversal(ipyx)
           newNode1.updateTransversal(ipyx) // TODO, remove not needed ?
-          gammaSet --= ImmutableBitSet(newNode2.beta) <|+| newNode1.strongGeneratingSet
+          gammaSet -= gamma
+//          gammaSet --= newNode2.orbitSet
         }
         // TODO: what happens if node2.inOrbit is true ?
         // gamma will not be removed from gammaSet

@@ -80,13 +80,15 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] {
 }
 
 trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
+  /** Finds an element such that `beta` is stabilized by the subgroup after the element. */  
   def findElemBeforeStabilizer(mutableChain: MutableChain[P], from: StartOrNode[P], beta: Int)(
     implicit action: PermutationAction[P]): StartOrNode[P] = {
+    require(beta >= 0)
     require(action == mutableChain.start.action)
     @tailrec def rec(chain: Chain[P], lastCandidate: StartOrNode[P]): StartOrNode[P] = chain match {
       case _: Term[P] => lastCandidate
       case node: Node[P] =>
-        if (node.ownGenerators.exists(g => (beta <|+| g) != g))
+        if (node.ownGenerators.exists(g => (beta <|+| g) != beta))
           rec(node.next, node)
         else
           rec(node.next, lastCandidate)
@@ -94,8 +96,9 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     rec(from.next, from)
   }
 
-  def insertNewBasePoint(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
+  def insertNewBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
     implicit action: PermutationAction[P]): MutableNode[P] = {
+    require(beta >= 0)
     require(action == mutableChain.start.action)
     val insertAfter = mutableChain.mutableStartOrNode(findElemBeforeStabilizer(mutableChain, afterThis, beta))
     val newNode = nodeBuilder.standalone(beta)(mutableChain.start.action, algebra)
@@ -103,12 +106,14 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     newNode
   }
 
-  def changeBasePoint(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
-    implicit action: PermutationAction[P]): MutableNode[P] =
+  def changeBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
+    implicit action: PermutationAction[P]): MutableNode[P] = {
+    require(beta >= 0)
     putExistingBasePointAfter(mutableChain, afterThis, beta).getOrElse {
-      insertNewBasePoint(mutableChain, afterThis, beta)
+      insertNewBasePointAfter(mutableChain, afterThis, beta)
       putExistingBasePointAfter(mutableChain, afterThis, beta).getOrElse(sys.error("Insertion should always suceed"))
     }
+  }
 
   /** Shifts the existing `beta` at the node after `after`, if the chain already contains `basePoint`.
     * 
@@ -143,7 +148,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
             if (mutableNode.beta == beta)
               rec(mutableNode, mutablePrev, remaining)
             else {
-              val changedNode = changeBasePoint(mutableChain, mutablePrev, beta)
+              val changedNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
               rec(changedNode, mutablePrev, remaining)
             }
           case node: Node[P] =>
@@ -151,7 +156,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
               rec(node, lastMutableStartOrNode, remaining)
             else {
               val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
-              val changedNode = changeBasePoint(mutableChain, mutablePrev, beta)
+              val changedNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
               rec(changedNode, mutablePrev, remaining)
             }
           case term: Term[P] =>
