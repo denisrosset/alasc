@@ -147,18 +147,11 @@ sealed trait Chain[P] extends Elem[P] {
 
   def conjugatedBy(p: P)(implicit algebra: Group[P], options: Options): Chain[P] = conjugatedBy(InversePair(p, p.inverse))
  */
-  def check: Unit = {
-    assert(base.toSet.size == base.size) // base elements are unique
-    checkFixBase(Nil)
-    checkNode
-  }
-
-  def checkNode: Unit = ???
-  def checkFixBase(partialBase: List[Int]): Unit = ???
 }
 
 object Chain {
   implicit def ChainSubgroup[P](implicit algebra: FiniteGroup[P]): Subgroup[Chain[P], P] = new ChainSubgroup[P]
+  implicit def ChainCheck[P](implicit algebra: FiniteGroup[P]): Check[Chain[P]] = new ChainCheck[P]
 }
 
 /** Node in a BSGS chain.
@@ -258,7 +251,7 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
   /** Adds a new generator `g` (given as an `InversePair`) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals.
     */
-  protected[bsgs] def addToOwnGenerators(g: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def addToOwnGenerators(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
 
   /** Updates this node transversal by the addition of a new generator `g`,
     * provided as an `InversePair`.
@@ -267,19 +260,26 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     *       have been added to this node or a children node `ownGenerators`
     *       by using addToOwnGenerators once.
     */
-  protected[bsgs] def updateTransversal(g: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
 
   /*
   /** Conjugates the current node by the group element `ip`, provided as an input pair
     * to avoid multiple inverse element computations. */
   protected[bsgs] def conjugateThisNode(ip: InversePair[P]): Unit
    */
-  /** Changes the base point of the current node, filters its own generators according to the predicate,
-    * and recomputes the transversal.
+
+  /** Move to the next node the own generators that belong to it, and updates the transversals
+    * of the next node.
     * 
-    * @return the removed generators.
+    * Used after a base swap.
     */
-  protected[bsgs] def changeBasePoint(newBeta: Int, pred: P => Boolean)(implicit ev: FiniteGroup[P]): Iterable[InversePair[P]]
+  protected[bsgs] def moveOwnGeneratorsToNext(mutableNext: MutableNode[P])(implicit ev: FiniteGroup[P]): Unit
+
+  /** Clears the transversal and the own generators sequence.
+    * 
+    * Used after a base swap.
+    */
+  protected[bsgs] def clear(implicit ev: FiniteGroup[P]): Unit
 }
 
 final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
@@ -293,6 +293,15 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
 }
 
 final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Chain[P]] {
+  /*  def check: Unit = {
+    assert(base.toSet.size == base.size) // base elements are unique
+    checkFixBase(Nil)
+    checkNode
+  }
+
+  def checkNode: Unit = ???
+  def checkFixBase(partialBase: List[Int]): Unit = ownGenerators.forall(g => partialBase.forall(b => (b <|+| g) == b))
+   */
   def check(chain: Chain[P]): Unit = {
     val baseSoFar = mutable.ArrayBuffer.empty[Int]
     @tailrec def rec(current: Chain[P], checkImmutable: Boolean = false): Unit = current match {

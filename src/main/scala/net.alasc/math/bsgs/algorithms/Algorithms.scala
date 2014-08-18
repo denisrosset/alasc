@@ -10,7 +10,7 @@ trait Algorithms[P] {
   implicit def algebra: FiniteGroup[P]
 }
 
-trait BasicAlgorithms[P] extends SchreierSims[P] with BaseChange[P]
+trait BasicAlgorithms[P] extends SchreierSims[P] with BaseChange[P] with BaseSwap[P] with BaseAlgorithms[P]
 
 object BasicAlgorithms {
   def deterministic[P](implicit givenAlgebra: FiniteGroup[P]): BasicAlgorithms[P] =

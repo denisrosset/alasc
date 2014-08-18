@@ -44,7 +44,7 @@ final class MutableNodeExplicit[P](
 
   protected def addTransversalElement(b: Int, pair: InversePair[P]): Unit = { transversal.update(b, pair) }
 
-  protected[bsgs] def addToOwnGenerators(g: InversePair[P])(implicit ev: FiniteGroup[P]) = { ownGeneratorsPairs += g }
+  protected[bsgs] def addToOwnGenerators(ip: InversePair[P])(implicit ev: FiniteGroup[P]) = { ownGeneratorsPairs += ip }
 
   protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
     var toCheck = MutableBitSet.empty
@@ -79,6 +79,22 @@ final class MutableNodeExplicit[P](
     transversal = newTransversal
   }
 
+  protected[bsgs] def moveOwnGeneratorsToNext(mutableNext: MutableNode[P])(implicit ev: FiniteGroup[P]): Unit = {
+    require(next eq mutableNext)
+    val (toNext, remaining) = ownGeneratorsPairs.partition(ip => (beta <|+| ip.g) == beta)
+    ownGeneratorsPairs = remaining
+    for (ip <- toNext) {
+      assert((mutableNext.beta <|+| ip.g) != mutableNext.beta)
+      mutableNext.addToOwnGenerators(ip)
+      mutableNext.updateTransversal(ip)
+    }
+  }
+
+  protected[bsgs] def clear(implicit ev: FiniteGroup[P]): Unit = {
+    transversal = MutableLongMap[InversePair[P]](beta.toLong -> InversePair(ev.id, ev.id))
+    ownGeneratorsPairs = UnrolledBuffer.empty[InversePair[P]]
+  }
+/* TODO: remove
   protected[bsgs] def changeBasePoint(newBeta: Int, pred: P => Boolean)(implicit ev: FiniteGroup[P]): Iterable[InversePair[P]] = {
     val (keep, removedPairs) = ownGeneratorsPairs.partition(ip => pred(ip.g))
     ownGeneratorsPairs = keep
@@ -87,7 +103,7 @@ final class MutableNodeExplicit[P](
     transversal.update(newBeta, ev.id)
     strongGeneratingSetPairs.foreach { ip => updateTransversal(ip) }
     removedPairs
-  }
+  }*/
 }
 
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {

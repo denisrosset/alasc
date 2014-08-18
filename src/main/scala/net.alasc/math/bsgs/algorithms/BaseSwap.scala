@@ -9,15 +9,16 @@ import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra.FiniteGroup
+import net.alasc.syntax.subgroup._
 
 trait BaseSwap[P] extends MutableAlgorithms[P] {
   /** Base swap.
     * 
-    * @param firstNode First base point to swap with its next node.
+    * @param secondNode Second base point to swap with its previous node.
     * 
     * @return the two swapped mutable nodes.
     */
-  def baseSwap(mutableChain: MutableChain[P], firstNode: MutableNode[P]): (MutableNode[P], MutableNode[P])
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P])
 }
 
 trait BaseSwapCommon[P] extends BaseSwap[P] {
@@ -27,22 +28,14 @@ trait BaseSwapCommon[P] extends BaseSwap[P] {
     * The chain is not in a complete state after `prepareSwap`, so either randomized or deterministic methods
     * must be used to complete the strong generating set.
     */
-  protected def prepareBaseSwap(mutableChain: MutableChain[P],
+  protected def prepareBaseSwap(mutableChain: MutableChain[P], node1: MutableNode[P],
     node2: MutableNode[P]): (MutableNode[P], MutableNode[P], BigInt) = {
     implicit def action = mutableChain.start.action
-    val node1 = IsMutableNode.unapply(node2.prev).getOrElse(sys.error("Previous element must be mutable node."))
     val sizesProduct = BigInt(node1.orbitSize) * BigInt(node2.orbitSize)
 
-    val newBeta1 = node2.beta
-    val newBeta2 = node1.beta
+    val (newNode1, newNode2) = mutableChain.swap(node1.prev, node1, node2, node2.next)
 
-    node1.changeBasePoint(newBeta1, g => true) // keep all generators for node1
-    val removedOwnGenerators = node2.changeBasePoint(newBeta2, g => (newBeta1 <|+| g) == newBeta1)
-    removedOwnGenerators.foreach { g =>
-      node1.addToOwnGenerators(g)
-      node1.updateTransversal(g)
-    }
-    (node1, node2, (sizesProduct / node1.orbitSize).toInt)
+    (newNode1, newNode2, (sizesProduct / newNode1.orbitSize).toInt)
   }
 }
 
@@ -57,36 +50,36 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
     * See also http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf for an alternate
     * implementation.
     */
-  def baseSwap(mutableChain: MutableChain[P],
-    firstNode: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     import OrbitInstances._
     implicit def action = mutableChain.start.action
-    val nodeCopy = nodeBuilder.standaloneClone(firstNode)
-    val gammaSet = MutableBitSet.empty ++ firstNode.orbit
-    val (node1, node2, sizeGoal2) = prepareBaseSwap(mutableChain, firstNode)
-    gammaSet -= node1.beta
-    gammaSet -= node2.beta
-    while (node2.orbitSize < sizeGoal2) {
+    val nodeCopy = nodeBuilder.standaloneClone(node1)
+    val gammaSet = MutableBitSet.empty ++ node1.orbit
+    val (newNode1, newNode2, sizeGoal2) = prepareBaseSwap(mutableChain, node1, node2)
+    require(newNode1.next eq newNode2)
+    gammaSet -= newNode1.beta
+    gammaSet -= newNode2.beta
+    while (newNode2.orbitSize < sizeGoal2) {
       val gamma = gammaSet.head
       val ipx@InversePair(x, xInv) = nodeCopy.uPair(gamma)
-      val b = node2.beta <|+| xInv
-      if (!node2.inOrbit(b))
-        gammaSet --= ImmutableBitSet(gamma) <|+| node1.strongGeneratingSet
+      val b = newNode1.beta <|+| xInv
+      if (!newNode1.inOrbit(b))
+        gammaSet --= ImmutableBitSet(gamma) <|+| newNode1.strongGeneratingSet
       else {
-        val ipy = node2.uPair(b)
+        val ipy = newNode1.uPair(b)
         val ipyx = ipy |+| ipx
-        if (!node2.inOrbit(node2.beta <|+| ipyx)) {
-          node2.addToOwnGenerators(ipyx)
-          node2.updateTransversal(ipyx)
-          node1.updateTransversal(ipyx)
-          gammaSet --= ImmutableBitSet(node2.beta) <|+| node1.strongGeneratingSet
+        if (!newNode2.inOrbit(node2.beta <|+| ipyx)) {
+          newNode2.addToOwnGenerators(ipyx)
+          newNode2.updateTransversal(ipyx)
+          newNode1.updateTransversal(ipyx) // TODO, remove not needed ?
+          gammaSet --= ImmutableBitSet(newNode2.beta) <|+| newNode1.strongGeneratingSet
         }
         // TODO: what happens if node2.inOrbit is true ?
         // gamma will not be removed from gammaSet
         // and deterministicBaseSwap could loop forever
       }
     }
-    (node1, node2)
+    (newNode1, newNode2)
   }
 }
 
@@ -98,21 +91,22 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
     * Based on algorithm 2.8 of 
     * http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf .
     */
-  def baseSwap(mutableChain: MutableChain[P],
-    firstNode: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     implicit def action = mutableChain.start.action
-    val nodeCopy = nodeBuilder.standaloneClone(firstNode)
-    val (node1, node2, sizeGoal2) = prepareBaseSwap(mutableChain, firstNode)
-    while (node2.orbitSize < sizeGoal2) {
-      val g = nodeCopy.randomU(randomGenerator) // TODO: |+| with random element of node2.next ?
-      val h = g |+| node1.uInv(node1.beta <|+| g)
+    val node1Copy = nodeBuilder.standaloneClone(node1)
+    val node2Copy = nodeBuilder.standaloneClone(node2)
+    val node2Next = node2.next
+    val (newNode1, newNode2, sizeGoal2) = prepareBaseSwap(mutableChain, node1, node2)
+    while (newNode2.orbitSize < sizeGoal2) {
+      val g = node2Next.randomElement(randomGenerator) |+| node2Copy.randomU(randomGenerator) |+| node1Copy.randomU(randomGenerator)
+      val h = g |+| newNode1.uInv(newNode1.beta <|+| g)
       val hPair = InversePair(h, h.inverse)
-      if (!node2.inOrbit(node2.beta <|+| h)) {
-        node2.addToOwnGenerators(hPair)
-        node2.updateTransversal(hPair)
-        node1.updateTransversal(hPair)
+      if (!newNode2.inOrbit(newNode2.beta <|+| h)) {
+        newNode2.addToOwnGenerators(hPair)
+        newNode2.updateTransversal(hPair)
+        newNode1.updateTransversal(hPair) // TODO, remove not needed ?
       }
     }
-    (node1, node2)
+    (newNode1, newNode2)
   }
 }
