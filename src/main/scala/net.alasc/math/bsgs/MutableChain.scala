@@ -142,7 +142,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * the base points are swapped and previous valid generators are added.
     * 
     * Before: prev -> node1(beta1) -> node2(beta2) -> next
-    * After:  prev ->  new1(beta2) ->  new2(beta1) -> next
+    * After:  prev ->  new1(beta2) ->  new2(beta1) -> next -- standalone node1(beta1), node2(beta2)
     * 
     * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
     */
@@ -191,54 +191,6 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     }
     val sizeGoal2 = (BigInt(node1.orbitSize) * BigInt(node2.orbitSize)) / newNode1.orbitSize
     (newNode1, newNode2, sizeGoal2)
-  }
-
-  /** Swaps `node1` and `node2`, sandwiched between `prev` and `next`, filters the ge
-    * 
-    * Before: prev -> node1 -> node2 -> next
-    * After : prev -> node2 -> node1 -> next
-    * 
-    * Will change the order of the nodes in the chain, and update the references: any
-    * previous reference to `node1` and `node2` is invalidated.
-    */
-  protected[bsgs] def swap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])(
-    implicit ev: FiniteGroup[P]) : (MutableNode[P], MutableNode[P]) = {
-    implicit def action = start.action
-    require(prev.next eq node1)
-    require(node1.prev eq prev)
-    require(node1.next eq node2)
-    require(node2.prev eq node1)
-    require(node2.next eq next)
-    IsMutableNode.unapply(next).foreach { n => require(n.prev eq node2) }
-    val generators = node1.ownGeneratorsPairs ++ node2.ownGeneratorsPairs
-    prev.next = node2
-    node2.prev = prev
-    node2.next = node1
-    node1.prev = node2
-    node1.next = next
-    IsMutableNode.unapply(next).foreach { n => n.prev = node1 }
-    node1.clear
-    node2.clear
-    import scala.collection.mutable.ArrayBuffer
-    val node1own = ArrayBuffer.empty[InversePair[P]]
-    val node2own = ArrayBuffer.empty[InversePair[P]]
-    generators.foreach { g =>
-      ((node2.beta <|+| g) == node2.beta, (node1.beta <|+| g) == node1.beta) match {
-        case (true, true) => sys.error("impossible")
-        case (true, false) => node1own += g
-        case (false, _) => node2own += g
-      }
-    }
-    node1own.foreach { g =>
-      node1.addToOwnGenerators(g)
-      node1.updateTransversal(g)
-      node2.updateTransversal(g)
-    }
-    node2own.foreach { g =>
-      node2.addToOwnGenerators(g)
-      node2.updateTransversal(g)
-    }
-    (node2, node1)
   }
 
   /** Returns a mutable node after `elem`, making it mutable from immutable, or inserting a new node it if terminal.
