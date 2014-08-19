@@ -66,7 +66,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
       assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
       if (!oldNode2.inOrbit(b))
-        gammaSet -= gamma //ImmutableBitSet(gamma) <|+| newNode1.strongGeneratingSet
+        gammaSet --= ImmutableBitSet(gamma) <|+| newNode2.strongGeneratingSet
       else {
         val ipy = oldNode2.uPair(b)
         val ipyx = ipy |+| ipx
@@ -74,8 +74,8 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
           newNode2.addToOwnGenerators(ipyx)
           newNode2.updateTransversal(ipyx)
           newNode1.updateTransversal(ipyx) // TODO, remove not needed ?
-          gammaSet -= gamma
-//          gammaSet --= newNode2.orbitSet
+//          gammaSet -= gamma
+          gammaSet --= newNode2.orbitSet
         }
         // TODO: what happens if node2.inOrbit is true ?
         // gamma will not be removed from gammaSet
