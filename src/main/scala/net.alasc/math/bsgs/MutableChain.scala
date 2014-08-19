@@ -86,6 +86,14 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     require(node.next eq next)
     IsMutableNode.unapply(next).foreach { n => require(n.prev eq node) }
     prev.next = newNode
+    newNode.prev = prev
+    newNode.next = next
+    IsMutableNode.unapply(next).foreach { n => n.prev = newNode }
+    // make node standalone
+    IsMutableNode.unapply(node).foreach { n =>
+      n.prev = null
+      n.next = null
+    }
   }
 
   /** Remove `node`, located between `prev` and `next`.
@@ -99,7 +107,8 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     */
   def remove(prev: MutableStartOrNode[P], node: Node[P], next: Chain[P]): Unit = {
     require(node.orbitSize == 1)
-    require(node.ownGeneratorsPairs.isEmpty)
+    if(!node.ownGeneratorsPairs.isEmpty)
+      println(node.beta -> node.ownGeneratorsPairs)
     // remove node from chain
     prev.next = next
     IsMutableNode.unapply(next).foreach { n => n.prev = prev }
@@ -127,6 +136,60 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     IsMutableNode.unapply(newStart.next).foreach { n => n.prev = prev }
     // invalidate the other start
     newStart.next = null
+  }
+
+  /** Prepares a base swap by replacing the two nodes with newly created nodes. In the new nodes,
+    * the base points are swapped and previous valid generators are added.
+    * 
+    * Before: prev -> node1(beta1) -> node2(beta2) -> next
+    * After:  prev ->  new1(beta2) ->  new2(beta1) -> next
+    * 
+    * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
+    */
+  def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])(
+    implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P]): (MutableNode[P], MutableNode[P], BigInt) = {
+    implicit def action = start.action
+    require(prev.next eq node1)
+    require(node1.prev eq prev)
+    require(node1.next eq node2)
+    require(node2.prev eq node1)
+    require(node2.next eq next)
+    IsMutableNode.unapply(next).foreach { n => require(n.prev eq node2) }
+
+    val generators = node1.ownGeneratorsPairs ++ node2.ownGeneratorsPairs
+    import scala.collection.mutable.ArrayBuffer
+    val new2own = ArrayBuffer.empty[InversePair[P]]
+    val new1own = ArrayBuffer.empty[InversePair[P]]
+    generators.foreach { g =>
+      ((node2.beta <|+| g) == node2.beta, (node1.beta <|+| g) == node1.beta) match {
+        case (true, true) => sys.error("impossible")
+        case (true, false) => new2own += g
+        case (false, _) => new1own += g
+      }
+    }
+    val newNode1 = nodeBuilder.standalone(node2.beta)
+    val newNode2 = nodeBuilder.standalone(node1.beta)
+    node1.prev.next = newNode1
+    newNode1.prev = node1.prev
+    newNode1.next = newNode2
+    newNode2.prev = newNode1
+    newNode2.next = node2.next
+    IsMutableNode.unapply(node2.next).foreach { n => n.prev = newNode2 }
+    node1.prev = null
+    node1.next = null
+    node2.prev = null
+    node2.next = null
+    new2own.foreach { g =>
+      newNode2.addToOwnGenerators(g)
+      newNode2.updateTransversal(g)
+      newNode1.updateTransversal(g)
+    }
+    new1own.foreach { g =>
+      newNode1.addToOwnGenerators(g)
+      newNode1.updateTransversal(g)
+    }
+    val sizeGoal2 = (BigInt(node1.orbitSize) * BigInt(node2.orbitSize)) / newNode1.orbitSize
+    (newNode1, newNode2, sizeGoal2)
   }
 
   /** Swaps `node1` and `node2`, sandwiched between `prev` and `next`, filters the ge

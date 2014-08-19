@@ -10,6 +10,7 @@ import spire.syntax.groupAction._
 
 import net.alasc.algebra.FiniteGroup
 import net.alasc.syntax.subgroup._
+import net.alasc.syntax.check._
 
 trait BaseSwap[P] extends MutableAlgorithms[P] {
   /** Base swap.
@@ -22,21 +23,6 @@ trait BaseSwap[P] extends MutableAlgorithms[P] {
 }
 
 trait BaseSwapCommon[P] extends BaseSwap[P] {
-  /** Swaps two adjacent nodes in the BSGS chain, and returns the first node after the swap, its tail
-    * and the size goal for the orbit of the tail node.
-    * 
-    * The chain is not in a complete state after `prepareSwap`, so either randomized or deterministic methods
-    * must be used to complete the strong generating set.
-    */
-  protected def prepareBaseSwap(mutableChain: MutableChain[P], node1: MutableNode[P],
-    node2: MutableNode[P]): (MutableNode[P], MutableNode[P], BigInt) = {
-    implicit def action = mutableChain.start.action
-    val sizesProduct = BigInt(node1.orbitSize) * BigInt(node2.orbitSize)
-
-    val (newNode1, newNode2) = mutableChain.swap(node1.prev, node1, node2, node2.next)
-
-    (newNode1, newNode2, (sizesProduct / newNode1.orbitSize).toInt)
-  }
 }
 
 trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
@@ -53,22 +39,20 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
   def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     import OrbitInstances._
     implicit def action = mutableChain.start.action
-    val oldNode1 = nodeBuilder.standaloneClone(node1)
-    val oldNode2 = nodeBuilder.standaloneClone(node2)
     val gammaSet = MutableBitSet.empty ++ node1.orbit
-    val (newNode1, newNode2, sizeGoal2) = prepareBaseSwap(mutableChain, node1, node2)
+    val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     require(newNode1.next eq newNode2)
     gammaSet -= newNode1.beta
     gammaSet -= newNode2.beta
     while (newNode2.orbitSize < sizeGoal2) {
       val gamma = gammaSet.head
-      val ipx@InversePair(x, xInv) = oldNode1.uPair(gamma)
+      val ipx@InversePair(x, xInv) = node1.uPair(gamma)
       assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
-      if (!oldNode2.inOrbit(b))
+      if (!node2.inOrbit(b))
         gammaSet --= ImmutableBitSet(gamma) <|+| newNode2.strongGeneratingSet
       else {
-        val ipy = oldNode2.uPair(b)
+        val ipy = node2.uPair(b)
         val ipyx = ipy |+| ipx
         if (!newNode2.inOrbit(node2.beta <|+| ipyx.g)) {
           newNode2.addToOwnGenerators(ipyx)
@@ -96,12 +80,10 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
     */
   def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     implicit def action = mutableChain.start.action
-    val node1Copy = nodeBuilder.standaloneClone(node1)
-    val node2Copy = nodeBuilder.standaloneClone(node2)
-    val node2Next = node2.next
-    val (newNode1, newNode2, sizeGoal2) = prepareBaseSwap(mutableChain, node1, node2)
+    val node2next = node2.next
+    val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     while (newNode2.orbitSize < sizeGoal2) {
-      val g = node2Next.randomElement(randomGenerator) |+| node2Copy.randomU(randomGenerator) |+| node1Copy.randomU(randomGenerator)
+      val g = node2next.randomElement(randomGenerator) |+| node2.randomU(randomGenerator) |+| node1.randomU(randomGenerator)
       val h = g |+| newNode1.uInv(newNode1.beta <|+| g)
       val hPair = InversePair(h, h.inverse)
       if (!newNode2.inOrbit(newNode2.beta <|+| h)) {
