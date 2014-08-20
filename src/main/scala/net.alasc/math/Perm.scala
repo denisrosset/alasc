@@ -55,7 +55,7 @@ sealed trait Perm extends Any {
 object Perm extends PermCompanion {
   def supportMaxElement = PermArray.supportMaxElement
 
-  implicit val Algebra: Permutation[Perm] = new PermPermutation
+  implicit val Algebra: ShiftablePermutation[Perm] = new PermPermutation
 
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
@@ -296,9 +296,9 @@ final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long =
 object Perm32 extends PermCompanion {
   def supportMaxElement = Perm32Encoding.supportMaxElement
 
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm32 =
     Perm32Encoding.fromImages(images, supportMax)
 
-  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm =
+  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm32 =
     Perm32Encoding.fromSupportAndImageFun(support, imageFun)
 }

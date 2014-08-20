@@ -8,6 +8,7 @@ package object syntax {
   object bigIndex extends BigIndexSyntax
   object finiteGroup extends FiniteGroupSyntax
   object permutationAction extends PermutationActionSyntax
+  object shiftablePermutation extends ShiftablePermutationSyntax
   object subgroup extends SubgroupSyntax
   object all extends AllSyntax
 }

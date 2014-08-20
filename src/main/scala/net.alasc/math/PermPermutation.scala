@@ -13,7 +13,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import perm._
 
-final class PermPermutation extends Permutation[Perm] {
+final class PermPermutation extends ShiftablePermutation[Perm] {
   @inline def eqv(x: Perm, y: Perm): Boolean = (x, y) match {
     case (lhs16: Perm16, rhs16: Perm16) => lhs16.encoding == rhs16.encoding
     case (_: Perm16, _) | (_, _: Perm16) => false // by Perm contract
@@ -46,4 +46,17 @@ final class PermPermutation extends Permutation[Perm] {
   @inline def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
   @inline def fromSupportAndImageFun(support: BitSet, image: Int => Int): Perm =
     Perm.fromSupportAndImageFun(support, image)
+  def plus(p: Perm, n: Int): Perm = {
+    require(n >= 0)
+    if (n == 0) return p
+    val newSupport = BitSet.empty ++ support(p).map(_ + n)
+    fromSupportAndImageFun(newSupport, k => actr(k - n, p) + n)
+  }
+  def minus(p: Perm, n: Int): Perm = {
+    require(n >= 0)
+    if (n == 0) return p
+    require(p.supportMin.getOrElse(n) >= n)
+    val newSupport = BitSet.empty ++ support(p).map(_ - n)
+    fromSupportAndImageFun(newSupport, k => actr(k + n, p) - n)
+  }
 }
