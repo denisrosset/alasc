@@ -21,6 +21,7 @@ object Perm32Encoding {
   @inline def maskWidth = 5
   //                       FEDCBA9876543210
   @inline def longMask: Long = 0x0FFFFFFFFFFFFFFFL
+  @inline def mask6: Int = 0x3FFFFFFF
   @inline def numPerLong = 12
   @inline def leftBlank = 64 - numPerLong * maskWidth
   @inline def long1Start = numPerLong
@@ -53,11 +54,11 @@ object Perm32Encoding {
   @inline def hash(long2: Long, long1: Long, long0: Long) = {
     import scala.util.hashing.MurmurHash3.{mix, finalizeHash}
     var h = PermHash.seed
-    h = mix(h, long0.toInt)
+    h = mix(h, long0.toInt & mask6)
     h = mix(h, (long0 >> 30).toInt)
-    h = mix(h, long1.toInt)
+    h = mix(h, long1.toInt & mask6)
     h = mix(h, (long1 >> 30).toInt)
-    h = mix(h, long2.toInt)
+    h = mix(h, long2.toInt & mask6)
     h = mix(h, (long2 >> 30).toInt)
     finalizeHash(h, 6)
   }

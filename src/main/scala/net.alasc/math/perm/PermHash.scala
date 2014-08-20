@@ -36,13 +36,21 @@ object PermHash {
   }
 
   def hash32[P: Permutation](p: P): Int = {
-    def encode(start: Int, length: Int = 6) = {
+    @inline def encode(start: Int, length: Int = 6) = {
       var res = 0
       for (i <- start until start + length)
         res += (((i <|+| p) - i) & 0x1F) << ((i - start) * 5)
       res
     }
-    orderedHash(Seq(encode(0), encode(6), encode(12), encode(18), encode(24), encode(30, 2)), seed)
+    import scala.util.hashing.MurmurHash3.{mix, finalizeHash}
+    var h = seed
+    h = mix(h, encode(0))
+    h = mix(h, encode(6))
+    h = mix(h, encode(12))
+    h = mix(h, encode(18))
+    h = mix(h, encode(24))
+    h = mix(h, encode(30, 2))
+    finalizeHash(h, 6)
   }
 
   def hash[P: Permutation](p: P): Int = {
