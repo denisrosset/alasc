@@ -174,6 +174,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
     val toNode1 = scala.collection.mutable.ArrayBuffer.empty[InversePair[P]]
+    newNode2.updateTransversal(newNode2.strongGeneratingSetPairs)
     node1.ownGeneratorsPairs.foreach { ip =>
       if ((newNode1.beta <|+| ip.g) == newNode1.beta) {
         newNode2.addToOwnGenerators(ip)
@@ -184,11 +185,16 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     }
     // and then update newNode1.ownGeneratorsPairs
     toNode1.foreach { ip =>
-      if ((newNode1.beta <|+| ip.g) != newNode1.beta) {
+//      if ((newNode1.beta <|+| ip.g) != newNode1.beta) {
         newNode1.addToOwnGenerators(ip)
         newNode1.updateTransversal(ip)
-      }
+//      }
     }
+    /*
+    node2.ownGeneratorsPairs.foreach { ip =>
+//      newNode1.addToOwnGenerators(ip)
+      newNode1.updateTransversal(ip)
+    }*/
     val sizeGoal2 = (BigInt(node1.orbitSize) * BigInt(node2.orbitSize)) / newNode1.orbitSize
     (newNode1, newNode2, sizeGoal2)
   }

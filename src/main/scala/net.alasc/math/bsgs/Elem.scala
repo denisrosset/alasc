@@ -248,38 +248,24 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     prev = null
   }
 
-  /** Adds a new generator `g` (given as an `InversePair`) to this node `ownGenerators`,
-    * without changing other nodes or updating any transversals.
-    */
-  protected[bsgs] def addToOwnGenerators(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  /** Adds `newGenerators` (given as a traversable of `InversePair`) to this node `ownGenerators`,
+    * without changing other nodes or updating any transversals. */
+  protected[bsgs] def addToOwnGenerators(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
 
-  /** Updates this node transversal by the addition of a new generator `g`,
-    * provided as an `InversePair`.
+  /** Updates this node transversal by the addition of `newGenerators`,
+    * provided as a traversable `InversePair`.
     * 
-    * @note `g` must be already part of the strong generating set, i.e.
+    * @note `newGenerators` must be already part of the strong generating set, i.e.
     *       have been added to this node or a children node `ownGenerators`
-    *       by using addToOwnGenerators once.
+    *       by using addToOwnGenerators.
     */
-  protected[bsgs] def updateTransversal(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
 
-  /*
   /** Conjugates the current node by the group element `ip`, provided as an input pair
     * to avoid multiple inverse element computations. */
-  protected[bsgs] def conjugateThisNode(ip: InversePair[P]): Unit
-   */
-
-  /** Move to the next node the own generators that belong to it, and updates the transversals
-    * of the next node.
-    * 
-    * Used after a base swap.
-    */
-  protected[bsgs] def moveOwnGeneratorsToNext(mutableNext: MutableNode[P])(implicit ev: FiniteGroup[P]): Unit
-
-  /** Clears the transversal and the own generators sequence.
-    * 
-    * Used after a base swap.
-    */
-  protected[bsgs] def clear(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
 }
 
 final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
@@ -303,6 +289,14 @@ final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Ch
   def checkFixBase(partialBase: List[Int]): Unit = ownGenerators.forall(g => partialBase.forall(b => (b <|+| g) == b))
    */
   def check(chain: Chain[P]): Unit = {
+    chain match {
+      case node: Node[P] =>
+        implicit def action = node.action
+        val alg = algorithms.BasicAlgorithms.deterministic[P]
+        val checkChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
+        assert(checkChain.start.next.nodesNext.map(_.orbitSize).sameElements(node.nodesNext.map(_.orbitSize)))
+      case _ =>
+    }
     val baseSoFar = mutable.ArrayBuffer.empty[Int]
     @tailrec def rec(current: Chain[P], checkImmutable: Boolean = false): Unit = current match {
       case node: Node[P] =>

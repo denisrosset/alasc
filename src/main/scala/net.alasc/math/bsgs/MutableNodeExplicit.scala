@@ -8,6 +8,7 @@ import scala.util.Random
 
 import spire.syntax.groupAction._
 import spire.syntax.group._
+import spire.syntax.eq._
 
 import net.alasc.algebra._
 
@@ -44,66 +45,107 @@ final class MutableNodeExplicit[P](
 
   protected def addTransversalElement(b: Int, pair: InversePair[P]): Unit = { transversal.update(b, pair) }
 
-  protected[bsgs] def addToOwnGenerators(ip: InversePair[P])(implicit ev: FiniteGroup[P]) = { ownGeneratorsPairs += ip }
+  protected[bsgs] def addToOwnGenerators(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]) = {
+    ownGeneratorsPairs ++= newGenerators
+  }
+
+  protected[bsgs] def addToOwnGenerators(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
+    ownGeneratorsPairs += newGenerator
+  }
+
+  import scala.collection.mutable.ArrayBuffer
+
+  protected[bsgs] def bulkAdd(beta: debox.Buffer[Int], pairs: ArrayBuffer[InversePair[P]])(implicit ev: FiniteGroup[P]) = {
+    for (i <- 0 until beta.length)
+      addTransversalElement(beta(i), pairs(i))
+  }
 
   protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
     var toCheck = MutableBitSet.empty
+    val sb = new StringBuilder
+    var toAddBeta = debox.Buffer.empty[Int]
+    var toAddIP = ArrayBuffer.empty[InversePair[P]]
     foreachOrbit { b =>
       val newB = b <|+| newGenerator.g
       if (!inOrbit(newB)) {
         val newPair = uPair(b) |+| newGenerator
-        addTransversalElement(newB, newPair)
+        toAddBeta += newB
+        toAddIP += newPair
         toCheck += newB
       }
     }
+    bulkAdd(toAddBeta, toAddIP)
+    toAddBeta.clear
+    toAddIP.clear
     while (!toCheck.isEmpty) {
       val newAdded = MutableBitSet.empty
-      for (ip@InversePair(g, gInv) <- strongGeneratingSetPairs; b <- toCheck) {
-        val newB = b <|+| g
-        if (!inOrbit(newB)) {
-          val newPair = uPair(b) |+| ip
-          addTransversalElement(newB, newPair)
-          newAdded += newB
+      toCheck.foreach { b =>
+        strongGeneratingSetPairs.foreach { ip =>
+          val InversePair(g, gInv) = ip
+          val newB = b <|+| g
+          if (!inOrbit(newB)) {
+            val newPair = uPair(b) |+| ip
+            toAddBeta += newB
+            toAddIP += newPair
+            newAdded += newB
+          }
         }
       }
+      bulkAdd(toAddBeta, toAddIP)
+      toAddBeta.clear
+      toAddIP.clear
       toCheck = newAdded
     }
   }
 
-  protected[bsgs] def conjugateThisNode(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit = {
-    val newBeta = beta <|+| ip
-    val newTransversal = MutableLongMap.empty[InversePair[P]]
-    for ( (b, pair) <- transversal )
-      newTransversal.update(b.toInt <|+| ip, ip.inverse |+| pair |+| ip)
-    beta = newBeta
-    transversal = newTransversal
-  }
-
-  protected[bsgs] def moveOwnGeneratorsToNext(mutableNext: MutableNode[P])(implicit ev: FiniteGroup[P]): Unit = {
-    require(next eq mutableNext)
-    val (toNext, remaining) = ownGeneratorsPairs.partition(ip => (beta <|+| ip.g) == beta)
-    ownGeneratorsPairs = remaining
-    for (ip <- toNext) {
-      assert((mutableNext.beta <|+| ip.g) != mutableNext.beta)
-      mutableNext.addToOwnGenerators(ip)
-      mutableNext.updateTransversal(ip)
+  protected[bsgs] def updateTransversal(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]) = {
+    var toCheck = MutableBitSet.empty
+    val sb = new StringBuilder
+    var toAddBeta = debox.Buffer.empty[Int]
+    var toAddIP = ArrayBuffer.empty[InversePair[P]]
+    foreachOrbit { b =>
+      newGenerators.foreach { newGenerator =>
+        val newB = b <|+| newGenerator.g
+        if (!inOrbit(newB)) {
+          val newPair = uPair(b) |+| newGenerator
+          toAddBeta += newB
+          toAddIP += newPair
+          toCheck += newB
+        }
+      }
+    }
+    bulkAdd(toAddBeta, toAddIP)
+    toAddBeta.clear
+    toAddIP.clear
+    while (!toCheck.isEmpty) {
+      val newAdded = MutableBitSet.empty
+      toCheck.foreach { b =>
+        strongGeneratingSetPairs.foreach { ip =>
+          val InversePair(g, gInv) = ip
+          val newB = b <|+| g
+          if (!inOrbit(newB)) {
+            val newPair = uPair(b) |+| ip
+            toAddBeta += newB
+            toAddIP += newPair
+            newAdded += newB
+          }
+        }
+      }
+      bulkAdd(toAddBeta, toAddIP)
+      toAddBeta.clear
+      toAddIP.clear
+      toCheck = newAdded
     }
   }
 
-  protected[bsgs] def clear(implicit ev: FiniteGroup[P]): Unit = {
-    transversal = MutableLongMap[InversePair[P]](beta.toLong -> InversePair(ev.id, ev.id))
-    ownGeneratorsPairs = UnrolledBuffer.empty[InversePair[P]]
+  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P]) = {
+    beta = beta <|+| ip.g
+    val newTransversal = MutableLongMap.empty[InversePair[P]]
+    transversal.foreachKey { k =>
+      newTransversal.update(k.toInt <|+| ip, ip.inverse |+| transversal(k) |+| ip)
+    }
+    transversal = newTransversal
   }
-/* TODO: remove
-  protected[bsgs] def changeBasePoint(newBeta: Int, pred: P => Boolean)(implicit ev: FiniteGroup[P]): Iterable[InversePair[P]] = {
-    val (keep, removedPairs) = ownGeneratorsPairs.partition(ip => pred(ip.g))
-    ownGeneratorsPairs = keep
-    beta = newBeta
-    transversal.clear
-    transversal.update(newBeta, ev.id)
-    strongGeneratingSetPairs.foreach { ip => updateTransversal(ip) }
-    removedPairs
-  }*/
 }
 
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
