@@ -97,6 +97,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     rec(from.next, from)
   }
 
+  /** Inserts a (non-existing) base point after the element `afterThis`. */
   def insertNewBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
     implicit action: PermutationAction[P]): Unit = {
     require(beta >= 0)
@@ -106,23 +107,23 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     mutableChain.insertInChain(insertAfter, insertAfter.next, newNode)
   }
 
+  /** Change the base point after the element `afterThis` to `beta` and returns this node with base point `beta`. */
   def changeBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
-    implicit action: PermutationAction[P]): Unit = {
-    require(beta >= 0)
-    if (!putExistingBasePointAfter(mutableChain, afterThis, beta)) {
+    implicit action: PermutationAction[P]): Node[P] =
+    putExistingBasePointAfter(mutableChain, afterThis, beta).getOrElse {
       insertNewBasePointAfter(mutableChain, afterThis, beta)
-      assert(putExistingBasePointAfter(mutableChain, afterThis, beta))
+      putExistingBasePointAfter(mutableChain, afterThis, beta).get
     }
-  }
 
   /** Shifts the existing `beta` at the node after `after`, if the chain already contains `basePoint`.
     * 
-    * @return True if the chain contains `basePoint` and the shift was performed, `false` otherwise.
+    * @return The shifted node with base point `beta` if the chain contains `basePoint` 
+              and the shift was performed, `RefNone` otherwise.
     */
-  def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): Boolean = {
-    findBasePoint(mutableChain, after.next, beta).fold(false) { toShift =>
+  def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): RefOption[Node[P]] = {
+    findBasePoint(mutableChain, after.next, beta).fold[RefOption[Node[P]]](RefNone) { toShift =>
       val mutableToShift = mutableChain.mutable(toShift, after)
-      @tailrec def shift(pos: MutableNode[P]): Unit =
+      @tailrec def shift(pos: MutableNode[P]): RefOption[Node[P]] =
         if (pos.prev ne after) {
           pos.prev match {
             case prevNode: MutableNode[P] =>
@@ -130,9 +131,9 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
               shift(node1)
             case _: Start[P] => sys.error("mutableHere should be before mutableToShift")
           }
-        }
+        } else
+          RefSome(pos)
       shift(mutableToShift)
-      true
     }
   }
 
@@ -147,25 +148,22 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
             if (mutableNode.beta == beta)
               rec(mutableNode, mutablePrev, remaining)
             else {
-              changeBasePointAfter(mutableChain, mutablePrev, beta)
-//              mutableChain.check
-              rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining)
+              val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
+              rec(newNode, mutablePrev, remaining)
             }
           case node: Node[P] =>
             if (node.beta == beta)
               rec(node, lastMutableStartOrNode, remaining)
             else {
               val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
-              changeBasePointAfter(mutableChain, mutablePrev, beta)
-//              mutableChain.check
-              rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining)
+              val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
+              rec(newNode, mutablePrev, remaining)
             }
           case term: Term[P] =>
             val newNode = nodeBuilder.standalone(beta)
             val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
             mutableChain.insertInChain(mutablePrev, term, newNode)
-//            mutableChain.check
-            rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining)
+            rec(newNode, mutablePrev, remaining)
         }
       }
     rec(mutableChain.start, mutableChain.start, newBase.iterator)
