@@ -17,7 +17,7 @@ trait BaseChange[P] extends Algorithms[P] {
     * @param after        Element after which the base is replaced.
     * @param newBase      New base to use, will be extended if it is not a complete base.
     */
-  def changeBase(mutableChain: MutableChain[P], after: MutableStartOrNode[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit
+  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit
 }
 
 trait BaseAlgorithms[P] extends MutableAlgorithms[P] {
@@ -136,8 +136,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     }
   }
 
-  def changeBase(mutableChain: MutableChain[P], after: MutableStartOrNode[P], newBase: Seq[Int])(
-    implicit action: PermutationAction[P]): Unit = {
+  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], remaining: Iterator[Int]): Unit =
       if (remaining.isEmpty) cutRedundantAfter(mutableChain, prev) else {
@@ -156,33 +155,32 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
             if (node.beta == beta)
               rec(node, lastMutableStartOrNode, remaining)
             else {
-              val mutablePrev = mutableChain.mutableStartOrNode(prev) // , lastMutableStartOrNode)
+              val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
               changeBasePointAfter(mutableChain, mutablePrev, beta)
 //              mutableChain.check
               rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining)
             }
           case term: Term[P] =>
             val newNode = nodeBuilder.standalone(beta)
-            val mutablePrev = mutableChain.mutableStartOrNode(prev) //, lastMutableStartOrNode)
+            val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
             mutableChain.insertInChain(mutablePrev, term, newNode)
 //            mutableChain.check
             rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining)
         }
       }
-    rec(after, after, newBase.iterator)
+    rec(mutableChain.start, mutableChain.start, newBase.iterator)
   }
 }
-
 /*
 trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] {
+  }
+}*/
 
-}
- */
 trait BaseChangeFromScratch[P] extends BaseChange[P] with SchreierSims[P] {
   def changeBase(mutableChain: MutableChain[P], after: MutableStartOrNode[P], newBase: Seq[Int])(
     implicit action: PermutationAction[P]): Unit = {
     require(action == after.action)
-    val tempChain = completeChainFromSubgroup(after.next, newBase)(after.action, implicitly[Subgroup[Chain[P], P]])
-    mutableChain.replaceChain(after, tempChain.start)
+    val tempChain = completeChainFromSubgroup(mutableChain.start.next, newBase)(after.action, implicitly[Subgroup[Chain[P], P]])
+    mutableChain.replaceChain(mutableChain.start, tempChain.start)
   }
 }

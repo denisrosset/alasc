@@ -73,7 +73,7 @@ object BaseSpec extends Properties("BSGS") {
     case (mutableChain, alg, newBase) => {
       implicit def nb = alg.nodeBuilder
       val order = mutableChain.start.next.order
-      alg.changeBase(mutableChain, mutableChain.start, newBase)
+      alg.changeBase(mutableChain, newBase)
       mutableChain.start.next.order == order
     }
   }
@@ -83,7 +83,7 @@ object BaseSpec extends Properties("BSGS") {
       implicit def nb = alg.nodeBuilder
       val newBase = newBaseAnsatz.distinct
       val order = mutableChain.start.next.order
-      alg.changeBase(mutableChain, mutableChain.start, newBase)
+      alg.changeBase(mutableChain, newBase)
       mutableChain.start.next.order == order
     }
   }
@@ -95,7 +95,7 @@ object BaseSpec extends Properties("BSGS") {
       val oldOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
       mutableChain.conjugate(g)
       mutableChain.check
-      alg.changeBase(mutableChain, mutableChain.start, oldBase)
+      alg.changeBase(mutableChain, oldBase)
       val newOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
       oldOrbitSizes.sameElements(newOrbitSizes)
     }
