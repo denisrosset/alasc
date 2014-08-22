@@ -39,6 +39,11 @@ object BaseGenerators {
     newN <- Gen.choose(0, 8)
     newBaseAnsatz <- Gen.listOfN(newN, Gen.choose(0, 50))
   } yield (mc, alg, newBaseAnsatz)
+
+  val mutableChainAlgAndRandomElement = for {
+    (mc, alg) <- mutableChainAlg
+    g = mc.start.next.randomElement(scala.util.Random)
+  } yield (mc, alg, g)
 }
 
 object BaseSpec extends Properties("BSGS") {
@@ -64,7 +69,7 @@ object BaseSpec extends Properties("BSGS") {
     }
   }
 
-  property("changeBase -- reordered base") = Prop.forAllNoShrink(mutableChainAlgAndReorderedBase) {
+  property("changeBase preserves order -- reordered base") = Prop.forAllNoShrink(mutableChainAlgAndReorderedBase) {
     case (mutableChain, alg, newBase) => {
       implicit def nb = alg.nodeBuilder
       val order = mutableChain.start.next.order
@@ -73,13 +78,26 @@ object BaseSpec extends Properties("BSGS") {
     }
   }
 
-  property("changeBase -- new base") = Prop.forAllNoShrink(mutableChainAlgAndReorderedBase) {
+  property("changeBase preserves order -- new base") = Prop.forAllNoShrink(mutableChainAlgAndReorderedBase) {
     case (mutableChain, alg, newBaseAnsatz) => {
       implicit def nb = alg.nodeBuilder
       val newBase = newBaseAnsatz.distinct
       val order = mutableChain.start.next.order
       alg.changeBase(mutableChain, mutableChain.start, newBase)
       mutableChain.start.next.order == order
+    }
+  }
+
+  property("conjugate and changeBase back = same orbits") = Prop.forAllNoShrink(mutableChainAlgAndRandomElement) {
+    case (mutableChain, alg, g) => {
+      implicit def nb = alg.nodeBuilder
+      val oldBase = mutableChain.start.next.base
+      val oldOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
+      mutableChain.conjugate(g)
+      mutableChain.check
+      alg.changeBase(mutableChain, mutableChain.start, oldBase)
+      val newOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
+      oldOrbitSizes.sameElements(newOrbitSizes)
     }
   }
 }

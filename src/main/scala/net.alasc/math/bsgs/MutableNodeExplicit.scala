@@ -145,6 +145,7 @@ final class MutableNodeExplicit[P](
       newTransversal.update(k.toInt <|+| ip, ip.inverse |+| transversal(k) |+| ip)
     }
     transversal = newTransversal
+    ownGeneratorsPairs.transform(g => ip.inverse |+| g |+| ip)
   }
 }
 

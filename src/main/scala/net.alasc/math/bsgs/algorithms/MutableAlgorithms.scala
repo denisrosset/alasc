@@ -99,18 +99,14 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
     implicit def action = mutableChain.start.action
     if (generators.isEmpty) return
 
-    val remaining = scala.collection.mutable.HashSet.empty[P]
-    remaining ++= generators
-
     def badGen = sys.error("Generator must not be identity")
-    def rec(mutableNode: MutableNode[P]): Unit = {
-      val generatorsThere = remaining.filter(g => (mutableNode.beta <|+| g) != mutableNode.beta)
-      remaining --= generatorsThere
-      if (!remaining.isEmpty)
-        rec(mutableChain.mutableNodeAfter(mutableNode, remaining.head.supportAny.getOrElse(badGen)))
+    def rec(mutableNode: MutableNode[P], remaining: Iterable[P]): Unit = {
+      val (generatorsThere, forNext) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
+      if (!forNext.isEmpty)
+        rec(mutableChain.mutableNodeAfter(mutableNode, forNext.head.supportAny.getOrElse(badGen)), forNext)
       generatorsThere.foreach( addStrongGeneratorHere(mutableChain, mutableNode, _) )
     }
-    rec(mutableChain.mutableNodeAfter(mutableChain.start, generators.head.supportAny.getOrElse(badGen)))
+    rec(mutableChain.mutableNodeAfter(mutableChain.start, generators.head.supportAny.getOrElse(badGen)), generators)
   }
 
   /** Add a new strong generator `p` at the node `mutableNode`, and updates the transversal

@@ -173,28 +173,17 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     // which case they are copied to newNode2, or (newNode1.beta <|+| g) != newNode1.beta, in which case they
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
-    val toNode1 = scala.collection.mutable.ArrayBuffer.empty[InversePair[P]]
     newNode2.updateTransversal(newNode2.strongGeneratingSetPairs)
     node1.ownGeneratorsPairs.foreach { ip =>
       if ((newNode1.beta <|+| ip.g) == newNode1.beta) {
         newNode2.addToOwnGenerators(ip)
         newNode2.updateTransversal(ip)
         newNode1.updateTransversal(ip)
-      } else
-        toNode1 += ip
-    }
-    // and then update newNode1.ownGeneratorsPairs
-    toNode1.foreach { ip =>
-//      if ((newNode1.beta <|+| ip.g) != newNode1.beta) {
+      } else {
         newNode1.addToOwnGenerators(ip)
         newNode1.updateTransversal(ip)
-//      }
+      }
     }
-    /*
-    node2.ownGeneratorsPairs.foreach { ip =>
-//      newNode1.addToOwnGenerators(ip)
-      newNode1.updateTransversal(ip)
-    }*/
     val sizeGoal2 = (BigInt(node1.orbitSize) * BigInt(node2.orbitSize)) / newNode1.orbitSize
     (newNode1, newNode2, sizeGoal2)
   }
@@ -303,6 +292,20 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
   def toChain: Chain[P] = {
     makeImmutableAfter(start)
     start.next
+  }
+
+  def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P]): Unit = {
+    @tailrec def rec(prev: MutableStartOrNode[P]): Unit = prev.next match {
+      case IsMutableNode(mn) =>
+        mn.conjugate(ip)
+        rec(mn)
+      case node: Node[P] =>
+        val mutableNode = mutable(node, prev)
+        mutableNode.conjugate(ip)
+        rec(mutableNode)
+      case _: Term[P] => // finished
+    }
+    rec(start)
   }
 
 /*
