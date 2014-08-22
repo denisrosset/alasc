@@ -5,6 +5,7 @@ package algorithms
 import scala.annotation.tailrec
 
 import spire.syntax.groupAction._
+import spire.syntax.group._
 
 import net.alasc.algebra.{PermutationAction, Subgroup}
 import net.alasc.syntax.check._
@@ -20,7 +21,7 @@ trait BaseChange[P] extends Algorithms[P] {
   def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit
 }
 
-trait BaseAlgorithms[P] extends MutableAlgorithms[P] {
+trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
   /** Checks if there exist a base point with orbit size 1 in `mutableChain`, starting from `chain`. */
   @tailrec final def existsRedundantBasePoint(mutableChain: MutableChain[P], chain: Chain[P]): Boolean = chain match {
     case node: Node[P] =>
@@ -78,10 +79,8 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] {
       }
       eliminateRedundantTail(afterThis, 0)
     }
-}
 
-trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
-  /** Finds an element such that `beta` is stabilized by the subgroup after the element. */  
+  /** Finds an element such that `beta` is stabilized by the subgroup after the element. */
   def findElemBeforeStabilizer(mutableChain: MutableChain[P], from: StartOrNode[P], beta: Int)(
     implicit action: PermutationAction[P]): StartOrNode[P] = {
     require(beta >= 0)
@@ -118,7 +117,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
   /** Shifts the existing `beta` at the node after `after`, if the chain already contains `basePoint`.
     * 
     * @return The shifted node with base point `beta` if the chain contains `basePoint` 
-              and the shift was performed, `RefNone` otherwise.
+    and the shift was performed, `RefNone` otherwise.
     */
   def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): RefOption[Node[P]] = {
     findBasePoint(mutableChain, after.next, beta).fold[RefOption[Node[P]]](RefNone) { toShift =>
@@ -136,7 +135,9 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
       shift(mutableToShift)
     }
   }
+}
 
+trait BaseChangeSwap[P] extends BaseAlgorithms[P] {
   def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], remaining: Iterator[Int]): Unit =
@@ -169,10 +170,53 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseSwap[P] {
     rec(mutableChain.start, mutableChain.start, newBase.iterator)
   }
 }
-/*
+
 trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] {
+  def changeBaseConjugation(mutableChain: MutableChain[P], newBase: Seq[Int])(
+    implicit action: PermutationAction[P]): InversePair[P] = {
+    @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], remaining: Iterator[Int], conj: InversePair[P]): InversePair[P] = {
+      if (remaining.isEmpty) {
+        cutRedundantAfter(mutableChain, prev)
+        conj
+      } else {
+        val beta = remaining.next
+        val alpha = beta <|+| conj.gInv
+        prev.next match {
+          case IsMutableNode(mutableNode) =>
+            val mutablePrev = mutableNode.prev
+            if (mutableNode.beta == alpha)
+              rec(mutableNode, mutablePrev, remaining, conj)
+            else if (mutableNode.inOrbit(alpha))
+              rec(mutableNode, mutablePrev, remaining, mutableNode.uPair(alpha) |+| conj)
+            else {
+              val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
+              rec(newNode, mutablePrev, remaining, conj)
+            }
+          case node: Node[P] =>
+            if (node.beta == alpha)
+              rec(node, lastMutableStartOrNode, remaining, conj)
+            else if (node.inOrbit(alpha))
+              rec(node, lastMutableStartOrNode, remaining, node.uPair(alpha) |+| conj)
+            else {
+              val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
+              val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
+              rec(newNode, mutablePrev, remaining, conj)
+            }
+          case term: Term[P] =>
+            val newNode = nodeBuilder.standalone(beta)
+            val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
+            mutableChain.insertInChain(mutablePrev, term, newNode)
+            rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining, conj)
+        }
+      }
+    }
+    rec(mutableChain.start, mutableChain.start, newBase.iterator, algebra.id)
   }
-}*/
+  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit = {
+    val conj = changeBaseConjugation(mutableChain, newBase)
+    mutableChain.conjugate(conj)
+  }
+}
 
 trait BaseChangeFromScratch[P] extends BaseChange[P] with SchreierSims[P] {
   def changeBase(mutableChain: MutableChain[P], after: MutableStartOrNode[P], newBase: Seq[Int])(
