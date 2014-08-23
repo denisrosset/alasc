@@ -23,6 +23,16 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
     implicit action: PermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
 
+  def withAction(chain: Chain[P], action: PermutationAction[P]): Chain[P] = chain match {
+    case node: Node[p] =>
+      if (action == node.action)
+        chain
+      else
+        completeChainFromSubgroup(chain)(action, Chain.ChainSubgroup).toChain
+    case term: Term[P] =>
+      term
+  }
+  
   def mutableCopyWithAction(chain: Chain[P], action: PermutationAction[P]): MutableChain[P] = chain match {
     case node: Node[P] =>
       if (action == node.action)
