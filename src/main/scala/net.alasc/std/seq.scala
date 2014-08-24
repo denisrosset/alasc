@@ -12,7 +12,8 @@ class SeqIndex[SA <: SeqLike[A, SA], A] extends Index[SA, A] {
   def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
 }
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: Permutation](implicit cbf: CanBuildFrom[Nothing, A, SA]) extends GroupAction[SA, P] {
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: PermutationAction](
+  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends GroupAction[SA, P] {
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.groupAction._
@@ -30,8 +31,8 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: Permutation](implicit cbf
 
 trait SeqInstances0 {
   implicit def SeqLength[CC[A] <: SeqLike[A, CC[A]], A] = new SeqIndex[CC[A], A]
-  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: Permutation](implicit cbf: CanBuildFrom[Nothing, A, CC[A]]) =
-    new SeqPermutationAction[CC[A], A, P]
+  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: PermutationAction](
+    implicit cbf: CanBuildFrom[Nothing, A, CC[A]]) = new SeqPermutationAction[CC[A], A, P]
 }
 
 trait SeqInstances extends SeqInstances0 {
