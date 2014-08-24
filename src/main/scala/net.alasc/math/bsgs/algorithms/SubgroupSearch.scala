@@ -111,12 +111,12 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       val chain1 = withAction(givenChain1, action)
       val chain2 = mutableCopyWithAction(givenChain2, action)
       changeBase(chain2, chain1.base)
-      class IntersectionTest(level: Int, chain2: Chain[P], prev2: P) extends SubgroupTest[P] {
+      class IntersectionTest(level: Int, chain2: Chain[P], prev2Inv: P) extends SubgroupTest[P] {
         def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[IntersectionTest] = {
-          val b2 = orbitImage <|+| (prev2.inverse)
+          val b2 = orbitImage <|+| prev2Inv
           val node2 = chain2.asInstanceOf[Node[P]]
           if (node2.inOrbit(b2))
-            RefSome(new IntersectionTest(level + 1, node2.next, node2.u(b2) |+| prev2))
+            RefSome(new IntersectionTest(level + 1, node2.next, prev2Inv |+| node2.uInv(b2)))
           else
             RefNone
         }
