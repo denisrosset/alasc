@@ -4,6 +4,9 @@ package algorithms
 
 import scala.annotation.tailrec
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ BitSet => MutableBitSet }
+
 import spire.syntax.groupAction._
 import spire.syntax.group._
 
@@ -22,6 +25,32 @@ trait BaseChange[P] extends Algorithms[P] {
 }
 
 trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
+  /** Finds for each base point the additional domain points that are stabilized (i.e. are
+    * not moved by the next subgroup in the stabilizer chain. The first element of each group
+    * is the original base point.
+    * 
+    * The considered domain is `0 ... domainSize - 1`.
+    */
+  def basePointGroups(chain: Chain[P], domainSize: Int): Seq[Iterable[Int]] = {
+    val remaining = MutableBitSet((0 until domainSize): _*)
+    val groups = ArrayBuffer.empty[Iterable[Int]]
+    @tailrec def rec(current: Chain[P]): Seq[Iterable[Int]] = current match {
+      case node: Node[P] =>
+        import node.action
+        val group = debox.Buffer[Int](node.beta)
+        remaining -= node.beta
+        remaining.foreach { k =>
+          if (node.strongGeneratingSet.exists( g => (k <|+| g) != k))
+            group +=k
+        }
+        val array = group.toArray
+        remaining --= array
+        groups += array
+        rec(node.next)
+      case _: Term[P] => groups.result
+    }
+    rec(chain)
+  }
 
   /** Checks if there exist a base point with orbit size 1 in `mutableChain`, starting from `chain`. */
   @tailrec final def existsRedundantBasePoint(mutableChain: MutableChain[P], chain: Chain[P]): Boolean = chain match {
