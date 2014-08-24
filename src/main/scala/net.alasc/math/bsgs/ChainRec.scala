@@ -1,7 +1,7 @@
 package net.alasc.math
 package bsgs
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
 import scala.util.Random
 
@@ -44,9 +44,9 @@ object ChainRec {
     case _: Term[P] => acc
   }
 
-  @tailrec final def base[P](chain: Chain[P], buffer: ListBuffer[Int] = ListBuffer.empty[Int]): List[Int] = chain match {
+  @tailrec final def base[P](chain: Chain[P], buffer: ArrayBuffer[Int] = ArrayBuffer.empty[Int]): Seq[Int] = chain match {
     case node: Node[P] => base(node.next, buffer += node.beta)
-    case _: Term[P] => buffer.toList
+    case _: Term[P] => buffer.result
   }
 
   @tailrec final def baseEquals[P](chain: Chain[P], baseToCheck: Iterator[Int]): Boolean = chain match {

@@ -134,7 +134,7 @@ sealed trait Chain[P] extends Elem[P] {
 
   def length: Int = ChainRec.length(chain)
 
-  def base: List[Int] = ChainRec.base(chain)
+  def base: Seq[Int] = ChainRec.base(chain)
 
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
