@@ -37,9 +37,9 @@ object FixingSeq {
         val indices: Set[Int] = pairSeq.map(_._2).toSet
         val remDomain: Set[Int] = (0 until degree).toSet -- indices
         val images = indices.toSeq.sorted ++ remDomain.toSeq.sorted
-        val permInverse = algebra.fromImages(images)
-        val perm = permInverse.inverse
-        Some(Conjugate(perm, Sym[P](indices.size), permInverse))
+        val perm = algebra.fromImages(images)
+        val permInverse = perm.inverse
+        Some(Conjugate(permInverse, Sym[P](indices.size), perm))
     }.toSeq
     DirectSum(groups)
   }
