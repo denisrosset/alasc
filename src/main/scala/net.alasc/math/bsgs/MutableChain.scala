@@ -307,20 +307,6 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     }
     rec(start)
   }
-
-/*
-  def conjugate(mutableNode: MutableNode[P], newBeta: Int): Mutable[P] = {
-
-  }
-
-  /** Conjugates the BSGS chain using the given group element. */
-  def conjugate(ip: InversePair[P]): this.type = {
-    if (!isEmpty) {
-      makeFullyMutable(sys.error("Cannot be empty"))
-      foreachMutable { _.conjugateThisNode(ip) }
-    }
-    this
-  }*/
 }
 
 object MutableChain {

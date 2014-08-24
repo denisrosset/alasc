@@ -84,7 +84,6 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
       if (!newNode2.inOrbit(newNode2.beta <|+| h)) {
         newNode2.addToOwnGenerators(hPair)
         newNode2.updateTransversal(hPair)
-        newNode1.updateTransversal(hPair) // TODO, remove not needed ?
       }
     }
     (newNode1, newNode2)

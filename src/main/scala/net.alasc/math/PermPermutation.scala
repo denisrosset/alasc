@@ -33,7 +33,6 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
     case (lhs: Perm, rhs: PermBase) => rhs.genRevOp(lhs)
     case (lhs: PermBase, rhs: Perm) => lhs.genOp(rhs)
   }
-
   @inline def support(p: Perm): BitSet = p.support
   @inline def supportMin(p: Perm): NNOption = p.supportMin
   @inline def supportMax(p: Perm): NNOption = p.supportMax

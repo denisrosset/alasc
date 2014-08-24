@@ -95,31 +95,3 @@ object PermArray extends PermCompanion {
   def fromHighSupportAndImageFun(support: BitSet, image: Int => Int, supportMax: Int): PermArray =
     new PermArray(Array.tabulate(supportMax + 1)(k => if (support(k)) image(k) else k))
 }
-
-/*
-
-  override def hashCode: Int =
-    if (isValidPerm16) toPerm16.hashCode
-    else if (isValidPerm32) toPerm32.hashCode
-    else {
-      import scala.util.hashing.MurmurHash3.{mix, mixLast, finalizeHash}
-      // TODO: add test that the underlying scala.util.MurmurHash3 implementation did not change
-      var a, b, n = 0
-      var c = 1
-      var k = 0
-      while (k < images.length) {
-        if (images(k) != k) {
-          val hash = pairHash(k)
-          a += hash
-          b ^= hash
-          if (hash != 0) c *= hash
-          n += 1
-        }
-      }
-      var h = PermHash.seed
-      h = mix(h, a)
-      h = mix(h, b)
-      h = mixLast(h, c)
-      finalizeHash(h, n)
-    }
- */
