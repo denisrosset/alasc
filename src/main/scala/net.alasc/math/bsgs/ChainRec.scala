@@ -77,9 +77,9 @@ object ChainRec {
         false
       else
         sifts(node.next, remaining |+| node.uInv(b))
-    case _: Term[P] => true
+    case _: Term[P] => remaining.isId
   }
-  
+
   @tailrec def basicSift[P: FiniteGroup](chain: Chain[P], remaining: P,
     transversalIndices: debox.Buffer[Int] = debox.Buffer.empty[Int]): (Seq[Int], P) =
     chain match {
