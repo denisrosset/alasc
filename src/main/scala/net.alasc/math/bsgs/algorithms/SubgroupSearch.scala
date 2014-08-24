@@ -76,13 +76,13 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
         var newLevelCompleted = levelCompleted
         val orbit = orbits(level)
         Sorting.sort(orbit)(imageOrder(bo, currentG), implicitly[ClassTag[Int]])
-        var sPrune = orbit.length // transversal.size
+        var sPrune = orbit.length
         var n = orbit.length
         var i = 0
         while (i < n) {
           val deltaP = orbit(i)
           val delta = deltaP <|+| currentG
-          val newTestOpt = test.test(deltaP, delta, currentG, node)
+          val newTestOpt = currentTest.test(deltaP, delta, currentG, node)
           if (newTestOpt.nonEmpty) {
             val newTest = newTestOpt.get
             val newG = node.u(deltaP) |+| currentG
@@ -105,26 +105,22 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   }
 
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P] =
-    /*    if (givenChain1.length < givenChain2.length)
-     intersection(givenChain2, givenChain1)
-     else*/ {
-    val chain1 = withAction(givenChain1, action)
-    chain1.check
-    val chain2 = mutableCopyWithAction(givenChain2, action)
-    chain2.check
-    changeBase(chain2, chain1.base)
-    println(chain1.base)
-    println(chain2.start.next.base)
-    class IntersectionTest(chain2: Chain[P], prev2: P) extends SubgroupTest[P] {
-      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[IntersectionTest] = {
-        val b2 = orbitImage <|+| prev2.inverse
-        val node2 = chain2.asInstanceOf[Node[P]]
-        if (node2.inOrbit(b2))
-          RefSome(new IntersectionTest(node2.next, node2.u(b2) |+| prev2))
-        else
-          RefNone
+    if (givenChain1.length < givenChain2.length)
+      intersection(givenChain2, givenChain1)
+    else {
+      val chain1 = withAction(givenChain1, action)
+      val chain2 = mutableCopyWithAction(givenChain2, action)
+      changeBase(chain2, chain1.base)
+      class IntersectionTest(level: Int, chain2: Chain[P], prev2: P) extends SubgroupTest[P] {
+        def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[IntersectionTest] = {
+          val b2 = orbitImage <|+| (prev2.inverse)
+          val node2 = chain2.asInstanceOf[Node[P]]
+          if (node2.inOrbit(b2))
+            RefSome(new IntersectionTest(level + 1, node2.next, node2.u(b2) |+| prev2))
+          else
+            RefNone
+        }
       }
+      subgroupSearch(chain1, g => chain2.start.next.contains(g), new IntersectionTest(0, chain2.start.next, algebra.id))
     }
-    subgroupSearch(chain1, g => chain2.start.next.contains(g), new IntersectionTest(chain2.start.next, algebra.id))
-  }
 }
