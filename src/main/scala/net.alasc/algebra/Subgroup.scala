@@ -5,10 +5,11 @@ import scala.util.Random
 import spire.algebra.Group
 import spire.syntax.eq._
 
+import net.alasc.math.Grp
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-trait Subgroup[S, G] {
+trait Subgroup[S, G] { sg =>
   implicit val algebra: FiniteGroup[G]
   /** Iterable through the subgroup elements. */
   def elements(s: S): Iterable[G]
@@ -48,4 +49,5 @@ trait Subgroup[S, G] {
     }
     res
   }
+  def toGrp(subgroup: S)(implicit action: PermutationAction[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, action)
 }
