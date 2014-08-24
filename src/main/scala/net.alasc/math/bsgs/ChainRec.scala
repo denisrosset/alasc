@@ -69,6 +69,17 @@ object ChainRec {
       Iterator(algebra.id)
     )
 
+  @tailrec def sifts[P: FiniteGroup](chain: Chain[P], remaining: P): Boolean = chain match {
+    case node: Node[P] =>
+      implicit def action = node.action
+      val b = node.beta <|+| remaining
+      if (!node.inOrbit(b))
+        false
+      else
+        sifts(node.next, remaining |+| node.uInv(b))
+    case _: Term[P] => true
+  }
+  
   @tailrec def basicSift[P: FiniteGroup](chain: Chain[P], remaining: P,
     transversalIndices: debox.Buffer[Int] = debox.Buffer.empty[Int]): (Seq[Int], P) =
     chain match {

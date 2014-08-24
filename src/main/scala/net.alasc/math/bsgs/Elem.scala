@@ -139,6 +139,8 @@ sealed trait Chain[P] extends Elem[P] {
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
   def basicSift(p: P)(implicit ev: FiniteGroup[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
+
+  def sifts(p: P)(implicit ev: FiniteGroup[P]): Boolean = ChainRec.sifts(chain, p)
 }
 
 object Chain {
@@ -263,6 +265,7 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
   def order(chain: Chain[P]): BigInt = ChainRec.order(chain, BigInt(1))
   def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
   def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), algebra.id)
+  override def contains(chain: Chain[P], g: P) = chain.sifts(g)
 }
 
 final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Chain[P]] {
