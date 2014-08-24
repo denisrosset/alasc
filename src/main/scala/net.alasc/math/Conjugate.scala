@@ -34,5 +34,5 @@ class ConjugateSubgroup[G, S](implicit val sg: Subgroup[S, G], val algebra: Fini
   def generators(conj: C) = conj.t.generators.map(conj.iso)
   def order(conj: C) = conj.t.order
   def randomElement(conj: C, gen: Random) = conj.iso(conj.t.randomElement(gen))
-//  def contains(conj: C, g: G) = conj.t.contains(conj.g |+| g |+| conj.gInv)
+  override def contains(conj: C, g: G) = conj.t.contains(conj.g |+| g |+| conj.gInv)
 }
