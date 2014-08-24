@@ -22,6 +22,7 @@ trait BaseChange[P] extends Algorithms[P] {
 }
 
 trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
+
   /** Checks if there exist a base point with orbit size 1 in `mutableChain`, starting from `chain`. */
   @tailrec final def existsRedundantBasePoint(mutableChain: MutableChain[P], chain: Chain[P]): Boolean = chain match {
     case node: Node[P] =>
@@ -219,10 +220,10 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] {
 }
 
 trait BaseChangeFromScratch[P] extends BaseChange[P] with SchreierSims[P] {
-  def changeBase(mutableChain: MutableChain[P], after: MutableStartOrNode[P], newBase: Seq[Int])(
+  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(
     implicit action: PermutationAction[P]): Unit = {
-    require(action == after.action)
-    val tempChain = completeChainFromSubgroup(mutableChain.start.next, newBase)(after.action, implicitly[Subgroup[Chain[P], P]])
+    require(action == mutableChain.start.action)
+    val tempChain = completeChainFromSubgroup(mutableChain.start.next, newBase)(mutableChain.start.action, implicitly[Subgroup[Chain[P], P]])
     mutableChain.replaceChain(mutableChain.start, tempChain.start)
   }
 }
