@@ -1,8 +1,10 @@
-package net.alasc.algebra
+package net.alasc.math
 
-import net.alasc.syntax.permutationAction._
 import scala.util.Random
 import scala.collection.immutable.BitSet
+
+import net.alasc.algebra._
+import net.alasc.syntax.permutationAction._
 
 /** Symmetric group of given degree. */
 class Sym[P](val degree: Int) {

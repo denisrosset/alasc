@@ -57,13 +57,8 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
         if (!newNode2.inOrbit(node2.beta <|+| ipyx.g)) {
           newNode2.addToOwnGenerators(ipyx)
           newNode2.updateTransversal(ipyx)
-          newNode1.updateTransversal(ipyx) // TODO, remove not needed ?
-//          gammaSet -= gamma
           gammaSet --= newNode2.orbitSet
         }
-        // TODO: what happens if node2.inOrbit is true ?
-        // gamma will not be removed from gammaSet
-        // and deterministicBaseSwap could loop forever
       }
     }
     (newNode1, newNode2)
