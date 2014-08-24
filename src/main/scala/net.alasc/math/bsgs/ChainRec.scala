@@ -49,22 +49,6 @@ object ChainRec {
     case _: Term[P] => buffer.toList
   }
 
-  /* TODO remove
-  /** Index of latest non-matching base element in `chain` and `baseToCheck`. If `chain` and `baseToCheck` do not have the same
-    * length, the missing elements are supposed to match. */
-  @tailrec final def baseIndexLatestNonMatching[P](chain: Chain[P], baseToCheck: Iterator[Int], index: Int = 0, indexLatest: Int = -1): Int = chain match {
-    case node: Node[P] =>
-      if (baseToCheck.hasNext) {
-        val betaToCheck = baseToCheck.next
-        if (node.beta == betaToCheck)
-          baseLatestNonMatching(node.next, baseToCheck, index + 1, indexLatest)
-        else
-          baseLatestNonMatching(node.next, baseToCheck, index + 1, index)
-      } else
-        indexLatest
-    case _: Term[P] => indexLatest
-  }
-   */
   @tailrec final def baseEquals[P](chain: Chain[P], baseToCheck: Iterator[Int]): Boolean = chain match {
     case node: Node[P] =>
       if (baseToCheck.hasNext) {

@@ -138,15 +138,7 @@ sealed trait Chain[P] extends Elem[P] {
 
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
-/*TODO  def withBase(newBase: Iterable[Int])(implicit options: Options, action: Permutation[P]): Chain[P] =
-    MutableChain(this).changeBase(newBase).toChain*/
-
   def basicSift(p: P)(implicit ev: FiniteGroup[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
-/*
-  def conjugatedBy(ip: InversePair[P])(implicit options: Options): Chain[P]
-
-  def conjugatedBy(p: P)(implicit algebra: Group[P], options: Options): Chain[P] = conjugatedBy(InversePair(p, p.inverse))
- */
 }
 
 object Chain {
@@ -209,10 +201,6 @@ trait Node[P] extends Chain[P] with StartOrNode[P] {
   def u(b: Int): P
   def uInv(b: Int): P
   def randomU(rand: Random): P
-
-  /*
-  def conjugatedBy(ip: InversePair[P])(implicit options: Options): Chain[P] =
-    MutableChain(node).conjugate(ip).toChain*/
 }
 
 object Node {
@@ -226,7 +214,6 @@ object Node {
 /** Represents the end of a BSGS chain, or, when viewed as a group, the trivial group (). */
 class Term[P] extends Chain[P] {
   def isTerminal = true
-//  def conjugatedBy(ip: InversePair[P])(implicit options: Options): Chain[P] = this
 }
 
 object Term {
@@ -279,15 +266,6 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
 }
 
 final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Chain[P]] {
-  /*  def check: Unit = {
-    assert(base.toSet.size == base.size) // base elements are unique
-    checkFixBase(Nil)
-    checkNode
-  }
-
-  def checkNode: Unit = ???
-  def checkFixBase(partialBase: List[Int]): Unit = ownGenerators.forall(g => partialBase.forall(b => (b <|+| g) == b))
-   */
   def check(chain: Chain[P]): Unit = {
     chain match {
       case node: Node[P] =>
