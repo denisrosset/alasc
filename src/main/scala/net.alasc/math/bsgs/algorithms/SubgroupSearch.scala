@@ -4,6 +4,8 @@ package algorithms
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ BitSet => MutableBitSet }
 
 import spire.algebra.Order
 import spire.syntax.groupAction._
@@ -31,9 +33,11 @@ trait SubgroupSearch[P] {
     implicit action: PermutationAction[P]): MutableChain[P]
 
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P]
+
+  def fixing(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P]
 }
 
-trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] {
+trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
     implicit action: PermutationAction[P]) : Iterator[P] = {
     val chain = withAction(givenChain, action)
@@ -63,7 +67,6 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     val bo = baseOrder(chain.base)
     val length = givenChain.nodesNext.size
     val orbits = givenChain.nodesNext.map(_.orbit.toArray).toArray
-    val scratch = new Array[Int](orbits.map(_.length).max)
     val subgroupChain = emptyChainWithBase(givenChain.base)
     def rec(level: Int, levelCompleted: Int, currentChain: Chain[P], currentSubgroup: Chain[P], currentG: P, currentTest: SubgroupTest[P]): SubgroupSearchResult = (currentChain, currentSubgroup) match {
       case (_: Term[P], _) =>
@@ -123,4 +126,78 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       }
       subgroupSearch(chain1, g => chain2.start.next.contains(g), new IntersectionTest(0, chain2.start.next, algebra.id))
     }
+
+  /** Finds for each base point the additional domain points that are stabilized (i.e. are
+    * not moved by the next subgroup in the stabilizer chain. The first element of each group
+    * is the original base point.
+    * 
+    * The considered domain is `0 ... domainSize - 1`.
+    */
+  def basePointGroups(chain: Chain[P], domainSize: Int): Array[Array[Int]] = {
+    val remaining = MutableBitSet((0 until domainSize): _*)
+    val groups = debox.Buffer.empty[Array[Int]]
+    @tailrec def rec(current: Chain[P]): Array[Array[Int]] = current match {
+      case node: Node[P] =>
+        import node.action
+        val fixed = debox.Buffer[Int](node.beta)
+        remaining -= node.beta
+        remaining.foreach { k =>
+          if (node.next.strongGeneratingSet.forall( g => (k <|+| g) == k))
+            fixed += k
+        }
+        val array = fixed.toArray
+        remaining --= array
+        groups += array
+        rec(node.next)
+      case _: Term[P] => groups.toArray
+    }
+    rec(chain)
+  }
+
+  def fixing(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P] = {
+    val seqVToInt = seq.distinct.zipWithIndex.toMap
+    val seqInteger = seq.map(seqVToInt).toArray
+    val n = seq.size
+    val reorderedChain = if (reorderBase) { // reorder the base such that rare elements of seq are tested first
+      val newBase = seq.zipWithIndex.groupBy(_._1).toSeq  // pair each element with its index and group by value
+        .sortBy(_._2.length).flatMap(_._2) // sort by value frequency
+        .map(pair => pair._2) // get index
+      val newChain = mutableCopyWithAction(givenChain, action)
+      changeBase(newChain, newBase)
+      cutRedundantAfter(newChain, newChain.start)
+      newChain.toChain
+    } else withAction(givenChain, action)
+    val pointSetsToTest: Array[Array[Int]] = if (usePointSets)
+      basePointGroups(reorderedChain, n)
+    else
+      reorderedChain.base.map(k => Array(k)).toArray
+    class FixingTest(level: Int) extends SubgroupTest[P] {
+      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[FixingTest] = {
+        val pointSet = pointSetsToTest(level)
+        if (seqInteger(pointSet(0)) != seqInteger(orbitImage))
+          return RefNone
+        if (pointSet.length > 1) {
+          val nextG = node.u(b)
+          var i = 1
+          while (i < pointSet.length) {
+            val k = pointSet(i)
+            if (seqInteger(k) != seqInteger(k <|+| nextG))
+              return RefNone
+            i += 1
+          }
+        }
+        RefSome(new FixingTest(level + 1))
+      }
+    }
+    def leaveInvariant(g: P): Boolean = {
+      var i = 0
+      while (i < n) {
+        if (seqInteger(i <|+| g) != seqInteger(i))
+          return false
+        i += 1
+      }
+      true
+    }
+    subgroupSearch(reorderedChain, leaveInvariant(_), new FixingTest(0))
+  }
 }
