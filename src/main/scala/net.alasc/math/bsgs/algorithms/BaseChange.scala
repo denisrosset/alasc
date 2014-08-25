@@ -206,7 +206,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] {
             val newNode = nodeBuilder.standalone(beta)
             val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
             mutableChain.insertInChain(mutablePrev, term, newNode)
-            rec(prev.next.asInstanceOf[Node[P]], mutablePrev, remaining, conj)
+            rec(mutablePrev.next.asInstanceOf[Node[P]], mutablePrev, remaining, conj)
         }
       }
     }
