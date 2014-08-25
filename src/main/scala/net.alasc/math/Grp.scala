@@ -84,6 +84,10 @@ class Grp[G]( // TODO: change type parameter P -> G
     val transversal: Transversal[G] = mutableChain.detachFirstNode(b)(algorithms.nodeBuilder, algebra, action)
     (Grp.fromChain(mutableChain.toChain), transversal)
   }
+  def /(rhs: Grp[G]): LeftCosets[G] = {
+    require(rhs.generators.forall(lhs.contains(_)))
+    new LeftCosets(lhs, rhs)
+  }
 }
 
 object Grp {
