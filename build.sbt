@@ -14,7 +14,6 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.spire-math" %% "debox" % "0.6.0",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1",
   "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
   "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test",
   "org.spire-math" %% "spire" % "0.8.3-SNAPSHOT"
