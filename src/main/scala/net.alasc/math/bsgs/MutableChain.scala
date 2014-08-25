@@ -244,7 +244,9 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
             mutable.makeImmutable
             rec(mutablePrev)
           case _: Node[P] => sys.error("An immutable node cannot be before a mutable node.")
-          case start: Start[P] => assert(start eq elem) // finished
+          case start: Start[P] =>
+            mutable.makeImmutable
+            assert(start eq elem) // finished
         }
       }
     }
