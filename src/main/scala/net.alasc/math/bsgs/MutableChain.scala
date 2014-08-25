@@ -286,6 +286,21 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
       case start: Start[P] => start
     }
 
+  /** Removes the first node from the chain and returns it. If the chain is empty,
+    * an empty node with given base point is created. */
+  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: PermutationAction[P]): Node[P] = start.next match {
+    case IsMutableNode(mn) =>
+      start.next = mn.next
+      IsMutableNode.unapply(mn.next).foreach { n => n.prev = start }
+      mn.prev = null
+      mn.next = null
+      mn
+    case node: Node[P] =>
+      start.next = node.next
+      node
+    case term: Term[P] =>
+      builder.standalone(beta)
+  }
 
   /** Converts the current chain to immutable.
     * 

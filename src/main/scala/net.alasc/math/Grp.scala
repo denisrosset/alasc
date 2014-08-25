@@ -12,38 +12,62 @@ import algorithms._
   *
   * Can be constructed from any finite group with a faithful permutation action.
   */
-class Grp[P](
-  val defaultAction: PermutationAction[P],
-  val algorithms: BasicAlgorithms[P],
-  val givenGenerators: RefOption[Iterable[P]] = RefNone,
-  var knownOrder: RefOption[BigInt] = RefNone,
-  var knownChain: RefOption[Chain[P]] = RefNone,
-  val givenRandomElement: Option[Random => P] = None)(implicit algebra: FiniteGroup[P]) { lhs =>
-  // TODO conjugatedBy
-  override def toString = generators.mkString("Grp(", ", ", ")") + (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
-  def chain: Chain[P] = knownChain.getOrElse {
+class Grp[G]( // TODO: change type parameter P -> G
+  val algorithms: BasicAlgorithms[G],
+  val defaultAction: PermutationAction[G],
+  givenGenerators: RefOption[Iterable[G]] = RefNone,
+  givenOrder: RefOption[BigInt] = RefNone,
+  givenChain: RefOption[Chain[G]] = RefNone,
+  givenRandomElement: Option[Random => G] = None)(implicit val algebra: FiniteGroup[G]) { lhs =>
+  require(givenChain.fold(true)(_.isImmutable))
+  private[this] var knownChain: RefOption[Chain[G]] = givenChain
+  def chain: Chain[G] = knownChain.getOrElse {
     implicit def action = defaultAction
-    if (givenGenerators.nonEmpty && knownOrder.nonEmpty)
-      algorithms.completeChainFromGeneratorsAndOrder(givenGenerators.get, knownOrder.get).toChain
-    else if (givenRandomElement.nonEmpty && knownOrder.nonEmpty && algorithms.isInstanceOf[SchreierSimsRandomized[P]])
-      algorithms.asInstanceOf[SchreierSimsRandomized[P]].randomizedSchreierSims(givenRandomElement.get, knownOrder.get).toChain
-    else if (givenGenerators.nonEmpty)
-      algorithms.completeChainFromGenerators(givenGenerators.get).toChain
+    if (knownGenerators.nonEmpty && knownOrder.nonEmpty)
+      algorithms.completeChainFromGeneratorsAndOrder(knownGenerators.get, knownOrder.get).toChain
+    else if (knownRandomElement.nonEmpty && knownOrder.nonEmpty && algorithms.isInstanceOf[SchreierSimsRandomized[G]])
+      algorithms.asInstanceOf[SchreierSimsRandomized[G]].randomizedSchreierSims(knownRandomElement.get, knownOrder.get).toChain
+    else if (knownGenerators.nonEmpty)
+      algorithms.completeChainFromGenerators(knownGenerators.get).toChain
     else
       sys.error("Group cannot be represented from the given information.")
   }
-  def order: BigInt = if (knownOrder.nonEmpty) knownOrder.get else {
-    knownOrder = RefSome(chain.order)
-    knownOrder.get
+  private[this] var knownOrder: RefOption[BigInt] = givenOrder
+  def order: BigInt = knownOrder.getOrElse {
+    val o = chain.order
+    knownOrder = RefSome(o)
+    o
   }
-  def generators = givenGenerators.getOrElse(chain.generators)
-  def randomElement(random: Random): P = givenRandomElement.fold(chain.randomElement(random))(_(random))
-  def &(rhs: Grp[P]) = intersect(rhs)
-  def |(rhs: Grp[P]) = union(rhs)
-  def fixing(seq: Seq[Any])(implicit action: PermutationAction[P]): Grp[P] =
+  private[this] var knownGenerators: RefOption[Iterable[G]] = givenGenerators
+  def generators: Iterable[G] = knownGenerators.getOrElse {
+    val g = chain.generators
+    knownGenerators = RefSome(g)
+    g
+  }
+  private[this] val knownRandomElement: Option[Random => G] = givenRandomElement
+
+  def chain(givenAction: PermutationAction[G], givenBase: Seq[Int] = Seq.empty): Chain[G] = {
+    if (givenAction == defaultAction) {
+      if (givenBase.isEmpty)
+        chain
+      else {
+        val mutableChain = algorithms.mutableChainCopy(chain)(defaultAction)
+        algorithms.changeBase(mutableChain, givenBase)(defaultAction)
+        mutableChain.toChain
+      }
+    } else
+      algorithms.completeChainFromSubgroup(chain, givenBase)(givenAction, implicitly[Subgroup[Chain[G], G]]).toChain
+  }
+
+  // TODO conjugatedBy
+  override def toString = generators.mkString("Grp(", ", ", ")") + (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
+  def randomElement(random: Random): G = knownRandomElement.fold(chain.randomElement(random))(_(random))
+  def &(rhs: Grp[G]) = intersect(rhs)
+  def |(rhs: Grp[G]) = union(rhs)
+  def fixing(seq: Seq[Any])(implicit action: PermutationAction[G]): Grp[G] =
     Grp.fromChain(algorithms.fixing(chain, seq)(action).toChain)
-  def intersect(rhs: Grp[P]): Grp[P] = Grp.fromChain(algorithms.intersection(chain, rhs.chain)(defaultAction).toChain)(algebra, defaultAction)
-  def union(rhs: Grp[P]): Grp[P] = if (knownChain.nonEmpty || givenGenerators.isEmpty) { // TODO: something more clever if the two groups commute
+  def intersect(rhs: Grp[G]): Grp[G] = Grp.fromChain(algorithms.intersection(chain, rhs.chain)(defaultAction).toChain)(algebra, defaultAction)
+  def union(rhs: Grp[G]): Grp[G] = if (knownChain.nonEmpty || givenGenerators.isEmpty) { // TODO: something more clever if the two groups commute
     // TODO: when rhs has been computed but not lhs
     val mutableChain = algorithms.mutableCopyWithAction(chain, defaultAction)
     algorithms.insertGenerators(mutableChain, rhs.generators)
@@ -54,26 +78,35 @@ class Grp[P](
     algorithms.completeStrongGenerators(mutableChain)
     Grp.fromChain(mutableChain.toChain)(algebra, defaultAction)
   }
+  def stabilizer(b: Int)(implicit action: PermutationAction[G]): (Grp[G], Transversal[G]) = {
+    val mutableChain = algorithms.mutableCopyWithAction(chain, action)
+    algorithms.changeBase(mutableChain, Seq(b))
+    val transversal: Transversal[G] = mutableChain.detachFirstNode(b)(algorithms.nodeBuilder, algebra, action)
+    (Grp.fromChain(mutableChain.toChain), transversal)
+  }
 }
 
 object Grp {
-  def defaultAlg[P](implicit algebra: FiniteGroup[P]) = BasicAlgorithms.randomized(Random)
-  def fromChain[P](chain: Chain[P])(implicit algebra: FiniteGroup[P], action: PermutationAction[P]) =
-    new Grp[P](defaultAction = action, algorithms = defaultAlg[P], knownChain = RefSome(chain))
-  def apply[P](generators: P*)(implicit algebra: FiniteGroup[P], action: PermutationAction[P]) = {
-    new Grp[P](defaultAction = action, algorithms = defaultAlg[P], givenGenerators = RefSome(generators))
+  def defaultAlg[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
+  def fromChain[G](chain: Chain[G])(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) =
+    new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenChain = RefSome(chain))
+  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) = {
+    new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenGenerators = RefSome(generators))
   }
-  def fromSubgroup[S, P](subgroup: S)(implicit algebra: FiniteGroup[P], sg: Subgroup[S, P], action: PermutationAction[P]) = {
-    val alg = defaultAlg[P]
-    fromChain(alg.completeChainFromGeneratorsAndOrder(subgroup.generators, subgroup.order).toChain)
+  def fromSubgroup[S, G](subgroup: S)(implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], action: PermutationAction[G]) = {
+    val alg = defaultAlg[G]
+    new Grp[G](defaultAction = action, algorithms = defaultAlg[G],
+      givenGenerators = RefSome(subgroup.generators), givenOrder = RefSome(subgroup.order),
+      givenRandomElement = Some(subgroup.randomElement(_)))
   }
-  implicit def GrpSubgroup[P](implicit algebra: FiniteGroup[P]): Subgroup[Grp[P], P] = new GrpSubgroup[P]
+  implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
 }
 
-class GrpSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Grp[P], P] {
-  def elements(grp: Grp[P]) = grp.chain.elements
-  def generators(grp: Grp[P]) = grp.generators
-  def order(grp: Grp[P]) = grp.order
-  def randomElement(grp: Grp[P], random: Random) = grp.randomElement(random)
-  override def contains(grp: Grp[P], g: P) = grp.chain.contains(g)
+class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
+  def elements(grp: Grp[G]) = grp.chain.elements
+  def generators(grp: Grp[G]) = grp.generators
+  def order(grp: Grp[G]) = grp.order
+  def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
+  override def contains(grp: Grp[G], g: G) = grp.chain.contains(g)
+  override def toGrp(grp: Grp[G])(implicit action: PermutationAction[G]): Grp[G] = grp
 }
