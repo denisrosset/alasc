@@ -59,8 +59,8 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     mutableChain
   }
 
-  def mutableChainCopy(chainStartNode: Node[P]): MutableChain[P] = {
-    implicit def action = chainStartNode.action
+  def mutableChainCopy(chain: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P] = {
+    chain.mapOrElse(node => require(node.action == action), ())
     val mutableChain = MutableChain.empty
     @tailrec def rec(after: MutableStartOrNode[P], toInsert: Chain[P]): Unit = toInsert match {
       case IsMutableNode(mutableNode) =>
@@ -71,7 +71,7 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
         after.next = node
       case _: Term[P] => // at the end
     }
-    rec(mutableChain.start, chainStartNode)
+    rec(mutableChain.start, chain)
     mutableChain
   }
 }
@@ -116,5 +116,10 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
     implicit def action = mutableChain.start.action
     mutableNode.addToOwnGenerators(generatorPair)
     mutableNode.nodesPrev.foreach( _.updateTransversal(generatorPair) )
+  }
+
+  /** Removes redundant strong generators in the given chain. */
+  def removeRedundantGenerators(mutableChain: MutableChain[P]): Unit = {
+
   }
 }
