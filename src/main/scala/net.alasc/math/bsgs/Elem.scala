@@ -114,6 +114,12 @@ sealed trait Chain[P] extends Elem[P] {
   /** Tests whether this element terminates the BSGS chain. */
   def isTerminal: Boolean
 
+  /** Tests whether this node is immutable. */
+  def isImmutable: Boolean
+
+  /** Tests whether this node is mutable. */
+  def isMutable: Boolean
+
   /** Seq starting with this element and going for the next nodes of the chain, in order. */
   def nodesNext: Seq[Node[P]] = new NextSeq[P](chain)
 
@@ -161,19 +167,13 @@ object Chain {
   * The set of strong generators is represented by storing with each node only the strong generators that stabilize
   * the previous base points, but not the current base point.
   */
-trait Node[P] extends Chain[P] with StartOrNode[P] {
+trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   node =>
   /** Permutation action for the type `P`. */
   implicit def action: PermutationAction[P]
 
   def isTerminal = false
   def isStandalone: Boolean
-
-  /** Tests whether this node is immutable. */
-  def isImmutable: Boolean
-
-  /** Tests whether this node is mutable. */
-  def isMutable: Boolean
 
   def next: Chain[P]
   def beta: Int
@@ -216,6 +216,8 @@ object Node {
 /** Represents the end of a BSGS chain, or, when viewed as a group, the trivial group (). */
 class Term[P] extends Chain[P] {
   def isTerminal = true
+  def isImmutable = true
+  def isMutable = false
 }
 
 object Term {
@@ -224,6 +226,7 @@ object Term {
 }
 
 trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
+  override def toString = if (isStandalone) s"Node ($beta) orbit $orbit" else super.toString
   def isImmutable = prev eq null
   def isStandalone = (prev eq null) && (next eq null)
   def isMutable = (prev ne null)
@@ -231,7 +234,7 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
   def prev: MutableStartOrNode[P]
   protected[bsgs] def prev_= (value: MutableStartOrNode[P]): Unit
 
-  /** Makes the current mode immutable. */
+  /** Makes the current node immutable. */
   protected[bsgs] def makeImmutable: Unit = {
     next.mapOrElse(node => assert(node.isImmutable), ())
     prev = null
