@@ -40,8 +40,7 @@ class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
           element <- rec(nextG, node.next, subgrpHnext)
         } yield element
       case _: Term[G] =>
-        if (subgrpH.order > 1)
-          println(subgrpH)
+        assert(subgrpH.order == 1)
         Iterator(new LeftCoset(g, grpH))
     }
     rec(algebra.id, grpG.chain, grpH)
