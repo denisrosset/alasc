@@ -56,8 +56,12 @@ final class MutableNodeExplicit[P](
   import scala.collection.mutable.ArrayBuffer
 
   protected[bsgs] def bulkAdd(beta: debox.Buffer[Int], pairs: ArrayBuffer[InversePair[P]])(implicit ev: FiniteGroup[P]) = {
-    for (i <- 0 until beta.length)
+    var i = 0
+    val n = beta.length
+    while (i < n) {
       addTransversalElement(beta(i), pairs(i))
+      i += 1
+    }
   }
 
   protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
@@ -81,8 +85,7 @@ final class MutableNodeExplicit[P](
       val newAdded = MutableBitSet.empty
       toCheck.foreach { b =>
         strongGeneratingSetPairs.foreach { ip =>
-          val InversePair(g, gInv) = ip
-          val newB = b <|+| g
+          val newB = b <|+| ip.g
           if (!inOrbit(newB)) {
             val newPair = uPair(b) |+| ip
             toAddBeta += newB
