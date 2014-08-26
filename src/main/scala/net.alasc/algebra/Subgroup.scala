@@ -49,5 +49,13 @@ trait Subgroup[S, G] { sg =>
     }
     res
   }
+  def supportAny(s: S)(implicit ev: PermutationAction[G]): NNOption = {
+    generators(s).foreach { g =>
+      val sup = g.supportAny
+      if (sup.nonEmpty)
+        return sup
+    }
+    NNNone
+  }
   def toGrp(subgroup: S)(implicit action: PermutationAction[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, action)
 }

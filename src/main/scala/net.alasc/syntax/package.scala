@@ -10,5 +10,6 @@ package object syntax {
   object permutationAction extends PermutationActionSyntax
   object shiftablePermutation extends ShiftablePermutationSyntax
   object subgroup extends SubgroupSyntax
+  object permutationSubgroup extends PermutationSubgroupSyntax
   object all extends AllSyntax
 }

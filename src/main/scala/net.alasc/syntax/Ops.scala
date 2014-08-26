@@ -58,8 +58,8 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def toGrp()(implicit pa: PermutationAction[G]): Grp[G] = ev.toGrp(lhs)
 }
 
-final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
-  def supportMin(): NNOption = macro Ops.unop[NNOption]
-  def supportMax(): NNOption = macro Ops.unop[NNOption]
-  def supportAny(): NNOption = macro Ops.unop[NNOption]
+final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: PermutationAction[G]) {
+  def supportMin(): NNOption = ev.supportMin(lhs)
+  def supportMax(): NNOption = ev.supportMax(lhs)
+  def supportAny(): NNOption = ev.supportAny(lhs)
 }
