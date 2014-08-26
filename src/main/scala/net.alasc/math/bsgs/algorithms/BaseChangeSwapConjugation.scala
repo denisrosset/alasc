@@ -16,8 +16,8 @@ import net.alasc.algebra.{PermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChangeGuided[P] {
-  def changeBaseConjugation(mutableChain: MutableChain[P], guide: BaseGuide)(
+trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] {
+  override def changeBaseConjugation(mutableChain: MutableChain[P], guide: BaseGuide)(
     implicit action: PermutationAction[P]): InversePair[P] = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], conj: InversePair[P]): InversePair[P] = {

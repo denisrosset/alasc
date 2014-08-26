@@ -38,6 +38,7 @@ trait SubgroupSearch[P] {
 }
 
 trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
+  self =>
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
     implicit action: PermutationAction[P]) : Iterator[P] = {
     val chain = withAction(givenChain, action)
@@ -154,23 +155,14 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(chain)
   }
 
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P] = {
-    val seqVToInt = seq.distinct.zipWithIndex.toMap
-    val seqInteger = seq.map(seqVToInt).toArray
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: PermutationAction[P]): MutableChain[P] = {
     val n = seq.size
-    val reorderedChain = if (reorderBase) { // reorder the base such that rare elements of seq are tested first
-      val newBase = seq.zipWithIndex.groupBy(_._1).toSeq  // pair each element with its index and group by value
-        .sortBy(_._2.length).flatMap(_._2) // sort by value frequency
-        .map(pair => pair._2) // get index
-      val newChain = mutableCopyWithAction(givenChain, action)
-      changeBase(newChain, newBase)
-      cutRedundantAfter(newChain, newChain.start)
-      newChain.toChain
-    } else withAction(givenChain, action)
-    val pointSetsToTest: Array[Array[Int]] = if (usePointSets)
-      basePointGroups(reorderedChain, n)
-    else
-      reorderedChain.base.map(k => Array(k)).toArray
+    val partition = Partition.fromSeq(seq)
+    val mutableChain = mutableCopyWithAction(givenChain, action)
+    changeBase(mutableChain, partition.guide)
+    val reorderedChain = mutableChain.toChain
+    val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
+    val seqInteger = partition.blockIndex
     class FixingTest(level: Int) extends SubgroupTest[P] {
       def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[FixingTest] = {
         val pointSet = pointSetsToTest(level)

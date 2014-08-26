@@ -24,8 +24,6 @@ trait BaseChange[P] extends Algorithms[P] {
     * @param newBase      New base to use, will be extended if it is not a complete base.
     */
   def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit
-}
-
-trait BaseChangeGuided[P] extends BaseChange[P] {
-  def changeBase(mutableChain: MutableChain[P], baseGuide: BaseGuide)(implicit action: PermutationAction[P]): Unit
+  def changeBase(mutableChain: MutableChain[P], baseGuide: BaseGuide)(implicit action: PermutationAction[P]): Unit =
+    changeBase(mutableChain, baseGuide.remainingBase)
 }

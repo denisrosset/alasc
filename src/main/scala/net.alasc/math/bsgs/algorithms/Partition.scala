@@ -19,6 +19,11 @@ import net.alasc.util._
 // TODO: sort in reverse order so we just have to pop the last block
 
 final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuide {
+  def clear: Unit = {
+    currentBlock.clear
+    remainingBlocks.clear
+  }
+  def remainingBase = currentBlock.toSeq ++ remainingBlocks.toIterable.flatMap(_.toSeq)
   def hasAdvice = currentBlock.nonEmpty || remainingBlocks.nonEmpty
   def basePoint(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int = {
     require(easyPoints.contains(beta))
