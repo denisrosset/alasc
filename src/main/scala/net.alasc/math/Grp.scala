@@ -101,6 +101,8 @@ object Grp {
   def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) = {
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenGenerators = RefSome(generators))
   }
+  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) =
+    new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenGenerators = RefSome(generators), givenOrder = RefSome(order))
   def fromSubgroup[S, G](subgroup: S)(implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], action: PermutationAction[G]) = {
     val alg = defaultAlg[G]
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G],

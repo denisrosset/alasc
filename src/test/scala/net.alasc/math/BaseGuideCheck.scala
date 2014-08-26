@@ -13,7 +13,7 @@ object BaseGuideGenerators {
   import MathieuGroups._
   val genGroupAndPartition = for {
     (generators, order) <- Gen.oneOf(M11, M12, M20, M21, M22, M23, RubikCube.group)
-    grp = Grp(generators: _*)
+    grp = Grp.fromGeneratorsAndOrder(generators, order)
     n = grp.supportMax.getOrElse(1) + 1
     seq <- Gen.listOfN(n, Gen.choose(0, 2))
   } yield (grp, seq)
