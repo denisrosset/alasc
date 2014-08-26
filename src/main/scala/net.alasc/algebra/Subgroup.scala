@@ -41,11 +41,11 @@ trait Subgroup[S, G] { sg =>
   def supportMax(s: S)(implicit ev: PermutationAction[G]): NNOption = {
     var res: NNOption = NNNone
     generators(s).foreach { g =>
-      val gMin = g.supportMin
+      val gMax = g.supportMax
       if (res.isEmpty) 
-        res = gMin
-      else if (gMin.isDefined)
-        res = NNSome(gMin.get.max(res.get))
+        res = gMax
+      else if (gMax.isDefined)
+        res = NNSome(gMax.get.max(res.get))
     }
     res
   }
