@@ -84,6 +84,12 @@ class Grp[G]( // TODO: change type parameter P -> G
     val transversal: Transversal[G] = mutableChain.detachFirstNode(b)(algorithms.nodeBuilder, algebra, action)
     (Grp.fromChain(mutableChain.toChain), transversal)
   }
+  def pointwiseStabilizer(set: Int*)(implicit action: PermutationAction[G]): Grp[G] =
+      pointwiseStabilizer(collection.immutable.BitSet.empty ++ set)
+  def pointwiseStabilizer(set: Set[Int])(implicit action: PermutationAction[G]): Grp[G] = {
+    val mutableChain = algorithms.pointwiseStabilizer(chain, set)(action)
+    Grp.fromChain(mutableChain.toChain)
+  }
   def setwiseStabilizer(set: Int*)(implicit action: PermutationAction[G]): Grp[G] =
     setwiseStabilizer(collection.immutable.BitSet.empty ++ set)
   def setwiseStabilizer(set: Set[Int])(implicit action: PermutationAction[G]): Grp[G] = {

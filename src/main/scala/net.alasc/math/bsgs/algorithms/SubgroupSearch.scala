@@ -161,15 +161,12 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(chain)
   }
 
-  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = ???
-
-  /*
-  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[G]): MutableChain[P] = {
+  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableCopyWithAction(givenChain, action)
     changeBase(mutableChain, BaseGuideSet(set))
     @tailrec def detachFirstIfInSet: Unit = mutableChain.start.next match {
       case node: Node[P] if set.contains(node.beta) =>
-        mutableChain.detachFirstNode
+        mutableChain.detachFirstNode(sys.error("Should never be called"))
         detachFirstIfInSet
       case node: Node[P] =>
         assert(set.forall(k => node.isFixed(k)))
@@ -178,7 +175,6 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     detachFirstIfInSet
     mutableChain
   }
-   */
 
   def setwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableCopyWithAction(givenChain, action)
