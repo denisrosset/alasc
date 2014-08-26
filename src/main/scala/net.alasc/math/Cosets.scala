@@ -13,6 +13,7 @@ class RightCoset[G](grpH: Grp[G], g: G) {
   implicit def algebra = grpH.algebra
   def contains(el: G) = grpH.contains(el |+| g.inverse)
   def size: BigInt = grpH.order
+  def leftCoset: LeftCoset[G] = new LeftCoset(g.inverse, grpH)
 }
 
 class LeftCoset[G](g: G, grpH: Grp[G]) {
@@ -21,6 +22,7 @@ class LeftCoset[G](g: G, grpH: Grp[G]) {
   def contains(el: G) = grpH.contains(g.inverse |+| el)
   def size: BigInt = grpH.order
   def iterator: Iterator[G] = grpH.elements.iterator.map( h => g |+| h )
+  def rightCoset: RightCoset[G] = new RightCoset(grpH, g.inverse)
 }
 
 /** Left cosets of G by its subgroup H. */
@@ -45,4 +47,11 @@ class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
     }
     rec(algebra.id, grpG.chain, grpH)
   }
+}
+
+class RightCosets[G](grpH: Grp[G], grpG: Grp[G]) {
+  override def toString = s"($grpH) \\ ($grpG)"
+  import grpG.{algebra, defaultAction, algorithms}
+  def size: BigInt = grpG.order / grpH.order
+  def iterator: Iterator[RightCoset[G]] = new LeftCosets(grpG, grpH).iterator.map(_.rightCoset)
 }

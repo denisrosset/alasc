@@ -88,6 +88,10 @@ class Grp[G]( // TODO: change type parameter P -> G
     require(rhs.generators.forall(lhs.contains(_)))
     new LeftCosets(lhs, rhs)
   }
+  def \(rhs: Grp[G]): RightCosets[G] = {
+    require(lhs.generators.forall(rhs.contains(_)))
+    new RightCosets(lhs, rhs)
+  }
 }
 
 object Grp {

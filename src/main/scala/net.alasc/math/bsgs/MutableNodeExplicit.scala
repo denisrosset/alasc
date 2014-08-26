@@ -67,8 +67,8 @@ final class MutableNodeExplicit[P](
   protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
     var toCheck = MutableBitSet.empty
     val sb = new StringBuilder
-    var toAddBeta = debox.Buffer.empty[Int]
-    var toAddIP = ArrayBuffer.empty[InversePair[P]]
+    val toAddBeta = debox.Buffer.empty[Int]
+    val toAddIP = ArrayBuffer.empty[InversePair[P]]
     foreachOrbit { b =>
       val newB = b <|+| newGenerator.g
       if (!inOrbit(newB)) {
