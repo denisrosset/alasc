@@ -21,7 +21,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChangeGuid
     implicit action: PermutationAction[P]): InversePair[P] = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], conj: InversePair[P]): InversePair[P] = {
-      if (prev.next.nodesNext.forall(_.orbitSize == 1)) {
+      if (prev.next.nodesNext.forall(_.orbitSize == 1) || !guide.hasAdvice) {
         cutRedundantAfter(mutableChain, prev)
         conj
       } else prev.next match {
@@ -29,7 +29,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChangeGuid
           val mutablePrev = mutableNode.prev
           val easyPoints = mutable.BitSet.empty
           mutableNode.foreachOrbit { k => easyPoints += (k <|+| conj.g) }
-          val beta = guide.basePoint(easyPoints, k => mutableNode.isFixed(k <|+| conj.gInv))
+          val beta = guide.basePoint(mutableNode.beta <|+| conj.g, easyPoints, k => mutableNode.isFixed(k <|+| conj.gInv))
           val alpha = beta <|+| conj.gInv
           if (mutableNode.beta == alpha) { // TODO: check conjugation of k
             guide.moveToNext(beta)
@@ -46,7 +46,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChangeGuid
         case node: Node[P] =>
           val easyPoints = mutable.BitSet.empty
           node.foreachOrbit { k => easyPoints += (k <|+| conj.g) }
-          val beta = guide.basePoint(easyPoints, k => node.isFixed(k <|+| conj.gInv))
+          val beta = guide.basePoint(node.beta <|+| conj.g, easyPoints, k => node.isFixed(k <|+| conj.gInv))
           val alpha = beta <|+| conj.gInv
           if (node.beta == alpha) {
             guide.moveToNext(beta)

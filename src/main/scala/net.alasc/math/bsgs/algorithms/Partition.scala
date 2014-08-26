@@ -19,50 +19,53 @@ import net.alasc.util._
 // TODO: sort in reverse order so we just have to pop the last block
 
 final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuide {
-  def isEmpty = currentBlock.isEmpty && remainingBlocks.isEmpty
-  def basePoint(easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int = {
-    require(easyPoints.nonEmpty)
+  def hasAdvice = currentBlock.nonEmpty || remainingBlocks.nonEmpty
+  def basePoint(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int = {
+    require(easyPoints.contains(beta))
     if (currentBlock.isEmpty) {
-      // we have to find a new block for the base change, with two constraints:
-      // - the block contains a point that is not fixed by the group
-      // - (nice to have) the block contains an easy point
-      @tailrec def findPointAndBlockIndex(lastIndex: Int, index: Int, nonFixed: OptionTuple2NN): Tuple2Int =
-        if (index >= 0 && remainingBlockSizes(lastIndex) == remainingBlockSizes(index)) {
-          var newNonFixed = nonFixed
-          var easyNonFixed = NoneTuple2NN
-          val block = remainingBlocks(index)
-          val toRemove = mutable.BitSet.empty
-          block.foreach { k =>
-            if (isFixed(k))
-              toRemove += k
-            else if (easyPoints.contains(k))
-              easyNonFixed = SomeTuple2NN(k, index)
-            else if (newNonFixed.isEmpty)
-              newNonFixed = SomeTuple2NN(k, index)
-          }
-          block --= toRemove
-          if (block.isEmpty) {
-            remainingBlocks.remove(index)
-            remainingBlockSizes.remove(index)
-            if (easyNonFixed.nonEmpty)
-              easyNonFixed.get
-            else
-              findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
-          } else {
-            if (easyNonFixed.nonEmpty)
-              easyNonFixed.get
-            else
-              findPointAndBlockIndex(index, index - 1, newNonFixed)
-          }
-        } else nonFixed match {
-          case OptionTuple2NN(point, blockIndex) => Tuple2Int(point, blockIndex)
-          case _ => sys.error("All points are fixed, should not happen.")
+      if (remainingBlocks.isEmpty) beta else {
+        // we have to find a new block for the base change, with two constraints:
+        // - the block contains a point that is not fixed by the group
+        // - (nice to have) the block contains an easy point
+        @tailrec def findPointAndBlockIndex(lastIndex: Int, index: Int, nonFixed: OptionTuple2NN): OptionTuple2NN =
+          if (index >= 0 && remainingBlockSizes(lastIndex) == remainingBlockSizes(index)) {
+            var newNonFixed = nonFixed
+            var easyNonFixed = NoneTuple2NN
+            val block = remainingBlocks(index)
+            val toRemove = mutable.BitSet.empty
+            block.foreach { k =>
+              if (isFixed(k))
+                toRemove += k
+              else if (easyPoints.contains(k))
+                easyNonFixed = SomeTuple2NN(k, index)
+              else if (newNonFixed.isEmpty)
+                newNonFixed = SomeTuple2NN(k, index)
+            }
+            block --= toRemove
+            if (block.isEmpty) {
+              remainingBlocks.remove(index)
+              remainingBlockSizes.remove(index)
+              if (easyNonFixed.nonEmpty)
+                easyNonFixed
+              else
+                findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
+            } else {
+              if (easyNonFixed.nonEmpty)
+                easyNonFixed
+              else
+                findPointAndBlockIndex(index, index - 1, newNonFixed)
+            }
+          } else nonFixed
+
+        findPointAndBlockIndex(remainingBlocks.length - 1, remainingBlocks.length - 1, NoneTuple2NN) match {
+          case OptionTuple2NN(point, blockIndex) =>
+            currentBlock ++= remainingBlocks(blockIndex)
+            remainingBlocks.remove(blockIndex)
+            remainingBlockSizes.remove(blockIndex)
+            point
+          case _ => beta
         }
-      val Tuple2Int(point, blockIndex) = findPointAndBlockIndex(remainingBlocks.length - 1, remainingBlocks.length - 1, NoneTuple2NN)
-      currentBlock ++= remainingBlocks(blockIndex)
-      remainingBlocks.remove(blockIndex)
-      remainingBlockSizes.remove(blockIndex)
-      return point
+      }
     } else {
       var nonFixed = NNNone
       val toRemove = mutable.BitSet.empty
@@ -78,11 +81,12 @@ final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks
       }
       currentBlock --= toRemove
       if (nonFixed.nonEmpty)
-        return nonFixed.get
+        nonFixed.get
+      else
+        basePoint(beta, easyPoints, isFixed)
     }
-    basePoint(easyPoints, isFixed)
   }
-  
+
   def moveToNext[P](chosenPoint: Int) = {
     assert(currentBlock.contains(chosenPoint))
     currentBlock -= chosenPoint

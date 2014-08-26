@@ -20,12 +20,12 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChangeGuided[P] {
   def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: PermutationAction[P]): Unit = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P]): Unit = {
-      if (prev.next.nodesNext.forall(_.orbitSize == 1))
+      if (prev.next.nodesNext.forall(_.orbitSize == 1) || !guide.hasAdvice)
         cutRedundantAfter(mutableChain, prev)
       else prev.next match {
           case IsMutableNode(mutableNode) =>
             val mutablePrev = mutableNode.prev
-            val beta = guide.basePoint(Set(mutableNode.beta), mutableNode.isFixed(_))
+            val beta = guide.basePoint(mutableNode.beta, Set(mutableNode.beta), mutableNode.isFixed(_))
             if (mutableNode.beta == beta) {
               guide.moveToNext(beta)
               rec(mutableNode, mutablePrev)
@@ -36,7 +36,7 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChangeGuided[P] {
               rec(newNode, mutablePrev)
             }
           case node: Node[P] =>
-            val beta = guide.basePoint(Set(node.beta), node.isFixed(_))
+            val beta = guide.basePoint(node.beta, Set(node.beta), node.isFixed(_))
             if (node.beta == beta) {
               guide.moveToNext(beta)
               rec(node, lastMutableStartOrNode)
