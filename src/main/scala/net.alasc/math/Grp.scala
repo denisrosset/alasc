@@ -12,7 +12,7 @@ import algorithms._
   *
   * Can be constructed from any finite group with a faithful permutation action.
   */
-class Grp[G]( // TODO: change type parameter P -> G
+class Grp[G](
   val algorithms: BasicAlgorithms[G],
   val defaultAction: PermutationAction[G],
   givenGenerators: RefOption[Iterable[G]] = RefNone,
