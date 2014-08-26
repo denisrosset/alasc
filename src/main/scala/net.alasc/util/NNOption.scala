@@ -59,6 +59,7 @@ class NNOption(val i: Int) extends AnyVal { lhs =>
 object NNOption {
   implicit def nnOptionToOption(nno: NNOption): Option[Int] = nno.toOption
   @inline def apply(i: Int): NNOption = if (i >= 0) new NNOption(i) else NNNone
+  def unapply(nno: NNOption): NNOption = nno
 }
 
 trait NNOptionTopLevel {
