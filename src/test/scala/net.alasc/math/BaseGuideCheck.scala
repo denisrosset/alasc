@@ -29,7 +29,6 @@ object BaseGuideCheck extends Properties("BSGS") {
       val partition = Partition.fromSeq(seq)
       algorithms.changeBase(mutableChain, partition.guide)
       val baseBlockSize = mutableChain.start.next.base.map(partition.blockSize(_))
-
       (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i <= j }
     }
   }

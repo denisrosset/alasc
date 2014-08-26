@@ -19,33 +19,36 @@ import net.alasc.util._
 trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChangeGuided[P] {
   def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: PermutationAction[P]): Unit = {
     require(action eq mutableChain.start.action)
-    @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P]): Unit =
-        prev.next match {
+    @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P]): Unit = {
+      if (prev.next.nodesNext.forall(_.orbitSize == 1))
+        cutRedundantAfter(mutableChain, prev)
+      else prev.next match {
           case IsMutableNode(mutableNode) =>
             val mutablePrev = mutableNode.prev
             val beta = guide.basePoint(Set(mutableNode.beta))
             if (mutableNode.beta == beta) {
-              guide.moveToNext(beta, mutableNode.next.isFixed(_))
+              guide.moveToNext(beta, mutableNode.isFixed(_))
               rec(mutableNode, mutablePrev)
             }
             else {
               val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
-              guide.moveToNext(beta, newNode.next.isFixed(_))
+              guide.moveToNext(beta, newNode.isFixed(_))
               rec(newNode, mutablePrev)
             }
           case node: Node[P] =>
             val beta = guide.basePoint(Set(node.beta))
             if (node.beta == beta) {
-              guide.moveToNext(beta, node.next.isFixed(_))
+              guide.moveToNext(beta, node.isFixed(_))
               rec(node, lastMutableStartOrNode)
             } else {
               val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
               val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
-              guide.moveToNext(beta, newNode.next.isFixed(_))
+              guide.moveToNext(beta, newNode.isFixed(_))
               rec(newNode, mutablePrev)
             }
           case term: Term[P] => // finished
         }
+    }
     rec(mutableChain.start, mutableChain.start)
   }
 
