@@ -29,36 +29,36 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChangeGuid
           val mutablePrev = mutableNode.prev
           val easyPoints = mutable.BitSet.empty
           mutableNode.foreachOrbit { k => easyPoints += (k <|+| conj.g) }
-          val beta = guide.basePoint(easyPoints)
+          val beta = guide.basePoint(easyPoints, k => mutableNode.isFixed(k <|+| conj.gInv))
           val alpha = beta <|+| conj.gInv
           if (mutableNode.beta == alpha) { // TODO: check conjugation of k
-            guide.moveToNext(beta, k => mutableNode.next.isFixed(k <|+| conj.gInv))
+            guide.moveToNext(beta)
             rec(mutableNode, mutablePrev, conj) // replace mutablePrev by mutableNode ?
           } else if (mutableNode.inOrbit(alpha)) {
             val nextConj = mutableNode.uPair(alpha) |+| conj
-            guide.moveToNext(beta, k => mutableNode.next.isFixed(k <|+| nextConj.gInv))
+            guide.moveToNext(beta)
             rec(mutableNode, mutablePrev, nextConj)  // replace mutablePrev by mutableNode ?
           } else {
             val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
-            guide.moveToNext(beta, k => newNode.next.isFixed(k <|+| conj.gInv))
+            guide.moveToNext(beta)
             rec(newNode, mutablePrev, conj)
           }
         case node: Node[P] =>
           val easyPoints = mutable.BitSet.empty
           node.foreachOrbit { k => easyPoints += (k <|+| conj.g) }
-          val beta = guide.basePoint(easyPoints)
+          val beta = guide.basePoint(easyPoints, k => node.isFixed(k <|+| conj.gInv))
           val alpha = beta <|+| conj.gInv
           if (node.beta == alpha) {
-            guide.moveToNext(beta, k => node.next.isFixed(k <|+| conj.gInv))
+            guide.moveToNext(beta)
             rec(node, lastMutableStartOrNode, conj)
           } else if (node.inOrbit(alpha)) {
             val nextConj = node.uPair(alpha) |+| conj
-            guide.moveToNext(beta, k => node.next.isFixed(k <|+| nextConj.gInv))
+            guide.moveToNext(beta)
             rec(node, lastMutableStartOrNode, nextConj)  // replace mutablePrev by mutableNode ?
           } else {
             val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
             val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
-            guide.moveToNext(beta, k => newNode.next.isFixed(k <|+| conj.gInv))
+            guide.moveToNext(beta)
             rec(newNode, mutablePrev, conj)  // replace mutablePrev by mutableNode ?
           }
         case term: Term[P] => conj

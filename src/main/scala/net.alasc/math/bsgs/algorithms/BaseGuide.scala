@@ -9,15 +9,15 @@ trait BaseGuide {
   /** Determines the next base point.
     * 
     * @param easyPoints Set of points that are easier for the base change.
+    * @param isFixed    A function that tests whether a point is fixed by the current stabilizer group in the chain.
     * 
     * @return The next base point, taken from `easyPoints` whenever possible.
     */
-  def basePoint(easyPoints: collection.Set[Int]): Int
+  def basePoint(easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int
 
   /** Moves to the next base point, telling this advisor what point was actually used in the base change.
     * 
     * @param chosenPoint The base point actually used in the base change.
-    * @param isFixed     A function that tests whether a point is fixed by the next group in the stabilizer chain.
     */
-  def moveToNext[P](chosenPoint: Int, isFixed: Int => Boolean): Unit
+  def moveToNext[P](chosenPoint: Int): Unit
 }
