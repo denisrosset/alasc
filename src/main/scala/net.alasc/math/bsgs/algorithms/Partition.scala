@@ -16,8 +16,6 @@ import net.alasc.algebra.{PermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-// TODO: sort in reverse order so we just have to pop the last block
-
 final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuide {
   def clear: Unit = {
     currentBlock.clear

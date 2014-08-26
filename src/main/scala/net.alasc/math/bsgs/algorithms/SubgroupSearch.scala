@@ -5,7 +5,8 @@ package algorithms
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.{ BitSet => MutableBitSet }
+import scala.collection.mutable
+import scala.collection.BitSet
 
 import spire.algebra.Order
 import spire.syntax.groupAction._
@@ -32,9 +33,14 @@ trait SubgroupSearch[P] {
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
     implicit action: PermutationAction[P]): MutableChain[P]
 
+  // TODO: remove action (not needed)
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P]
 
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P]
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: PermutationAction[P]): MutableChain[P]
+
+  def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P]
+
+  def setwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P]
 }
 
 trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
@@ -135,7 +141,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     * The considered domain is `0 ... domainSize - 1`.
     */
   def basePointGroups(chain: Chain[P], domainSize: Int): Array[Array[Int]] = {
-    val remaining = MutableBitSet((0 until domainSize): _*)
+    val remaining = mutable.BitSet((0 until domainSize): _*)
     val groups = debox.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[P]): Array[Array[Int]] = current match {
       case node: Node[P] =>
@@ -155,6 +161,74 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(chain)
   }
 
+  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = ???
+
+  /*
+  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[G]): MutableChain[P] = {
+    val mutableChain = mutableCopyWithAction(givenChain, action)
+    changeBase(mutableChain, BaseGuideSet(set))
+    @tailrec def detachFirstIfInSet: Unit = mutableChain.start.next match {
+      case node: Node[P] if set.contains(node.beta) =>
+        mutableChain.detachFirstNode
+        detachFirstIfInSet
+      case node: Node[P] =>
+        assert(set.forall(k => node.isFixed(k)))
+      case _: Term[P] =>
+    }
+    detachFirstIfInSet
+    mutableChain
+  }
+   */
+
+  def setwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
+    val mutableChain = mutableCopyWithAction(givenChain, action)
+    changeBase(mutableChain, BaseGuideSet(set))
+    val reorderedChain = mutableChain.toChain
+    /** Finds for each base point the additional points that are stabilized (i.e. are
+      * not moved by the next subgroup in the stabilizer chain.
+      * 
+      * The points considered are those contained in `set`.
+      */
+    def basePointGroupsInSet: Array[BitSet] = {
+      val remaining = mutable.BitSet.empty ++= set
+      val groups = debox.Buffer.empty[BitSet]
+      @tailrec @inline def rec(current: Chain[P]): Array[BitSet] = current match {
+        case node: Node[P] if remaining.contains(node.beta) =>
+          import node.action
+          val fixed = mutable.BitSet(node.beta)
+          remaining -= node.beta
+          remaining.foreach { k =>
+            if (node.next.isFixed(k)) fixed += k
+          }
+          remaining --= fixed
+          groups += fixed
+          rec(node.next)
+        case _ => groups.toArray
+      }
+      rec(reorderedChain)
+    }
+    val pointSetsToTest: Array[BitSet] = basePointGroupsInSet
+    class FixingTest(level: Int) extends SubgroupTest[P] {
+      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[FixingTest] =
+        if (level < pointSetsToTest.length) {
+          if (!set.contains(orbitImage))
+            return RefNone
+          val pointSet = pointSetsToTest(level)
+          if (pointSet.size > 1) {
+            val nextG = node.u(b) |+| currentG
+            if (pointSet.exists( k => k != node.beta && !set.contains(k <|+| nextG) ))
+              return RefNone
+          }
+          RefSome(new FixingTest(level + 1))
+        } else {
+          RefSome(this)
+        }
+    }
+    def setwiseStabilized(g: P): Boolean =
+      set.forall { k => set.contains(k <|+| g) }
+    subgroupSearch(reorderedChain, setwiseStabilized(_), new FixingTest(0))
+  }
+
   def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: PermutationAction[P]): MutableChain[P] = {
     val n = seq.size
     val partition = Partition.fromSeq(seq)
@@ -169,7 +243,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
         if (seqInteger(pointSet(0)) != seqInteger(orbitImage))
           return RefNone
         if (pointSet.length > 1) {
-          val nextG = node.u(b)
+          val nextG = node.u(b) |+| currentG
           var i = 1
           while (i < pointSet.length) {
             val k = pointSet(i)

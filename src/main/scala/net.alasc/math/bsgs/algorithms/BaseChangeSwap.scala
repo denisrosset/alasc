@@ -16,7 +16,7 @@ import net.alasc.algebra.{PermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-trait BaseChangeSwap[P] extends BaseAlgorithms[P] {
+trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChange[P] {
   override def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: PermutationAction[P]): Unit = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P]): Unit = {
