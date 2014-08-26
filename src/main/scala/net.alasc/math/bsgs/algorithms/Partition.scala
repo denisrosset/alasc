@@ -27,7 +27,7 @@ final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks
       // - the block contains a point that is not fixed by the group
       // - (nice to have) the block contains an easy point
       @tailrec def findPointAndBlockIndex(lastIndex: Int, index: Int, nonFixed: OptionTuple2NN): Tuple2Int =
-        if (index < remainingBlocks.length && remainingBlockSizes(lastIndex) == remainingBlockSizes(index)) {
+        if (index >= 0 && remainingBlockSizes(lastIndex) == remainingBlockSizes(index)) {
           var newNonFixed = nonFixed
           var easyNonFixed = NoneTuple2NN
           val block = remainingBlocks(index)
@@ -47,18 +47,18 @@ final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks
             if (easyNonFixed.nonEmpty)
               easyNonFixed.get
             else
-              findPointAndBlockIndex(lastIndex, index, newNonFixed)
+              findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
           } else {
             if (easyNonFixed.nonEmpty)
               easyNonFixed.get
             else
-              findPointAndBlockIndex(index, index + 1, newNonFixed)
+              findPointAndBlockIndex(index, index - 1, newNonFixed)
           }
         } else nonFixed match {
           case OptionTuple2NN(point, blockIndex) => Tuple2Int(point, blockIndex)
           case _ => sys.error("All points are fixed, should not happen.")
         }
-      val Tuple2Int(point, blockIndex) = findPointAndBlockIndex(0, 0, NoneTuple2NN)
+      val Tuple2Int(point, blockIndex) = findPointAndBlockIndex(remainingBlocks.length - 1, remainingBlocks.length - 1, NoneTuple2NN)
       currentBlock ++= remainingBlocks(blockIndex)
       remainingBlocks.remove(blockIndex)
       remainingBlockSizes.remove(blockIndex)
@@ -112,10 +112,10 @@ class Partition(val n: Int, val blocks: Seq[BitSet]) {
 
 object Partition {
   def fromSets(sets: Iterable[Iterable[Int]]): Partition =
-    new Partition(sets.flatten.max + 1, sets.toSeq.map(set => BitSet.empty ++ set).sortBy(_.size))
+    new Partition(sets.flatten.max + 1, sets.toSeq.map(set => BitSet.empty ++ set).sortBy(block => -block.size))
   def fromSeq(seq: Seq[Any]): Partition = {
     val map = mutable.HashMap.empty[Any, mutable.BitSet]
     seq.indices.foreach { i => map.getOrElseUpdate(seq(i), mutable.BitSet.empty) += i }
-    new Partition(seq.length, map.values.toSeq.sortBy(_.size))
+    new Partition(seq.length, map.values.toSeq.sortBy(block => -block.size))
   }
 }
