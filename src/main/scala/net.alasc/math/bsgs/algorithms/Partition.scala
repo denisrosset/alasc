@@ -18,19 +18,24 @@ import net.alasc.util._
 
 class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet]) extends BaseGuide {
   def isEmpty = currentBlock.isEmpty && remainingBlocks.isEmpty
-  def basePoint(easyPoints: collection.Set[Int]) =
+  def basePoint(easyPoints: collection.Set[Int]): Int =
     if (currentBlock.isEmpty) {
       if (easyPoints.isEmpty)
         remainingBlocks(0).head
       else {
+        val n = remainingBlocks.length
+        if (n == 0)
+          return easyPoints.head
         @tailrec def findPointAndBlockIndex(lastIndex: Int, index: Int): Tuple2Int =
-          if (remainingBlocks(index).size != remainingBlocks(lastIndex).size)
-            Tuple2Int(remainingBlocks(lastIndex).head, lastIndex)
-          else
-            easyPoints.find(k => remainingBlocks(index).contains(k)) match {
-              case Some(k) => Tuple2Int(k, index)
-              case None => findPointAndBlockIndex(index, index + 1)
-            }
+          if (index < n) {
+            if (remainingBlocks(index).size != remainingBlocks(lastIndex).size)
+              Tuple2Int(remainingBlocks(lastIndex).head, lastIndex)
+            else
+              easyPoints.find(k => remainingBlocks(index).contains(k)) match {
+                case Some(k) => Tuple2Int(k, index)
+                case None => findPointAndBlockIndex(index, index + 1)
+              }
+          } else Tuple2Int(remainingBlocks(0).head, 0)
         val Tuple2Int(point, blockIndex) = findPointAndBlockIndex(0, 0)
         currentBlock ++= remainingBlocks(blockIndex)
         remainingBlocks.remove(blockIndex)
@@ -42,23 +47,26 @@ class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debo
         case None => currentBlock.head
       }
     }
-  def moveToNext[P](chosenPoint: Int, nextGenerators: Iterable[P])(implicit action: PermutationAction[P]) = {
-    assert(currentBlock.contains(chosenPoint))
-    currentBlock -= chosenPoint
-    @tailrec def removeFixedFromBlocks(i: Int, n: Int, toRemove: mutable.BitSet): Unit =
-      if (i < n) {
-        toRemove.clear
-        remainingBlocks(i).foreach { k => if (nextGenerators.forall(g => (k <|+| g) == k)) toRemove += k }
-        remainingBlocks(i) --= toRemove
-        if (remainingBlocks(i).isEmpty) {
-          remainingBlocks.remove(i)
-          removeFixedFromBlocks(i, n - 1, toRemove)
-        } else
-          removeFixedFromBlocks(i + 1, n, toRemove)
-      }
-    removeFixedFromBlocks(0, remainingBlocks.length, mutable.BitSet.empty)
-    remainingBlocks.sort(Order.from( (x,y) => (x.size - y.size).signum ))
-  }
+  
+  def moveToNext[P](chosenPoint: Int, nextGenerators: Iterable[P])(implicit action: PermutationAction[P]) =
+    if (remainingBlocks.nonEmpty) {
+      assert(currentBlock.contains(chosenPoint))
+      currentBlock -= chosenPoint
+      @tailrec def removeFixedFromBlocks(i: Int, n: Int, toRemove: mutable.BitSet): Unit =
+        if (i < n) {
+          assert(remainingBlocks.length == n)
+          toRemove.clear
+          remainingBlocks(i).foreach { k => if (nextGenerators.forall(g => (k <|+| g) == k)) toRemove += k }
+          remainingBlocks(i) --= toRemove
+          if (remainingBlocks(i).isEmpty) {
+            remainingBlocks.remove(i)
+            removeFixedFromBlocks(i, n - 1, toRemove)
+          } else
+            removeFixedFromBlocks(i + 1, n, toRemove)
+        }
+      removeFixedFromBlocks(0, remainingBlocks.length, mutable.BitSet.empty)
+      remainingBlocks.sort(Order.from( (x,y) => (x.size - y.size).signum ))
+    }
 }
 
 /** Partition of n elements from the set {0 ... n - 1}. */
@@ -72,6 +80,7 @@ class Partition(val n: Int, val blocks: Seq[BitSet]) {
     }
     res
   }
+  def blockSize(k: Int) = blocks(blockIndex(k)).size
   override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
   def guide: PartitionGuide =
     new PartitionGuide(mutable.BitSet.empty,
