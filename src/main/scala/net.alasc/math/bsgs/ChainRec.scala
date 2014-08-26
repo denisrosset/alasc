@@ -22,6 +22,15 @@ object MutableChainRec {
 }
 
 object ChainRec {
+  @tailrec def isFixed[P](chain: Chain[P], k: Int): Boolean = chain match {
+    case node: Node[P] =>
+      if (node.ownGeneratorsPairs.exists( ip => node.action.actr(k, ip.g) != k ))
+        false
+      else
+        isFixed(node.next, k)
+    case _: Term[P] => true
+  }
+
   @tailrec def foreach[P, U](chain: Chain[P], f: Node[P] => U): Unit = chain match {
     case node: Node[P] =>
       f(node)

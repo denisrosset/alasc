@@ -129,6 +129,9 @@ sealed trait Chain[P] extends Elem[P] {
     case _ => default
   }
 
+  /** Tests whether if `k` is fixed by the group described by this chain. */
+  def isFixed(k: Int): Boolean = ChainRec.isFixed(chain, k)
+
   /** Returns the strong generating set for the BSGS chain starting from this node.
     * 
     * @note The strong generating set is stored piece by piece by having each

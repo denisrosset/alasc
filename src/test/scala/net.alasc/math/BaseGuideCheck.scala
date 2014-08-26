@@ -28,9 +28,9 @@ object BaseGuideCheck extends Properties("BSGS") {
       val mutableChain = algorithms.mutableChainCopy(grp.chain)
       val partition = Partition.fromSeq(seq)
       algorithms.changeBase(mutableChain, partition.guide)
-      val base = mutableChain.start.next.base.map(partition.blockSize(_))
+      val baseBlockSize = mutableChain.start.next.base.map(partition.blockSize(_))
 
-      (base.iterator zip base.iterator.drop(1)).forall { case (i, j) => i <= j }
+      (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i <= j }
     }
   }
 }

@@ -16,19 +16,24 @@ import net.alasc.algebra.{PermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet]) extends BaseGuide {
+class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuide {
   def isEmpty = currentBlock.isEmpty && remainingBlocks.isEmpty
   def basePoint(easyPoints: collection.Set[Int]): Int =
     if (currentBlock.isEmpty) {
-      if (easyPoints.isEmpty)
-        remainingBlocks(0).head
-      else {
+      if (easyPoints.isEmpty) {
+        currentBlock ++= remainingBlocks(0)
+        remainingBlocks.remove(0)
+        remainingBlockSizes.remove(0)
+        currentBlock.head
+      } else {
         val n = remainingBlocks.length
-        if (n == 0)
+        if (n == 0) {
+          println("Warning")
           return easyPoints.head
+        }
         @tailrec def findPointAndBlockIndex(lastIndex: Int, index: Int): Tuple2Int =
           if (index < n) {
-            if (remainingBlocks(index).size != remainingBlocks(lastIndex).size)
+            if (remainingBlockSizes(index) != remainingBlockSizes(lastIndex))
               Tuple2Int(remainingBlocks(lastIndex).head, lastIndex)
             else
               easyPoints.find(k => remainingBlocks(index).contains(k)) match {
@@ -39,6 +44,7 @@ class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debo
         val Tuple2Int(point, blockIndex) = findPointAndBlockIndex(0, 0)
         currentBlock ++= remainingBlocks(blockIndex)
         remainingBlocks.remove(blockIndex)
+        remainingBlockSizes.remove(blockIndex)
         point
       }
     } else {
@@ -48,33 +54,37 @@ class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks: debo
       }
     }
   
-  def moveToNext[P](chosenPoint: Int, nextGenerators: Iterable[P])(implicit action: PermutationAction[P]) =
-    if (remainingBlocks.nonEmpty) {
+  def moveToNext[P](chosenPoint: Int, isFixed: Int => Boolean) =
+    if (currentBlock.nonEmpty || remainingBlocks.nonEmpty) {
       assert(currentBlock.contains(chosenPoint))
       currentBlock -= chosenPoint
+      val toRemove = mutable.BitSet.empty
+      currentBlock.foreach { k => if (isFixed(k)) toRemove += k }
+      currentBlock --= toRemove
       @tailrec def removeFixedFromBlocks(i: Int, n: Int, toRemove: mutable.BitSet): Unit =
         if (i < n) {
-          assert(remainingBlocks.length == n)
           toRemove.clear
-          remainingBlocks(i).foreach { k => if (nextGenerators.forall(g => (k <|+| g) == k)) toRemove += k }
+          remainingBlocks(i).foreach { k => if (isFixed(k)) toRemove += k }
           remainingBlocks(i) --= toRemove
           if (remainingBlocks(i).isEmpty) {
             remainingBlocks.remove(i)
+            remainingBlockSizes.remove(i)
             removeFixedFromBlocks(i, n - 1, toRemove)
           } else
             removeFixedFromBlocks(i + 1, n, toRemove)
         }
-      removeFixedFromBlocks(0, remainingBlocks.length, mutable.BitSet.empty)
-      remainingBlocks.sort(Order.from( (x,y) => (x.size - y.size).signum ))
+      removeFixedFromBlocks(0, remainingBlocks.length, toRemove) // we reuse toRemove
     }
 }
 
 /** Partition of n elements from the set {0 ... n - 1}. */
 class Partition(val n: Int, val blocks: Seq[BitSet]) {
   lazy val blockIndex: Array[Int] = {
-    val res = Array.fill(blocks.length)(-1)
+    val n = blocks.map(_.max).max + 1
+    assert(blocks.forall { _.forall { _ < n } })
+    val res = Array.fill(n)(-1)
     var i = 0
-    while (i < res.length) {
+    while (i < blocks.length) {
       blocks(i).foreach { k => res(k) = i }
       i += 1
     }
@@ -84,7 +94,8 @@ class Partition(val n: Int, val blocks: Seq[BitSet]) {
   override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
   def guide: PartitionGuide =
     new PartitionGuide(mutable.BitSet.empty,
-      debox.Buffer.fromIterable(blocks.map(bitset => mutable.BitSet.fromBitMaskNoCopy(bitset.toBitMask))))
+      debox.Buffer.fromIterable(blocks.map(bitset => mutable.BitSet.fromBitMaskNoCopy(bitset.toBitMask))),
+      debox.Buffer.fromIterable(blocks.map(_.size)))
 }
 
 object Partition {

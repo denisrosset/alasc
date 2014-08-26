@@ -25,23 +25,23 @@ trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChangeGuided[P] {
             val mutablePrev = mutableNode.prev
             val beta = guide.basePoint(Set(mutableNode.beta))
             if (mutableNode.beta == beta) {
-              guide.moveToNext(beta, mutableNode.next.strongGeneratingSet)
+              guide.moveToNext(beta, mutableNode.next.isFixed(_))
               rec(mutableNode, mutablePrev)
             }
             else {
               val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
-              guide.moveToNext(beta, newNode.next.strongGeneratingSet)
+              guide.moveToNext(beta, newNode.next.isFixed(_))
               rec(newNode, mutablePrev)
             }
           case node: Node[P] =>
             val beta = guide.basePoint(Set(node.beta))
             if (node.beta == beta) {
-              guide.moveToNext(beta, node.next.strongGeneratingSet)
+              guide.moveToNext(beta, node.next.isFixed(_))
               rec(node, lastMutableStartOrNode)
             } else {
               val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
               val newNode = changeBasePointAfter(mutableChain, mutablePrev, beta)
-              guide.moveToNext(beta, newNode.next.strongGeneratingSet)
+              guide.moveToNext(beta, newNode.next.isFixed(_))
               rec(newNode, mutablePrev)
             }
           case term: Term[P] => // finished

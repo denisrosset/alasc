@@ -17,7 +17,7 @@ trait BaseGuide {
   /** Moves to the next base point, telling this advisor what point was actually used in the base change.
     * 
     * @param chosenPoint The base point actually used in the base change.
-    * @param nextGenerators Generators for the next group in the stabilizer chain.
+    * @param isFixed     A function that tests whether a point is fixed by the next group in the stabilizer chain.
     */
-  def moveToNext[P](chosenPoint: Int, nextGenerators: Iterable[P])(implicit action: PermutationAction[P]): Unit
+  def moveToNext[P](chosenPoint: Int, isFixed: Int => Boolean): Unit
 }
