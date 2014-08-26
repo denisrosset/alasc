@@ -64,8 +64,8 @@ class Grp[G]( // TODO: change type parameter P -> G
   def randomElement(random: Random): G = knownRandomElement.fold(chain.randomElement(random))(_(random))
   def &(rhs: Grp[G]) = intersect(rhs)
   def |(rhs: Grp[G]) = union(rhs)
-  def fixing(seq: Seq[Any])(implicit action: PermutationAction[G]): Grp[G] =
-    Grp.fromChain(algorithms.fixing(chain, seq)(action).toChain)
+  def fixingSequence(seq: Seq[Any])(implicit action: PermutationAction[G]): Grp[G] =
+    Grp.fromChain(algorithms.fixingSequence(chain, seq)(action).toChain)
   def intersect(rhs: Grp[G]): Grp[G] = Grp.fromChain(algorithms.intersection(chain, rhs.chain)(defaultAction).toChain)(algebra, defaultAction)
   def union(rhs: Grp[G]): Grp[G] = if (knownChain.nonEmpty || givenGenerators.isEmpty) { // TODO: something more clever if the two groups commute
     // TODO: when rhs has been computed but not lhs

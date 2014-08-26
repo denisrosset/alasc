@@ -34,7 +34,7 @@ trait SubgroupSearch[P] {
 
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P]
 
-  def fixing(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P]
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P]
 }
 
 trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
@@ -154,7 +154,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(chain)
   }
 
-  def fixing(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any], usePointSets: Boolean = true, reorderBase: Boolean = true)(implicit action: PermutationAction[P]): MutableChain[P] = {
     val seqVToInt = seq.distinct.zipWithIndex.toMap
     val seqInteger = seq.map(seqVToInt).toArray
     val n = seq.size
