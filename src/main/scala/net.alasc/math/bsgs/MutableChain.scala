@@ -184,7 +184,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
         newNode1.updateTransversal(ip)
       }
     }
-    val sizeGoal2 = (BigInt(node1.orbitSize) * BigInt(node2.orbitSize)) / newNode1.orbitSize
+    val sizeGoal2 = ((node1.orbitSize.toLong * node2.orbitSize.toLong) / newNode1.orbitSize).toInt
     (newNode1, newNode2, sizeGoal2)
   }
 
