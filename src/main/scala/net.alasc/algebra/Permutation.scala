@@ -26,6 +26,12 @@ trait PermutationAction[P] extends FaithfulAction[Int, P] with Signed[P] {
   /** Returns the value of the maximal support element support by this permutation type. */
   def supportMaxElement: Int
 
+  def images(p: P, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
+    require(supportMax(p).getOrElse(-1) < n)
+    def length = n
+    def apply(idx: Int) = actr(idx, p)
+  }
+
   def signum(p: P) = {
     // optimized for dense permutation on non-huge domains
     val toCheck = MutableBitSet.empty ++= support(p)
