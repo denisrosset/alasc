@@ -7,20 +7,8 @@ trait CheckSyntax {
   implicit def checkSyntax[A: Check](a: A) = new CheckOps(a)
 }
 
-trait LengthSyntax {
-  implicit def lengthSyntax[A: Length](a: A) = new LengthOps(a)  
-}
-
-trait BigLengthSyntax {
-  implicit def bigLengthSyntax[A: BigLength](a: A) = new BigLengthOps(a)  
-}
-
-trait IndexSyntax extends LengthSyntax {
-  implicit def indexSyntax[T, A](t: T)(implicit ev: Index[T, A]) = new IndexOps(t)
-}
-
-trait BigIndexSyntax extends BigLengthSyntax {
-  implicit def bigIndexSyntax[T, A](t: T)(implicit ev: BigIndex[T, A]) = new BigIndexOps(t)
+trait SequenceSyntax {
+  implicit def sequenceSyntax[T, A](t: T)(implicit ev: Sequence[T, A]) = new SequenceOps(t)
 }
 
 trait FiniteGroupSyntax {
@@ -46,10 +34,7 @@ trait PermutationSubgroupSyntax {
 
 trait AllSyntax
     extends CheckSyntax
-    with LengthSyntax
-    with BigLengthSyntax
-    with IndexSyntax
-    with BigIndexSyntax
+    with SequenceSyntax
     with FiniteGroupSyntax
     with PermutationActionSyntax
     with ShiftablePermutationSyntax

@@ -15,21 +15,10 @@ final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
   def check(): Unit = ev.check(lhs)
 }
 
-final class LengthOps[A](lhs: A)(implicit ev: Length[A]) {
+final class SequenceOps[T, A](lhs: T)(implicit ev: Sequence[T, A]) {
   def length(): Int = macro Ops.unop[Int]
-}
-
-final class BigLengthOps[A](lhs: A)(implicit ev: BigLength[A]) {
-  def bigLength(): BigInt = macro Ops.unop[BigInt]
-}
-
-final class IndexOps[T, A](lhs: T)(implicit ev: Index[T, A]) {
-  def element(rhs: Int): A = macro Ops.binop[Int, A]
+  def elemAt(rhs: Int): A = macro Ops.binop[Int, A]
   def toIndexedSeq(): IndexedSeq[A] = macro Ops.unop[IndexedSeq[A]]
-}
-
-final class BigIndexOps[T, A](lhs: T)(implicit ev: BigIndex[T, A]) {
-  def bigElement(rhs: BigInt): A = macro Ops.binop[BigInt, A]
 }
 
 final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {

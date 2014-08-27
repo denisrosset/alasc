@@ -6,9 +6,9 @@ import scala.collection.SeqLike
 import scala.collection.generic.CanBuildFrom
 import scala.language.higherKinds
 
-class SeqIndex[SA <: SeqLike[A, SA], A] extends Index[SA, A] {
+class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
   def length(s: SA) = s.length
-  def element(s: SA, i: Int): A = s(i)
+  def elemAt(s: SA, i: Int): A = s(i)
   def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
 }
 
@@ -30,7 +30,7 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: PermutationA
 }
 
 trait SeqInstances0 {
-  implicit def SeqLength[CC[A] <: SeqLike[A, CC[A]], A] = new SeqIndex[CC[A], A]
+  implicit def SeqSequence[CC[A] <: SeqLike[A, CC[A]], A]: Sequence[CC[A], A] = new SeqSequence[CC[A], A]
   implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: PermutationAction](
     implicit cbf: CanBuildFrom[Nothing, A, CC[A]]) = new SeqPermutationAction[CC[A], A, P]
 }
