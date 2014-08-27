@@ -90,7 +90,7 @@ final class PartitionGuide(val currentBlock: mutable.BitSet, val remainingBlocks
     }
   }
 
-  def moveToNext[P](chosenPoint: Int) = {
+  def moveToNext(chosenPoint: Int) = {
     assert(currentBlock.contains(chosenPoint))
     currentBlock -= chosenPoint
   }

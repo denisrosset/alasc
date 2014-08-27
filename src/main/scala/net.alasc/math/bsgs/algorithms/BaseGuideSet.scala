@@ -42,7 +42,7 @@ final class BaseGuideSet(val set: mutable.BitSet) extends BaseGuide {
     }
   }
   
-  def moveToNext[P](chosenPoint: Int) = {
+  def moveToNext(chosenPoint: Int) = {
     assert(set.contains(chosenPoint) || set.isEmpty)
     set -= chosenPoint
   }

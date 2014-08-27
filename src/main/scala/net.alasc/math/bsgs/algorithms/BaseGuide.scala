@@ -20,7 +20,7 @@ trait BaseGuide {
     * 
     * @param chosenPoint The base point actually used in the base change.
     */
-  def moveToNext[P](chosenPoint: Int): Unit
+  def moveToNext(chosenPoint: Int): Unit
   /** Checks whether the base guide can still give advice, or if the remaining base can be left as it is. */
   def hasAdvice: Boolean
   /** Returns the remaining guided base without optimization. Used when base is recomputed from scratch. */
