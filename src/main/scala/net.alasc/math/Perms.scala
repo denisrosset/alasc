@@ -6,7 +6,8 @@ import scala.annotation.tailrec
 import net.alasc.syntax.permutationAction._
 
 /** Lexicographically ordered sequence of permutations acting on `n` elements. */
-final case class Perms(n: Int) extends coll.big.IndexedSeqImpl[Perm] with coll.Searchable[BigInt, Perm] with coll.Iterable[Perm] with coll.Traversable[Perm] {
+final case class Perms(n: Int) extends coll.big.IndexedSeqImpl[Perm] with coll.Searchable[BigInt, Perm] with coll.Iterable[Perm] with coll.Traversable[Perm] with coll.Container[Perm] with coll.Mappable[Perms, Perm] {
+  def contains(perm: Perm): Boolean = perm.supportMax.getOrElse(-1) < n
   @tailrec def fact(k: Int, acc: BigInt = 1): BigInt =
     if (k < 2) acc else fact(k - 1, acc * k)
   def length = fact(n)
