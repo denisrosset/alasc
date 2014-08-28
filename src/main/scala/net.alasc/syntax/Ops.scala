@@ -12,6 +12,14 @@ import net.alasc.algebra._
 import net.alasc.math.Grp
 import net.alasc.util._
 
+final class JoinSemilatticeOps[A](lhs: A)(implicit ev: JoinSemilattice[A]) {
+  def join(rhs: A): A = macro Ops.binop[A, A]
+}
+
+final class MeetSemilatticeOps[A](lhs: A)(implicit ev: MeetSemilattice[A]) {
+  def meet(rhs: A): A = macro Ops.binop[A, A]
+}
+
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
   def check(): Unit = ev.check(lhs)
 }
