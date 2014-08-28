@@ -47,7 +47,7 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def order(): BigInt = macro Ops.unop[BigInt]
   def randomElement(rhs: Random): G = macro Ops.binop[Random, G]
   def contains(rhs: G): Boolean = macro Ops.binop[G, Boolean]
-  def toGrp()(implicit pa: FaithfulPermutationAction[G]): Grp[G] = ev.toGrp(lhs)
+  def toGrp()(implicit actions: FaithfulPermutationActions[G]): Grp[G] = ev.toGrp(lhs)
 }
 
 final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: FaithfulPermutationAction[G]) {

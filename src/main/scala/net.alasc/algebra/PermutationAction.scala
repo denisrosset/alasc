@@ -50,14 +50,20 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
 
   def to[P](g: G)(implicit evP: Permutation[P]): P =
     evP.fromSupportAndImageFun(support(g), k => actr(k, g))
-
 }
 
 trait FaithfulPermutationAction[G] extends PermutationAction[G] {
+  /** Checks whether this action can provide a permutation representation of `g`.
+    * 
+    * The contract is that if `g` and `h` are compatible with this action, then
+    * `g.inverse` and `g |+| h` are compatible as well.
+    */
   def compatibleWith(g: G): Boolean
 }
 
+/** Builder for a faithful permutation action given a set of elements of `G`. */ 
 trait FaithfulPermutationActions[G] {
+  /** Tests whether this builder always returns the same action. */
   def isUnique: Boolean
   def actionFor(elements: Iterable[G]): FaithfulPermutationAction[G]
 }

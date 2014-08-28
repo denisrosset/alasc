@@ -56,7 +56,7 @@ object Perm extends PermCompanion {
   def supportMaxElement = PermArray.supportMaxElement
 
   implicit val Algebra: ShiftablePermutation[Perm] = new PermPermutation
-
+  implicit def Actions: FaithfulPermutationActions[Perm] = UniqueFaithfulPermutationAction(Algebra)
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
       Perm32.fromImagesAndHighSupportMax(images, supportMax)

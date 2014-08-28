@@ -132,7 +132,7 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
 
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) =
-    randomizedSchreierSims(RandomBag(generators).randomElement(_), order, givenBase)
+    randomizedSchreierSims(RandomBag(generators, randomGenerator).randomElement(_), order, givenBase)
 
   def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     randomizedSchreierSims(chain.randomElement(_), chain.order, givenBase)(newAction)

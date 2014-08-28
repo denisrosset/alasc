@@ -48,7 +48,7 @@ class RandomBag[G: Group] private[math](private var x0: G, private var x: ArrayS
 }
 
 object RandomBag {
-  def apply[G](xiterable: Iterable[G], givenR: Int = -1, n: Int = 50, rand: Random = Random)(implicit algebra: Group[G]): RandomBag[G] = {
+  def apply[G](xiterable: Iterable[G], rand: Random, givenR: Int = -1, n: Int = 50)(implicit algebra: Group[G]): RandomBag[G] = {
     val k = xiterable.size
     val r = if (givenR < k || givenR < 10) k.max(10) else givenR
     val x = if (k == 0)

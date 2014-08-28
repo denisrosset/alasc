@@ -3,15 +3,17 @@ package algebra
 
 import scala.util.Random
 
-import spire.algebra.Group
+import spire.algebra.{Group, Eq}
 import spire.syntax.eq._
 
 import net.alasc.math.Grp
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-trait Subgroup[S, G] { sg =>
+trait Subgroup[S, G] extends Eq[S] { sg =>
   implicit val algebra: FiniteGroup[G]
+  /** Tests if two subgroups are equivalent. */
+  def eqv(x: S, y: S) = generators(x).forall(contains(y, _)) && generators(y).forall(contains(x, _))
   /** Iterator through the subgroup elements. */
   def iterator(s: S): Iterator[G]
   /** Set of subgroup elements. */
@@ -65,5 +67,5 @@ trait Subgroup[S, G] { sg =>
     }
     NNNone
   }
-  def toGrp(subgroup: S)(implicit action: FaithfulPermutationAction[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, action)
+  def toGrp(subgroup: S)(implicit actions: FaithfulPermutationActions[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, actions)
 }
