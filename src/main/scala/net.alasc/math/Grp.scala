@@ -1,6 +1,11 @@
-package net.alasc.math
+package net.alasc
+package math
 
+import scala.annotation.tailrec
 import scala.util.Random
+
+import spire.syntax.group._
+import spire.syntax.groupAction._
 
 import net.alasc.algebra._
 import net.alasc.syntax.all._
@@ -103,6 +108,45 @@ class Grp[G](
   def \(rhs: Grp[G]): RightCosets[G] = {
     require(lhs.generators.forall(rhs.contains(_)))
     new RightCosets(lhs, rhs)
+  }
+  def lexElements(implicit action: PermutationAction[G]): coll.big.IndexedSet[G] = new coll.big.IndexedSet[G] {
+    val lexChain = {
+      val mutableChain = algorithms.mutableCopyWithAction(chain, action)
+      algorithms.changeBase(mutableChain, BaseGuideLex(mutableChain.start.next.supportMax.getOrElse(-1) + 1))
+      mutableChain.toChain
+    }
+    def size = coll.BigIntSize(lhs.order)
+    def length = lhs.order
+    def contains(g: G) = lhs.contains(g)
+    def foreach[U](f: G => U) = iterator.foreach(f)
+    def apply(idx: BigInt): G = {
+      @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {
+        case node: Node[G] =>
+          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
+          val nextOrder = curOrder / node.orbitSize
+          val nextIdx = curIdx % nextOrder
+          val orbitIndex = ((curIdx - nextIdx) / nextOrder).toInt
+          val nextG = node.u(sortedOrbit(orbitIndex)) |+| curG
+          rec(node.next, nextIdx, nextOrder, nextG)
+        case _: Term[G] =>
+          assert(curIdx == 0)
+          curG
+      }
+      rec(lexChain, idx, lhs.order, algebra.id)
+    }
+    def iterator: Iterator[G] = {
+      def rec(current: Chain[G], curG: G): Iterator[G] = current match {
+        case node: Node[G] =>
+          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
+          for {
+            b <- sortedOrbit.iterator
+            nextG = node.u(b) |+| curG
+            rest <- rec(node.next, nextG)
+          } yield rest
+        case _: Term[G] => Iterator(curG)
+      }
+      rec(lexChain, algebra.id)
+    }
   }
 }
 
