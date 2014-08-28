@@ -1,4 +1,5 @@
-package net.alasc.syntax
+package net.alasc
+package syntax
 
 import scala.collection.immutable.BitSet
 import scala.language.experimental.macros
@@ -40,7 +41,8 @@ final class ShiftablePermutationOps[A](lhs: A)(implicit ev: ShiftablePermutation
 }
 
 final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
-  def elements(): Iterable[G] = macro Ops.unop[Iterable[G]]
+  def iterator(): Iterator[G] = macro Ops.unop[Iterator[G]]
+  def elements(): coll.Set[G] = macro Ops.unop[coll.Set[G]]
   def generators(): Iterable[G] = macro Ops.unop[Iterable[G]]
   def order(): BigInt = macro Ops.unop[BigInt]
   def randomElement(rhs: Random): G = macro Ops.binop[Random, G]

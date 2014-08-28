@@ -1,4 +1,5 @@
-package net.alasc.algebra
+package net.alasc
+package algebra
 
 import scala.util.Random
 
@@ -11,8 +12,15 @@ import net.alasc.util._
 
 trait Subgroup[S, G] { sg =>
   implicit val algebra: FiniteGroup[G]
-  /** Iterable through the subgroup elements. */
-  def elements(s: S): Iterable[G]
+  /** Iterator through the subgroup elements. */
+  def iterator(s: S): Iterator[G]
+  /** Set of subgroup elements. */
+  def elements(s: S): coll.Set[G] = new coll.Set[G] {
+    def contains(g: G) = sg.contains(s, g)
+    def foreach[U](f: G => U): Unit = sg.iterator(s).foreach(f)
+    def iterator = sg.iterator(s)
+    def size = coll.BigIntSize(sg.order(s))
+  }
   /** Iterable of the subgroup generators. */
   def generators(s: S): Iterable[G]
   /** Order of the subgroup `s`. */
@@ -20,7 +28,7 @@ trait Subgroup[S, G] { sg =>
   /** Generates a random element of the group. */ 
   def randomElement(s: S, gen: Random): G
   /** Tests if the element `g` is contained inside `s`. */
-  def contains(s: S, g: G): Boolean = elements(s).exists(g === _)
+  def contains(s: S, g: G): Boolean
   /** Returns the minimal domain element which is permuted by `s`, or `NNNone` if
     * `s` is the trivial group = ().
     */

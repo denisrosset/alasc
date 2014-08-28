@@ -125,7 +125,7 @@ object Grp {
 }
 
 class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
-  def elements(grp: Grp[G]) = grp.chain.elements
+  def iterator(grp: Grp[G]) = grp.chain.iterator
   def generators(grp: Grp[G]) = grp.generators
   def order(grp: Grp[G]) = grp.order
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)

@@ -19,10 +19,7 @@ class SymPermutationSubgroup[P](implicit val algebra: Permutation[P]) extends Su
   def swapFun(i: Int, j: Int): (Int => Int) = (k => if (k == i) j else if (k == j) i else k)
   def generators(s: Sym[P]) =
     (0 to s.degree - 2).map(k => algebra.fromSupportAndImageFun(BitSet(k, k + 1), swapFun(k, k + 1)))
-  def elements(s: Sym[P]) = new Iterable[P] {
-    override def stringPrefix = "Elements"
-    def iterator = domainSequence(s.degree).permutations.map(images => algebra.fromImages(images))
-  }
+  def iterator(s: Sym[P]) = domainSequence(s.degree).permutations.map(images => algebra.fromImages(images))
 }
 
 object Sym {

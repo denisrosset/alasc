@@ -1,4 +1,5 @@
-package net.alasc.math
+package net.alasc
+package math
 
 import net.alasc.algebra._
 import scala.util.Random
@@ -30,7 +31,7 @@ class ConjugateGroupAction[G, S](implicit val sg: Subgroup[S, G], val algebra: F
 
 class ConjugateSubgroup[G, S](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Subgroup[Conjugate[G, S], G] {
   type C = Conjugate[G, S]
-  def elements(conj: C) = conj.t.elements.map(conj.iso)
+  def iterator(conj: C) = conj.t.iterator.map(conj.iso)
   def generators(conj: C) = conj.t.generators.map(conj.iso)
   def order(conj: C) = conj.t.order
   def randomElement(conj: C, gen: Random) = conj.iso(conj.t.randomElement(gen))

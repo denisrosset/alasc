@@ -264,14 +264,11 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
 }
 
 final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
-  def elements(chain: Chain[P]): Iterable[P] = new Iterable[P] {
-    override def stringPrefix = "Elements"
-    def iterator = ChainRec.elementsIterator(chain)
-  }
+  def iterator(chain: Chain[P]) = ChainRec.elementsIterator(chain)
   def order(chain: Chain[P]): BigInt = ChainRec.order(chain, BigInt(1))
   def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
   def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), algebra.id)
-  override def contains(chain: Chain[P], g: P) = chain.sifts(g)
+  def contains(chain: Chain[P], g: P) = chain.sifts(g)
 }
 
 final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Chain[P]] {

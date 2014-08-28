@@ -14,18 +14,18 @@ object DirectSum {
 
 class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Subgroup[DirectSum[S], G] {
   type DS = DirectSum[S]
-  def elementsIterator(ds: DS, i: Int): Iterator[G] =
-    if (i == ds.seq.size) Iterator(algebra.id) else for {
-      el1 <- elementsIterator(ds, i + 1)
-      el2 <- ds.seq(i).elements
-    } yield el1 |+| el2
-  def elements(ds: DS) = new Iterable[G] {
-      override def stringPrefix = "Elements"
-      def iterator = elementsIterator(ds, 0)
+  def iterator(ds: DS) = {
+    def rec(i: Int): Iterator[G] =
+      if (i == ds.seq.size) Iterator(algebra.id) else for {
+        el1 <- rec(i + 1)
+        el2 <- ds.seq(i).iterator
+      } yield el1 |+| el2
+    rec(0)
   }
   def generators(ds: DS) = ds.seq.flatMap(_.generators)
   def order(ds: DS) = (BigInt(1) /: ds.seq) { case (o, s) => o * s.order }
   def randomElement(ds: DS, gen: Random) = (algebra.id /: ds.seq) { case (g, s) => g |+| s.randomElement(gen) }
+  def contains(ds: DS, el: G) = iterator(ds).exists( g => algebra.eqv(el, g))
 }
 
 object FixingSeq {
