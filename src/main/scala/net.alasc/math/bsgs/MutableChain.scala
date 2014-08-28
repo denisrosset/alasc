@@ -1,13 +1,8 @@
 package net.alasc.math
 package bsgs
 
-import scala.util.Random
 import scala.annotation.tailrec
-import scala.collection.mutable.{BitSet => MutableBitSet}
-import scala.collection.immutable.{BitSet => ImmutableBitSet}
 
-import spire.syntax.eq._
-import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
@@ -294,7 +289,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 
   /** Removes the first node from the chain and returns it. If the chain is empty,
     * an empty node with given base point is created. */
-  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: PermutationAction[P]): Node[P] = start.next match {
+  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]): Node[P] = start.next match {
     case IsMutableNode(mn) =>
       start.next = mn.next
       IsMutableNode.unapply(mn.next).foreach { n => n.prev = start }
@@ -333,12 +328,12 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 }
 
 object MutableChain {
-  def empty[P: FiniteGroup](implicit action: PermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
+  def empty[P: FiniteGroup](implicit action: FaithfulPermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
   implicit def MutableChainCheck[P: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
 }
 
 final class MutableChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[MutableChain[P]] {
-  @tailrec def checkAllAction(chain: Chain[P], action: PermutationAction[P]): Unit = chain match {
+  @tailrec def checkAllAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Unit = chain match {
     case node: Node[P] =>
       assert(node.action eq action)
       checkAllAction(node.next, action)

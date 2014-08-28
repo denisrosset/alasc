@@ -26,7 +26,7 @@ final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
   def order(): Int = macro Ops.unop[Int]
 }
 
-final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
+final class PermutationActionOps[A](lhs: A)(implicit ev: FaithfulPermutationAction[A]) {
   def support(): BitSet = macro Ops.unop[BitSet]
   def supportMax(): NNOption = macro Ops.unop[NNOption]
   def supportMin(): NNOption = macro Ops.unop[NNOption]
@@ -47,10 +47,10 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def order(): BigInt = macro Ops.unop[BigInt]
   def randomElement(rhs: Random): G = macro Ops.binop[Random, G]
   def contains(rhs: G): Boolean = macro Ops.binop[G, Boolean]
-  def toGrp()(implicit pa: PermutationAction[G]): Grp[G] = ev.toGrp(lhs)
+  def toGrp()(implicit pa: FaithfulPermutationAction[G]): Grp[G] = ev.toGrp(lhs)
 }
 
-final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: PermutationAction[G]) {
+final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: FaithfulPermutationAction[G]) {
   def supportMin(): NNOption = ev.supportMin(lhs)
   def supportMax(): NNOption = ev.supportMax(lhs)
   def supportAny(): NNOption = ev.supportAny(lhs)

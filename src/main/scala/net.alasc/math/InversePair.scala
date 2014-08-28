@@ -1,7 +1,7 @@
 package net.alasc.math
 
 import spire.algebra.{Group, GroupAction, Eq}
-import net.alasc.algebra.PermutationAction
+import net.alasc.algebra.FaithfulPermutationAction
 import scala.{ specialized => spec }
 import scala.language.implicitConversions
 import spire.syntax.group._
@@ -17,8 +17,8 @@ case class InversePair[G](g: G, gInv: G)
 
 object InversePair {
   implicit def InversePairGroup[G](implicit algebra: Group[G]): Group[InversePair[G]] = new InversePairGroup[G]
-  implicit def InversePairPermutationAction[P](implicit action: PermutationAction[P]): PermutationAction[InversePair[P]] =
-    new InversePairPermutationAction[P]
+  implicit def InversePairFaithFulPermutationAction[P](implicit action: FaithfulPermutationAction[P]): FaithfulPermutationAction[InversePair[P]] =
+    new InversePairFaithfulPermutationAction[P]
   implicit def inversePair[G](g: G)(implicit algebra: Group[G]): InversePair[G] = InversePair(g, g.inverse)
 }
 
@@ -29,7 +29,7 @@ class InversePairGroup[G](implicit val algebra: Group[G]) extends Group[InverseP
   def op(x: I, y: I) = InversePair(x.g |+| y.g, y.gInv |+| x.gInv)
 }
 
-class InversePairPermutationAction[P](implicit val algebra: PermutationAction[P]) extends PermutationAction[InversePair[P]] {
+class InversePairFaithfulPermutationAction[P](implicit val algebra: FaithfulPermutationAction[P]) extends FaithfulPermutationAction[InversePair[P]] {
    type I = InversePair[P]
   def actl(ip: I, p: Int) = algebra.actr(p, ip.gInv)
   def actr(p: Int, ip: I) = algebra.actr(p, ip.g)
@@ -39,4 +39,5 @@ class InversePairPermutationAction[P](implicit val algebra: PermutationAction[P]
   def supportMin(ip: I) = algebra.supportMin(ip.g)
   def supportMaxElement = algebra.supportMaxElement
   override def signum(ip: I) = algebra.signum(ip.g)
+  def compatibleWith(ip: I) = algebra.compatibleWith(ip.g)
 }

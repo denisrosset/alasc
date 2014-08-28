@@ -32,7 +32,7 @@ trait Subgroup[S, G] { sg =>
   /** Returns the minimal domain element which is permuted by `s`, or `NNNone` if
     * `s` is the trivial group = ().
     */
-  def supportMin(s: S)(implicit ev: PermutationAction[G]): NNOption = {
+  def supportMin(s: S)(implicit ev: FaithfulPermutationAction[G]): NNOption = {
     var res: NNOption = NNNone
     generators(s).foreach { g =>
       val gMin = g.supportMin
@@ -46,7 +46,7 @@ trait Subgroup[S, G] { sg =>
   /** Returns the maximal domain element which is permuted by `s`, or `NNNone` if
     * `s` is the trivial group = ().
     */
-  def supportMax(s: S)(implicit ev: PermutationAction[G]): NNOption = {
+  def supportMax(s: S)(implicit ev: FaithfulPermutationAction[G]): NNOption = {
     var res: NNOption = NNNone
     generators(s).foreach { g =>
       val gMax = g.supportMax
@@ -57,7 +57,7 @@ trait Subgroup[S, G] { sg =>
     }
     res
   }
-  def supportAny(s: S)(implicit ev: PermutationAction[G]): NNOption = {
+  def supportAny(s: S)(implicit ev: FaithfulPermutationAction[G]): NNOption = {
     generators(s).foreach { g =>
       val sup = g.supportAny
       if (sup.nonEmpty)
@@ -65,5 +65,5 @@ trait Subgroup[S, G] { sg =>
     }
     NNNone
   }
-  def toGrp(subgroup: S)(implicit action: PermutationAction[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, action)
+  def toGrp(subgroup: S)(implicit action: FaithfulPermutationAction[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, action)
 }

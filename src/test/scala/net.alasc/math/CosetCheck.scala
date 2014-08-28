@@ -66,7 +66,7 @@ class CosetCheck extends PropSpec with Matchers with EqMatchers with GeneratorDr
       case (m11, subgroup, subgroupOrder) =>
         assert(subgroup.order == subgroupOrder)
         val unionOfCosets = (m11 / subgroup).iterator.flatMap(_.iterator).toSet
-        unionOfCosets == m11.elements.toSet
+        unionOfCosets == m11.elements.iterator.toSet
     }
   }
 }

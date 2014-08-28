@@ -16,7 +16,7 @@ trait FiniteGroupSyntax {
 }
 
 trait PermutationActionSyntax extends FiniteGroupSyntax {
-  implicit def permutationActionSyntax[A: PermutationAction](a: A) = new PermutationActionOps(a)
+  implicit def permutationActionSyntax[A: FaithfulPermutationAction](a: A) = new PermutationActionOps(a)
 }
 
 trait ShiftablePermutationSyntax extends FiniteGroupSyntax {
@@ -28,7 +28,7 @@ trait SubgroupSyntax {
 }
 
 trait PermutationSubgroupSyntax {
-  implicit def permutationSubgroupSyntax[S, G](s: S)(implicit ev: Subgroup[S, G], action: PermutationAction[G]) =
+  implicit def permutationSubgroupSyntax[S, G](s: S)(implicit ev: Subgroup[S, G], action: FaithfulPermutationAction[G]) =
     new PermutationSubgroupOps[S, G](s)
 }
 

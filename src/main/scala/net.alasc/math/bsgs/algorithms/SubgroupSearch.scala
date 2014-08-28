@@ -13,40 +13,40 @@ import spire.syntax.groupAction._
 import spire.syntax.group._
 import spire.math.Sorting
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 trait SubgroupTest[P] extends AnyRef {
-  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[SubgroupTest[P]]
+  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[SubgroupTest[P]]
 }
 
 class TrivialSubgroupTest[P] extends SubgroupTest[P] {
-  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]) = RefSome(this)
+  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]) = RefSome(this)
 }
 
 trait SubgroupSearch[P] {
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
-    implicit action: PermutationAction[P]): Iterator[P]
+    implicit action: FaithfulPermutationAction[P]): Iterator[P]
 
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
-    implicit action: PermutationAction[P]): MutableChain[P]
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   // TODO: remove action (not needed)
-  def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P]
+  def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: PermutationAction[P]): MutableChain[P]
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P]
+  def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def setwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P]
+  def setwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 }
 
 trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
   self =>
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
-    implicit action: PermutationAction[P]) : Iterator[P] = {
+    implicit action: FaithfulPermutationAction[P]) : Iterator[P] = {
     val chain = withAction(givenChain, action)
     val bo = baseOrder(chain.base)
     def rec(currentChain: Chain[P], currentG: P, currentTest: SubgroupTest[P]): Iterator[P] = currentChain match {
@@ -69,7 +69,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   case class SubgroupSearchResult(restartFrom: Int, levelCompleted: Int)
 
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
-    implicit action: PermutationAction[P]): MutableChain[P] = {
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val chain = withAction(givenChain, action)
     val bo = baseOrder(chain.base)
     val length = givenChain.nodesNext.size
@@ -114,7 +114,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     subgroupChain
   }
 
-  def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P] =
+  def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] =
     if (givenChain1.length < givenChain2.length)
       intersection(givenChain2, givenChain1)
     else {
@@ -122,7 +122,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       val chain2 = mutableCopyWithAction(givenChain2, action)
       changeBase(chain2, chain1.base)
       class IntersectionTest(level: Int, chain2: Chain[P], prev2Inv: P) extends SubgroupTest[P] {
-        def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[IntersectionTest] = {
+        def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[IntersectionTest] = {
           val b2 = orbitImage <|+| prev2Inv
           val node2 = chain2.asInstanceOf[Node[P]]
           if (node2.inOrbit(b2))
@@ -161,7 +161,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(chain)
   }
 
-  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableCopyWithAction(givenChain, action)
     changeBase(mutableChain, BaseGuideSet(set))
     @tailrec def detachFirstIfInSet: Unit = mutableChain.start.next match {
@@ -176,7 +176,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     mutableChain
   }
 
-  def setwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def setwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableCopyWithAction(givenChain, action)
     changeBase(mutableChain, BaseGuideSet(set))
     val reorderedChain = mutableChain.toChain
@@ -205,7 +205,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     }
     val pointSetsToTest: Array[BitSet] = basePointGroupsInSet
     class FixingTest(level: Int) extends SubgroupTest[P] {
-      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[FixingTest] =
+      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest] =
         if (level < pointSetsToTest.length) {
           if (!set.contains(orbitImage))
             return RefNone
@@ -225,7 +225,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     subgroupSearch(reorderedChain, setwiseStabilized(_), new FixingTest(0))
   }
 
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = seq.size
     val partition = Partition.fromSeq(seq)
     val mutableChain = mutableCopyWithAction(givenChain, action)
@@ -234,7 +234,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
     val seqInteger = partition.blockIndex
     class FixingTest(level: Int) extends SubgroupTest[P] {
-      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: PermutationAction[P]): RefOption[FixingTest] = {
+      def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest] = {
         val pointSet = pointSetsToTest(level)
         if (seqInteger(pointSet(0)) != seqInteger(orbitImage))
           return RefNone

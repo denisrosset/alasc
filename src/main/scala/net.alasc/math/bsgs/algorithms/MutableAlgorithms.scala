@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, PermutationAction}
+import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
@@ -46,7 +46,7 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     }
   }
 
-  def emptyChainWithBase(base: Seq[Int])(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def emptyChainWithBase(base: Seq[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = MutableChain.empty[P]
     @tailrec def rec(prev: MutableStartOrNode[P], iterator: Iterator[Int]): Unit =
       if (iterator.hasNext) {
@@ -59,7 +59,7 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     mutableChain
   }
 
-  def mutableChainCopy(chain: Chain[P])(implicit action: PermutationAction[P]): MutableChain[P] = {
+  def mutableChainCopy(chain: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     chain.mapOrElse(node => require(node.action == action), ())
     val mutableChain = MutableChain.empty
     @tailrec def rec(after: MutableStartOrNode[P], toInsert: Chain[P]): Unit = toInsert match {
@@ -79,7 +79,7 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
 trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
 
   def incompleteChainWithGenerators(generators: Iterable[P], base: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]): MutableChain[P] = {
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = emptyChainWithBase(base)
     insertGenerators(mutableChain, generators)
     mutableChain

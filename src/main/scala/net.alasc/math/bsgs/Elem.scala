@@ -20,7 +20,7 @@ import net.alasc.syntax.subgroup._
 sealed trait Elem[P] extends AnyRef
 
 sealed trait StartOrNode[P] extends Elem[P] { elem =>
-  implicit def action: PermutationAction[P]
+  implicit def action: FaithfulPermutationAction[P]
   def next: Chain[P]
 }
 
@@ -82,7 +82,7 @@ sealed trait MutableStartOrNode[P] extends StartOrNode[P] { elem =>
   def nodesPrev: Seq[MutableNode[P]] = new PrevSeq[P](elem)
 }
 
-class Start[P](var next: Chain[P])(implicit val action: PermutationAction[P]) extends MutableStartOrNode[P] {
+class Start[P](var next: Chain[P])(implicit val action: FaithfulPermutationAction[P]) extends MutableStartOrNode[P] {
   /** Pretty prints the builder, while doing basic chain consistency checks. */
   override def toString = {
     import scala.collection.mutable.StringBuilder
@@ -173,7 +173,7 @@ object Chain {
 trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   node =>
   /** Permutation action for the type `P`. */
-  implicit def action: PermutationAction[P]
+  implicit def action: FaithfulPermutationAction[P]
 
   def isTerminal = false
   def isStandalone: Boolean

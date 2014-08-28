@@ -1,7 +1,7 @@
 package net.alasc.math
 package bsgs
 
-import net.alasc.algebra.{PermutationAction, FiniteGroup}
+import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
 
 trait NodeBuilder[P] {
   /** Creates a standalone clone of the provided node.
@@ -14,5 +14,5 @@ trait NodeBuilder[P] {
     * 
     * @param beta  New node base point.
     */
-  def standalone(beta: Int)(implicit action: PermutationAction[P], algebra: FiniteGroup[P]): MutableNode[P]
+  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P]): MutableNode[P]
 }

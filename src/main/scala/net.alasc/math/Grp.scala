@@ -19,7 +19,7 @@ import algorithms._
   */
 class Grp[G](
   val algorithms: BasicAlgorithms[G],
-  val defaultAction: PermutationAction[G],
+  val defaultAction: FaithfulPermutationAction[G],
   givenGenerators: RefOption[Iterable[G]] = RefNone,
   givenOrder: RefOption[BigInt] = RefNone,
   givenChain: RefOption[Chain[G]] = RefNone,
@@ -51,7 +51,7 @@ class Grp[G](
   }
   private[this] val knownRandomElement: Option[Random => G] = givenRandomElement
 
-  def chain(givenAction: PermutationAction[G], givenBase: Seq[Int] = Seq.empty): Chain[G] = {
+  def chain(givenAction: FaithfulPermutationAction[G], givenBase: Seq[Int] = Seq.empty): Chain[G] = {
     if (givenAction == defaultAction) {
       if (givenBase.isEmpty)
         chain
@@ -69,7 +69,7 @@ class Grp[G](
   def randomElement(random: Random): G = knownRandomElement.fold(chain.randomElement(random))(_(random))
   def &(rhs: Grp[G]) = intersect(rhs)
   def |(rhs: Grp[G]) = union(rhs)
-  def fixingSequence(seq: Seq[Any])(implicit action: PermutationAction[G]): Grp[G] =
+  def fixingSequence(seq: Seq[Any])(implicit action: FaithfulPermutationAction[G]): Grp[G] =
     Grp.fromChain(algorithms.fixingSequence(chain, seq)(action).toChain)
   def intersect(rhs: Grp[G]): Grp[G] = Grp.fromChain(algorithms.intersection(chain, rhs.chain)(defaultAction).toChain)(algebra, defaultAction)
   def union(rhs: Grp[G]): Grp[G] = if (knownChain.nonEmpty || givenGenerators.isEmpty) { // TODO: something more clever if the two groups commute
@@ -83,21 +83,21 @@ class Grp[G](
     algorithms.completeStrongGenerators(mutableChain)
     Grp.fromChain(mutableChain.toChain)(algebra, defaultAction)
   }
-  def stabilizer(b: Int)(implicit action: PermutationAction[G]): (Grp[G], Transversal[G]) = {
+  def stabilizer(b: Int)(implicit action: FaithfulPermutationAction[G]): (Grp[G], Transversal[G]) = {
     val mutableChain = algorithms.mutableCopyWithAction(chain, action)
     algorithms.changeBase(mutableChain, Seq(b))
     val transversal: Transversal[G] = mutableChain.detachFirstNode(b)(algorithms.nodeBuilder, algebra, action)
     (Grp.fromChain(mutableChain.toChain), transversal)
   }
-  def pointwiseStabilizer(set: Int*)(implicit action: PermutationAction[G]): Grp[G] =
+  def pointwiseStabilizer(set: Int*)(implicit action: FaithfulPermutationAction[G]): Grp[G] =
       pointwiseStabilizer(collection.immutable.BitSet.empty ++ set)
-  def pointwiseStabilizer(set: Set[Int])(implicit action: PermutationAction[G]): Grp[G] = {
+  def pointwiseStabilizer(set: Set[Int])(implicit action: FaithfulPermutationAction[G]): Grp[G] = {
     val mutableChain = algorithms.pointwiseStabilizer(chain, set)(action)
     Grp.fromChain(mutableChain.toChain)
   }
-  def setwiseStabilizer(set: Int*)(implicit action: PermutationAction[G]): Grp[G] =
+  def setwiseStabilizer(set: Int*)(implicit action: FaithfulPermutationAction[G]): Grp[G] =
     setwiseStabilizer(collection.immutable.BitSet.empty ++ set)
-  def setwiseStabilizer(set: Set[Int])(implicit action: PermutationAction[G]): Grp[G] = {
+  def setwiseStabilizer(set: Set[Int])(implicit action: FaithfulPermutationAction[G]): Grp[G] = {
     val mutableChain = algorithms.setwiseStabilizer(chain, set)(action)
     Grp.fromChain(mutableChain.toChain)
   }
@@ -109,7 +109,7 @@ class Grp[G](
     require(lhs.generators.forall(rhs.contains(_)))
     new RightCosets(lhs, rhs)
   }
-  def lexElements(implicit action: PermutationAction[G]): coll.big.IndexedSet[G] = new coll.big.IndexedSet[G] {
+  def lexElements(implicit action: FaithfulPermutationAction[G]): coll.big.IndexedSet[G] = new coll.big.IndexedSet[G] {
     val lexChain = {
       val mutableChain = algorithms.mutableCopyWithAction(chain, action)
       algorithms.changeBase(mutableChain, BaseGuideLex(mutableChain.start.next.supportMax.getOrElse(-1) + 1))
@@ -152,14 +152,14 @@ class Grp[G](
 
 object Grp {
   def defaultAlg[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
-  def fromChain[G](chain: Chain[G])(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) =
+  def fromChain[G](chain: Chain[G])(implicit algebra: FiniteGroup[G], action: FaithfulPermutationAction[G]) =
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenChain = RefSome(chain))
-  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) = {
+  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], action: FaithfulPermutationAction[G]) = {
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenGenerators = RefSome(generators))
   }
-  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit algebra: FiniteGroup[G], action: PermutationAction[G]) =
+  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit algebra: FiniteGroup[G], action: FaithfulPermutationAction[G]) =
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G], givenGenerators = RefSome(generators), givenOrder = RefSome(order))
-  def fromSubgroup[S, G](subgroup: S)(implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], action: PermutationAction[G]) = {
+  def fromSubgroup[S, G](subgroup: S)(implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], action: FaithfulPermutationAction[G]) = {
     val alg = defaultAlg[G]
     new Grp[G](defaultAction = action, algorithms = defaultAlg[G],
       givenGenerators = RefSome(subgroup.generators), givenOrder = RefSome(subgroup.order),
@@ -174,5 +174,5 @@ class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[
   def order(grp: Grp[G]) = grp.order
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
   override def contains(grp: Grp[G], g: G) = grp.chain.contains(g)
-  override def toGrp(grp: Grp[G])(implicit action: PermutationAction[G]): Grp[G] = grp
+  override def toGrp(grp: Grp[G])(implicit action: FaithfulPermutationAction[G]): Grp[G] = grp
 }

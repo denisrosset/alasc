@@ -5,7 +5,7 @@ import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.PermutationAction
+import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
@@ -27,7 +27,7 @@ class HoltSuite extends FunSuite with NonImplicitAssertions with Matchers with E
     assert(mchain.start.next.order == 16)
     class Test(level: Int) extends SubgroupTest[Perm] {
       def test(b: Int, orbitImage: Int, currentG: Perm, node: Node[Perm])(
-        implicit action: PermutationAction[Perm]): RefOption[Test] =
+        implicit action: FaithfulPermutationAction[Perm]): RefOption[Test] =
         (level, orbitImage) match {
           case (0, 1) | (0, 3) | (1, 2) => RefSome(new Test(level + 1))
           case (0, _) | (1, _) => RefNone

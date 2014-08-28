@@ -12,7 +12,7 @@ import spire.algebra.Order
 import spire.syntax.groupAction._
 import spire.syntax.group._
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 

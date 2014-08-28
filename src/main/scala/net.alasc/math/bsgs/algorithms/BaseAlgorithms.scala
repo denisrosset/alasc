@@ -12,7 +12,7 @@ import spire.algebra.Order
 import spire.syntax.groupAction._
 import spire.syntax.group._
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
@@ -77,7 +77,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
 
   /** Finds an element such that `beta` is stabilized by the subgroup after the element. */
   def findElemBeforeStabilizer(mutableChain: MutableChain[P], from: StartOrNode[P], beta: Int)(
-    implicit action: PermutationAction[P]): StartOrNode[P] = {
+    implicit action: FaithfulPermutationAction[P]): StartOrNode[P] = {
     require(beta >= 0)
     require(action == mutableChain.start.action)
     @tailrec def rec(chain: Chain[P], lastCandidate: StartOrNode[P]): StartOrNode[P] = chain match {
@@ -93,7 +93,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
 
   /** Inserts a (non-existing) base point after the element `afterThis`. */
   def insertNewBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
-    implicit action: PermutationAction[P]): Unit = {
+    implicit action: FaithfulPermutationAction[P]): Unit = {
     require(beta >= 0)
     require(action == mutableChain.start.action)
     val insertAfter = mutableChain.mutableStartOrNode(findElemBeforeStabilizer(mutableChain, afterThis, beta))
@@ -103,7 +103,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
 
   /** Change the base point after the element `afterThis` to `beta` and returns this node with base point `beta`. */
   def changeBasePointAfter(mutableChain: MutableChain[P], afterThis: MutableStartOrNode[P], beta: Int)(
-    implicit action: PermutationAction[P]): Node[P] =
+    implicit action: FaithfulPermutationAction[P]): Node[P] =
     putExistingBasePointAfter(mutableChain, afterThis, beta).getOrElse {
       insertNewBasePointAfter(mutableChain, afterThis, beta)
       putExistingBasePointAfter(mutableChain, afterThis, beta).get

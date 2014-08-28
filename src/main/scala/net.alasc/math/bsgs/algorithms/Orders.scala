@@ -8,17 +8,17 @@ import spire.algebra.Order
 import spire.syntax.groupAction._
 import spire.syntax.group._
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
 trait Orders[P] extends Algorithms[P] {
   trait BaseOrder extends Order[Int] {
     def base: Seq[Int]
-    implicit def action: PermutationAction[P]
+    implicit def action: FaithfulPermutationAction[P]
   }
 
-  def baseOrder(base: Seq[Int])(implicit action: PermutationAction[P]): BaseOrder
+  def baseOrder(base: Seq[Int])(implicit action: FaithfulPermutationAction[P]): BaseOrder
 
   class ElementOrder(val baseOrder: BaseOrder) extends Order[P] {
     def compare(a: P, b: P): Int = {
@@ -56,12 +56,12 @@ trait Orders[P] extends Algorithms[P] {
 }
 
 trait OrdersImpl[P] extends Orders[P] {
-  class BaseMapOrder(val base: Seq[Int], val reorderedMap: debox.Map[Int, Int])(implicit val action: PermutationAction[P]) extends BaseOrder {
+  class BaseMapOrder(val base: Seq[Int], val reorderedMap: debox.Map[Int, Int])(implicit val action: FaithfulPermutationAction[P]) extends BaseOrder {
     def compare(a: Int, b: Int): Int =
       (reorderedMap.getOrElse(a, a).toLong - reorderedMap.getOrElse(b, b).toLong).signum.toInt
   }
 
-  def baseOrder(base: Seq[Int])(implicit action: PermutationAction[P]) = {
+  def baseOrder(base: Seq[Int])(implicit action: FaithfulPermutationAction[P]) = {
     val reorderedMap = debox.Map.empty[Int, Int]
     val iter = base.iterator
     var v = Int.MinValue + 1

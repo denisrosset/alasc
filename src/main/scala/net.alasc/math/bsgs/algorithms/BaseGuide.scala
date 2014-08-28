@@ -2,7 +2,7 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 
 /** Advisor for base changes. The base change algorithm is authorized to ignore the advice. */
 trait BaseGuide {

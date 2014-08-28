@@ -6,6 +6,10 @@ trait HasSize extends Any {
   def size: Size
 }
 
+trait HasHead[+A] extends Any {
+  def head: A
+}
+
 trait HasForeach[+A] extends Any {
   def foreach[U](f: A => U): Unit
 }

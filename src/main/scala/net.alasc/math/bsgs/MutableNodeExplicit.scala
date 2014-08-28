@@ -17,7 +17,7 @@ final class MutableNodeExplicit[P](
   var transversal: MutableLongMap[InversePair[P]],
   var ownGeneratorsPairs: UnrolledBuffer[InversePair[P]],
   var prev: MutableStartOrNode[P] = null,
-  var next: Chain[P] = null)(implicit val action: PermutationAction[P]) extends MutableNode[P] {
+  var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
 
   def ownGenerators = ownGeneratorsPairs.view.map(_.g)
 
@@ -161,7 +161,7 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
       val newOwnGeneratorsPairs = UnrolledBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
   }
-  def standalone(beta: Int)(implicit action: PermutationAction[P], algebra: FiniteGroup[P]) =
+  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P]) =
     new MutableNodeExplicit(beta,
       MutableLongMap(beta.toLong -> InversePair(algebra.id, algebra.id)),
       UnrolledBuffer.empty[InversePair[P]])

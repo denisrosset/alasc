@@ -10,7 +10,7 @@ import spire.syntax.order._
 import spire.syntax.groupAction._
 import spire.syntax.signed._
 
-import net.alasc.algebra.PermutationAction
+import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
 /** Represent a cyclic permutation of non-negative indices. */
@@ -59,7 +59,7 @@ class CycleSigned extends Signed[Cycle] {
   override def signum(c: Cycle) = if (c.length % 2 == 0) 1 else -1
 }
 
-class CyclePermutationAction extends PermutationAction[Cycle] {
+class CyclePermutationAction extends FaithfulPermutationAction[Cycle] {
   def support(c: Cycle): BitSet = BitSet(c.seq: _*)
   def supportMax(c: Cycle) = NNSome(c.seq.max)
   def supportMin(c: Cycle) = NNSome(c.seq.min)
@@ -73,6 +73,7 @@ class CyclePermutationAction extends PermutationAction[Cycle] {
     case -1 => k
     case i => c.seq((i + 1) % c.seq.size)
   }
+  def compatibleWith(c: Cycle) = true
 }
 
 /** Canonical order for cycles.
@@ -90,7 +91,7 @@ class CycleOrder extends Order[Cycle] {
 }
 
 object Cycle {
-  implicit final val CyclePermutationAction: PermutationAction[Cycle] = new CyclePermutationAction
+  implicit final val CyclePermutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
   implicit final val CycleSigned: Signed[Cycle] = new CycleSigned
   implicit final val CycleOrder: Order[Cycle] = new CycleOrder
 

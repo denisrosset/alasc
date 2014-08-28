@@ -9,21 +9,21 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, PermutationAction, Subgroup}
+import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[P] {
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]): MutableChain[P]
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]): MutableChain[P]
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
+    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
 
-  def withAction(chain: Chain[P], action: PermutationAction[P]): Chain[P] = chain match {
+  def withAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Chain[P] = chain match {
     case node: Node[p] =>
       if (action == node.action)
         chain
@@ -33,7 +33,7 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
       term
   }
   
-  def mutableCopyWithAction(chain: Chain[P], action: PermutationAction[P]): MutableChain[P] = chain match {
+  def mutableCopyWithAction(chain: Chain[P], action: FaithfulPermutationAction[P]): MutableChain[P] = chain match {
     case node: Node[P] =>
       if (action == node.action)
         mutableChainCopy(node)(action)
@@ -99,7 +99,7 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
 
   /** Deterministic Schreier-Sims algorithm. */
   def deterministicSchreierSims(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]): MutableChain[P] = {
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = incompleteChainWithGenerators(generators, givenBase)
     completeStrongGenerators(mutableChain)
     mutableChain
@@ -108,37 +108,37 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
 
 trait SchreierSimsDeterministic[P] extends SchreierSimsCommon[P] {
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
+    implicit action: FaithfulPermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
 
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]) = {
+    implicit action: FaithfulPermutationAction[P]) = {
     val mutableChain = deterministicSchreierSims(generators, givenBase)
     assert(mutableChain.start.next.order == order)
     mutableChain
   }
 
-  def completeChainFromAnotherChain(chain: Chain[P], newAction: PermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
+  def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     completeChainFromGeneratorsAndOrder(chain.generators, chain.order, givenBase)(newAction)
 
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P], subgroup: Subgroup[S, P]) =
+    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]) =
     completeChainFromGeneratorsAndOrder(s.generators, s.order, givenBase)(action)
 }
 
 trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlgorithms {
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
+    implicit action: FaithfulPermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
 
 
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P]) =
+    implicit action: FaithfulPermutationAction[P]) =
     randomizedSchreierSims(RandomBag(generators).randomElement(_), order, givenBase)
 
-  def completeChainFromAnotherChain(chain: Chain[P], newAction: PermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
+  def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     randomizedSchreierSims(chain.randomElement(_), chain.order, givenBase)(newAction)
 
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: PermutationAction[P], subgroup: Subgroup[S, P]) =
+    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]) =
     randomizedSchreierSims(s.randomElement(_), s.order, givenBase)
 
   /* Randomized BSGS Schreier-Sims using the provided procedure to generate
@@ -147,7 +147,7 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
    * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
    */
   def randomizedSchreierSims(randomElement: Random => P, order: BigInt,
-    givenBase: Seq[Int] = Seq.empty)(implicit action: PermutationAction[P]): MutableChain[P] = {
+    givenBase: Seq[Int] = Seq.empty)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = emptyChainWithBase(givenBase)
     while (mutableChain.start.next.order < order) {
       for ( (nodeForGenerator, generator) <- siftAndUpdateBaseFrom(mutableChain, mutableChain.start, randomElement(randomGenerator)) )

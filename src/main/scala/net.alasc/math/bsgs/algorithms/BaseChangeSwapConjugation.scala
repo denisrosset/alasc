@@ -12,13 +12,13 @@ import spire.algebra.Order
 import spire.syntax.groupAction._
 import spire.syntax.group._
 
-import net.alasc.algebra.{PermutationAction, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
 trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] {
   def changeBaseConjugation(mutableChain: MutableChain[P], guide: BaseGuide)(
-    implicit action: PermutationAction[P]): InversePair[P] = {
+    implicit action: FaithfulPermutationAction[P]): InversePair[P] = {
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], conj: InversePair[P]): InversePair[P] = {
       if (prev.next.nodesNext.forall(_.orbitSize == 1) || !guide.hasAdvice) {
@@ -68,7 +68,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
   }
 
   def changeBaseConjugation(mutableChain: MutableChain[P], newBase: Seq[Int])(
-    implicit action: PermutationAction[P]): InversePair[P] = {
+    implicit action: FaithfulPermutationAction[P]): InversePair[P] = {
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P], remaining: Iterator[Int], conj: InversePair[P]): InversePair[P] = {
       if (remaining.isEmpty) {
         cutRedundantAfter(mutableChain, prev)
@@ -107,12 +107,12 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
     }
     rec(mutableChain.start, mutableChain.start, newBase.iterator, algebra.id)
   }
-  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: PermutationAction[P]): Unit = {
+  def changeBase(mutableChain: MutableChain[P], newBase: Seq[Int])(implicit action: FaithfulPermutationAction[P]): Unit = {
     val conj = changeBaseConjugation(mutableChain, newBase)
     mutableChain.conjugate(conj)
   }
 
-  override def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: PermutationAction[P]): Unit = {
+  override def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {
     val conj = changeBaseConjugation(mutableChain, guide)
     mutableChain.conjugate(conj)
   }
