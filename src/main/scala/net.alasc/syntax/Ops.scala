@@ -12,12 +12,9 @@ import net.alasc.algebra._
 import net.alasc.math.Grp
 import net.alasc.util._
 
-final class JoinSemilatticeOps[A](lhs: A)(implicit ev: JoinSemilattice[A]) {
-  def join(rhs: A): A = macro Ops.binop[A, A]
-}
-
-final class MeetSemilatticeOps[A](lhs: A)(implicit ev: MeetSemilattice[A]) {
+final class LatticeOps[A](lhs: A)(implicit ev: Lattice[A]) {
   def meet(rhs: A): A = macro Ops.binop[A, A]
+  def join(rhs: A): A = macro Ops.binop[A, A]
 }
 
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
@@ -55,7 +52,7 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def order(): BigInt = macro Ops.unop[BigInt]
   def randomElement(rhs: Random): G = macro Ops.binop[Random, G]
   def contains(rhs: G): Boolean = macro Ops.binop[G, Boolean]
-  def toGrp()(implicit actions: FaithfulPermutationActions[G]): Grp[G] = ev.toGrp(lhs)
+  def toGrp()(implicit representations: Representations[_ <: Representation[G], G]): Grp[G] = ev.toGrp(lhs)
 }
 
 final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: FaithfulPermutationAction[G]) {

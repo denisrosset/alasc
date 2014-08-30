@@ -3,12 +3,8 @@ package net.alasc.syntax
 import net.alasc.algebra._
 import scala.language.implicitConversions
 
-trait JoinSemilatticeSyntax {
-  implicit def joinSemilatticeSyntax[A: JoinSemilattice](a: A) = new JoinSemilatticeOps(a)
-}
-
-trait MeetSemilatticeSyntax {
-  implicit def meetSemilatticeSyntax[A: MeetSemilattice](a: A) = new MeetSemilatticeOps(a)
+trait LatticeSyntax {
+  implicit def latticeSyntax[A: Lattice](a: A) = new LatticeOps(a)
 }
 
 trait CheckSyntax {
@@ -41,8 +37,7 @@ trait PermutationSubgroupSyntax {
 }
 
 trait AllSyntax
-    extends JoinSemilatticeSyntax
-    with MeetSemilatticeSyntax
+    extends LatticeSyntax
     with CheckSyntax
     with SequenceSyntax
     with FiniteGroupSyntax
