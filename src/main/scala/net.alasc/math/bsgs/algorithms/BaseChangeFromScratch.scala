@@ -17,7 +17,7 @@ import net.alasc.syntax.check._
 import net.alasc.util._
 
 trait BaseChangeFromScratch[P] extends BaseChange[P] with SchreierSims[P] {
-  def changeBase(mutableChain: MutableChain[P], baseGuide: BaseGuide)(
+  def changeBaseSameAction(mutableChain: MutableChain[P], baseGuide: BaseGuide)(
     implicit action: FaithfulPermutationAction[P]): Unit = {
     require(action == mutableChain.start.action)
     val tempChain = completeChainFromSubgroup(mutableChain.start.next, baseGuide.fullBase)(mutableChain.start.action, implicitly[Subgroup[Chain[P], P]])

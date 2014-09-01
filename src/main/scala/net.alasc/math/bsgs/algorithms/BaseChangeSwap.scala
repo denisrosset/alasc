@@ -17,7 +17,7 @@ import net.alasc.syntax.check._
 import net.alasc.util._
 
 trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChange[P] {
-  def changeBase(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {
+  def changeBaseSameAction(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {
     val iter = guide.iterator
     require(action eq mutableChain.start.action)
     @tailrec def rec(prev: StartOrNode[P], lastMutableStartOrNode: MutableStartOrNode[P]): Unit = {
