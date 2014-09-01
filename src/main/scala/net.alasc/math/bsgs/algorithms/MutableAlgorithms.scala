@@ -16,13 +16,11 @@ trait MutableAlgorithms[P] extends Algorithms[P] {
 }
 
 trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
-  /** Sifts the element `p` through the BSGS chain starting at `elem`, and returns either:
+  /** Returns an element obtained by sifting `p` through the BSGS chain starting at `elem`, inserting new
+    * base points as required, returns `RefNone` if `p` can be sifted completely.
     * 
-    * - `None` if `p` can be sifted completely,
-    * - `Some(pair)` where `pair` describes the node and the
-    *   (incompletely) sifted element that should be inserted up to it.
-    * 
-    * Will insert new base points if necessary.
+    * @return the sifted element `RefSome((node, p1))` where `node` is where the sifting stopped,
+    *         and `p1` is the remaining element, or `RefNone` if `p` can be sifted completely.
     * 
     * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
     */
@@ -46,6 +44,7 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     }
   }
 
+  /** Returns a newly created empty mutable chain with the given base and action. */
   def emptyChainWithBase(base: Seq[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = MutableChain.empty[P]
     @tailrec def rec(prev: MutableStartOrNode[P], iterator: Iterator[Int]): Unit =
@@ -59,7 +58,12 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     mutableChain
   }
 
-  def mutableChainCopy(chain: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
+  /** Returns a newly created mutable copy of `chain`, cloning all mutable nodes in the given chain.
+    * The provided `chain` must have action compatible with the provided `action`.
+    * 
+    * The provided `action` is used only if the given `chain` is a terminal.
+    */
+  def mutableChain(chain: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     chain.mapOrElse(node => require(node.action == action), ())
     val mutableChain = MutableChain.empty
     @tailrec def rec(after: MutableStartOrNode[P], toInsert: Chain[P]): Unit = toInsert match {

@@ -16,34 +16,46 @@ import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-object BaseGuideSet {
-  def apply(set: Set[Int]) = new BaseGuideSet(mutable.BitSet.empty ++= set)
-}
+case class BaseGuideSet(val set: Set[Int]) extends BaseGuide {
+  final class Iter(val remaining: mutable.BitSet) extends BaseGuideIterator {
+    def hasNext = remaining.nonEmpty
 
-final class BaseGuideSet(val set: mutable.BitSet) extends BaseGuide {
-  def remainingBase = set.toSeq
-  def hasAdvice = set.nonEmpty
-  def basePoint(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int = {
-    val inter = set intersect easyPoints
-    if (inter.nonEmpty) inter.head else {
-      val toRemove = mutable.BitSet.empty
-      var res = NNNone
-      set.foreach { k =>
-        if (isFixed(k))
-          toRemove += k
-        else if (res.isEmpty)
-          res = NNSome(k)
+    def next(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int =
+      if (remaining.isEmpty) beta else {
+        val toRemove = mutable.BitSet.empty
+        def find: Int = {
+          val inter = remaining intersect easyPoints
+          inter.foreach { k =>
+            toRemove += k
+            if (!isFixed(k))
+              return k
+          }
+          remaining --= toRemove
+          toRemove.clear
+          remaining.foreach { k =>
+            toRemove += k
+            if (!isFixed(k))
+              return k
+          }
+          beta
+        }
+        val newPoint = find
+        remaining --= toRemove
+        newPoint
       }
-      set --= toRemove
-      res match {
-        case NNOption(k) => k
-        case _ => beta
-      }
-    }
+    override def checksNext(beta: Int, isFixed: Int => Boolean): Boolean =
+      if (remaining.isEmpty) true else
+        if (remaining.contains(beta)) {
+          remaining -= beta
+          true
+        } else {
+          val allFixed = remaining.forall(isFixed(_))
+          if (allFixed) {
+            remaining.clear
+            true
+          } else false
+        }
   }
-  
-  def moveToNext(chosenPoint: Int) = {
-    assert(set.contains(chosenPoint) || set.isEmpty)
-    set -= chosenPoint
-  }
+  def fullBase = set.toSeq
+  def iterator = new Iter(mutable.BitSet.empty ++= set)
 }

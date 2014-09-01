@@ -52,11 +52,39 @@ sealed trait Perm extends Any {
 //  def minus(n: Int): Perm
 }
 
+case class PermRepresentation(size: Int) extends Representation[Perm] {
+  def action = Perm.Algebra
+  def represents(g: Perm) = g.supportMax.getOrElse(-1) < size
+}
+
+object PermRepresentationLattice extends Lattice[PermRepresentation] {
+  def partialCompare(x: PermRepresentation, y: PermRepresentation) = (x.size - y.size).signum.toDouble
+  def join(x: PermRepresentation, y: PermRepresentation) = if (x.size >= y.size) x else y
+  def meet(x: PermRepresentation, y: PermRepresentation) = if (x.size <= y.size) x else y
+}
+
 object Perm extends PermCompanion {
   def supportMaxElement = PermArray.supportMaxElement
 
   implicit val Algebra: ShiftablePermutation[Perm] = new PermPermutation
-  implicit def Actions: FaithfulPermutationActions[Perm] = UniqueFaithfulPermutationAction(Algebra)
+  implicit object Representations extends Representations[PermRepresentation, Perm] {
+    implicit def lattice = PermRepresentationLattice
+    def tryCast(r: Representation[Perm]) = r match {
+      case typed: PermRepresentation => RefSome(typed)
+      case _ => RefNone
+    }
+    def get(generators: Iterable[Perm]) = {
+      @tailrec def rec(size: Int, iterator: Iterator[Perm]): Int =
+        if (iterator.hasNext) {
+          iterator.next.supportMax match {
+            case NNOption(v) if v >= size => rec(v + 1, iterator)
+            case _ => rec(size, iterator)
+          }
+        } else size
+      PermRepresentation(rec(1, generators.iterator))
+    }
+  }
+
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
       Perm32.fromImagesAndHighSupportMax(images, supportMax)
@@ -68,7 +96,6 @@ object Perm extends PermCompanion {
       Perm32.fromHighSupportAndImageFun(support, imageFun, supportMax)
     else
       PermArray.fromHighSupportAndImageFun(support, imageFun, supportMax)
-
 }
 
 trait PermCompanion {

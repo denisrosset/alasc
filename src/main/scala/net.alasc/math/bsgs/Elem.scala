@@ -150,6 +150,15 @@ sealed trait Chain[P] extends Elem[P] {
   def basicSift(p: P)(implicit ev: FiniteGroup[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
 
   def sifts(p: P)(implicit ev: FiniteGroup[P]): Boolean = ChainRec.sifts(chain, p)
+
+  /** If the current element is a node, returns the next stabilizer group in chain and the current node
+    * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with
+    * base point `beta`.
+    */
+  def detach(beta: => Int)(implicit ev: FiniteGroup[P]): (Chain[P], Transversal[P]) = chain match {
+    case node: Node[P] => (node.next, node)
+    case term: Term[P] => (term, Transversal.empty(beta))
+  }
 }
 
 object Chain {

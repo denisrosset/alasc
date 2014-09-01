@@ -119,8 +119,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       intersection(givenChain2, givenChain1)
     else {
       val chain1 = withAction(givenChain1, action)
-      val chain2 = mutableCopyWithAction(givenChain2, action)
-      changeBase(chain2, chain1.base)
+      val chain2 = withBase(givenChain2, chain1.base)(action)
       class IntersectionTest(level: Int, chain2: Chain[P], prev2Inv: P) extends SubgroupTest[P] {
         def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[IntersectionTest] = {
           val b2 = orbitImage <|+| prev2Inv
@@ -131,7 +130,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
             RefNone
         }
       }
-      subgroupSearch(chain1, g => chain2.start.next.contains(g), new IntersectionTest(0, chain2.start.next, algebra.id))
+      subgroupSearch(chain1, g => chain2.contains(g), new IntersectionTest(0, chain2, algebra.id))
     }
 
   /** Finds for each base point the additional domain points that are stabilized (i.e. are
@@ -162,8 +161,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   }
 
   def pointwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
-    val mutableChain = mutableCopyWithAction(givenChain, action)
-    changeBase(mutableChain, BaseGuideSet(set))
+    val mutableChain = mutableChainCopyWithBase(givenChain, BaseGuideSet(set))(action)
     @tailrec def detachFirstIfInSet: Unit = mutableChain.start.next match {
       case node: Node[P] if set.contains(node.beta) =>
         mutableChain.detachFirstNode(sys.error("Should never be called"))
@@ -177,9 +175,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   }
 
   def setwiseStabilizer(givenChain: Chain[P], set: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
-    val mutableChain = mutableCopyWithAction(givenChain, action)
-    changeBase(mutableChain, BaseGuideSet(set))
-    val reorderedChain = mutableChain.toChain
+    val reorderedChain = withBase(givenChain, BaseGuideSet(set))(action)
     /** Finds for each base point the additional points that are stabilized (i.e. are
       * not moved by the next subgroup in the stabilizer chain.
       * 
@@ -228,9 +224,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = seq.size
     val partition = Partition.fromSeq(seq)
-    val mutableChain = mutableCopyWithAction(givenChain, action)
-    changeBase(mutableChain, partition.guide)
-    val reorderedChain = mutableChain.toChain
+    val reorderedChain = withBase(givenChain, partition.guide)(action)
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
     val seqInteger = partition.blockIndex
     class FixingTest(level: Int) extends SubgroupTest[P] {

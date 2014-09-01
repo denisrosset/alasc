@@ -33,10 +33,11 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
       term
   }
   
-  def mutableCopyWithAction(chain: Chain[P], action: FaithfulPermutationAction[P]): MutableChain[P] = chain match {
+  def mutableChainCopyWithAction(chain: Chain[P], action: FaithfulPermutationAction[P]): MutableChain[P] = chain match {
+    // TODO: implement action change using homomorphisms
     case node: Node[P] =>
       if (action == node.action)
-        mutableChainCopy(node)(action)
+        mutableChain(node)(action)
       else
         completeChainFromSubgroup(chain)(action, Chain.ChainSubgroup)
     case _: Term[P] =>

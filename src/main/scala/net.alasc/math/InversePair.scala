@@ -39,5 +39,4 @@ class InversePairFaithfulPermutationAction[P](implicit val algebra: FaithfulPerm
   def supportMin(ip: I) = algebra.supportMin(ip.g)
   def supportMaxElement = algebra.supportMaxElement
   override def signum(ip: I) = algebra.signum(ip.g)
-  def compatibleWith(ip: I) = algebra.compatibleWith(ip.g)
 }

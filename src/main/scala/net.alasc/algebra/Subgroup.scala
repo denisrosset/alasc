@@ -67,5 +67,5 @@ trait Subgroup[S, G] extends Eq[S] { sg =>
     }
     NNNone
   }
-  def toGrp(subgroup: S)(implicit actions: FaithfulPermutationActions[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, actions)
+  def toGrp(subgroup: S)(implicit representations: Representations[_ <: Representation[G], G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, representations)
 }

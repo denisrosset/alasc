@@ -28,16 +28,16 @@ class LeftCoset[G](g: G, grpH: Grp[G]) {
 /** Left cosets of G by its subgroup H. */
 class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
   override def toString = s"($grpG) / ($grpH)"
-  import grpG.{algebra, defaultAction, algorithms}
+  import grpG.{representation, algebra, algorithms, action}
   def size: BigInt = grpG.order / grpH.order
   def iterator: Iterator[LeftCoset[G]] = {
-    val bo = algorithms.baseOrder(grpG.chain.base)(defaultAction)
+    val bo = algorithms.baseOrder(grpG.chain.base)(action)
     def rec(g: G, chainG: Chain[G], subgrpH: Grp[G]): Iterator[LeftCoset[G]] = chainG match {
       case node: Node[G] =>
         for {
           b <- node.orbit.iterator
-          bg = defaultAction.actr(b, g)
-          (subgrpHnext, transversal) = subgrpH.stabilizer(bg)(defaultAction) if transversal.orbit.min(Order.ordering(bo)) == bg
+          bg = action.actr(b, g)
+          (subgrpHnext, transversal) = subgrpH.stabilizer(bg)(representation) if transversal.orbit.min(Order.ordering(bo)) == bg
           nextG = node.u(b) |+| g
           element <- rec(nextG, node.next, subgrpHnext)
         } yield element
@@ -51,7 +51,6 @@ class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
 
 class RightCosets[G](grpH: Grp[G], grpG: Grp[G]) {
   override def toString = s"($grpH) \\ ($grpG)"
-  import grpG.{algebra, defaultAction, algorithms}
   def size: BigInt = grpG.order / grpH.order
   def iterator: Iterator[RightCoset[G]] = new LeftCosets(grpG, grpH).iterator.map(_.rightCoset)
 }

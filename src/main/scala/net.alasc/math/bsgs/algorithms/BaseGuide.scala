@@ -2,27 +2,49 @@ package net.alasc.math
 package bsgs
 package algorithms
 
+import scala.annotation.tailrec
+
 import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 
-/** Advisor for base changes. The base change algorithm is authorized to ignore the advice. */
 trait BaseGuide {
-  /** Determines the next base point.
+  def iterator: BaseGuideIterator
+  def isSatisfiedBy[P](chain: Chain[P]): Boolean = {
+    val it = iterator
+    @tailrec def check(current: Chain[P]): Boolean = current match {
+      case node: Node[P] =>
+        if (!it.checksNext(node.beta, node.isFixed(_)))
+          false
+        else
+          check(node.next)
+      case _: Term[P] => true
+    }
+    check(chain)
+  }
+  /** Returns a full base without online optimizations. Used when base is computed from scratch. */
+  def fullBase: Seq[Int]
+}
+
+/** Iterator to guide base changes. */
+trait BaseGuideIterator {
+  /** Checks whether the base guide can still give advice, or if the remaining base can be left as it is. */
+  def hasNext: Boolean
+
+  /** If the iterator is non-empty, advises the next base point, and advances the iterator. Otherwise,
+    * returns `beta`.
     * 
     * @param beta       Current base point. If the guide no longer has advice, the function returns `beta`. 
     * @param easyPoints Set of points that are easier for the base change; must always contain `beta`.
     * @param isFixed    A function that tests whether a point is fixed by the current stabilizer group in the chain.
     * 
-    * @return The next base point, taken from `easyPoints` whenever possible.
+    * @return The next base point, taken from `easyPoints` whenever possible when the iterator is not empty,
+    *         otherwise `beta`.
     */
-  def basePoint(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int
+  def next(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int
 
-  /** Moves to the next base point, telling this advisor what point was actually used in the base change.
+  /** Checks if the next point in an already constructed chain satisfies the guide.
     * 
-    * @param chosenPoint The base point actually used in the base change.
+    * After it returns false, reuse of the iterator produces undefined results.
     */
-  def moveToNext(chosenPoint: Int): Unit
-  /** Checks whether the base guide can still give advice, or if the remaining base can be left as it is. */
-  def hasAdvice: Boolean
-  /** Returns the remaining guided base without optimization. Used when base is recomputed from scratch. */
-  def remainingBase: Seq[Int]
+  def checksNext(beta: Int, isFixed: Int => Boolean): Boolean =
+    next(beta, Set(beta), isFixed) == beta
 }
