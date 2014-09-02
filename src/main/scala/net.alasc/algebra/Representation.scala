@@ -1,6 +1,9 @@
 package net.alasc.algebra
 
+import scala.annotation.tailrec
+
 import net.alasc.syntax.latticeSyntax._
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 /** Faithful permutation representation of a finite group on the domain 0 ... n - 1, where
@@ -11,13 +14,14 @@ import net.alasc.util._
   * used to check the validity of the representation of a given element. The usage of `action` on
   * invalid elements produces undefined results.
   */
-trait Representation[G] <: AnyRef {
+trait Representation[G] extends AnyRef {
   /** Size of the representation, constraining the support of any permutation in 0 ... n-1. */
   def size: Int
   /** Faithful permutation action used to represent the finite group. */
   def action: FaithfulPermutationAction[G]
   /** Tests if this representation can represent the element `g`. */
   def represents(g: G): Boolean
+  def representations: Representations[G]
 }
 
 /** Describes a family of permutation representations of a group G. Depending on the particular subgroup H of G,
@@ -28,19 +32,30 @@ trait Representation[G] <: AnyRef {
   * of G for which a and b are valid, the representation c is valid for the union of A and B. This is described
   * using a join-semilattice.
   */ 
-trait Representations[R <: Representation[G], G] {
+trait Representations[G] {
+  def get(generators: Iterable[G]): Representation[G]
+  def repJoin(r1: Representation[G], generators1: Iterable[G], generators2: Iterable[G]): Representation[G]
+  def repJoin(r1: Representation[G], r2: Representation[G],
+    generators1: Iterable[G], generators2: Iterable[G]): Representation[G]
+  def repMeet(r1: Representation[G], r2: Representation[G],
+    generators1: Iterable[G], generators2: Iterable[G]): Representation[G]
+}
+
+trait RepresentationsImpl[G] extends Representations[G] {
+  self =>
+  type R <: Representation[G]
   implicit def lattice: Lattice[R]
   def tryCast(r: Representation[G]): RefOption[R]
   object Typed {
     def unapply(r: Representation[G]): RefOption[R] = tryCast(r)
   }
   def get(generators: Iterable[G]): R
-  def genericJoin(r1: Representation[G], generators1: Iterable[G], generators2: Iterable[G]): R =
+  def repJoin(r1: Representation[G], generators1: Iterable[G], generators2: Iterable[G]): R =
     r1 match {
       case Typed(rep1) => rep1 join get(generators2)
       case _ => get(generators1 ++ generators2)
     }
-  def genericJoin(r1: Representation[G], r2: Representation[G],
+  def repJoin(r1: Representation[G], r2: Representation[G],
     generators1: Iterable[G], generators2: Iterable[G]): R =
     r1 match {
       case Typed(rep1) => r2 match {
@@ -52,7 +67,33 @@ trait Representations[R <: Representation[G], G] {
         case _ => get(generators1 ++ generators2)
       }
     }
-  def genericMeet(r1: Representation[G], r2: Representation[G],
+  def repMeet(r1: Representation[G], r2: Representation[G],
     generators1: Iterable[G], generators2: Iterable[G]): R =
     Typed.unapply(r1).getOrElse(get(generators1)) meet Typed.unapply(r2).getOrElse(get(generators2))
+}
+
+final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends RepresentationsImpl[P] {
+  self =>
+  def forSize(size: Int): Representation[P] = R(size)
+  case class R(size: Int) extends Representation[P] {
+    def action = ev
+    def representations = self
+    def represents(p: P) = p.supportMax.getOrElse(-1) < size
+  }
+  def get(generators: Iterable[P]) = {
+    @tailrec def rec(size: Int, iterator: Iterator[P]): Int =
+      if (iterator.hasNext)
+        rec(size.max(iterator.next.supportMax.getOrElse(-1) + 1), iterator)
+      else size
+    R(rec(1, generators.iterator))
+  }
+  def tryCast(r: Representation[P]) = r match {
+    case typed: R => RefSome(typed)
+    case _ => RefNone
+  }
+  implicit object lattice extends Lattice[R] {
+    def partialCompare(x: R, y: R) = (x.size - y.size).signum.toDouble
+    def join(x: R, y: R) = if (x.size >= y.size) x else y
+    def meet(x: R, y: R) = if (x.size <= y.size) x else y
+  }
 }

@@ -39,7 +39,7 @@ class Grp[G](
   givenOrder: RefOption[BigInt] = RefNone,
   givenChain: RefOption[Chain[G]] = RefNone,
   givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
-  implicit val algebra: FiniteGroup[G], representations: Representations[_ <: Representation[G], G]) { lhs =>
+  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) { lhs =>
 
   // TODO conjugatedBy
 
@@ -135,29 +135,47 @@ class Grp[G](
 
   // operations on this Grp alone
 
-  // TODO: avoid action recomputation by using representation
-  def fixingSequence(seq: Seq[Any])(implicit rp: Representation[G]): Grp[G] =
+  def fixingSequenceW(seq: Seq[Any], rp: Representation[G]): Grp[G] =
     Grp.fromChain(algorithms.fixingSequence(chain, seq)(rp.action).toChain, RefSome(rp))
 
-  def stabilizer(b: Int)(implicit rp: Representation[G]): (Grp[G], Transversal[G]) =  {
+  def fixingSequence(seq: Seq[Any])(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    fixingSequenceW(seq, prp.forSize(seq.size))
+
+  def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) =  {
     val newChain = algorithms.withBase(chain(RefSome(rp), Seq(b)), Seq(b))(rp.action)
     val (nextChain, transversal) = newChain.detach(b)
     (Grp.fromChain(nextChain, RefSome(rp)), transversal)
   }
 
-  def pointwiseStabilizer(set: Int*)(implicit rp: Representation[G]): Grp[G] =
-    pointwiseStabilizer(collection.immutable.BitSet.empty ++ set)
-  def pointwiseStabilizer(set: Set[Int])(implicit rp: Representation[G]): Grp[G] = {
+  def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
+    val rp = if (b < representation.size) representation else prp.forSize(b + 1)
+    stabilizerW(b, rp)
+  }
+
+  def pointwiseStabilizerW(set: Set[Int], rp: Representation[G]): Grp[G] = {
     val mutableChain = algorithms.pointwiseStabilizer(chain, set)(rp.action)
     Grp.fromChain(mutableChain.toChain, RefSome(rp))
   }
 
-  def setwiseStabilizer(set: Int*)(implicit rp: Representation[G]): Grp[G] =
-    setwiseStabilizer(collection.immutable.BitSet.empty ++ set)
+  def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
+    if (points.size == 0) return this
+    val set = Set(points:_*)
+    val maxSet = set.max
+    val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
+    pointwiseStabilizerW(set, rp)
+  }
 
-  def setwiseStabilizer(set: Set[Int])(implicit rp: Representation[G]): Grp[G] = {
+  def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] = {
     val mutableChain = algorithms.setwiseStabilizer(chain, set)(rp.action)
     Grp.fromChain(mutableChain.toChain, RefSome(rp))
+  }
+
+  def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
+    if (points.size == 0) return this
+    val set = Set(points:_*)
+    val maxSet = set.max
+    val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
+    setwiseStabilizer(set, rp)
   }
 
   // operations between subgroups
@@ -174,12 +192,12 @@ class Grp[G](
   def joinRepresentation(rhs: Grp[G]): Representation[G] =
     if (lhs.isRepresentationKnown) {
       if (rhs.isRepresentationKnown)
-        representations.genericJoin(lhs.representation, rhs.representation, lhs.generators, rhs.generators)
+        representations.repJoin(lhs.representation, rhs.representation, lhs.generators, rhs.generators)
       else
-        representations.genericJoin(lhs.representation, lhs.generators, rhs.generators)
+        representations.repJoin(lhs.representation, lhs.generators, rhs.generators)
     } else {
       if (rhs.isRepresentationKnown)
-        representations.genericJoin(rhs.representation, rhs.generators, lhs.generators)
+        representations.repJoin(rhs.representation, rhs.generators, lhs.generators)
       else
         representations.get(lhs.generators ++ rhs.generators)
     }
@@ -286,7 +304,7 @@ object Grp {
   def defaultAlgorithms[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
 
   def fromChain[G](chain: Chain[G], givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], rp: Representations[_ <: Representation[G], G]) = {
+    implicit algebra: FiniteGroup[G], rp: Representations[G]) = {
     givenRepresentation.foreach { r => require(chain.generators.forall(r.represents(_))) } // TODO remove
     val representation = givenRepresentation.getOrElse(rp.get(chain.generators))
     chain match {
@@ -297,18 +315,18 @@ object Grp {
   }
 
   def fromGenerators[G](generators: Iterable[G], givenRepresentation: RefOption[Representation[G]])(
-    implicit algebra: FiniteGroup[G], rp: Representations[_ <: Representation[G], G]) =
+    implicit algebra: FiniteGroup[G], rp: Representations[G]) =
     new Grp[G](defaultAlgorithms[G], generators, givenRepresentation)
 
-  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], rp: Representations[_ <: Representation[G], G]) =
+  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], rp: Representations[G]) =
     new Grp[G](defaultAlgorithms[G], generators, RefNone)
 
   def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt, givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], rp: Representations[_ <: Representation[G], G]) =
+    implicit algebra: FiniteGroup[G], rp: Representations[G]) =
     new Grp[G](defaultAlgorithms[G], generators, givenRepresentation, givenOrder = RefSome(order))
 
   def fromSubgroup[S, G](subgroup: S, givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], rp: Representations[_ <: Representation[G], G]) =
+    implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], rp: Representations[G]) =
     new Grp[G](defaultAlgorithms[G], subgroup.generators, givenRepresentation,
       givenOrder = RefSome(subgroup.order), givenRandomElement = RefSome(subgroup.randomElement(_)))
 
@@ -321,5 +339,5 @@ class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[
   def order(grp: Grp[G]) = grp.order
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
   override def contains(grp: Grp[G], g: G) = grp.chain.contains(g)
-  override def toGrp(grp: Grp[G])(implicit representations: Representations[_ <: Representation[G], G]): Grp[G] = grp
+  override def toGrp(grp: Grp[G])(implicit representations: Representations[G]): Grp[G] = grp
 }
