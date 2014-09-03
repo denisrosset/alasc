@@ -1,7 +1,7 @@
 package net.alasc.math
 package perm
 
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
 
 import spire.syntax.signed._
 

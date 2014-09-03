@@ -1,0 +1,148 @@
+package net.alasc.math
+
+import scala.language.higherKinds
+
+import scala.collection.generic.CanBuildFrom
+import scala.collection.SeqLike
+import scala.collection.mutable
+import scala.reflect.ClassTag
+
+import spire.algebra._
+import spire.syntax.eq._
+import spire.syntax.group._
+import spire.syntax.groupAction._
+
+import net.alasc.algebra._
+import net.alasc.std.seq._
+import net.alasc.syntax.permutationAction._
+import net.alasc.util._
+
+case class Wr[A, H](aSeq: Seq[A], h: H)
+
+object Wr {
+  implicit def wrImprimitiveRepresentations[A: FiniteGroup: Representations, H: Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
+  implicit def wrFiniteGroup[A: FiniteGroup, H: Permutation]: FiniteGroup[Wr[A, H]] = new WrFiniteGroup[A, H]
+}
+
+// TODO: rewrite Seq support using iterators instead of linear access
+class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
+  self =>
+  type AR = aReps.R
+  def tryCast(genR: Representation[Wr[A, H]]): RefOption[R] = genR match {
+    case r: R if r.representations eq self => RefSome(r)
+    case _ => RefNone
+  }
+  def minimal = R(1, aReps.minimal)
+  def get(generators: Iterable[Wr[A, H]]) = {
+    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElse(-1) + 1) }
+    val aRep = aReps.get(generators.flatMap(_.aSeq))
+    R(n, aRep)
+  }
+  implicit object lattice extends Lattice[R] {
+    def partialCompare(x: R, y: R) = {
+      val sizeC = (x.n - y.n).signum
+      val compR = aReps.lattice.partialCompare(x.aRep, y.aRep)
+      if (compR == sizeC.toDouble) compR
+      Double.NaN
+    }
+    def join(x: R, y: R) = R(x.n.max(y.n), aReps.lattice.join(x.aRep, y.aRep))
+    def meet(x: R, y: R) = R(x.n.min(y.n), aReps.lattice.meet(x.aRep, y.aRep))
+  }
+  case class R(n: Int, aRep: AR) extends Representation[Wr[A, H]] {
+    val size = n * aRep.size
+    def representations = self
+    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
+    val action = new FaithfulPermutationAction[Wr[A, H]] {
+      def actr(k: Int, w: Wr[A, H]): Int =
+        if (k >= size) k else {
+          val s = aRep.size
+          val sub = k % s
+          val block = k / s
+          val newBlock = block <|+| w.h
+          if (block >= w.aSeq.size)
+            newBlock * s + sub
+          else
+            newBlock * s + aRep.action.actr(sub, w.aSeq(block))
+        }
+      def actl(w: Wr[A, H], k: Int): Int =
+        if (k >= size) k else {
+          val s = aRep.size
+          val sub = k % s
+          val block = k / s
+          val newBlock = (w.h |+|> block) * s
+          if (block >= w.aSeq.size)
+            newBlock * s + sub
+          else
+            newBlock * s + aRep.action.actl(w.aSeq(newBlock), sub)
+        }
+      def supportMaxElement = size
+      def support(w: Wr[A, H]) = {
+        val bitset = mutable.BitSet.empty
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        var block = 0
+        var offset = 0
+        val s = aRep.size
+        while (block < m) {
+          if ((block <|+| w.h) != block)
+            bitset ++= offset until (offset + s)
+          else
+            aRep.action.support(w.aSeq(block)).foreach { sub => bitset += (offset + sub) }
+          block += 1
+          offset += s
+        }
+        bitset
+      }
+      def supportMin(w: Wr[A, H]): NNOption = {
+        var block = 0
+        var offset = 0
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        val s = aRep.size
+        while (block < m) {
+          if ((block <|+| w.h) != block)
+            return NNSome(offset)
+          else
+            aRep.action.supportMin(w.aSeq(block)) match {
+              case NNOption(sub) => return NNSome(offset + sub)
+              case _ =>
+            }
+          block += 1
+          offset += s
+        }
+        NNNone
+      }
+      def supportMax(w: Wr[A, H]): NNOption = {
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        var block = m - 1
+        val s = aRep.size
+        var offset = block * s
+        while (block >= 0) {
+          if ((block <|+| w.h) != block)
+            return NNSome(offset + s - 1)
+          else
+            aRep.action.supportMax(w.aSeq(block)) match {
+              case NNOption(sub) => return NNSome(offset + sub)
+              case _ =>
+            }
+          block -= 1
+          offset -= s
+        }
+        NNNone
+      }
+    }
+  }
+}
+
+class WrFiniteGroup[A, H](implicit aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends FiniteGroup[Wr[A, H]] {
+  def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && (x.aSeq === y.aSeq)
+  def id = Wr(Seq.empty[A], hAlgebra.id)
+  def inverse(w: Wr[A, H]): Wr[A, H] = {
+    val hInv = w.h.inverse
+    val n = w.aSeq.size
+    Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => aAlgebra.id).inverse), hInv)
+  }
+  def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
+    val newH = x.h |+| y.h
+    val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElse(-1) + 1)
+    Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => aAlgebra.id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => aAlgebra.id) ), newH)
+  }
+}

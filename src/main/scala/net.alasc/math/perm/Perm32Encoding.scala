@@ -1,7 +1,8 @@
 package net.alasc.math
 package perm
 
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
+import scala.collection.immutable
 
 import spire.syntax.signed._
 import spire.syntax.groupAction._
@@ -99,7 +100,7 @@ object Perm32Encoding {
         k -= 1
       }
     }
-    BitSet.fromBitMask(Array(bitset))
+    immutable.BitSet.fromBitMask(Array(bitset))
   }
 
   @inline def decode(long2: Long, long1: Long, long0: Long, preimage: Int): Int =

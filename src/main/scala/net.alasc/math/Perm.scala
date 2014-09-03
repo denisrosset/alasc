@@ -1,7 +1,7 @@
 package net.alasc.math
 
 import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
 
 import spire.syntax.eq._
 import spire.syntax.signed._

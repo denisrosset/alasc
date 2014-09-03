@@ -1,7 +1,8 @@
 package net.alasc.math
 package perm
 
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
+import scala.collection.immutable
 
 import spire.syntax.groupAction._
 import spire.syntax.signed._
@@ -59,7 +60,7 @@ object Perm16Encoding {
       bitset |= 1 << image
       remaining &= ~(Perm16Encoding.permMask(image) | Perm16Encoding.permMask(preimage))
     }
-    BitSet.fromBitMask(Array(bitset))
+    immutable.BitSet.fromBitMask(Array(bitset))
   }
 
   def inverse(encoding: Long): Long = {

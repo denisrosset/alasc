@@ -15,7 +15,7 @@ import net.alasc.syntax.subgroup._
 import net.alasc.syntax.shiftablePermutation._
 
 object FixingSeqCheck extends Properties("FixingCheck") with PermutationGenerators[Perm] {
-  implicit def algebra = Perm.Algebra
+  implicit def permutation = Perm.Algebra
   val genSeq = for {
     n <- Gen.choose(1, 30)
     seq <- Gen.containerOfN[Seq, Int](n, Gen.choose(0, 4))

@@ -60,6 +60,6 @@ object PermHash {
     else if (sm <= 31)
       hash32(p)
     else
-      unorderedHash(p.support.map(k => pairHash(k, k <|+| p)), seed)
+      unorderedHash(p.support.toSeq.map(k => pairHash(k, k <|+| p)), seed)
   }
 }

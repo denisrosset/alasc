@@ -1,7 +1,7 @@
 package net.alasc
 package syntax
 
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
 import scala.language.experimental.macros
 
 import scala.util.Random
@@ -31,7 +31,7 @@ final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
   def order(): Int = macro Ops.unop[Int]
 }
 
-final class PermutationActionOps[A](lhs: A)(implicit ev: FaithfulPermutationAction[A]) {
+final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
   def support(): BitSet = macro Ops.unop[BitSet]
   def supportMax(): NNOption = macro Ops.unop[NNOption]
   def supportMin(): NNOption = macro Ops.unop[NNOption]

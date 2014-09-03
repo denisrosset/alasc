@@ -11,7 +11,7 @@ import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 
 class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] {
-  implicit def algebra = Perm.Algebra
+  implicit def permutation = Perm.Algebra
 
   property("x === fromImages(x.images)") {
     forAll { (x: Perm) =>

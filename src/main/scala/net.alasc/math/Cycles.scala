@@ -2,7 +2,7 @@ package net.alasc.math
 
 import scala.language.implicitConversions
 
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
 import scala.runtime.RichInt
 
 import spire.algebra._

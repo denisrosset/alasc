@@ -12,7 +12,7 @@ import spire.syntax.eq._
 import net.alasc.syntax.permutationAction._
 
 class CyclesCheck extends PermutationCheck[Cycles] with PermutationGenerators[Cycles] {
-  implicit def algebra = Cycles.Algebra
+  implicit def permutation = Cycles.Algebra
 
   property("x.to[Perm].to[Cycles] === x") {
     forAll { (x: Cycles) =>

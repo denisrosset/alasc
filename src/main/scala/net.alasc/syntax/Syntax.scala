@@ -20,7 +20,7 @@ trait FiniteGroupSyntax {
 }
 
 trait PermutationActionSyntax extends FiniteGroupSyntax {
-  implicit def permutationActionSyntax[A: FaithfulPermutationAction](a: A) = new PermutationActionOps(a)
+  implicit def permutationActionSyntax[A: PermutationAction](a: A) = new PermutationActionOps(a)
 }
 
 trait ShiftablePermutationSyntax extends FiniteGroupSyntax {

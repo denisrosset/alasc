@@ -2,7 +2,7 @@ package net.alasc.algebra
 
 import scala.{ specialized => spec }
 import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
+import scala.collection.BitSet
 import scala.collection.mutable.{ BitSet => MutableBitSet }
 import spire.algebra._
 import spire.syntax.groupAction._
