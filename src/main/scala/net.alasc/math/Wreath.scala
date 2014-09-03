@@ -15,13 +15,28 @@ import spire.syntax.groupAction._
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
+import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
+/** Describes the wreath product of two objects. */
 case class Wr[A, H](aSeq: Seq[A], h: H)
 
+/** Type classes for wreath products. */
 object Wr {
   implicit def wrImprimitiveRepresentations[A: FiniteGroup: Representations, H: Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
   implicit def wrFiniteGroup[A: FiniteGroup, H: Permutation]: FiniteGroup[Wr[A, H]] = new WrFiniteGroup[A, H]
+  def grp[SA, SH, A: Representations, H](n: Int, sa: SA, sh: SH)(
+    implicit afg: FiniteGroup[A], hp: Permutation[H], sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
+    val aGenerators = for {
+      k <- 0 until n
+      a <- sa.generators
+    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else afg.id ), hp.id)
+    val hGenerators = for {
+      h <- sh.generators
+    } yield Wr(Seq.empty[A], h)
+    val order = sa.order.pow(n) * sh.order
+    Grp.fromGeneratorsAndOrder(aGenerators ++ hGenerators, order)
+  }
 }
 
 // TODO: rewrite Seq support using iterators instead of linear access
@@ -69,8 +84,8 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
           val s = aRep.size
           val sub = k % s
           val block = k / s
-          val newBlock = (w.h |+|> block) * s
-          if (block >= w.aSeq.size)
+          val newBlock = w.h |+|> block
+          if (newBlock >= w.aSeq.size)
             newBlock * s + sub
           else
             newBlock * s + aRep.action.actl(w.aSeq(newBlock), sub)
@@ -85,7 +100,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
         while (block < m) {
           if ((block <|+| w.h) != block)
             bitset ++= offset until (offset + s)
-          else
+          else if (block < w.aSeq.size)
             aRep.action.support(w.aSeq(block)).foreach { sub => bitset += (offset + sub) }
           block += 1
           offset += s
@@ -100,11 +115,12 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
         while (block < m) {
           if ((block <|+| w.h) != block)
             return NNSome(offset)
-          else
+          else if (block < w.aSeq.size) {
             aRep.action.supportMin(w.aSeq(block)) match {
               case NNOption(sub) => return NNSome(offset + sub)
               case _ =>
             }
+          }
           block += 1
           offset += s
         }
@@ -118,11 +134,12 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
         while (block >= 0) {
           if ((block <|+| w.h) != block)
             return NNSome(offset + s - 1)
-          else
+          else if (block < w.aSeq.size) {
             aRep.action.supportMax(w.aSeq(block)) match {
               case NNOption(sub) => return NNSome(offset + sub)
               case _ =>
             }
+          }
           block -= 1
           offset -= s
         }
@@ -137,7 +154,7 @@ class WrFiniteGroup[A, H](implicit aAlgebra: FiniteGroup[A], hAlgebra: Permutati
   def id = Wr(Seq.empty[A], hAlgebra.id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
     val hInv = w.h.inverse
-    val n = w.aSeq.size
+    val n = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
     Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => aAlgebra.id).inverse), hInv)
   }
   def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
