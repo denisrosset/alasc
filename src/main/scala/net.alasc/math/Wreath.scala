@@ -105,7 +105,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
           block += 1
           offset += s
         }
-        bitset
+        bitset.toImmutable
       }
       def supportMin(w: Wr[A, H]): NNOption = {
         var block = 0
@@ -217,7 +217,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
             bitset += i
           i += 1
         }
-        bitset
+        bitset.toImmutable
       }
       def supportMin(w: Wr[A, H]): NNOption = {
         var i = 0

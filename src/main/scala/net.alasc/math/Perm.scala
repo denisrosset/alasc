@@ -1,7 +1,7 @@
 package net.alasc.math
 
 import scala.annotation.tailrec
-import scala.collection.BitSet
+import scala.collection.immutable
 
 import spire.syntax.eq._
 import spire.syntax.signed._
@@ -40,7 +40,7 @@ sealed trait Perm extends Any {
 
   def supportMax: NNOption
   def supportMin: NNOption
-  def support: BitSet
+  def support: Set[Int]
 
   def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).to[Perm]
   def apply(cycle: String): Perm = apply(cycle.map(DomainAlphabet.map(_)): _*)
@@ -63,7 +63,7 @@ object Perm extends PermCompanion {
     else
       PermArray.fromImagesAndHighSupportMax(images, supportMax)
 
-  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm =
+  def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
       Perm32.fromHighSupportAndImageFun(support, imageFun, supportMax)
     else
@@ -105,7 +105,7 @@ trait PermCompanion {
     * 
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
-  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm
+  def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm
 
   /** Constructs a permutation from its support and an image function.
     *
@@ -114,7 +114,7 @@ trait PermCompanion {
     * 
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
-  def fromSupportAndImageFun(support: BitSet, imageFun: Int => Int): Perm =
+  def fromSupportAndImageFun(support: Set[Int], imageFun: Int => Int): Perm =
     if (support.isEmpty)
       Perm.Algebra.id
     else {
@@ -132,7 +132,7 @@ trait PermCompanion {
   /** Constructs a permutatino from a cycle given as a variable number of arguments. */
   def apply(seq: Int*): Perm = {
     val map: Map[Int, Int] = (seq zip (seq.tail :+ seq.head)).toMap
-    val support = BitSet.empty ++ seq
+    val support = immutable.BitSet.empty ++ seq
     fromSupportAndImageFun(support, map(_))
   }
 }
@@ -156,7 +156,7 @@ final case class Perm16 private[math](val encoding: Long) extends AnyVal with Pe
 object Perm16 extends PermCompanion {
   def supportMaxElement = 15
   def tooBig(supportMax: Int) = sys.error(s"Permutation too big (supportMax = $supportMax) to be encoded in Perm16.")
-  def fromHighSupportAndImageFun(support: BitSet, image: Int => Int, supportMax: Int): Perm =
+  def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): Perm =
     tooBig(supportMax)
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     tooBig(supportMax)
@@ -298,6 +298,6 @@ object Perm32 extends PermCompanion {
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm32 =
     Perm32Encoding.fromImages(images, supportMax)
 
-  def fromHighSupportAndImageFun(support: BitSet, imageFun: Int => Int, supportMax: Int): Perm32 =
+  def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm32 =
     Perm32Encoding.fromSupportAndImageFun(support, imageFun)
 }

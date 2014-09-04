@@ -4,7 +4,7 @@ package algorithms
 
 import scala.annotation.tailrec
 
-import scala.collection.BitSet
+import scala.collection.immutable.BitSet
 import scala.collection.immutable
 import scala.collection.mutable
 
@@ -16,11 +16,11 @@ import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-case class PartitionGuide(partition: Partition) extends BaseGuide {
-  def fullBase = partition.blocks.flatMap(identity)
+case class PartitionGuide(orderedPartition: OrderedPartition) extends BaseGuide {
+  def fullBase = orderedPartition.blocks.flatMap(identity)
   def iterator = new Iter(mutable.BitSet.empty,
-    debox.Buffer.fromIterable(partition.blocks.map(bitset => mutable.BitSet.fromBitMaskNoCopy(bitset.toBitMask))),
-    debox.Buffer.fromIterable(partition.blocks.map(_.size)))
+    debox.Buffer.fromIterable(orderedPartition.blocks.map(block => mutable.BitSet.empty ++= block)),
+    debox.Buffer.fromIterable(orderedPartition.blocks.map(_.size)))
 
   final class Iter(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty

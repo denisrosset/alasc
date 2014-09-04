@@ -202,7 +202,7 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   def inOrbit(b: Int): Boolean
   def orbit: Iterable[Int]
   def foreachOrbit[U](f: Int => U): Unit
-  def orbitSet: collection.BitSet = {
+  def orbitSet: Set[Int] = {
     val bitset = mutable.BitSet.empty
     foreachOrbit { bitset += _ }
     bitset.toImmutable

@@ -2,8 +2,6 @@ package net.alasc.algebra
 
 import scala.{ specialized => spec }
 import scala.annotation.tailrec
-import scala.collection.BitSet
-import scala.collection.mutable.{ BitSet => MutableBitSet }
 import spire.algebra._
 import spire.syntax.groupAction._
 
@@ -22,7 +20,7 @@ trait Permutation[P] extends FiniteGroup[P] with FaithfulPermutationAction[P] {
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
   def fromImages(images: Seq[Int]): P
-  def fromSupportAndImageFun(support: BitSet, image: Int => Int): P
+  def fromSupportAndImageFun(support: Set[Int], image: Int => Int): P
   def sorting[T: Order](seq: Seq[T]): P = {
     import spire.compat._
     fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))

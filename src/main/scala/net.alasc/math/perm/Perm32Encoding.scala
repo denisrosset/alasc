@@ -1,7 +1,6 @@
 package net.alasc.math
 package perm
 
-import scala.collection.BitSet
 import scala.collection.immutable
 
 import spire.syntax.signed._
@@ -74,7 +73,7 @@ object Perm32Encoding {
     else
       false
 
-  @inline def support(long2: Long, long1: Long, long0: Long): BitSet = {
+  @inline def support(long2: Long, long1: Long, long0: Long): Set[Int] = {
     var bitset = 0L
     if (long2 != 0) {
       var k = 31
@@ -184,7 +183,7 @@ object Perm32Encoding {
     res
   }
 
-  def fromSupportAndImageFun(support: BitSet, image: Int => Int): Perm32 = {
+  def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm32 = {
     val res = new Perm32
     support.foreach { k =>
       val i = image(k)

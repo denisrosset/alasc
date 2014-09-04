@@ -74,7 +74,7 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
           i += 1
           offset += s
         }
-        bitset
+        bitset.toImmutable
       }
       def supportMin(sg: SG): NNOption = {
         var i = 0

@@ -2,6 +2,7 @@ package net.alasc.math
 package bsgs
 
 import scala.util.Random
+import scala.collection.immutable.BitSet
 
 import spire.syntax.group._
 
@@ -13,7 +14,7 @@ trait Transversal[P] extends Any {
   def inOrbit(b: Int): Boolean
   def orbit: Iterable[Int]
   def foreachOrbit[U](f: Int => U): Unit
-  def orbitSet: collection.BitSet
+  def orbitSet: Set[Int]
   def randomOrbit(rand: Random): Int
   def iterable: Iterable[(Int, InversePair[P])]
   def foreachU[N](f: P => N): Unit

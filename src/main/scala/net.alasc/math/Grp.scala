@@ -135,11 +135,11 @@ class Grp[G](
 
   // operations on this Grp alone
 
-  def fixingSequenceW(seq: Seq[Any], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(algorithms.fixingSequence(chain, seq)(rp.action).toChain, RefSome(rp))
+  def fixingPartitionW(partition: Partition, rp: Representation[G]): Grp[G] =
+    Grp.fromChain(algorithms.fixingPartition(chain, partition)(rp.action).toChain, RefSome(rp))
 
-  def fixingSequence(seq: Seq[Any])(implicit prp: PermutationRepresentations[G]): Grp[G] =
-    fixingSequenceW(seq, prp.forSize(seq.size))
+  def fixingPartition(partition: Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    fixingPartitionW(partition, prp.forSize(partition.size))
 
   def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) =  {
     val newChain = algorithms.withBase(chain(RefSome(rp), Seq(b)), Seq(b))(rp.action)

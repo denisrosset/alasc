@@ -2,8 +2,8 @@ package net.alasc.algebra
 
 import scala.{ specialized => spec }
 import scala.annotation.tailrec
-import scala.collection.BitSet
-import scala.collection.mutable.{ BitSet => MutableBitSet }
+import scala.collection.mutable
+
 import spire.algebra._
 import spire.syntax.groupAction._
 
@@ -14,7 +14,7 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
   /** Returns a bit set of all integers k that are changed by the action of the permutation,
     * i.e. `S = { k | k <|+| g != k }`.
     */
-  def support(g: G): BitSet
+  def support(g: G): Set[Int]
   /** Returns the maximal element in the support of ` g`, or NNNone if the support is empty. */ 
   def supportMax(g: G): NNOption
   /** Returns the minimal element in the support of `g`, or NNNone if the support is empty. */
@@ -33,7 +33,7 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
 
   def signum(g: G) = {
     // optimized for dense permutation on non-huge domains
-    val toCheck = MutableBitSet.empty ++= support(g)
+    val toCheck = mutable.BitSet.empty ++= support(g)
     var parity = 0
     while (!toCheck.isEmpty) {
       val start = toCheck.head

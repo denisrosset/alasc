@@ -1,7 +1,7 @@
 package net.alasc.math
 package perm
 
-import scala.collection.BitSet
+import scala.collection.mutable
 
 import spire.syntax.signed._
 
@@ -57,14 +57,14 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 
   def support = {
-    var bitset = BitSet.empty
+    val bitset = mutable.BitSet.empty
     var k = supportMax.getOrElse(-1)
     while (k >= 0) {
       if (image(k) != k)
         bitset += k
       k -= 1
     }
-    bitset
+    bitset.toImmutable
   }
 
   def isValidPerm32 = supportMax.getOrElse(-1) <= Perm32Encoding.supportMaxElement
@@ -92,6 +92,6 @@ object PermArray extends PermCompanion {
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): PermArray =
     new PermArray(images.view.take(supportMax + 1).toArray)
 
-  def fromHighSupportAndImageFun(support: BitSet, image: Int => Int, supportMax: Int): PermArray =
+  def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): PermArray =
     new PermArray(Array.tabulate(supportMax + 1)(k => if (support(k)) image(k) else k))
 }

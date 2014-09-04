@@ -1,7 +1,7 @@
 package net.alasc.math
 
 import scala.annotation.tailrec
-import scala.collection.BitSet
+import scala.collection.immutable
 
 import spire.syntax.eq._
 import spire.syntax.signed._
@@ -47,7 +47,7 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
       case rhs: Perm => lhs.genOp(rhs)
     }
   }
-  @inline def support(p: Perm): BitSet = p.support
+  @inline def support(p: Perm): Set[Int] = p.support
   @inline def supportMin(p: Perm): NNOption = p.supportMin
   @inline def supportMax(p: Perm): NNOption = p.supportMax
   @inline def actr(preimage: Int, p: Perm): Int = p.image(preimage)
@@ -57,19 +57,19 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
   @inline def id = Perm16Encoding.id
   @inline def supportMaxElement = PermArray.supportMaxElement
   @inline def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
-  @inline def fromSupportAndImageFun(support: BitSet, image: Int => Int): Perm =
+  @inline def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
     Perm.fromSupportAndImageFun(support, image)
   def plus(p: Perm, n: Int): Perm = {
     require(n >= 0)
     if (n == 0) return p
-    val newSupport = BitSet.empty ++ support(p).map(_ + n)
+    val newSupport = immutable.BitSet.empty ++ support(p).map(_ + n)
     fromSupportAndImageFun(newSupport, k => actr(k - n, p) + n)
   }
   def minus(p: Perm, n: Int): Perm = {
     require(n >= 0)
     if (n == 0) return p
     require(p.supportMin.getOrElse(n) >= n)
-    val newSupport = BitSet.empty ++ support(p).map(_ - n)
+    val newSupport = immutable.BitSet.empty ++ support(p).map(_ - n)
     fromSupportAndImageFun(newSupport, k => actr(k + n, p) - n)
   }
 }

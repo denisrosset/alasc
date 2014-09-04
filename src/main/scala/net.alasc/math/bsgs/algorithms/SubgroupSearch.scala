@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
-import scala.collection.BitSet
+import scala.collection.immutable.BitSet
 
 import spire.algebra.Order
 import spire.syntax.groupAction._
@@ -36,7 +36,7 @@ trait SubgroupSearch[P] {
   // TODO: remove action (not needed)
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
+  def fixingPartition(givenChain: Chain[P], partition: Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
@@ -193,7 +193,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
             if (node.next.isFixed(k)) fixed += k
           }
           remaining --= fixed
-          groups += fixed
+          groups += fixed.toImmutable
           rec(node.next)
         case _ => groups.toArray
       }
@@ -220,24 +220,22 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       set.forall { k => set.contains(k <|+| g) }
     subgroupSearch(reorderedChain, setwiseStabilized(_), new FixingTest(0))
   }
-
-  def fixingSequence(givenChain: Chain[P], seq: Seq[Any])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
-    val n = seq.size
-    val partition = Partition.fromSeq(seq)
-    val reorderedChain = withBase(givenChain, partition.guide)(action)
+  def fixingPartition(givenChain: Chain[P], partition: Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
+    val n = partition.size
+    val orderedPartition = partition.sizeDecreasing
+    val reorderedChain = withBase(givenChain, PartitionGuide(orderedPartition))(action)
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
-    val seqInteger = partition.blockIndex
     class FixingTest(level: Int) extends SubgroupTest[P] {
       def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest] = {
         val pointSet = pointSetsToTest(level)
-        if (seqInteger(pointSet(0)) != seqInteger(orbitImage))
+        if (orderedPartition.representative(pointSet(0)) != orderedPartition.representative(orbitImage))
           return RefNone
         if (pointSet.length > 1) {
           val nextG = node.u(b) |+| currentG
           var i = 1
           while (i < pointSet.length) {
             val k = pointSet(i)
-            if (seqInteger(k) != seqInteger(k <|+| nextG))
+            if (orderedPartition.representative(k) != orderedPartition.representative(k <|+| nextG))
               return RefNone
             i += 1
           }
@@ -248,7 +246,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     def leaveInvariant(g: P): Boolean = {
       var i = 0
       while (i < n) {
-        if (seqInteger(i <|+| g) != seqInteger(i))
+        if (orderedPartition.representative(i <|+| g) != orderedPartition.representative(i))
           return false
         i += 1
       }

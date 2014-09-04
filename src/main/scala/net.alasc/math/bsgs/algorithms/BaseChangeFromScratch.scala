@@ -4,7 +4,7 @@ package algorithms
 
 import scala.annotation.tailrec
 
-import scala.collection.BitSet
+import scala.collection.immutable.BitSet
 import scala.collection.immutable
 import scala.collection.mutable
 

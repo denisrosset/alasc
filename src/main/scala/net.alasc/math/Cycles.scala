@@ -2,7 +2,7 @@ package net.alasc.math
 
 import scala.language.implicitConversions
 
-import scala.collection.BitSet
+import scala.collection.immutable.BitSet
 import scala.runtime.RichInt
 
 import spire.algebra._
@@ -39,8 +39,8 @@ class CyclesPermutation extends Permutation[Cycles] {
     fromSupportAndImageFun(support, images(_))
   }
 
-  def fromSupportAndImageFun(support: BitSet, image: Int => Int): Cycles = {
-    @scala.annotation.tailrec def rec(cycles: List[Cycle], remSupport: BitSet): Cycles = 
+  def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Cycles = {
+    @scala.annotation.tailrec def rec(cycles: List[Cycle], remSupport: Set[Int]): Cycles = 
       remSupport.isEmpty match {
         case true => fromDisjointCycles(cycles)
         case false =>
@@ -63,7 +63,7 @@ class CyclesPermutation extends Permutation[Cycles] {
   def id = new Cycles(Seq.empty[Cycle])
 
   def op(x: Cycles, y: Cycles) = 
-    Cycles.Algebra.fromSupportAndImageFun(support(x) ++ support(y), i => actr(actr(i, x), y))
+    Cycles.Algebra.fromSupportAndImageFun(support(x) ++ support(y), (i: Int) => actr(actr(i, x), y))
 
   def inverse(a: Cycles) = Cycles.Algebra.fromDisjointCycles(a.seq.map(_.inverse))
 

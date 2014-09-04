@@ -1,7 +1,6 @@
 package net.alasc.math
 package perm
 
-import scala.collection.BitSet
 import scala.collection.immutable
 
 import spire.syntax.groupAction._
@@ -50,7 +49,7 @@ object Perm16Encoding {
   @inline def image(encoding: Long, preimage: Int): Int =
     if (preimage > supportMaxElement) preimage else decode(encoding, preimage)
 
-  def support(encoding: Long): BitSet = {
+  def support(encoding: Long): Set[Int] = {
     var bitset = 0L
     var remaining = encoding
     while (remaining != 0) {
@@ -114,7 +113,7 @@ object Perm16Encoding {
     encoding
   }
 
-  def supportAndImageFunEncoding(support: BitSet, image: Int => Int): Long = {
+  def supportAndImageFunEncoding(support: Set[Int], image: Int => Int): Long = {
     var encoding = 0L
     support.foreach { k =>
       val i = image(k)

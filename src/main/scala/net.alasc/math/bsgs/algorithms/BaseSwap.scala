@@ -2,8 +2,8 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.collection.mutable.{ BitSet => MutableBitSet }
-import scala.collection.immutable.{ BitSet => ImmutableBitSet }
+import scala.collection.mutable
+import scala.collection.immutable
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
@@ -39,7 +39,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
   def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
     import OrbitInstances._
     implicit def action = mutableChain.start.action
-    val gammaSet = MutableBitSet.empty ++ node1.orbit
+    val gammaSet = mutable.BitSet.empty ++ node1.orbit
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     require(newNode1.next eq newNode2)
     gammaSet -= newNode1.beta
@@ -50,7 +50,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
       assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
       if (!node2.inOrbit(b))
-        gammaSet --= ImmutableBitSet(gamma) <|+| newNode2.strongGeneratingSet
+        gammaSet --= immutable.BitSet(gamma) <|+| newNode2.strongGeneratingSet
       else {
         val ipy = node2.uPair(b)
         val ipyx = ipy |+| ipx
