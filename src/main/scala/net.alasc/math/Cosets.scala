@@ -9,14 +9,14 @@ import net.alasc.syntax.subgroup._
 
 import bsgs._
 
-class RightCoset[G](grpH: Grp[G], g: G) {
+class RightCoset[G](grpH: Grp[G], val g: G) {
   implicit def algebra = grpH.algebra
   def contains(el: G) = grpH.contains(el |+| g.inverse)
   def size: BigInt = grpH.order
   def leftCoset: LeftCoset[G] = new LeftCoset(g.inverse, grpH)
 }
 
-class LeftCoset[G](g: G, grpH: Grp[G]) {
+class LeftCoset[G](val g: G, grpH: Grp[G]) {
   override def toString = s"$g |+| ($grpH)"
   implicit def algebra = grpH.algebra
   def contains(el: G) = grpH.contains(g.inverse |+| el)
