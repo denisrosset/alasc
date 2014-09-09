@@ -17,12 +17,20 @@ import bsgs._
 trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
   self =>
   import grp.{algorithms, algebra, action}
-  lazy val chainRepr = grp.chain(RefSome(representation))
-  lazy val chainReprBasePoints = algorithms.basePointGroups(chainRepr, representation.size)
+  def chainInRepresentation: Chain[G] // grp.chain(RefSome(representatation))
+  lazy val chainInRepresentationBasePointGroups = algorithms.basePointGroups(chainInRepresentation, representation.size)
   def find(r: T): Option[Representative[T, G]] = {
     val tIntArray = Array.tabulate(tLength)(tInt(_))
-    val rIntArray =  Array.tabulate(tLength)(seqInt(r, _))
-    val bo = algorithms.baseOrder(chainRepr.base)(action)
+    val bo = algorithms.baseOrder(chainInRepresentation.base)(action)
+    val rIntArray = new Array[Int](tLength)
+    var idx = 0
+    while (idx < tLength) {
+      seqInt(r, idx) match {
+        case NNOption(i) => rIntArray(idx) = i
+        case _ => return None
+      }
+      idx += 1
+    }
     def rec(level: Int, g: G, chainGrp: Chain[G], chainSym: Grp[G]): Option[Representative[T, G]] = chainGrp match {
       case node: Node[G] =>
         implicit def action = representation.action
@@ -35,9 +43,9 @@ trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
             val nextG = node.u(b) |+| g
             var j = 1
             var disagree = false
-            val m = chainReprBasePoints(level).length
+            val m = chainInRepresentationBasePointGroups(level).length
             while (j < m && !disagree) {
-              val c = chainReprBasePoints(level)(j)
+              val c = chainInRepresentationBasePointGroups(level)(j)
               if (rIntArray(c) != tIntArray(c <|+| nextG))
                 disagree = true
               j += 1
@@ -59,6 +67,6 @@ trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
         implicit val actionTG = self.actionTG
         })
     }
-    rec(0, algebra.id, chainRepr, symGrp)
+    rec(0, algebra.id, chainInRepresentation, symGrp)
   }
 }

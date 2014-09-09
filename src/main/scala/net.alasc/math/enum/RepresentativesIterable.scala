@@ -27,7 +27,7 @@ trait RepresentativesIterable[T, G] extends Representatives[T, G] with coll.Iter
   def foreach[U](f: Representative[T, G] => U): Unit = iterator.foreach(f)
 }
 
-trait RepresentativesHead[T, G] extends Representatives[T, G] with coll.HasHead[Representative[T, G]]
+//trait RepresentativesHead[T, G] extends Representatives[T, G] with coll.HasHead[Representative[T, G]]
 
 /*
 trait RepresentativesHeadIntArray[T, G, A] extends RepresentativesHead[T, G] {
