@@ -15,7 +15,7 @@ import net.alasc.syntax.check._
 import net.alasc.util._
 
 /** Partition of the domain {0, ... size - 1}, with size >= 1. */
-trait Partition {
+trait OldPartition {
   override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
   /** Returns the size of the partition, >= 1. */
   def size: Int
@@ -28,7 +28,7 @@ trait Partition {
   def sizeIncreasing: OrderedPartition = OrderedPartition(size, blocks.toSeq.sortBy(b => (b.size, b.min)))
 }
 
-case class OrderedPartition(size: Int, blocks: Seq[Set[Int]]) extends Partition {
+case class OrderedPartition(size: Int, blocks: Seq[Set[Int]]) extends OldPartition {
   lazy val reps: Array[Int] = {
     val res = new Array[Int](size)
     blocks.foreach { block =>
@@ -44,12 +44,12 @@ case class OrderedPartition(size: Int, blocks: Seq[Set[Int]]) extends Partition 
   def representative(k: Int) = reps(k)
 }
 
-object Partition {
-  def fromSets(sets: Iterable[Iterable[Int]]): Partition = {
+object OldPartition {
+  def fromSets(sets: Iterable[Iterable[Int]]): OldPartition = {
     val size = sets.map(_.max).max + 1
     OrderedPartition(size, sets.map(_.toSet).toSeq)
   }
-  def fromSeqEq[A](seq: Seq[A])(implicit eq: Eq[A]): Partition = {
+  def fromSeqEq[A](seq: Seq[A])(implicit eq: Eq[A]): OldPartition = {
     val size = seq.size
     val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]
     var i = 0
@@ -70,7 +70,7 @@ object Partition {
     OrderedPartition(size, blocks.result.map(_.toImmutable))
   }
 
-  def fromSeqHashCode(seq: Seq[Any]): Partition = {
+  def fromSeqHashCode(seq: Seq[Any]): OldPartition = {
     val map = mutable.HashMap.empty[Any, mutable.BitSet]
     seq.indices.foreach { i => map.getOrElseUpdate(seq(i), mutable.BitSet.empty) += i }
     OrderedPartition(seq.size, map.values.map(_.toImmutable).toSeq)

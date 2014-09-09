@@ -136,10 +136,10 @@ class Grp[G](
 
   // operations on this Grp alone
 
-  def fixingPartitionW(partition: Partition, rp: Representation[G]): Grp[G] =
+  def fixingPartitionW(partition: OldPartition, rp: Representation[G]): Grp[G] =
     Grp.fromChain(algorithms.fixingPartition(chain, partition)(rp.action).toChain, RefSome(rp))
 
-  def fixingPartition(partition: Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
+  def fixingPartition(partition: OldPartition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartitionW(partition, prp.forSize(partition.size))
 
   def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) =  {

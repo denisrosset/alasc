@@ -45,7 +45,7 @@ trait SubgroupSearch[P] {
   // TODO: remove action (not needed)
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def fixingPartition(givenChain: Chain[P], partition: Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
+  def fixingPartition(givenChain: Chain[P], partition: OldPartition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
@@ -223,7 +223,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       set.forall { k => set.contains(k <|+| g) }
     subgroupSearch(reorderedChain, setwiseStabilized(_), new FixingTest(0))
   }
-  def fixingPartition(givenChain: Chain[P], partition: Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
+  def fixingPartition(givenChain: Chain[P], partition: OldPartition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = partition.size
     val orderedPartition = partition.sizeIncreasing
     val reorderedChain = withBase(givenChain, PartitionGuide(orderedPartition))(action)
