@@ -66,7 +66,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
   }
   case class R(n: Int, aRep: AR) extends Representation[Wr[A, H]] {
     val size = n * aRep.size
-    def representations = self
+    val representations = self
     def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
@@ -178,7 +178,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
     require(aSize > 1)
     val factors: Array[Int] = Array.fill(n)(aSize).scanLeft(1)(_*_)
     val size = factors.last
-    def representations = self
+    val representations = self
     def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =

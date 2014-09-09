@@ -2,6 +2,7 @@ package net.alasc.algebra
 
 import scala.annotation.tailrec
 
+import net.alasc.math.InversePair
 import net.alasc.syntax.lattice._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
@@ -15,6 +16,7 @@ import net.alasc.util._
   * invalid elements produces undefined results.
   */
 trait Representation[G] extends AnyRef {
+  self =>
   /** Size of the representation, constraining the support of any permutation in 0 ... n-1. */
   def size: Int
   /** Faithful permutation action used to represent the finite group. */
@@ -22,7 +24,12 @@ trait Representation[G] extends AnyRef {
   def images(g: G): IndexedSeq[Int] = action.images(g, size)
   /** Tests if this representation can represent the element `g`. */
   def represents(g: G): Boolean
-  def representations: Representations[G]
+  val representations: Representations[G]
+  def conjugatedBy(ip: InversePair[G]): Representation[G] =
+    if (represents(ip.g)) this else {
+      val reprG = representations.get(Seq(ip.g))
+      representations.lattice.join(representations.tryCast(self).get, reprG)
+    }
 }
 
 /** Describes a family of permutation representations of a group G. Depending on the particular subgroup H of G,
@@ -108,8 +115,9 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
   def forSize(size: Int): Representation[P] = R(size)
   case class R(size: Int) extends Representation[P] {
     def action = ev
-    def representations = self
+    val representations = self
     def represents(p: P) = p.supportMax.getOrElse(-1) < size
+    override def conjugatedBy(ip: InversePair[P]) = R(size.max(ip.g.supportMax.getOrElse(-1) + 1))
   }
   def get(generators: Iterable[P]) = {
     @tailrec def rec(size: Int, iterator: Iterator[P]): Int =

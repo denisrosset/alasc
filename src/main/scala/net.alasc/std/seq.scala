@@ -42,7 +42,7 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
   }
   case class R(n: Int, scalarRep: SR) extends Representation[SG] {
     val size = n * scalarRep.size
-    def representations = self
+    val representations = self
     def represents(sg: SG) = sg.size < n && sg.forall(scalarRep.represents(_))
     val action = new FaithfulPermutationAction[SG] {
       def actr(k: Int, sg: SG): Int =
