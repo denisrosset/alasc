@@ -7,7 +7,7 @@ import scala.collection.BitSet
 import scala.collection.mutable
 import scala.collection.immutable
 
-import spire.algebra.PartialOrder
+import spire.algebra.{PartialOrder, Order}
 
 import net.alasc.util._
 
@@ -24,6 +24,7 @@ class PartitionRefinement(val blocks: debox.Buffer[mutable.BitSet], val size: In
       }
       i += 1
     }
+    blocks.sort(Order.from[mutable.BitSet]( (x, y) => (x.min - y.min).signum ))
   }
   def partition(domain: Domain): domain.Partition = domain.Partition.fromArray(blocks.iterator.map(_.toImmutable).toArray)
 }
