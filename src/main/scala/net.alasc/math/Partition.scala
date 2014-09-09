@@ -21,6 +21,8 @@ trait Partition {
   def size: Int
   /** Returns an iterable of the partition blocks. */
   def blocks: Iterable[Set[Int]]
+  /** Returns the block containing `k`. */
+  def blockFor(k: Int): Set[Int]
   /** Returns a representative of the block in which `k` belongs. */
   def representative(k: Int): Int
   def sizeDecreasing: OrderedPartition = OrderedPartition(size, blocks.toSeq.sortBy(b => (b.size, b.min)))
@@ -34,6 +36,10 @@ case class OrderedPartition(size: Int, blocks: Seq[Set[Int]]) extends Partition 
       block.foreach { k => res(k) = rep }
     }
     res
+  }
+  def blockFor(k: Int): Set[Int] = {
+    require(0 <= k && k < size)
+    blocks.find(_.contains(k)).get
   }
   def representative(k: Int) = reps(k)
 }
@@ -63,13 +69,10 @@ object Partition {
     }
     OrderedPartition(size, blocks.result.map(_.toImmutable))
   }
-  def fromSeqEquals(seq: Seq[Any]): Partition = fromSeqEq(seq)(spire.optional.genericEq.generic[Any])
 
-/*  def fromSeqEqvHash[A](seq: Seq[A], hash: A => Int): Partition
-  def fromSeqHash(seq: Seq[Any]): Partition
-  def fromSeq(seq: Seq[Any]): Partition = {
+  def fromSeqHashCode(seq: Seq[Any]): Partition = {
     val map = mutable.HashMap.empty[Any, mutable.BitSet]
     seq.indices.foreach { i => map.getOrElseUpdate(seq(i), mutable.BitSet.empty) += i }
-    new Partition(map.values.toSeq.sortBy(block => -block.size))
-  }*/
+    OrderedPartition(seq.size, map.values.map(_.toImmutable).toSeq)
+  }
 }
