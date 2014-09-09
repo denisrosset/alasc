@@ -22,13 +22,13 @@ object BaseGuideGenerators {
 object BaseGuideCheck extends Properties("BSGS") {
   import BaseGuideGenerators._
 
-  property("Base change guided by partition has base points corresponding to blocks of decreasing size") = Prop.forAllNoShrink(genGroupAndPartition) {
+  property("Base change guided by partition has base points corresponding to blocks of increasing size") = Prop.forAllNoShrink(genGroupAndPartition) {
     case (grp, seq) => {
       import grp.algorithms
-      val partition = Partition.fromSeqHashCode(seq).sizeDecreasing
+      val partition = Partition.fromSeqHashCode(seq).sizeIncreasing
       val chain = algorithms.withBase(grp.chain, PartitionGuide(partition))
       val baseBlockSize = chain.base.map(partition.blockFor(_).size)
-      (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i <= j }
+      (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i >= j }
     }
   }
 }

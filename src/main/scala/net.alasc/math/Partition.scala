@@ -25,7 +25,7 @@ trait Partition {
   def blockFor(k: Int): Set[Int]
   /** Returns a representative of the block in which `k` belongs. */
   def representative(k: Int): Int
-  def sizeDecreasing: OrderedPartition = OrderedPartition(size, blocks.toSeq.sortBy(b => (b.size, b.min)))
+  def sizeIncreasing: OrderedPartition = OrderedPartition(size, blocks.toSeq.sortBy(b => (b.size, b.min)))
 }
 
 case class OrderedPartition(size: Int, blocks: Seq[Set[Int]]) extends Partition {

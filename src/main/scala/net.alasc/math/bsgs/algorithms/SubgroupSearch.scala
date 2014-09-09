@@ -225,7 +225,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   }
   def fixingPartition(givenChain: Chain[P], partition: Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = partition.size
-    val orderedPartition = partition.sizeDecreasing
+    val orderedPartition = partition.sizeIncreasing
     val reorderedChain = withBase(givenChain, PartitionGuide(orderedPartition))(action)
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
     class FixingTest(level: Int) extends SubgroupTest[P] {
