@@ -45,7 +45,7 @@ trait SubgroupSearch[P] {
   // TODO: remove action (not needed)
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def fixingPartition(givenChain: Chain[P], partition: OldPartition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
+  def fixingPartition(givenChain: Chain[P], partition: Domain#Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
   def pointwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
@@ -223,22 +223,22 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       set.forall { k => set.contains(k <|+| g) }
     subgroupSearch(reorderedChain, setwiseStabilized(_), new FixingTest(0))
   }
-  def fixingPartition(givenChain: Chain[P], partition: OldPartition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
+  def fixingPartition(givenChain: Chain[P], partition: Domain#Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = partition.size
     val orderedPartition = partition.sizeIncreasing
-    val reorderedChain = withBase(givenChain, PartitionGuide(orderedPartition))(action)
+    val reorderedChain = withBase(givenChain, PartitionGuide(partition))(action)
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
     class FixingTest(level: Int) extends SubgroupTest[P] {
       def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest] = {
         val pointSet = pointSetsToTest(level)
-        if (orderedPartition.representative(pointSet(0)) != orderedPartition.representative(orbitImage))
+        if (partition.representative(pointSet(0)) != partition.representative(orbitImage))
           return RefNone
         if (pointSet.length > 1) {
           val nextG = node.u(b) |+| currentG
           var i = 1
           while (i < pointSet.length) {
             val k = pointSet(i)
-            if (orderedPartition.representative(k) != orderedPartition.representative(k <|+| nextG))
+            if (partition.representative(k) != partition.representative(k <|+| nextG))
               return RefNone
             i += 1
           }
@@ -249,7 +249,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     def leaveInvariant(g: P): Boolean = {
       var i = 0
       while (i < n) {
-        if (orderedPartition.representative(i <|+| g) != orderedPartition.representative(i))
+        if (partition.representative(i <|+| g) != partition.representative(i))
           return false
         i += 1
       }

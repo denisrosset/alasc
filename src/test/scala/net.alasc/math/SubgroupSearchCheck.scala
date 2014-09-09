@@ -28,7 +28,7 @@ object SubgroupSearchCheck extends Properties("SubgroupSearch") {
     val chain1 = alg.completeChainFromSubgroup(FixingSeq[Perm](seq)).toChain
     val sym = Sym[Perm](seq.length)
     val symChain = alg.completeChainFromSubgroup(sym).toChain
-    val partition = OldPartition.fromSeqHashCode(seq)
+    val partition = Partition.fromSeq(seq)
     val chain2 = alg.fixingPartition(symChain, partition).toChain
     chain1.order == chain2.order
   }

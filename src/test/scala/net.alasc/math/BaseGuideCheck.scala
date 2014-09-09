@@ -25,7 +25,7 @@ object BaseGuideCheck extends Properties("BSGS") {
   property("Base change guided by partition has base points corresponding to blocks of increasing size") = Prop.forAllNoShrink(genGroupAndPartition) {
     case (grp, seq) => {
       import grp.algorithms
-      val partition = OldPartition.fromSeqHashCode(seq).sizeIncreasing
+      val partition = Partition.fromSeq(seq)
       val chain = algorithms.withBase(grp.chain, PartitionGuide(partition))
       val baseBlockSize = chain.base.map(partition.blockFor(_).size)
       (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i >= j }

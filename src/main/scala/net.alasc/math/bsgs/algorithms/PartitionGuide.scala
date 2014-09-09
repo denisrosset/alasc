@@ -16,11 +16,12 @@ import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-case class PartitionGuide(orderedPartition: OrderedPartition) extends BaseGuide {
-  def fullBase = orderedPartition.blocks.flatMap(identity)
+case class PartitionGuide(partition: Domain#Partition) extends BaseGuide {
+  val blocks = partition.sizeIncreasing
+  def fullBase = blocks.flatMap(identity)
   def iterator = new Iter(mutable.BitSet.empty,
-    debox.Buffer.fromIterable(orderedPartition.blocks.map(block => mutable.BitSet.empty ++= block)),
-    debox.Buffer.fromIterable(orderedPartition.blocks.map(_.size)))
+    debox.Buffer.fromIterable(blocks.map(block => mutable.BitSet.empty ++= block)),
+    debox.Buffer.fromIterable(blocks.map(_.size)))
 
   final class Iter(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty
