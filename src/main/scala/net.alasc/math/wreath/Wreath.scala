@@ -1,4 +1,5 @@
 package net.alasc.math
+package wreath
 
 import scala.language.higherKinds
 

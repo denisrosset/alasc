@@ -1,4 +1,5 @@
 package net.alasc.math
+package wreath
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary._
