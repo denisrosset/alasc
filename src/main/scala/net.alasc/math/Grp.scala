@@ -84,6 +84,7 @@ class Grp[G](
   }
 
   def chain: Chain[G] = chain()
+  // TODO: instead of givenBase, provide a BaseGuide
   def chain(representationToUse: RefOption[Representation[G]] = RefNone, givenBase: Seq[Int] = Seq.empty): Chain[G] =
     knownChain match {
       case RefOption(node: Node[G]) => representationToUse match {

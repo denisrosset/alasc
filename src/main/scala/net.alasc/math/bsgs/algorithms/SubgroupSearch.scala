@@ -33,6 +33,15 @@ trait SubgroupSearch[P] {
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
+  // TODO: consider returning array of additional domain points, not including the base point itself
+  /** Finds for each base point the additional domain points that are stabilized (i.e. are
+    * not moved by the next subgroup in the stabilizer chain. The first element of each group
+    * is the original base point.
+    * 
+    * The considered domain is `0 ... domainSize - 1`.
+    */
+  def basePointGroups(chain: Chain[P], domainSize: Int): Array[Array[Int]]
+
   // TODO: remove action (not needed)
   def intersection(givenChain1: Chain[P], givenChain2: Chain[P])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
@@ -133,12 +142,6 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       subgroupSearch(chain1, g => chain2.contains(g), new IntersectionTest(0, chain2, algebra.id))
     }
 
-  /** Finds for each base point the additional domain points that are stabilized (i.e. are
-    * not moved by the next subgroup in the stabilizer chain. The first element of each group
-    * is the original base point.
-    * 
-    * The considered domain is `0 ... domainSize - 1`.
-    */
   def basePointGroups(chain: Chain[P], domainSize: Int): Array[Array[Int]] = {
     val remaining = mutable.BitSet((0 until domainSize): _*)
     val groups = debox.Buffer.empty[Array[Int]]

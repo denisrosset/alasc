@@ -15,7 +15,7 @@ import net.alasc.algebra._
 final class MutableNodeExplicit[P](
   var beta: Int,
   var transversal: MutableLongMap[InversePair[P]],
-  var ownGeneratorsPairs: UnrolledBuffer[InversePair[P]],
+  var ownGeneratorsPairs: UnrolledBuffer[InversePair[P]], // TODO: replace by ArrayBuffer
   var prev: MutableStartOrNode[P] = null,
   var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
 
@@ -145,7 +145,7 @@ final class MutableNodeExplicit[P](
     beta = beta <|+| ip.g
     val newTransversal = MutableLongMap.empty[InversePair[P]]
     transversal.foreachKey { k =>
-      newTransversal.update(k.toInt <|+| ip, ip.inverse |+| transversal(k) |+| ip)
+      newTransversal.update(k.toInt <|+| ip.g, ip.inverse |+| transversal(k) |+| ip)
     }
     transversal = newTransversal
     ownGeneratorsPairs.transform(g => ip.inverse |+| g |+| ip)
