@@ -21,28 +21,36 @@ import bsgs._
   */
 trait Representatives[T, G] /* extends coll.Iterable[Representative[T, G]] */ {
   /** To be define in an early initializer. */ 
-  def t: T
-  def grp: Grp[G]
+  val t: T
+  val grp: Grp[G]
+
+  /** Permutation action of `G` on sequence-like `T`. */
+  implicit def actionTG: GroupAction[T, G]
 
   /** Length of the sequence `t`. */
   def tLength: Int
 
-  /** Retrieves the integer representation of element `t(idx)`. */
-// TODO  def tInt(idx: Int): Int
+  /** Retrieves the integer representation of element `t(idx)`, using non-negative integers. */
+  def tInt(idx: Int): Int
 
-  /** Permutation action of `G` on sequence-like `T`. */
-  implicit def actionTG: GroupAction[T, G]
+  def seqInt(seq: T, idx: Int): Int
 
   /** Returns the representation of G specific to `t`. */
   def representation: Representation[G]
 
   /** Returns the partition given by equivalent elements in `t`. */
-  def partition: Partition
+  lazy val partition: Domain#Partition = Domain(tLength).Partition.fromSeq(Seq.tabulate(tLength)(idx => tInt(idx)))
 
   /** Returns the subgroup of `grp` that fixes the `partition` given by `t`. */
   lazy val symGrp: Grp[G] = grp.fixingPartitionW(partition, representation)
 }
 
+trait OrderedRepresentatives[T, G] extends Representatives[T, G] {
+  /** Retrieves the (ordered) integer representation of element `t(idx)`, using non-negative integers. */
+  def tInt(idx: Int): Int
+}
+
+/*
 object Representatives {
   def iterable[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P]) =
     new {
@@ -53,58 +61,9 @@ object Representatives {
       val representation = givenPR.forSize(t.size)
     } with RepresentativesIterable[Seq[A], P] with ImplIntArrayHashed[Seq[A], A]
 }
-/*
-trait RepresentativesSearchable[T, G] extends RepresentativesIterable[T, G] {
-  abstract class SearchableBase(t: T, grp: Grp[G]) extends IterableOf(t, grp) {
-    val tIntArray: Array[Int]
-    def asIntArray(r: T): Array[Int]
-    import grp.{algorithms, algebra, action}
-    override def stringPrefix = "Searchable"
-    lazy val chainRepr = grp.chain(RefSome(repr))
-    lazy val chainReprBasePoints = algorithms.basePointGroups(chainRepr, repr.size)
-    def find(r: T): Option[Representative[T, G]] = {
-      val rIntArray = asIntArray(r)
-      val bo = algorithms.baseOrder(chainRepr.base)(action)
-      def rec(level: Int, g: G, chainGrp: Chain[G], chainSym: Grp[G]): Option[Representative[T, G]] = chainGrp match {
-        case node: Node[G] =>
-          implicit def action = repr.action
-          val orbitIt = node.orbit.iterator
-          while (orbitIt.hasNext) {
-            val beta = node.beta
-            val b = orbitIt.next
-            val bg = action.actr(b, g)
-            if (rIntArray(beta) == tIntArray(bg)) {
-              val nextG = node.u(b) |+| g
-              var j = 1
-              var disagree = false
-              val m = chainReprBasePoints(level).length
-              while (j < m && !disagree) {
-                val c = chainReprBasePoints(level)(j)
-                if (rIntArray(c) != tIntArray(c <|+| nextG))
-                  disagree = true
-                j += 1
-              }
-              if (!disagree) {
-                val (nextSym, transversal) = chainSym.stabilizerW(bg, repr)
-                if (transversal.orbit.min(Order.ordering(bo)) == bg) {
-                  val res = rec(level + 1, nextG, node.next, nextSym)
-                  if (res.nonEmpty)
-                    return res
-                }
-              }
-            }
-          }
-          None
-        case _: Term[G] => Some(new Representative[T, G] {
-          val element = g.inverse
-          def get = t <|+| element
-        })
-      }
-      rec(0, algebra.id, chainRepr, symGrp)
-    }
-  }
-}
+ */
 
+/*
 trait RepresentativesLexFirst[T, G] extends RepresentativesSearchable[T, G] {
 
 }
