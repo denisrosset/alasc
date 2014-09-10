@@ -13,6 +13,63 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 
+abstract class GrpBase[G] { lhs: Grp[G] =>
+  override def toString = generators.mkString("Grp(", ", ", ")") //+ (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
+
+  /** Set of algorithms used in the computations. */
+  def algorithms: BasicAlgorithms[G]
+  /** Generators of the group. Must not contain the identity. */
+  def generators: Iterable[G]
+  /** Representation provider for elements of G, used only if needed;
+    * givenRepresentation does not have to be compatible with these representations.
+    */
+  implicit def representations: Representations[G]
+
+  implicit def algebra: FiniteGroup[G]
+
+  def order: BigInt
+  def orderIfComputed: RefOption[BigInt]
+  def chain: Chain[G]
+  def chainIfComputed: RefOption[Chain[G]]
+  def representation: Representation[G]
+  def randomElement(random: Random): G
+
+  def fixingPartitionW(partition: Domain#Partition, rp: Representation[G]): Grp[G]
+  def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G]
+  def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G])
+  def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G])
+  def pointwiseStabilizerW(set: Set[Int], rp: Representation[G]): Grp[G]
+  def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G]
+  def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G]
+  def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G]
+
+  // operations between subgroups
+  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(g => lhs.contains(g))
+  def hasProperSubgroup(rhs: Grp[G]): Boolean = hasSubgroup(rhs) && (lhs.order != rhs.order)
+  def isSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasSubgroup(lhs)
+  def isProperSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasProperSubgroup(lhs)
+
+  def &(rhs: Grp[G]) = intersect(rhs)
+  def |(rhs: Grp[G]) = union(rhs)
+  def union(rhs: Grp[G]): Grp[G]
+  def intersect(rhs: Grp[G]): Grp[G]
+  def /(rhs: Grp[G]): LeftCosets[G] = {
+    require(rhs.generators.forall(lhs.contains(_)))
+    new LeftCosets(lhs, rhs)
+  }
+  def \(rhs: Grp[G]): RightCosets[G] = {
+    require(lhs.generators.forall(rhs.contains(_)))
+    new RightCosets(lhs, rhs)
+  }
+  def lexElements(implicit rp: Representation[G]): coll.big.IndexedSet[G]
+}
+
+/*
+class GrpChain[G](val algorithms: BasicAlgorithms[G], val generators: Iterable[G], val representation: Representation[G], val chain: Chain[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends GrpBase[G] { lhs =>
+
+}
+ */
+
 /** User-friendly representation of a group internally using a base and strong generating set data structure.
   *
   * Can be constructed from any finite group with a faithful permutation action.
@@ -39,7 +96,7 @@ class Grp[G](
   givenOrder: RefOption[BigInt] = RefNone,
   givenChain: RefOption[Chain[G]] = RefNone,
   givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
-  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) { lhs =>
+  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends GrpBase[G] { lhs =>
 
   // TODO conjugatedBy
 
@@ -75,6 +132,7 @@ class Grp[G](
   }
 
   def isChainComputed: Boolean = knownChain.nonEmpty
+
   protected def computeChain(base: Seq[Int])(implicit action: FaithfulPermutationAction[G]): Chain[G] = knownOrder match {
     case RefOption(order) => algorithms match {
       case ssr: SchreierSimsRandomized[G] => ssr.randomizedSchreierSims(randomElement(_), order, base).toChain
@@ -115,6 +173,9 @@ class Grp[G](
     o
   }
 
+  def orderIfComputed: RefOption[BigInt] = if (isOrderComputed) RefSome(order) else RefNone
+  def chainIfComputed: RefOption[Chain[G]] = if (isChainComputed) RefSome(chain) else RefNone
+
   private[this] var knownRandomBag: RefOption[RandomBag[G]] = RefNone
   def randomElement(random: Random): G = givenRandomElement match {
     case RefOption(f) => f(random)
@@ -131,8 +192,6 @@ class Grp[G](
         rbag.randomElement(random)
     }
   }
-
-  override def toString = generators.mkString("Grp(", ", ", ")") + (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
 
   // operations on this Grp alone
 
@@ -179,16 +238,7 @@ class Grp[G](
     setwiseStabilizer(set, rp)
   }
 
-  // operations between subgroups
-  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(g => lhs.contains(g))
-  def hasProperSubgroup(rhs: Grp[G]): Boolean = hasSubgroup(rhs) && (lhs.order != rhs.order)
-  def isSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasSubgroup(lhs)
-  def isProperSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasProperSubgroup(lhs)
-
   // operations between subgroups, with possible action reconfiguration
-
-  def &(rhs: Grp[G]) = intersect(rhs)
-  def |(rhs: Grp[G]) = union(rhs)
 
   def joinRepresentation(rhs: Grp[G]): Representation[G] =
     if (lhs.isRepresentationKnown) {
@@ -251,15 +301,6 @@ class Grp[G](
       val rChain = rhs.chain(RefSome(rp), lChain.base) // TODO: use BaseGuideSeqStripped
       grpFromChains(lChain, rChain, rp)
     }
-  }
-
-  def /(rhs: Grp[G]): LeftCosets[G] = {
-    require(rhs.generators.forall(lhs.contains(_)))
-    new LeftCosets(lhs, rhs)
-  }
-  def \(rhs: Grp[G]): RightCosets[G] = {
-    require(lhs.generators.forall(rhs.contains(_)))
-    new RightCosets(lhs, rhs)
   }
 
   // enumeration of subgroup elements

@@ -3,8 +3,12 @@ package bsgs
 package algorithms
 
 import scala.annotation.tailrec
+import scala.collection.mutable
+
+import spire.syntax.groupAction._
 
 import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
+import net.alasc.syntax.permutationAction._
 
 trait BaseGuide {
   def iterator: BaseGuideIterator
@@ -20,7 +24,8 @@ trait BaseGuide {
     }
     check(chain)
   }
-  /** Returns a full base without online optimizations. Used when base is computed from scratch. */
+  /** Returns a full base without online optimizations. Used when no real base change is possible, only recomputation
+    * from scratch. */
   def fullBase: Seq[Int]
 }
 

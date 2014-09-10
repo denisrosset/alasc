@@ -14,6 +14,9 @@ import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[P] {
+  def completeChainActionChange(oldChain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty): MutableChain[P] =
+    completeChainFromSubgroup(oldChain, givenBase)(newAction, Chain.ChainSubgroup)
+
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
@@ -22,27 +25,6 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
 
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
-
-  def withAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Chain[P] = chain match {
-    case node: Node[p] =>
-      if (action == node.action)
-        chain
-      else
-        completeChainFromSubgroup(chain)(action, Chain.ChainSubgroup).toChain
-    case term: Term[P] =>
-      term
-  }
-  
-  def mutableChainCopyWithAction(chain: Chain[P], action: FaithfulPermutationAction[P]): MutableChain[P] = chain match {
-    // TODO: implement action change using homomorphisms
-    case node: Node[P] =>
-      if (action == node.action)
-        mutableChain(node)(action)
-      else
-        completeChainFromSubgroup(chain)(action, Chain.ChainSubgroup)
-    case _: Term[P] =>
-      MutableChain.empty(algebra, action)
-  }
 }
 
 trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms[P] {

@@ -52,7 +52,7 @@ trait SubgroupSearch[P] {
   def setwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 }
 
-trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] {
+trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] with ChainBuilder[P] {
   self =>
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]) : Iterator[P] = {
