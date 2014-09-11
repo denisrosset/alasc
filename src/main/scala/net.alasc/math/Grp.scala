@@ -6,6 +6,7 @@ import scala.util.Random
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
+import spire.syntax.partialOrder._
 
 import net.alasc.algebra._
 import net.alasc.syntax.all._
@@ -36,25 +37,7 @@ sealed abstract class Grp[G] { lhs =>
   def randomElement(random: Random): G
   def contains(g: G): Boolean
 
-  // operations between subgroups
-  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(g => lhs.contains(g))
-  def hasProperSubgroup(rhs: Grp[G]): Boolean = hasSubgroup(rhs) && (lhs.order != rhs.order)
-  def isSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasSubgroup(lhs)
-  def isProperSubgroupOf(rhs: Grp[G]): Boolean = rhs.hasProperSubgroup(lhs)
-
-  def &(rhs: Grp[G]) = intersect(rhs)
-  def |(rhs: Grp[G]) = union(rhs)
-  def union(rhs: Grp[G]): Grp[G]
-  def intersect(rhs: Grp[G]): Grp[G]
-  def /(rhs: Grp[G]): LeftCosets[G] = {
-    require(rhs.generators.forall(lhs.contains(_)))
-    new LeftCosets(lhs, rhs)
-  }
-  def \(rhs: Grp[G]): RightCosets[G] = {
-    require(lhs.generators.forall(rhs.contains(_)))
-    new RightCosets(lhs, rhs)
-  }
-  def lexElements(implicit rp: Representation[G]): coll.big.IndexedSet[G]
+  implicit def lattice = Grp.lattice[G](algebra, representations, algorithms)
 }
 
 /*
@@ -157,9 +140,6 @@ class GrpImpl[G](
         }
     }
 
-  def newMutableChain(rp: Representation[G], givenBase: Seq[Int] = Seq.empty): MutableChain[G] =
-    algorithms.mutableChainCopyWithAction(chain(RefSome(rp), givenBase), rp.action)
-
   def isOrderComputed: Boolean = isChainComputed || knownOrder.nonEmpty
   private[this] var knownOrder: RefOption[BigInt] = givenOrder
   def order: BigInt = knownOrder.getOrElse {
@@ -189,110 +169,10 @@ class GrpImpl[G](
   }
 
   def contains(g: G) = chain.contains(g)
-
-  // operations between subgroups, with possible action reconfiguration
-
-  def joinRepresentation(rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
-    case RefOption(lhsRepr) => rhs.representationIfComputed match {
-      case RefOption(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
-      case _ => representations.repJoin(lhsRepr, lhs.generators, rhs.generators)
-    }
-    case _ => rhs.representationIfComputed match {
-      case RefOption(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
-      case _ => representations.get(lhs.generators ++ rhs.generators)
-    }
-  }
-
-  protected def unionByAdding(chain: Chain[G], rp: Representation[G], generators: Iterable[G]): Grp[G] = {
-    val mutableChain = newMutableChain(rp)
-    algorithms.insertGenerators(mutableChain, generators)
-    algorithms.completeStrongGenerators(mutableChain)
-    Grp.fromChain(mutableChain.toChain, RefSome(rp))
-  }
-
-  def union(rhs: Grp[G]): Grp[G] = {
-    // if one of the arguments has a computed chain with a representation compatible with the other argument generators,
-    // augment the computed chain with these generators
-    if (lhs.chainIfComputed.nonEmpty && rhs.generators.forall(g => lhs.representation.represents(g)))
-      return unionByAdding(lhs.chain, lhs.representation, rhs.generators)
-    if (rhs.chainIfComputed.nonEmpty && lhs.generators.forall(g => rhs.representation.represents(g)))
-      return unionByAdding(rhs.chain, rhs.representation, lhs.generators)
-    // if representations are known but not compatible, use the join of the representations for the union
-    val rp = joinRepresentation(rhs)
-    if (lhs.orderIfComputed.nonEmpty) {
-      if (rhs.orderIfComputed.nonEmpty) {
-        if (lhs.order >= rhs.order)
-          unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
-        else
-          unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
-      } else
-        unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
-    } else {
-      if (rhs.orderIfComputed.nonEmpty)
-        unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
-      else
-        Grp.fromGenerators(lhs.generators ++ rhs.generators, RefSome(rp))
-    }
-  }
-
-  def intersect(rhs: Grp[G]): Grp[G] = {
-    def grpFromChains(lChain: Chain[G], rChain: Chain[G], rp: Representation[G]): Grp[G] =
-      Grp.fromChain(algorithms.intersection(lChain, rChain)(rp.action).toChain, RefSome(rp))
-    if (lhs.chainIfComputed.nonEmpty && rhs.chainIfComputed.nonEmpty) {
-      val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
-      val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))
-      if (lCompatible && (!rCompatible || lhs.order >= rhs.order))
-        grpFromChains(lhs.chain, rhs.chain(RefSome(lhs.representation), lhs.chain.base), lhs.representation)
-      else
-        grpFromChains(rhs.chain, lhs.chain(RefSome(rhs.representation), rhs.chain.base), rhs.representation)
-    } else {
-      val rp = joinRepresentation(rhs)
-      val lChain = lhs.chain(RefSome(rp))
-      val rChain = rhs.chain(RefSome(rp), lChain.base) // TODO: use BaseGuideSeqStripped
-      grpFromChains(lChain, rChain, rp)
-    }
-  }
-
-  // enumeration of subgroup elements
-  def lexElements(implicit rp: Representation[G]): coll.big.IndexedSet[G] = new coll.big.IndexedSet[G] {
-    implicit val action = rp.action
-    val lexChain = algorithms.withBase(chain, BaseGuideLex(rp.size))(rp.action)
-    def size = coll.BigIntSize(lhs.order)
-    def length = lhs.order
-    def contains(g: G) = (lhs: Grp[G]).contains(g)
-    def foreach[U](f: G => U) = iterator.foreach(f)
-    def apply(idx: BigInt): G = {
-      @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {
-        case node: Node[G] =>
-          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
-          val nextOrder = curOrder / node.orbitSize
-          val nextIdx = curIdx % nextOrder
-          val orbitIndex = ((curIdx - nextIdx) / nextOrder).toInt
-          val nextG = node.u(sortedOrbit(orbitIndex)) |+| curG
-          rec(node.next, nextIdx, nextOrder, nextG)
-        case _: Term[G] =>
-          assert(curIdx == 0)
-          curG
-      }
-      rec(lexChain, idx, lhs.order, algebra.id)
-    }
-    def iterator: Iterator[G] = {
-      def rec(current: Chain[G], curG: G): Iterator[G] = current match {
-        case node: Node[G] =>
-          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
-          for {
-            b <- sortedOrbit.iterator
-            nextG = node.u(b) |+| curG
-            rest <- rec(node.next, nextG)
-          } yield rest
-        case _: Term[G] => Iterator(curG)
-      }
-      rec(lexChain, algebra.id)
-    }
-  }
 }
 
 object Grp {
+  def lattice[G](implicit algebra: FiniteGroup[G], representations: Representations[G], algorithms: BasicAlgorithms[G]): BoundedBelowLattice[Grp[G]] = new GrpLattice[G]
   def trivial[G](implicit algebra: FiniteGroup[G], rp: Representations[G]) = apply[G]()
   def defaultAlgorithms[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
 
