@@ -14,7 +14,7 @@ import net.alasc.syntax.lattice._
 
 trait LatticeCheck[L] extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions {
   implicit def lattice: Lattice[L]
-  implicit def arbitrary: Arbitrary[L]
+  implicit def arbitraryLatticeElement: Arbitrary[L]
 
   property("Join is commutative") {
     forAll { (a: L, b: L) => (a join b) shouldEqv (b join a) }
@@ -61,7 +61,23 @@ trait LatticeCheck[L] extends PropSpec with Matchers with EqMatchers with Genera
   }
 }
 
-trait BoundedLatticeCheck[L] extends LatticeCheck[L] {
+trait BoundedBelowLatticeCheck[L] extends LatticeCheck[L] {
+  implicit def lattice: BoundedBelowLattice[L]
+
+  property("(a meet 0) === 0") {
+    forAll { (a: L) =>
+      (a meet lattice.zero) shouldEqv lattice.zero
+    }
+  }
+
+  property("0 <= a") {
+    forAll { (a: L) =>
+      (lattice.zero <= a) shouldEqv true
+    }
+  }
+}
+
+trait BoundedLatticeCheck[L] extends BoundedBelowLatticeCheck[L] {
   implicit def lattice: BoundedLattice[L]
 
   property("(a join 1) === 1") {
@@ -70,21 +86,9 @@ trait BoundedLatticeCheck[L] extends LatticeCheck[L] {
     }
   }
 
-  property("(a meet 0) === 0") {
-    forAll { (a: L) =>
-      (a meet lattice.zero) shouldEqv lattice.zero
-    }
-  }
-
   property("a <= 1") {
     forAll { (a: L) =>
       (a <= lattice.one) shouldEqv true
-    }
-  }
-
-  property("0 <= a") {
-    forAll { (a: L) =>
-      (lattice.zero <= a) shouldEqv true
     }
   }
 }

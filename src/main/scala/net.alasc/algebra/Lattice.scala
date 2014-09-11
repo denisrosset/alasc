@@ -7,7 +7,10 @@ trait Lattice[A] extends PartialOrder[A] {
   def meet(x: A, y: A): A
 }
 
-trait BoundedLattice[A] extends Lattice[A] {
+trait BoundedBelowLattice[A] extends Lattice[A] {
   def zero: A
+}
+
+trait BoundedLattice[A] extends BoundedBelowLattice[A] {
   def one: A
 }

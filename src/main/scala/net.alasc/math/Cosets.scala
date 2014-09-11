@@ -28,15 +28,15 @@ class LeftCoset[G](val g: G, grpH: Grp[G]) {
 /** Left cosets of G by its subgroup H. */
 class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
   override def toString = s"($grpG) / ($grpH)"
-  import grpG.{representation, algebra, algorithms, action}
+  import grpG.{representation, algebra, algorithms}
   def size: BigInt = grpG.order / grpH.order
   def iterator: Iterator[LeftCoset[G]] = {
-    val bo = algorithms.baseOrder(grpG.chain.base)(action)
+    val bo = algorithms.baseOrder(grpG.chain.base)(representation.action)
     def rec(g: G, chainG: Chain[G], subgrpH: Grp[G]): Iterator[LeftCoset[G]] = chainG match {
       case node: Node[G] =>
         for {
           b <- node.orbit.iterator
-          bg = action.actr(b, g)
+          bg = representation.action.actr(b, g)
           (subgrpHnext, transversal) = subgrpH.stabilizerW(bg, representation) if transversal.orbit.min(Order.ordering(bo)) == bg
           nextG = node.u(b) |+| g
           element <- rec(nextG, node.next, subgrpHnext)

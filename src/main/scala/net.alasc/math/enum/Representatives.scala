@@ -48,6 +48,8 @@ trait Representatives[T, G] /* extends coll.Iterable[Representative[T, G]] */ {
 trait RepresentativesOrdered[T, G] extends Representatives[T, G] {
   /** Retrieves the (ordered) integer representation of element `t(idx)`, using non-negative integers. */
   def tInt(idx: Int): Int
+
+ // def chainInRepresentation = grp.chain(RefSome(representation), algorithms.BaseGuideLex(tLength))
 }
 
 object Representatives {

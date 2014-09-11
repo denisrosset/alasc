@@ -127,16 +127,20 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     if (givenChain1.length < givenChain2.length)
       intersection(givenChain2, givenChain1)
     else {
+      if (givenChain1.order == 1 || givenChain2.order == 1) return emptyChainWithBase(Seq.empty)
       val chain1 = withAction(givenChain1, action)
       val chain2 = withBase(givenChain2, chain1.base)(action)
       class IntersectionTest(level: Int, chain2: Chain[P], prev2Inv: P) extends SubgroupTest[P] {
         def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[IntersectionTest] = {
           val b2 = orbitImage <|+| prev2Inv
-          val node2 = chain2.asInstanceOf[Node[P]]
-          if (node2.inOrbit(b2))
-            RefSome(new IntersectionTest(level + 1, node2.next, prev2Inv |+| node2.uInv(b2)))
-          else
-            RefNone
+          chain2 match {
+            case node2: Node[P] if node2.inOrbit(b2) =>
+              RefSome(new IntersectionTest(level + 1, node2.next, prev2Inv |+| node2.uInv(b2)))
+            case _ if node.beta == b2 =>
+              RefSome(new IntersectionTest(level + 1, chain2, prev2Inv))
+            case _ =>
+              RefNone
+          }
         }
       }
       subgroupSearch(chain1, g => chain2.contains(g), new IntersectionTest(0, chain2, algebra.id))

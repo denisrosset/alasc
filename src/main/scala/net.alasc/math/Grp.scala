@@ -13,7 +13,7 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 
-abstract class GrpBase[G] { lhs: Grp[G] =>
+sealed abstract class Grp[G] { lhs =>
   override def toString = generators.mkString("Grp(", ", ", ")") //+ (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
 
   /** Set of algorithms used in the computations. */
@@ -24,15 +24,17 @@ abstract class GrpBase[G] { lhs: Grp[G] =>
     * givenRepresentation does not have to be compatible with these representations.
     */
   implicit def representations: Representations[G]
-
   implicit def algebra: FiniteGroup[G]
 
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
   def chain: Chain[G]
   def chainIfComputed: RefOption[Chain[G]]
+  def chain(representationToUse: RefOption[Representation[G]] = RefNone, givenBase: Seq[Int] = Seq.empty): Chain[G]
   def representation: Representation[G]
+  def representationIfComputed: RefOption[Representation[G]]
   def randomElement(random: Random): G
+  def contains(g: G): Boolean
 
   def fixingPartitionW(partition: Domain#Partition, rp: Representation[G]): Grp[G]
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G]
@@ -89,14 +91,14 @@ class GrpChain[G](val algorithms: BasicAlgorithms[G], val generators: Iterable[G
   * @param representations     Representation provider for elements of G, used only if needed; givenRepresentation 
   *                            does not have to be compatible with these representations.
   */
-class Grp[G](
+class GrpImpl[G](
   val algorithms: BasicAlgorithms[G],
   val generators: Iterable[G],
   givenRepresentation: RefOption[Representation[G]],
   givenOrder: RefOption[BigInt] = RefNone,
   givenChain: RefOption[Chain[G]] = RefNone,
   givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
-  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends GrpBase[G] { lhs =>
+  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
 
   // TODO conjugatedBy
 
@@ -123,6 +125,8 @@ class Grp[G](
       case _ => representation
     }
   }
+  def representationIfComputed: RefOption[Representation[G]] =
+    if (isRepresentationKnown) RefSome(representation) else RefNone
 
   def action: FaithfulPermutationAction[G] = knownChain match {
     case RefOption(node: Node[G]) =>
@@ -193,6 +197,8 @@ class Grp[G](
     }
   }
 
+  def contains(g: G) = chain.contains(g)
+
   // operations on this Grp alone
 
   def fixingPartitionW(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
@@ -240,18 +246,16 @@ class Grp[G](
 
   // operations between subgroups, with possible action reconfiguration
 
-  def joinRepresentation(rhs: Grp[G]): Representation[G] =
-    if (lhs.isRepresentationKnown) {
-      if (rhs.isRepresentationKnown)
-        representations.repJoin(lhs.representation, rhs.representation, lhs.generators, rhs.generators)
-      else
-        representations.repJoin(lhs.representation, lhs.generators, rhs.generators)
-    } else {
-      if (rhs.isRepresentationKnown)
-        representations.repJoin(rhs.representation, rhs.generators, lhs.generators)
-      else
-        representations.get(lhs.generators ++ rhs.generators)
+  def joinRepresentation(rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
+    case RefOption(lhsRepr) => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
+      case _ => representations.repJoin(lhsRepr, lhs.generators, rhs.generators)
     }
+    case _ => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
+      case _ => representations.get(lhs.generators ++ rhs.generators)
+    }
+  }
 
   protected def unionByAdding(chain: Chain[G], rp: Representation[G], generators: Iterable[G]): Grp[G] = {
     val mutableChain = newMutableChain(rp)
@@ -263,14 +267,14 @@ class Grp[G](
   def union(rhs: Grp[G]): Grp[G] = {
     // if one of the arguments has a computed chain with a representation compatible with the other argument generators,
     // augment the computed chain with these generators
-    if (lhs.isChainComputed && rhs.generators.forall(g => lhs.representation.represents(g)))
+    if (lhs.chainIfComputed.nonEmpty && rhs.generators.forall(g => lhs.representation.represents(g)))
       return unionByAdding(lhs.chain, lhs.representation, rhs.generators)
-    if (rhs.isChainComputed && lhs.generators.forall(g => rhs.representation.represents(g)))
+    if (rhs.chainIfComputed.nonEmpty && lhs.generators.forall(g => rhs.representation.represents(g)))
       return unionByAdding(rhs.chain, rhs.representation, lhs.generators)
     // if representations are known but not compatible, use the join of the representations for the union
     val rp = joinRepresentation(rhs)
-    if (lhs.isOrderComputed) {
-      if (rhs.isOrderComputed) {
+    if (lhs.orderIfComputed.nonEmpty) {
+      if (rhs.orderIfComputed.nonEmpty) {
         if (lhs.order >= rhs.order)
           unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
         else
@@ -278,7 +282,7 @@ class Grp[G](
       } else
         unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
     } else {
-      if (rhs.isOrderComputed)
+      if (rhs.orderIfComputed.nonEmpty)
         unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
       else
         Grp.fromGenerators(lhs.generators ++ rhs.generators, RefSome(rp))
@@ -288,7 +292,7 @@ class Grp[G](
   def intersect(rhs: Grp[G]): Grp[G] = {
     def grpFromChains(lChain: Chain[G], rChain: Chain[G], rp: Representation[G]): Grp[G] =
       Grp.fromChain(algorithms.intersection(lChain, rChain)(rp.action).toChain, RefSome(rp))
-    if (lhs.isChainComputed && rhs.isChainComputed) {
+    if (lhs.chainIfComputed.nonEmpty && rhs.chainIfComputed.nonEmpty) {
       val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
       val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))
       if (lCompatible && (!rCompatible || lhs.order >= rhs.order))
@@ -309,7 +313,7 @@ class Grp[G](
     val lexChain = algorithms.withBase(chain, BaseGuideLex(rp.size))(rp.action)
     def size = coll.BigIntSize(lhs.order)
     def length = lhs.order
-    def contains(g: G) = lhs.contains(g)
+    def contains(g: G) = (lhs: Grp[G]).contains(g)
     def foreach[U](f: G => U) = iterator.foreach(f)
     def apply(idx: BigInt): G = {
       @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {
@@ -346,30 +350,30 @@ object Grp {
   def defaultAlgorithms[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
 
   def fromChain[G](chain: Chain[G], givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], rp: Representations[G]) = {
+    implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] = {
     givenRepresentation.foreach { r => require(chain.generators.forall(r.represents(_))) } // TODO remove
     val representation = givenRepresentation.getOrElse(rp.get(chain.generators))
     chain match {
       case node: Node[G] if representation.action != node.action =>
         fromSubgroup[Chain[G], G](node, RefSome(representation))
-      case _ => new Grp[G](defaultAlgorithms[G], chain.generators, RefSome(representation), givenChain = RefSome(chain))
+      case _ => new GrpImpl[G](defaultAlgorithms[G], chain.generators, RefSome(representation), givenChain = RefSome(chain))
     }
   }
 
   def fromGenerators[G](generators: Iterable[G], givenRepresentation: RefOption[Representation[G]])(
-    implicit algebra: FiniteGroup[G], rp: Representations[G]) =
-    new Grp[G](defaultAlgorithms[G], generators, givenRepresentation)
+    implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
+    new GrpImpl[G](defaultAlgorithms[G], generators, givenRepresentation)
 
-  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], rp: Representations[G]) =
-    new Grp[G](defaultAlgorithms[G], generators, RefNone)
+  def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
+    new GrpImpl[G](defaultAlgorithms[G], generators, RefNone)
 
   def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt, givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], rp: Representations[G]) =
-    new Grp[G](defaultAlgorithms[G], generators, givenRepresentation, givenOrder = RefSome(order))
+    implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
+    new GrpImpl[G](defaultAlgorithms[G], generators, givenRepresentation, givenOrder = RefSome(order))
 
   def fromSubgroup[S, G](subgroup: S, givenRepresentation: RefOption[Representation[G]] = RefNone)(
-    implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], rp: Representations[G]) =
-    new Grp[G](defaultAlgorithms[G], subgroup.generators, givenRepresentation,
+    implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], rp: Representations[G]): Grp[G] =
+    new GrpImpl[G](defaultAlgorithms[G], subgroup.generators, givenRepresentation,
       givenOrder = RefSome(subgroup.order), givenRandomElement = RefSome(subgroup.randomElement(_)))
 
   implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
@@ -382,4 +386,86 @@ class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
   override def contains(grp: Grp[G], g: G) = grp.chain.contains(g)
   override def toGrp(grp: Grp[G])(implicit representations: Representations[G]): Grp[G] = grp
+}
+
+class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Representations[G], algorithms: BasicAlgorithms[G]) extends BoundedBelowLattice[Grp[G]] {
+  def zero = Grp.fromGenerators[G](Iterable.empty, RefNone)
+
+  def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
+    case RefOption(lhsRepr) => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
+      case _ => representations.repJoin(lhsRepr, lhs.generators, rhs.generators)
+    }
+    case _ => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
+      case _ => representations.get(lhs.generators ++ rhs.generators)
+    }
+  }
+
+  protected def unionByAdding(chain: Chain[G], rp: Representation[G], generators: Iterable[G]): Grp[G] = {
+    val mutableChain = algorithms.mutableChainCopyWithAction(chain, rp.action)
+    algorithms.insertGenerators(mutableChain, generators)
+    algorithms.completeStrongGenerators(mutableChain)
+    Grp.fromChain(mutableChain.toChain, RefSome(rp))
+  }
+
+  def join(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
+    // if one of the arguments has a computed chain with a representation compatible with the other argument generators,
+    // augment the computed chain with these generators
+    if (lhs.chainIfComputed.nonEmpty && rhs.generators.forall(g => lhs.representation.represents(g)))
+      return unionByAdding(lhs.chain, lhs.representation, rhs.generators)
+    if (rhs.chainIfComputed.nonEmpty && lhs.generators.forall(g => rhs.representation.represents(g)))
+      return unionByAdding(rhs.chain, rhs.representation, lhs.generators)
+    // if representations are known but not compatible, use the join of the representations for the union
+    val rp = joinRepresentation(lhs, rhs)
+    if (lhs.orderIfComputed.nonEmpty) {
+      if (rhs.orderIfComputed.nonEmpty) {
+        if (lhs.order >= rhs.order)
+          unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
+        else
+          unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
+      } else
+        unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
+    } else {
+      if (rhs.orderIfComputed.nonEmpty)
+        unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
+      else
+        Grp.fromGenerators(lhs.generators ++ rhs.generators, RefSome(rp))
+    }
+  }
+
+  def meet(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
+    def grpFromChains(lChain: Chain[G], rChain: Chain[G], rp: Representation[G]): Grp[G] =
+      Grp.fromChain(algorithms.intersection(lChain, rChain)(rp.action).toChain, RefSome(rp))
+    if (lhs.chainIfComputed.nonEmpty && rhs.chainIfComputed.nonEmpty) {
+      val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
+      val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))
+      if (lCompatible && (!rCompatible || lhs.order >= rhs.order))
+        grpFromChains(lhs.chain, rhs.chain(RefSome(lhs.representation), lhs.chain.base), lhs.representation)
+      else
+        grpFromChains(rhs.chain, lhs.chain(RefSome(rhs.representation), rhs.chain.base), rhs.representation)
+    } else {
+      val rp = joinRepresentation(lhs, rhs)
+      val lChain = lhs.chain(RefSome(rp))
+      val rChain = rhs.chain(RefSome(rp), lChain.base) // TODO: use BaseGuideSeqStripped
+      grpFromChains(lChain, rChain, rp)
+    }
+  }
+
+  override def lteqv(x: Grp[G], y: Grp[G]): Boolean = x.generators.forall(y.contains(_))
+  override def gteqv(x: Grp[G], y: Grp[G]): Boolean = y.generators.forall(x.contains(_))
+  override def eqv(x: Grp[G], y: Grp[G]): Boolean = (x.order == y.order) && lteqv(x, y)
+  override def lt(x: Grp[G], y: Grp[G]): Boolean = lteqv(x, y) && (x.order < y.order)
+  override def gt(x: Grp[G], y: Grp[G]): Boolean = gteqv(x, y) && (x.order > y.order)
+
+  def partialCompare(x: Grp[G], y: Grp[G]): Double = {
+    val c = x.order.compare(y.order)
+    if (c < 0) {
+      if (lteqv(x, y)) -1.0 else Double.NaN
+    } else if (c > 0) {
+      if (gteqv(x, y)) 1.0 else Double.NaN
+    } else { // c == 0
+      if (lteqv(x, y)) 0.0 else Double.NaN
+    }
+  }
 }

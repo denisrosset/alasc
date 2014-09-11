@@ -16,12 +16,12 @@ import bsgs._
 
 trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
   self =>
-  import grp.{algorithms, algebra, action}
+  import grp.{algorithms, algebra, representation}
   def chainInRepresentation: Chain[G] // grp.chain(RefSome(representatation))
   lazy val chainInRepresentationBasePointGroups = algorithms.basePointGroups(chainInRepresentation, representation.size)
   def find(r: T): Option[Representative[T, G]] = {
     val tIntArray = Array.tabulate(tLength)(tInt(_))
-    val bo = algorithms.baseOrder(chainInRepresentation.base)(action)
+    val bo = algorithms.baseOrder(chainInRepresentation.base)(representation.action)
     val rIntArray = new Array[Int](tLength)
     var idx = 0
     while (idx < tLength) {

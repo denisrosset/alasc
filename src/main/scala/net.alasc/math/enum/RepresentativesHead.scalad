@@ -15,7 +15,7 @@ import net.alasc.util._
 import bsgs._
 
 trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.HasHead[Representative[T, G]] {
-//  lazy val lexGrpStart = grp.chain(representation, 
+  lazy val lexGrpStart = grp.chain(representation,
 //  def head: LexRepresentative[T, G] = {
 //
 //  }

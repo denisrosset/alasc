@@ -23,7 +23,7 @@ class WrCheck extends PermutationActionCheck[Wr[Perm, Perm]] {
   } yield Wr(a, h)
   implicit def arbitrary: Arbitrary[Wr[Perm, Perm]] = Arbitrary(genWr)
   implicit val action: PermutationAction[Wr[Perm, Perm]] = new WrImprimitiveRepresentations[Perm, Perm].get(Seq(Wr(Seq(Perm(0,1,2,3),Perm(0,1,2,3),Perm(0,1,2,3),Perm(0,1,2,3)), Perm(0,1,2,3)))).action
-  implicit val finiteGroup = new WrFiniteGroup[Perm, Perm]
+  implicit val finiteGroup: FiniteGroup[Wr[Perm, Perm]] = new WrFiniteGroup[Perm, Perm]
 }
 
 class WrCheckPrimitive extends PermutationActionCheck[Wr[Perm, Perm]] {
@@ -38,5 +38,5 @@ class WrCheckPrimitive extends PermutationActionCheck[Wr[Perm, Perm]] {
   } yield Wr(a, h)
   implicit def arbitrary: Arbitrary[Wr[Perm, Perm]] = Arbitrary(genWr)
   implicit val action: PermutationAction[Wr[Perm, Perm]] = new WrPrimitiveRepresentations[Perm, Perm].get(Seq(Wr(Seq(Perm(0,1,2,3),Perm(0,1,2,3),Perm(0,1,2,3),Perm(0,1,2,3)), Perm(0,1,2,3)))).action
-  implicit val finiteGroup = new WrFiniteGroup[Perm, Perm]
+  implicit val finiteGroup: FiniteGroup[Wr[Perm, Perm]] = new WrFiniteGroup[Perm, Perm]
 }

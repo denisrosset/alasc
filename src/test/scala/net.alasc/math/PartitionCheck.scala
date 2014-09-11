@@ -14,7 +14,7 @@ object PartitionCheck {
 class PartitionCheck extends BoundedLatticeCheck[PartitionCheck.domain.Partition] {
   import PartitionCheck.domain
   implicit def lattice = domain.lattice
-  implicit def arbitrary = Arbitrary {
+  implicit def arbitraryLatticeElement = Arbitrary {
     for {
       seq <- Gen.containerOfN[Seq, Int](domain.size, Gen.choose(0, 4))
     } yield domain.Partition.fromSeq(seq)
