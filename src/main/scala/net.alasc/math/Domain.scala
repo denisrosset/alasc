@@ -24,14 +24,15 @@ final class Domain private (val size: Int) {
     def numBlocks = array.length
     def blocks: Iterable[Set[Int]] = (array: Seq[Set[Int]])
     // TODO: optimize by computing indices
-    def blockFor(k: Int): Set[Int] = {
+    def blockFor(k: Int): Set[Int] = array(blockIndex(k))
+    lazy val blockIndex: Array[Int] = {
+      val res = new Array[Int](size)
       var i = 0
       while (i < array.length) {
-        if (array(i).contains(k))
-          return array(i)
+        array(i).foreach { k => res(k) = i }
         i += 1
       }
-      sys.error("Point outside domain")
+      res
     }
     def representative(k: Int): Int = blockFor(k).min
     def sizeIncreasing: Seq[Set[Int]] = array.toSeq.sortBy(b => (b.size, b.min))

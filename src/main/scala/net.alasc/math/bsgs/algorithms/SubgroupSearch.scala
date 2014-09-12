@@ -52,15 +52,15 @@ trait SubgroupSearch[P] {
   def setwiseStabilizer(givenChain: Chain[P], points: Set[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 }
 
-trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] with ChainBuilder[P] {
+trait SubgroupSearchImpl[P] extends SchreierSims[P] with BaseChange[P] with BaseAlgorithms[P] with ChainBuilder[P] {
   self =>
   def generalSearch(givenChain: Chain[P], predicate: P => Boolean, givenTest: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]) : Iterator[P] = {
     val chain = withAction(givenChain, action)
-    val bo = baseOrder(chain.base)
+    val bo = BaseOrder[P](chain.base)
     def rec(currentChain: Chain[P], currentG: P, currentTest: SubgroupTest[P]): Iterator[P] = currentChain match {
       case node: Node[P] =>
-        val sortedOrbit = node.orbit.toSeq.sorted(Order.ordering(imageOrder(bo, currentG)))
+        val sortedOrbit = node.orbit.toSeq.sorted(Order.ordering(ImageOrder(bo, currentG)))
         for {
           b <- sortedOrbit.iterator
           orbitImage = b <|+| currentG
@@ -78,7 +78,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val chain = withAction(givenChain, action)
-    val bo = baseOrder(chain.base)
+    val bo = BaseOrder[P](chain.base)
     val length = givenChain.nodesNext.size
     val orbits = givenChain.nodesNext.map(_.orbit.toArray).toArray
     val subgroupChain = emptyChainWithBase(givenChain.base)
@@ -93,7 +93,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
       case (node: Node[P], IsMutableNode(subgroupNode)) =>
         var newLevelCompleted = levelCompleted
         val orbit = orbits(level)
-        Sorting.sort(orbit)(imageOrder(bo, currentG), implicitly[ClassTag[Int]])
+        Sorting.sort(orbit)(ImageOrder(bo, currentG), implicitly[ClassTag[Int]])
         var sPrune = orbit.length
         var n = orbit.length
         var i = 0
@@ -229,7 +229,7 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
   def fixingPartition(givenChain: Chain[P], partition: Domain#Partition)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val n = partition.size
     val orderedPartition = partition.sizeIncreasing
-    val reorderedChain = withBase(givenChain, PartitionGuide(partition))(action)
+    val reorderedChain = withBase(givenChain, BaseGuidePartition(partition))(action)
     val pointSetsToTest: Array[Array[Int]] = basePointGroups(reorderedChain, n)
     class FixingTest(level: Int) extends SubgroupTest[P] {
       def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest] = {

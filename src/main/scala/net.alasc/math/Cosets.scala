@@ -31,7 +31,7 @@ class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
   import grpG.{representation, algebra, algorithms}
   def size: BigInt = grpG.order / grpH.order
   def iterator: Iterator[LeftCoset[G]] = {
-    val bo = algorithms.baseOrder(grpG.chain.base)(representation.action)
+    val bo = bsgs.algorithms.BaseOrder(grpG.chain.base)(representation.action)
     def rec(g: G, chainG: Chain[G], subgrpH: Grp[G]): Iterator[LeftCoset[G]] = chainG match {
       case node: Node[G] =>
         for {

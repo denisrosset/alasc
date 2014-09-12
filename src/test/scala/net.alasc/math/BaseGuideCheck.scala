@@ -26,7 +26,7 @@ object BaseGuideCheck extends Properties("BSGS") {
     case (grp, seq) => {
       import grp.algorithms
       val partition = Partition.fromSeq(seq)
-      val chain = algorithms.withBase(grp.chain, PartitionGuide(partition))
+      val chain = algorithms.withBase(grp.chain, BaseGuidePartition(partition))
       val baseBlockSize = chain.base.map(partition.blockFor(_).size)
       (baseBlockSize.iterator zip baseBlockSize.iterator.drop(1)).forall { case (i, j) => i >= j }
     }

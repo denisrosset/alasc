@@ -16,7 +16,7 @@ import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.check._
 import net.alasc.util._
 
-case class PartitionGuide(partition: Domain#Partition) extends BaseGuide {
+case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
   val blocks = partition.sizeIncreasing
   def fullBase = blocks.flatMap(identity)
   def iterator = new Iter(mutable.BitSet.empty,
