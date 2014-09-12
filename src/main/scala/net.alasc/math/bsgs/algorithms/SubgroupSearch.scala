@@ -75,8 +75,6 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     rec(givenChain, algebra.id, givenTest)
   }
 
-  case class SubgroupSearchResult(restartFrom: Int, levelCompleted: Int)
-
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val chain = withAction(givenChain, action)
@@ -84,13 +82,14 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
     val length = givenChain.nodesNext.size
     val orbits = givenChain.nodesNext.map(_.orbit.toArray).toArray
     val subgroupChain = emptyChainWithBase(givenChain.base)
-    def rec(level: Int, levelCompleted: Int, currentChain: Chain[P], currentSubgroup: Chain[P], currentG: P, currentTest: SubgroupTest[P]): SubgroupSearchResult = (currentChain, currentSubgroup) match {
+    // Tuple2Int contains (restartFrom, levelCompleted)
+    def rec(level: Int, levelCompleted: Int, currentChain: Chain[P], currentSubgroup: Chain[P], currentG: P, currentTest: SubgroupTest[P]): Tuple2Int = (currentChain, currentSubgroup) match {
       case (_: Term[P], _) =>
         if (predicate(currentG) && !currentG.isId) {
           insertGenerators(subgroupChain, Iterable(currentG))
-          SubgroupSearchResult(levelCompleted - 1, levelCompleted)
+          Tuple2Int(levelCompleted - 1, levelCompleted)
         } else
-          SubgroupSearchResult(level - 1, levelCompleted)
+          Tuple2Int(level - 1, levelCompleted)
       case (node: Node[P], IsMutableNode(subgroupNode)) =>
         var newLevelCompleted = levelCompleted
         val orbit = orbits(level)
@@ -106,19 +105,19 @@ trait SubgroupSearchImpl[P] extends Orders[P] with SchreierSims[P] with BaseChan
             val newTest = newTestOpt.get
             val newG = node.u(deltaP) |+| currentG
             if (sPrune < subgroupNode.orbitSize)
-              return SubgroupSearchResult(level - 1, level)
-            val SubgroupSearchResult(subRestartFrom, subLevelCompleted) = rec(level + 1, newLevelCompleted, node.next, subgroupNode.next, newG, newTest)
+              return Tuple2Int(level - 1, level)
+            val Tuple2Int(subRestartFrom, subLevelCompleted) = rec(level + 1, newLevelCompleted, node.next, subgroupNode.next, newG, newTest)
             newLevelCompleted = subLevelCompleted
             if (subRestartFrom < level)
-              return SubgroupSearchResult(subRestartFrom, newLevelCompleted)
+              return Tuple2Int(subRestartFrom, newLevelCompleted)
             sPrune -= 1
           }
           i += 1
         }
-        SubgroupSearchResult(level - 1, level)
+        Tuple2Int(level - 1, level)
       case _ => sys.error("Invalid argument")
     }
-    val SubgroupSearchResult(restartFrom, levelCompleted) = rec(0, length, givenChain, subgroupChain.start.next, algebra.id, test)
+    val Tuple2Int(restartFrom, levelCompleted) = rec(0, length, givenChain, subgroupChain.start.next, algebra.id, test)
     assert(levelCompleted == 0)
     subgroupChain
   }
