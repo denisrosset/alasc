@@ -61,7 +61,7 @@ object Representatives {
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
     } with RepresentativesIterable[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
-      lazy val chainInRepresentation = grp.chain(RefSome(representation))
+      lazy val chainInRepresentation = grp.chain(representation)
     }
 }
 
@@ -74,6 +74,6 @@ object RepresentativesOrdered {
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
     } with RepresentativesIterable[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
-      lazy val chainInRepresentation = grp.chain(RefSome(representation)) // TODO: lexicographic base ordering
+      lazy val chainInRepresentation = grp.chain(representation) // TODO: lexicographic base ordering
     }
 }

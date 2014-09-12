@@ -29,9 +29,9 @@ sealed abstract class Grp[G] { lhs =>
 
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
-  def chain: Chain[G]
   def chainIfComputed: RefOption[Chain[G]]
-  def chain(representationToUse: RefOption[Representation[G]] = RefNone, givenBase: Seq[Int] = Seq.empty): Chain[G]
+  def chain: Chain[G]
+  def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G]
   def representation: Representation[G]
   def representationIfComputed: RefOption[Representation[G]]
   def randomElement(random: Random): G
@@ -99,8 +99,7 @@ class GrpImpl[G](
       case _ => representation
     }
   }
-  def representationIfComputed: RefOption[Representation[G]] =
-    if (isRepresentationKnown) RefSome(representation) else RefNone
+  def representationIfComputed: RefOption[Representation[G]] = knownRepresentation
 
   def action: FaithfulPermutationAction[G] = knownChain match {
     case RefOption(node: Node[G]) =>
@@ -111,34 +110,27 @@ class GrpImpl[G](
 
   def isChainComputed: Boolean = knownChain.nonEmpty
 
-  protected def computeChain(base: Seq[Int])(implicit action: FaithfulPermutationAction[G]): Chain[G] = knownOrder match {
-    case RefOption(order) => algorithms match {
-      case ssr: SchreierSimsRandomized[G] => ssr.randomizedSchreierSims(randomElement(_), order, base).toChain
-      case _ => algorithms.completeChainFromGeneratorsAndOrder(generators, order, base).toChain
-    }
-    case _ => algorithms.completeChainFromGenerators(generators, base).toChain
+  protected def computeChain(baseGuide: BaseGuide, action: FaithfulPermutationAction[G]): Chain[G] = knownOrder match {
+    case RefOption(order) => algorithms.chainWithBase(generators, order, baseGuide, action)
+    case _ => algorithms.chainWithBase(generators, baseGuide, action)
   }
 
-  def chain: Chain[G] = chain()
-  // TODO: instead of givenBase, provide a BaseGuide
-  def chain(representationToUse: RefOption[Representation[G]] = RefNone, givenBase: Seq[Int] = Seq.empty): Chain[G] =
-    knownChain match {
-      case RefOption(node: Node[G]) => representationToUse match {
-        case RefOption(rp) if (node.action != rp.action) => computeChain(givenBase)(rp.action)
-        case _ => node // either representationToUse is empty, or the action is compatible
+  def chain: Chain[G] = chain(representation)
+  def chain(representationToUse: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G] = knownChain match {
+    case RefOption(node: Node[G]) =>
+      algorithms.chainWithBase(node, baseGuide, representationToUse.action)
+    case RefOption(term: Term[G]) => term
+    case _ => // knownChain is empty, we have to compute a chain
+      if (knownRepresentation.nonEmpty) { // forced representation during Grp construction, use it to compute knownChain
+        knownChain = RefSome(computeChain(baseGuide, representation.action))
+        chain(representationToUse, baseGuide) // but return one with the newly given representation
+      } else {
+        knownRepresentation = RefSome(representationToUse)
+        val c = computeChain(baseGuide, representation.action)
+        knownChain = RefSome(c)
+        c
       }
-      case RefOption(term: Term[G]) => term
-      case _ => // knownChain is empty, we have to compute a chain
-        if (knownRepresentation.nonEmpty) { // forced representation during Grp construction, use it to compute knownChain
-          knownChain = RefSome(computeChain(givenBase)(representation.action))
-          chain(representationToUse, givenBase) // but return one with the newly given representation
-        } else {
-          knownRepresentation = RefSome(representationToUse.getOrElse(representationFromGenerators))
-          val c = computeChain(givenBase)(representation.action)
-          knownChain = RefSome(c)
-          c
-        }
-    }
+  }
 
   def isOrderComputed: Boolean = isChainComputed || knownOrder.nonEmpty
   private[this] var knownOrder: RefOption[BigInt] = givenOrder

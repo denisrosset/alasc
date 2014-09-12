@@ -45,7 +45,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) { // TODO: qualify all calls to grp.chain
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartitionW(partition, prp.forSize(partition.size))
   def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
-    val newChain = algorithms.withBase(lhs.chain(RefSome(rp), Seq(b)), Seq(b))(rp.action)
+    val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
     (Grp.fromChain(nextChain, RefSome(rp)), transversal)
   }

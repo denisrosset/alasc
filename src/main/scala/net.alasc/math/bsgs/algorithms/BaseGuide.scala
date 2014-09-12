@@ -34,7 +34,7 @@ object BaseGuide {
     def iterator = new BaseGuideIterator {
       def hasNext = false
       def next(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean) = beta
-      def checksNext(beta: Int, isFixed: Int => Boolean) = true
+      override def checksNext(beta: Int, isFixed: Int => Boolean) = true
     }
     def fullBase = Seq.empty
   }

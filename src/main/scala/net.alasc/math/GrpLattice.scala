@@ -46,14 +46,14 @@ class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Repre
     if (lhs.orderIfComputed.nonEmpty) {
       if (rhs.orderIfComputed.nonEmpty) {
         if (lhs.order >= rhs.order)
-          unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
+          unionByAdding(lhs.chain(rp), rp, rhs.generators)
         else
-          unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
+          unionByAdding(rhs.chain(rp), rp, lhs.generators)
       } else
-        unionByAdding(lhs.chain(RefSome(rp)), rp, rhs.generators)
+        unionByAdding(lhs.chain(rp), rp, rhs.generators)
     } else {
       if (rhs.orderIfComputed.nonEmpty)
-        unionByAdding(rhs.chain(RefSome(rp)), rp, lhs.generators)
+        unionByAdding(rhs.chain(rp), rp, lhs.generators)
       else
         Grp.fromGenerators(lhs.generators ++ rhs.generators, RefSome(rp))
     }
@@ -66,13 +66,13 @@ class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Repre
       val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
       val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))
       if (lCompatible && (!rCompatible || lhs.order >= rhs.order))
-        grpFromChains(lhs.chain, rhs.chain(RefSome(lhs.representation), lhs.chain.base), lhs.representation)
+        grpFromChains(lhs.chain, rhs.chain(lhs.representation, BaseGuideSeq(lhs.chain.base)), lhs.representation)
       else
-        grpFromChains(rhs.chain, lhs.chain(RefSome(rhs.representation), rhs.chain.base), rhs.representation)
+        grpFromChains(rhs.chain, lhs.chain(rhs.representation, BaseGuideSeq(rhs.chain.base)), rhs.representation)
     } else {
       val rp = joinRepresentation(lhs, rhs)
-      val lChain = lhs.chain(RefSome(rp))
-      val rChain = rhs.chain(RefSome(rp), lChain.base) // TODO: use BaseGuideSeqStripped
+      val lChain = lhs.chain(rp)
+      val rChain = rhs.chain(rp, BaseGuideSeq(lChain.base)) // TODO: use BaseGuideSeqStripped
       grpFromChains(lChain, rChain, rp)
     }
   }
