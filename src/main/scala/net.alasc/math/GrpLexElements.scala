@@ -20,7 +20,7 @@ class GrpLexElements[G](val lhs: Grp[G]) {
   // enumeration of subgroup elements
   def lexElements(implicit rp: Representation[G]): coll.big.IndexedSet[G] = new coll.big.IndexedSet[G] {
     implicit val action = rp.action
-    val lexChain = algorithms.withBase(chain, BaseGuideLex(rp.size))(rp.action)
+    val lexChain = lhs.chain(rp, BaseGuideLex(rp.size))
     def size = coll.BigIntSize(lhs.order)
     def length = lhs.order
     def contains(g: G) = (lhs: Grp[G]).contains(g)
