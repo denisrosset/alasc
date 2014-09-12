@@ -61,7 +61,7 @@ class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Repre
 
   def meet(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
     def grpFromChains(lChain: Chain[G], rChain: Chain[G], rp: Representation[G]): Grp[G] =
-      Grp.fromChain(algorithms.intersection(lChain, rChain)(rp.action).toChain, RefSome(rp))
+      Grp.fromChain(Intersection.intersection(lChain, rChain))
     if (lhs.chainIfComputed.nonEmpty && rhs.chainIfComputed.nonEmpty) {
       val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
       val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))

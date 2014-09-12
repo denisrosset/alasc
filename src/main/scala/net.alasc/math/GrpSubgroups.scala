@@ -40,34 +40,34 @@ class GrpSubgroups[G](val lhs: Grp[G]) { // TODO: qualify all calls to grp.chain
     require(lhs.generators.forall(rhs.contains(_)))
     new RightCosets(lhs, rhs)
   }
-  def fixingPartitionW(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
-    Grp.fromChain(algorithms.fixingPartition(lhs.chain, partition)(rp.action).toChain, RefSome(rp))
+  implicit def algorithms = lhs.algorithms
+  def fixingPartition(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
+    Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition))
+
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
-    fixingPartitionW(partition, prp.forSize(partition.size))
-  def stabilizerW(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
+    fixingPartition(partition, prp.forSize(partition.size))
+
+  def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
     val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
     (Grp.fromChain(nextChain, RefSome(rp)), transversal)
   }
   def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)
-    stabilizerW(b, rp)
+    stabilizer(b, rp)
   }
-  def pointwiseStabilizerW(set: Set[Int], rp: Representation[G]): Grp[G] = {
-    val mutableChain = algorithms.pointwiseStabilizer(lhs.chain, set)(rp.action)
-    Grp.fromChain(mutableChain.toChain, RefSome(rp))
-  }
+
+  def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
+    Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
   def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
     val maxSet = set.max
     val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
-    pointwiseStabilizerW(set, rp)
+    pointwiseStabilizer(set, rp)
   }
-  def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] = {
-    val mutableChain = algorithms.setwiseStabilizer(lhs.chain, set)(rp.action)
-    Grp.fromChain(mutableChain.toChain, RefSome(rp))
-  }
+  def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
+    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
   def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)

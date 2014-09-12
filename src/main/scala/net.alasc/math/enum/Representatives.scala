@@ -42,7 +42,7 @@ trait Representatives[T, G] /* extends coll.Iterable[Representative[T, G]] */ {
   lazy val partition: Domain#Partition = Domain(tLength).Partition.fromSeq(Seq.tabulate(tLength)(idx => tInt(idx)))
 
   /** Returns the subgroup of `grp` that fixes the `partition` given by `t`. */
-  lazy val symGrp: Grp[G] = grp.fixingPartitionW(partition, representation)
+  lazy val symGrp: Grp[G] = grp.fixingPartition(partition, representation)
 }
 
 trait RepresentativesOrdered[T, G] extends Representatives[T, G] {

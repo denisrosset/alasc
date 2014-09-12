@@ -37,7 +37,7 @@ class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
         for {
           b <- node.orbit.iterator
           bg = representation.action.actr(b, g)
-          (subgrpHnext, transversal) = subgrpH.stabilizerW(bg, representation) if transversal.orbit.min(Order.ordering(bo)) == bg
+          (subgrpHnext, transversal) = subgrpH.stabilizer(bg, representation) if transversal.orbit.min(Order.ordering(bo)) == bg
           nextG = node.u(b) |+| g
           element <- rec(nextG, node.next, subgrpHnext)
         } yield element

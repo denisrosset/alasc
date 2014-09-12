@@ -25,11 +25,13 @@ object SubgroupSearchCheck extends Properties("SubgroupSearch") {
     
   property("SubgroupSearch.fixing") = Prop.forAllNoShrink(genAlg, genSeq) { (alg, seq) =>
     implicit def nb = alg.nodeBuilder
+    implicit def algorithms = alg
     val chain1 = alg.completeChainFromSubgroup(FixingSeq[Perm](seq)).toChain
     val sym = Sym[Perm](seq.length)
-    val symChain = alg.completeChainFromSubgroup(sym).toChain
+    val symChain = alg.completeChainFromSubgroup(sym)
     val partition = Partition.fromSeq(seq)
-    val chain2 = alg.fixingPartition(symChain, partition).toChain
+    alg.changeBaseSameAction(symChain, FixingPartition.baseGuide(partition))
+    val chain2 = FixingPartition.fixingPartition(symChain.toChain, partition)
     chain1.order == chain2.order
   }
 }

@@ -51,7 +51,7 @@ trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
               j += 1
             }
             if (!disagree) {
-              val (nextSym, transversal) = chainSym.stabilizerW(bg, representation)
+              val (nextSym, transversal) = chainSym.stabilizer(bg, representation)
               if (transversal.orbit.min(Order.ordering(bo)) == bg) {
                 val res = rec(level + 1, nextG, node.next, nextSym)
                 if (res.nonEmpty)

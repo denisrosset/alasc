@@ -38,7 +38,10 @@ object Intersection {
       case node1: Node[P] => chain2WithGuidedBase match {
         case node2: Node[P] =>
           implicit def action = node1.action
-          assert(node1.base.startsWith(node2.base))
+          val base1 = node1.base
+          val base2 = node2.base
+          val l = base1.length.min(base2.length)
+          assert(node1.base.take(l) == node2.base.take(l))
           assert(node1.action == node2.action)
           alg.subgroupSearch(chain1, g => chain2WithGuidedBase.contains(g), new IntersectionTest(0, chain2WithGuidedBase, algebra.id)).toChain
         case term2: Term[P] => term2
