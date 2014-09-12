@@ -28,10 +28,12 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
     implicit def action = mutableChain.start.action
     elem.next match {
       case _: Term[P] =>
-        p.supportAny.fold[RefOption[(MutableNode[P], P)]](RefNone) { k =>
-          val newNode = nodeBuilder.standalone(k)
-          mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
-          RefSome(newNode -> p)
+        p.supportAny match {
+          case NNOption(k) =>
+            val newNode = nodeBuilder.standalone(k)
+            mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
+            RefSome(newNode -> p)
+          case _ => RefNone
         }
       case node: Node[P] =>
         val b = node.beta <|+| p

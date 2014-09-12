@@ -2,7 +2,7 @@ package net.alasc.math
 package bsgs
 
 import scala.annotation.tailrec
-import scala.collection.mutable.{BitSet => MutableBitSet, LongMap => MutableLongMap, UnrolledBuffer}
+import scala.collection.mutable.{BitSet => MutableBitSet, LongMap => MutableLongMap, ArrayBuffer}
 
 import scala.util.Random
 
@@ -15,7 +15,7 @@ import net.alasc.algebra._
 final class MutableNodeExplicit[P](
   var beta: Int,
   var transversal: MutableLongMap[InversePair[P]],
-  var ownGeneratorsPairs: UnrolledBuffer[InversePair[P]], // TODO: replace by ArrayBuffer
+  var ownGeneratorsPairs: ArrayBuffer[InversePair[P]], // TODO: replace by ArrayBuffer
   var prev: MutableStartOrNode[P] = null,
   var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
 
@@ -158,11 +158,11 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
       new MutableNodeExplicit(mne.beta, mne.transversal.clone, mne.ownGeneratorsPairs.clone)(mne.action)
     case _ =>
       val newTransversal = MutableLongMap.empty[InversePair[P]] ++= node.iterable.map { case (k, v) => (k.toLong, v) }
-      val newOwnGeneratorsPairs = UnrolledBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
+      val newOwnGeneratorsPairs = ArrayBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
   }
   def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P]) =
     new MutableNodeExplicit(beta,
       MutableLongMap(beta.toLong -> InversePair(algebra.id, algebra.id)),
-      UnrolledBuffer.empty[InversePair[P]])
+      ArrayBuffer.empty[InversePair[P]])
 }
