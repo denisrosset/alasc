@@ -29,6 +29,17 @@ trait BaseGuide {
   def fullBase: Seq[Int]
 }
 
+object BaseGuide {
+  def empty = new BaseGuide {
+    def iterator = new BaseGuideIterator {
+      def hasNext = false
+      def next(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean) = beta
+      def checksNext(beta: Int, isFixed: Int => Boolean) = true
+    }
+    def fullBase = Seq.empty
+  }
+}
+
 /** Iterator to guide base changes. */
 trait BaseGuideIterator {
   /** Checks whether the base guide can still give advice, or if the remaining base can be left as it is. */
