@@ -121,7 +121,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
         if (pos.prev ne after) {
           pos.prev match {
             case prevNode: MutableNode[P] =>
-              val (node1, node2) = baseSwap(mutableChain, prevNode, pos)
+              val MutableNodeAndNext(node1, node2) = baseSwap(mutableChain, prevNode, pos)
               shift(node1)
             case _: Start[P] => sys.error("mutableHere should be before mutableToShift")
           }

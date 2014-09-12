@@ -19,7 +19,7 @@ trait BaseSwap[P] extends MutableAlgorithms[P] {
     * 
     * @return the two swapped mutable nodes.
     */
-  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P])
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): MutableNodeAndNext[P]
 }
 
 trait BaseSwapCommon[P] extends BaseSwap[P] {
@@ -36,7 +36,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
     * See also http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf for an alternate
     * implementation.
     */
-  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): MutableNodeAndNext[P] = {
     import OrbitInstances._
     implicit def action = mutableChain.start.action
     val gammaSet = mutable.BitSet.empty ++ node1.orbit
@@ -61,7 +61,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
         }
       }
     }
-    (newNode1, newNode2)
+    MutableNodeAndNext(newNode1, newNode2)
   }
 }
 
@@ -73,7 +73,7 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
     * Based on algorithm 2.8 of 
     * http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf .
     */
-  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): (MutableNode[P], MutableNode[P]) = {
+  def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): MutableNodeAndNext[P] = {
     implicit def action = mutableChain.start.action
     val node2next = node2.next
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
@@ -86,6 +86,6 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
         newNode2.updateTransversal(hPair)
       }
     }
-    (newNode1, newNode2)
+    MutableNodeAndNext(newNode1, newNode2)
   }
 }
