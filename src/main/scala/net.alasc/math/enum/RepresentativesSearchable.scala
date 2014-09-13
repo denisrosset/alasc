@@ -16,8 +16,8 @@ import bsgs._
 
 trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
   self =>
-  import grp.{algorithms, algebra, representation}
-  def chainInRepresentation: Chain[G] // grp.chain(RefSome(representatation))
+  import grp.{algorithms, representation}
+  def chainInRepresentation: Chain[G]
   lazy val chainInRepresentationBasePointGroups = algorithms.basePointGroups(chainInRepresentation, representation.size)
   def find(r: T): Option[Representative[T, G]] = {
     val tIntArray = Array.tabulate(tLength)(tInt(_))
@@ -35,8 +35,8 @@ trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
       case node: Node[G] =>
         implicit def action = representation.action
         val orbitIt = node.orbit.iterator
+        val beta = node.beta
         while (orbitIt.hasNext) {
-          val beta = node.beta
           val b = orbitIt.next
           val bg = action.actr(b, g)
           if (rIntArray(beta) == tIntArray(bg)) {
@@ -67,6 +67,6 @@ trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
         implicit val actionTG = self.actionTG
         })
     }
-    rec(0, algebra.id, chainInRepresentation, symGrp)
+    rec(0, finiteGroupG.id, chainInRepresentation, symGrp)
   }
 }

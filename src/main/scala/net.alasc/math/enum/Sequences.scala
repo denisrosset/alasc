@@ -36,32 +36,15 @@ trait SequencesHash[T, A, G] extends Representatives[T, G] {
 trait SequencesOrdered[T, A, G] extends RepresentativesOrdered[T, G] {
   implicit def sequenceTA: Sequence[T, A]
   implicit def orderA: Order[A]
-  var aMap = immutable.SortedMap.empty[A, Int](Order.ordering(orderA))
-/*
   val tLength = sequenceTA.length(t)
-  val tIntArray = Array.tabulate(tLength) { i =>
-    val a = sequenceTA.elemAt(t, i)
-    aMap.get(a) match {
-      case Some(index) => index
-      case None =>
-        val newIndex = aMap.size
-        aMap += (a -> newIndex)
-        newIndex
-    }
-  }
+  protected def sortedSet = mutable.SortedSet.empty[A](Order.ordering(orderA)) ++ (0 until tLength).map(i => sequenceTA.elemAt(t, i))
+  val aMap = mutable.HashMap.empty[A, Int] ++ sortedSet.zipWithIndex
+  val tIntArray = Array.tabulate(tLength) { i => aMap(sequenceTA.elemAt(t, i)) }
 
-  def asIntArray(r: T): RefOption[Array[Int]] = {
-    require(sequenceTA.length(r) == tLength)
-    val array = new Array[Int](tLength)
-    var i = 0
-    while (i < tLength) {
-      aMap.get(sequenceTA.elemAt(r, i)) match {
-        case Some(index) => array(i) = index
-        case None => return RefNone
-      }
-      i += 1
-    }
-    RefSome(array)
+  def tInt(idx: Int) = tIntArray(idx)
+
+  def seqInt(seq: T, idx: Int): NNOption = aMap.get(sequenceTA.elemAt(seq, idx)) match {
+    case Some(i) => NNSome(i)
+    case None => NNNone
   }
- */
 }

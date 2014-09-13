@@ -55,4 +55,3 @@ class GrpLexElements[G](val lhs: Grp[G]) {
     }
   }
 }
-

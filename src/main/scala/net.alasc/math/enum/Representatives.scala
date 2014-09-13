@@ -19,10 +19,11 @@ import bsgs._
   * `t` can be a sequence, a regular Java array, a linear algebra vector; all that matters is that
   * an integer array representation (for speed) of the elements of `t` can be extracted.
   */
-trait Representatives[T, G] /* extends coll.Iterable[Representative[T, G]] */ {
+trait Representatives[T, G] {
   /** To be define in an early initializer. */ 
   val t: T
   val grp: Grp[G]
+  implicit def finiteGroupG: FiniteGroup[G] = grp.algorithms.algebra
 
   /** Permutation action of `G` on sequence-like `T`. */
   implicit def actionTG: GroupAction[T, G]
@@ -49,7 +50,7 @@ trait RepresentativesOrdered[T, G] extends Representatives[T, G] {
   /** Retrieves the (ordered) integer representation of element `t(idx)`, using non-negative integers. */
   def tInt(idx: Int): Int
 
- // def chainInRepresentation = grp.chain(RefSome(representation), algorithms.BaseGuideLex(tLength))
+  def chainInRepresentation = grp.chain(representation, algorithms.BaseGuideLex(tLength))
 }
 
 object Representatives {
@@ -60,20 +61,20 @@ object Representatives {
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
-    } with RepresentativesIterable[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
+    } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
       lazy val chainInRepresentation = grp.chain(representation)
     }
 }
 
 object RepresentativesOrdered {
-  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P]) =
+  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P], givenOrderA: Order[A]) =
     new {
       val t = givenT
       val grp = givenGrp
+      implicit val orderA: Order[A] = givenOrderA
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
-    } with RepresentativesIterable[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
-      lazy val chainInRepresentation = grp.chain(representation) // TODO: lexicographic base ordering
+    } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with RepresentativesHead[Seq[A], P] with SequencesOrdered[Seq[A], A, P] {
     }
 }
