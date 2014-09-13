@@ -40,7 +40,7 @@ trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.H
           var k = beta + 1
           val u = node.u(b)
           while (k < nextBeta && comp == 0) {
-            comp = (tInt((k <|+| u) <|+| g) - tInt(minimal(k))).signum
+            comp = (tInt((k <|+| u) <|+| g) - minimal(k)).signum
             k += 1
           }
           if (comp <= 0) {
@@ -65,7 +65,7 @@ trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.H
           val (nextSym, transversal) = chainSym.stabilizer(bg, representation)
           if (transversal.orbit.min == bg) {
             val nextG = node.u(b) |+| g
-            rec(level + 1, toLevel, nextG, node.next, chainSym)
+            rec(level + 1, toLevel, nextG, node.next, nextSym)
           }
           i += 1
         }

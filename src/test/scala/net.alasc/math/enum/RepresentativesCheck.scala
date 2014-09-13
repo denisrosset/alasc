@@ -5,8 +5,10 @@ import org.scalacheck._
 import org.scalacheck.Arbitrary._
 import org.scalatest._
 import prop._
+import spire.algebra.Order
 import spire.syntax.eq._
 import spire.syntax.groupAction._
+import spire.std.int._
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.subgroup._
@@ -19,7 +21,7 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") with Perm
     gen3 <- genP(sz)
   } yield Grp(gen1, gen2, gen3)
   def genSeqGrp = for {
-    sz <- Gen.choose(1, 7)
+    sz <- Gen.choose(1, 8)
     seq <- Gen.containerOfN[Seq, Int](sz, Gen.choose(0, 3))
     grp <- genGrp(sz)
   } yield (seq, grp)
@@ -27,5 +29,10 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") with Perm
       val bruteForceSet = grp.elements.iterator.map(g => seq <|+| g).toSet
       val cleverSeq = Representatives(seq, grp).iterator.map(_.get).toSeq
         (cleverSeq.size == bruteForceSet.size) && (cleverSeq.toSet == bruteForceSet)
+  }
+  property("Minimal representative is found") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
+      val bruteForceMinimal = grp.elements.iterator.map(g => seq <|+| g).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
+      val cleverMinimal = RepresentativesOrdered(seq, grp).head.get
+      cleverMinimal.sameElements(bruteForceMinimal)
   }
 }
