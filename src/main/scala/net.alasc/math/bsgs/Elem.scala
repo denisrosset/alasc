@@ -137,7 +137,7 @@ sealed trait Chain[P] extends Elem[P] {
     * @note The strong generating set is stored piece by piece by having each
     *       node storing explicitly only the generators appearing at its level.
     */
-  def strongGeneratingSet: Iterable[P] = nodesNext.flatMap(_.ownGenerators)
+  def strongGeneratingSet: Iterable[P] = nodesNext.flatMap(_.ownGenerators) // TODO: replace by view, now it is allocating ListBuffer
 
   def strongGeneratingSetPairs: Iterable[InversePair[P]] = nodesNext.flatMap(_.ownGeneratorsPairs)
 
