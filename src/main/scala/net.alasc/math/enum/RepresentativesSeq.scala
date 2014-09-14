@@ -34,7 +34,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         case RefOption(nextBlock) => rec(nextBlock)
         case _ => None
       }
-      case tb: TermBlock => Some(tb.representative)
+      case tb: TermBlock => Some(tb)
     }
     rec(Block.start)
   }
@@ -45,7 +45,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         case RefOption(nextBlock) => rec(nextBlock)
         case _ => throw new IndexOutOfBoundsException
       }
-      case tb: TermBlock => tb.representative
+      case tb: TermBlock => tb
     }
     rec(Block.start)
   }
@@ -58,7 +58,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         block <- nb.children
         repr <- iteratorSearch(block)
       } yield repr
-      case tb: TermBlock => Iterator(tb.representative)
+      case tb: TermBlock => Iterator(tb)
     }
     iteratorSearch(Block.start)
   }
@@ -82,14 +82,12 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   }
 
   // TODO: make TermBlock extends LexRepresentative
-  case class TermBlock(level: Int, chain: Term[G], images: ULong, index: BigInt, permutation: G) extends Block {
+  case class TermBlock(level: Int, chain: Term[G], images: ULong, index: BigInt, permutation: G) extends Block with LexRepresentative[T, G] {
     def size = 1
-    def representative: LexRepresentative[T, G] = new LexRepresentative[T, G] {
-      val element = permutation.inverse
-      val rank = index
-      val original = t
-      implicit val actionTG = self.actionTG
-    }
+    val element = permutation.inverse
+    val rank = index
+    val original = t
+    implicit val actionTG = self.actionTG
   }
 
   case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: debox.Buffer[G], symGrps: debox.Buffer[Grp[G]]) extends Block {
