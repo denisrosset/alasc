@@ -217,7 +217,28 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   def randomU(rand: Random): P
 }
 
+case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action: FaithfulPermutationAction[P]) extends Node[P] {
+  def isImmutable = true
+  def isMutable = false
+  def foreachOrbit[U](f: Int => U) = f(beta)
+  def foreachU[N](f: P => N): Unit = f(id)
+  def inOrbit(b: Int) = b == beta
+  def isStandalone = false
+  def iterable = Iterable(beta -> InversePair(id, id))
+  def orbit = Iterable(beta)
+  def orbitSize = 1
+  def ownGenerators = Iterable.empty
+  def ownGeneratorsPairs = Iterable.empty
+  def randomOrbit(rand: Random) = beta
+  def randomU(rand: Random) = id
+  def u(b: Int) = if (b == beta) id else sys.error("Not in orbit")
+  def uInv(b: Int) = if (b == beta) id else sys.error("Not in orbit")
+  def uPair(b: Int) = if (b == beta) InversePair(id, id) else sys.error("Not in orbit")
+}
+
 object Node {
+  def trivial[P](beta: Int, next: Chain[P] = Term[P])(implicit action: FaithfulPermutationAction[P], ev: FiniteGroup[P]): Node[P] =
+    new TrivialNode[P](beta, ev.id, next)
   /** Extractor for `Node` from `Elem`. */
   def unapply[P](elem: Elem[P]): Option[Node[P]] = elem match {
     case node: Node[P] => Some(node)
