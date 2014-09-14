@@ -5,7 +5,7 @@ package enum
 import spire.algebra.GroupAction
 import spire.syntax.groupAction._
 
-trait Representative[T, G] {
+trait Representative[T, G] extends AnyRef {
   override def toString = s"Rep(${get.toString}, ${element.toString})"
   def get: T = original <|+| element
   def element: G
@@ -15,4 +15,5 @@ trait Representative[T, G] {
 
 trait LexRepresentative[T, G] extends Representative[T, G] {
   def rank: BigInt
+  override def toString = s"Rep(${get.toString}, ${element.toString}, ${rank})"
 }

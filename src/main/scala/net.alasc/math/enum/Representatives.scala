@@ -3,6 +3,7 @@ package math
 package enum
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, GroupAction, Order}
 import spire.syntax.group._
@@ -33,6 +34,9 @@ trait Representatives[T, G] {
 
   /** Retrieves the integer representation of element `t(idx)`, using non-negative integers. */
   def tInt(idx: Int): Int
+
+  /** Returns the maximal integer value used in the representation of `t`. */
+  def maxInt: Int
 
   def seqInt(seq: T, idx: Int): NNOption
 
@@ -67,14 +71,15 @@ object Representatives {
 }
 
 object RepresentativesOrdered {
-  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P], givenOrderA: Order[A]) =
+  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P], givenOrderA: Order[A], givenClassTagP: ClassTag[P]) =
     new {
       val t = givenT
       val grp = givenGrp
+      implicit val classTagG = givenClassTagP
       implicit val orderA: Order[A] = givenOrderA
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
-    } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with RepresentativesHead[Seq[A], P] with SequencesOrdered[Seq[A], A, P] {
+    } with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P] with SequencesOrdered[Seq[A], A, P] {
     }
 }

@@ -24,6 +24,7 @@ trait SequencesHash[T, A, G] extends Representatives[T, G] {
     val newIndex = aMap.size
     aMap.getOrElseUpdate(sequenceTA.elemAt(t, i), newIndex)
   }
+  val maxInt = aMap.size - 1
 
   def tInt(idx: Int) = tIntArray(idx)
 
@@ -39,6 +40,7 @@ trait SequencesOrdered[T, A, G] extends RepresentativesOrdered[T, G] {
   val tLength = sequenceTA.length(t)
   protected def sortedSet = mutable.SortedSet.empty[A](Order.ordering(orderA)) ++ (0 until tLength).map(i => sequenceTA.elemAt(t, i))
   val aMap = mutable.HashMap.empty[A, Int] ++ sortedSet.zipWithIndex
+  val maxInt = aMap.size - 1
   val tIntArray = Array.tabulate(tLength) { i => aMap(sequenceTA.elemAt(t, i)) }
 
   def tInt(idx: Int) = tIntArray(idx)
