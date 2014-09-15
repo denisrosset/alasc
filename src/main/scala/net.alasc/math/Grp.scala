@@ -98,7 +98,7 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
   def orderIfComputed = RefSome(order)
   def randomElement(random: Random) = {
     val h = originalChain.randomElement(random)
-    gInv |+| h |+| g
+    h.conjBy(conjugatedBy)
   }
   // `h in gInv G g` if and only if `g h gInv in G`.
   def contains(h: G) = originalChain.contains(g |+| h |+| gInv)
@@ -174,6 +174,6 @@ class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[
   def generators(grp: Grp[G]) = grp.generators
   def order(grp: Grp[G]) = grp.order
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
-  override def contains(grp: Grp[G], g: G) = grp.chain.contains(g)
+  override def contains(grp: Grp[G], g: G) = grp.contains(g)
   override def toGrp(grp: Grp[G])(implicit representations: Representations[G]): Grp[G] = grp
 }

@@ -8,7 +8,7 @@ import scala.collection.immutable
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.FiniteGroup
+import net.alasc.algebra.{FiniteGroup, InversePair}
 import net.alasc.syntax.subgroup._
 import net.alasc.syntax.check._
 

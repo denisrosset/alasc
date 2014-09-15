@@ -2,7 +2,6 @@ package net.alasc.algebra
 
 import scala.annotation.tailrec
 
-import net.alasc.math.InversePair
 import net.alasc.syntax.lattice._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._

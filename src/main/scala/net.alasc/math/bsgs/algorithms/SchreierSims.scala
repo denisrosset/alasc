@@ -9,7 +9,7 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, Subgroup}
+import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, InversePair, Subgroup}
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
@@ -49,7 +49,7 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
         if (ubx =!= node.u(i)) {
           val schreierGen = ubx |+| node.uInv(i)
           val res = siftAndUpdateBaseFrom(mutableChain, node, schreierGen)
-          if (!res.isEmpty) return res
+          if (!res.isEmpty) return res.toOption
         }
       }
     }
@@ -144,7 +144,7 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
     givenBase: Seq[Int] = Seq.empty)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = emptyChainWithBase(givenBase)
     while (mutableChain.start.next.order < order) {
-      for ( (nodeForGenerator, generator) <- siftAndUpdateBaseFrom(mutableChain, mutableChain.start, randomElement(randomGenerator)) )
+      for ( (nodeForGenerator, generator) <- siftAndUpdateBaseFrom(mutableChain, mutableChain.start, randomElement(randomGenerator)).toOption )
         addStrongGeneratorHere(mutableChain, nodeForGenerator, generator)
     }
     mutableChain

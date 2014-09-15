@@ -187,7 +187,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         val newBlockSymGrps = debox.Buffer.empty[Grp[G]]
         var it = RefOption(candidatesForImages(images.toLong))
         while (it.nonEmpty) {
-          val NextCandidate(b, c, next) = it.get
+          val NextCandidate(b, c, next) = it.a
           val u = chain.u(b)
           val g = candidates(c)
           val bg = b <|+| g

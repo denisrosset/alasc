@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction}
+import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, InversePair}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 

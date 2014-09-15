@@ -28,6 +28,7 @@ final class SequenceOps[T, A](lhs: T)(implicit ev: Sequence[T, A]) {
 
 final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
   def order(): Int = macro Ops.unop[Int]
+  def conjBy(rhs: InversePair[A]): A = macro Ops.binop[InversePair[A], A]
 }
 
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {

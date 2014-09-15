@@ -57,22 +57,24 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
     * @return the number of removed elements
     */
   def cutRedundantAfter(mutableChain: MutableChain[P], afterThis: StartOrNode[P]): Int =
-    findLastRedundant(mutableChain, afterThis.next).fold(0) { lastR =>
-      @tailrec def eliminateRedundantTail(prev: StartOrNode[P], removed: Int): Int = prev.next match {
-        case _: Term[P] => sys.error("lastR should have been encountered before")
-        case node: Node[P] =>
-          if (node.orbitSize == 1) {
-            val isLastR = node eq lastR
-            val mutablePrev = mutableChain.mutableStartOrNode(prev)
-            mutableChain.remove(mutablePrev, node, node.next)
-            if (!isLastR)
-              eliminateRedundantTail(mutablePrev, removed + 1)
-            else
-              removed + 1
-          } else
-            eliminateRedundantTail(node, removed)
-      }
-      eliminateRedundantTail(afterThis, 0)
+    findLastRedundant(mutableChain, afterThis.next) match {
+      case RefOption(lastR) =>
+        @tailrec def eliminateRedundantTail(prev: StartOrNode[P], removed: Int): Int = prev.next match {
+          case _: Term[P] => sys.error("lastR should have been encountered before")
+          case node: Node[P] =>
+            if (node.orbitSize == 1) {
+              val isLastR = node eq lastR
+              val mutablePrev = mutableChain.mutableStartOrNode(prev)
+              mutableChain.remove(mutablePrev, node, node.next)
+              if (!isLastR)
+                eliminateRedundantTail(mutablePrev, removed + 1)
+              else
+                removed + 1
+            } else
+              eliminateRedundantTail(node, removed)
+        }
+        eliminateRedundantTail(afterThis, 0)
+      case _ => 0
     }
 
   /** Finds an element such that `beta` is stabilized by the subgroup after the element. */
@@ -115,19 +117,21 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
     and the shift was performed, `RefNone` otherwise.
     */
   def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): RefOption[Node[P]] = {
-    findBasePoint(mutableChain, after.next, beta).fold[RefOption[Node[P]]](RefNone) { toShift =>
-      val mutableToShift = mutableChain.mutable(toShift, after)
-      @tailrec def shift(pos: MutableNode[P]): RefOption[Node[P]] =
-        if (pos.prev ne after) {
-          pos.prev match {
-            case prevNode: MutableNode[P] =>
-              val MutableNodeAndNext(node1, node2) = baseSwap(mutableChain, prevNode, pos)
-              shift(node1)
-            case _: Start[P] => sys.error("mutableHere should be before mutableToShift")
-          }
-        } else
-          RefSome(pos)
-      shift(mutableToShift)
+    findBasePoint(mutableChain, after.next, beta) match {
+      case RefOption(toShift) =>
+        val mutableToShift = mutableChain.mutable(toShift, after)
+        @tailrec def shift(pos: MutableNode[P]): RefOption[Node[P]] =
+          if (pos.prev ne after) {
+            pos.prev match {
+              case prevNode: MutableNode[P] =>
+                val MutableNodeAndNext(node1, node2) = baseSwap(mutableChain, prevNode, pos)
+                shift(node1)
+              case _: Start[P] => sys.error("mutableHere should be before mutableToShift")
+            }
+          } else
+            RefSome(pos)
+        shift(mutableToShift)
+      case _ => RefNone
     }
   }
 }

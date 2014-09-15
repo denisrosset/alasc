@@ -16,5 +16,7 @@ trait FiniteGroup[F] extends Group[F] with Eq[F] {
       if (isId(acc)) k else rec(k + 1, op(f, acc))
     rec(1, f)
   }
-  // TODO: add optimized conjugatedBy method
+
+  /** Returns `ip.gInv |+| f |+| ip.g`. */
+  def conjBy(f: F, ip: InversePair[F]): F = op(ip.gInv, op(f, ip.g))
 }

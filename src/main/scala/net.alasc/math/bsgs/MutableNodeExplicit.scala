@@ -145,10 +145,15 @@ final class MutableNodeExplicit[P](
     beta = beta <|+| ip.g
     val newTransversal = MutableLongMap.empty[InversePair[P]]
     transversal.foreachKey { k =>
-      newTransversal.update(k.toInt <|+| ip.g, ip.inverse |+| transversal(k) |+| ip)
+      val newG: P = ip.gInv |+| transversal(k).g |+| ip.g
+      newTransversal.update(k.toInt <|+| ip.g, InversePair(newG, newG.inverse))
     }
     transversal = newTransversal
-    ownGeneratorsPairs.transform(g => ip.inverse |+| g |+| ip)
+    ownGeneratorsPairs.transform {
+      case InversePair(g, gInv) =>
+        val newG = ip.gInv |+| g |+| ip.g
+        InversePair(newG, newG.inverse)
+    }
   }
 }
 

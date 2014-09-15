@@ -38,10 +38,11 @@ class RefOption[+A <: AnyRef](val a: A) extends AnyVal {
 
   @inline final def toLeft[X](right: => X) =
     if (isEmpty) Right(right) else Left(a)
+
+  def toOption: Option[A] = Option(a)
 }
 
 object RefOption {
-  implicit def refOptionToOption[A <: AnyRef](ro: RefOption[A]): Option[A] = Option(ro.a)
   @inline def apply[A <: AnyRef](a: A): RefOption[A] = new RefOption(a)
   def unapply[A <: AnyRef](ro: RefOption[A]): RefOption[A] = ro
 }
