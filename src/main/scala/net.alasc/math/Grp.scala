@@ -14,6 +14,12 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 
+/** User-friendly representation of a group internally using a base and strong generating set data structure.
+  *
+  * TODO: make thread-safe
+  * 
+  * Can be constructed from any finite group with a faithful permutation action.
+  */
 sealed abstract class Grp[G] { lhs =>
   override def toString = generators.mkString("Grp(", ", ", ")") //+ (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
 
@@ -21,10 +27,10 @@ sealed abstract class Grp[G] { lhs =>
   def algorithms: BasicAlgorithms[G]
   /** Generators of the group. Must not contain the identity. */
   def generators: Iterable[G]
-  /** Representation provider for elements of G, used only if needed;
-    * givenRepresentation does not have to be compatible with these representations.
-    */
+  /** Representation provider for elements of G, used only if needed. */
   implicit def representations: Representations[G]
+  /** Finite group operations on type G. */
+
   implicit def algebra: FiniteGroup[G]
 
   def order: BigInt
@@ -40,159 +46,124 @@ sealed abstract class Grp[G] { lhs =>
   implicit def lattice = Grp.lattice[G](algebra, representations, algorithms)
 }
 
-/*
-class GrpChain[G](val algorithms: BasicAlgorithms[G], val generators: Iterable[G], val representation: Representation[G], val chain: Chain[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends GrpBase[G] { lhs =>
-
-}
- */
-
-/** User-friendly representation of a group internally using a base and strong generating set data structure.
-  *
-  * Can be constructed from any finite group with a faithful permutation action.
-  * 
-  * Note: `givenChain`, if provided, has to be accompanied with `givenRepresentation` such that
-  * the action (if any) of `givenChain` is equal to `givenRepresentation.get.action`.
-  * 
-  * @param algorithms          Set of algorithms used in the computations.
-  * @param generators          Generators of the group. Must not contain the identity.
-  * @param givenRepresentation Force the use of a particular representation.
-  * @param givenOrder          Known order for the group, enabling the use of faster randomized algorithms.
-  * @param givenChain          Known chain for the group. When not empty, givenRepresentation has to provided,
-  *                            and givenChain action (if givenChain is contains a node) has to be equal to
-  *                            givenRepresentation.action.
-  * @param givenRandomElement  Function that provides a random element of the group, for use with randomized algorithms.
-  * @param algebra             Finite group operations on type G.
-  * @param representations     Representation provider for elements of G, used only if needed; givenRepresentation 
-  *                            does not have to be compatible with these representations.
-  */
-class GrpImpl[G](
-  val algorithms: BasicAlgorithms[G],
-  val generators: Iterable[G],
-  givenRepresentation: RefOption[Representation[G]],
-  givenOrder: RefOption[BigInt] = RefNone,
-  givenChain: RefOption[Chain[G]] = RefNone,
-  givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
-  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
-
-  // TODO conjugatedBy
-
-  require(givenChain.fold(true)(_.isImmutable))
-
-  private[this] var knownChain: RefOption[Chain[G]] = givenChain
-
-  def isRepresentationKnown = knownRepresentation.nonEmpty
-  protected def representationFromGenerators = representations.get(generators)
-  private[this] var knownRepresentation: RefOption[Representation[G]] = givenRepresentation
-  def representation: Representation[G] = knownRepresentation match {
-    case RefOption(r) => r
-    case _ =>
-      val r = representationFromGenerators
-      knownRepresentation = RefSome(r)
-      r
+class GrpChain[G](val algorithms: BasicAlgorithms[G], val generators: Iterable[G], val representation: Representation[G], val chain: Chain[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
+  chain match {
+    case node: Node[G] => require(node.action == representation.action)
+    case _: Term[G] =>
   }
-  def representation(advice: RefOption[Representation[G]]): Representation[G] = knownRepresentation match {
-    case RefOption(r) => r
-    case _ => advice match {
-      case RefOption(r) =>
-        knownRepresentation = advice
-        r
-      case _ => representation
-    }
-  }
-  def representationIfComputed: RefOption[Representation[G]] = knownRepresentation
-
-  def action: FaithfulPermutationAction[G] = knownChain match {
-    case RefOption(node: Node[G]) =>
-      assert(node.action == representation.action) // TODO remove
-      node.action
-    case _ => representation.action
-  }
-
-  def isChainComputed: Boolean = knownChain.nonEmpty
-
-  protected def computeChain(baseGuide: BaseGuide, action: FaithfulPermutationAction[G]): Chain[G] = knownOrder match {
-    case RefOption(order) => algorithms.chainWithBase(generators, order, baseGuide, action)
-    case _ => algorithms.chainWithBase(generators, baseGuide, action)
-  }
-
-  def chain: Chain[G] = chain(representation)
-  def chain(representationToUse: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G] = knownChain match {
-    case RefOption(node: Node[G]) =>
-      algorithms.chainWithBase(node, baseGuide, representationToUse.action)
-    case RefOption(term: Term[G]) => term
-    case _ => // knownChain is empty, we have to compute a chain
-      if (knownRepresentation.nonEmpty) { // forced representation during Grp construction, use it to compute knownChain
-        knownChain = RefSome(computeChain(baseGuide, representation.action))
-        chain(representationToUse, baseGuide) // but return one with the newly given representation
-      } else {
-        knownRepresentation = RefSome(representationToUse)
-        val c = computeChain(baseGuide, representation.action)
-        knownChain = RefSome(c)
-        c
-      }
-  }
-
-  def isOrderComputed: Boolean = isChainComputed || knownOrder.nonEmpty
-  private[this] var knownOrder: RefOption[BigInt] = givenOrder
-  def order: BigInt = knownOrder.getOrElse {
-    val o = chain.order
-    knownOrder = RefSome(o)
-    o
-  }
-
-  def orderIfComputed: RefOption[BigInt] = if (isOrderComputed) RefSome(order) else RefNone
-  def chainIfComputed: RefOption[Chain[G]] = if (isChainComputed) RefSome(chain) else RefNone
-
-  private[this] var knownRandomBag: RefOption[RandomBag[G]] = RefNone
-  def randomElement(random: Random): G = givenRandomElement match {
-    case RefOption(f) => f(random)
-    case _ => knownChain match {
-      case RefOption(chain) => chain.randomElement(random)
-      case _ =>
-        val rbag = knownRandomBag match {
-          case RefOption(bag) => bag
-          case _ =>
-            val bag = RandomBag(generators, random)
-            knownRandomBag = RefSome(bag)
-            bag
-        }
-        rbag.randomElement(random)
-    }
-  }
-
+  def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty) =
+    algorithms.chainWithBase(chain, baseGuide, representation.action)
+  def chainIfComputed = RefSome(chain)
+  def order = chain.order
+  def orderIfComputed = RefSome(order)
+  def randomElement(random: Random) = chain.randomElement(random)
+  def representationIfComputed = RefSome(representation)
   def contains(g: G) = chain.contains(g)
 }
+
+/** Represents a conjugated group from an original group G (represented by `originalChain`) and an InversePair(g, gInv).
+  * The represented group is `H = gInv G g`.
+  */
+class GrpConjugated[G](val algorithms: BasicAlgorithms[G], val originalGenerators: Iterable[G], val representation: Representation[G], val originalChain: Chain[G], val conjugatedBy: InversePair[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
+  import conjugatedBy.{g, gInv}
+  originalChain match {
+    case node: Node[G] => require(node.action == representation.action)
+    case _: Term[G] =>
+  }
+  def representationIfComputed = RefSome(representation)
+  def chainIfComputed = RefSome(chain)
+  def chain = originalChain match {
+    case node: Node[G] =>
+      implicit def action = representation.action
+      import algorithms.nodeBuilder
+      val mut = algorithms.mutableChain(node)(node.action)
+      mut.conjugate(conjugatedBy)
+      mut.toChain
+    case term: Term[G] => term
+  }
+  def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty) = originalChain match {
+    case node: Node[G] =>
+      if (node.action == representation.action) {
+        implicit def action = representation.action
+        import algorithms.nodeBuilder
+        val mut = algorithms.mutableChain(node)(node.action)
+        mut.conjugate(conjugatedBy)
+        algorithms.changeBaseSameAction(mut, baseGuide)
+        mut.toChain
+      } else
+        algorithms.chainWithBase(generators, randomElement(_), order, baseGuide, representation.action)
+    case term: Term[G] => term
+  }
+  def order = originalChain.order
+  def orderIfComputed = RefSome(order)
+  def randomElement(random: Random) = {
+    val h = originalChain.randomElement(random)
+    gInv |+| h |+| g
+  }
+  // `h in gInv G g` if and only if `g h gInv in G`.
+  def contains(h: G) = originalChain.contains(g |+| h |+| gInv)
+  def generators = originalChain.generators.map(h => gInv |+| h |+| g)
+}
+
+abstract class GrpLazyBase[G] extends Grp[G] {
+  def isChainComputed: Boolean
+  def isOrderComputed: Boolean
+  def orderIfComputed: RefOption[BigInt]
+  def chainIfComputed: RefOption[Chain[G]]
+
+  protected def compute(givenRepresentation: RefOption[Representation[G]] = RefNone, givenBaseGuide: RefOption[BaseGuide] = RefNone): Unit
+
+  def chain: Chain[G] = chain(representation)
+
+  def chain(representationToUse: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G] =
+    chainIfComputed match {
+      case RefOption(node: Node[G]) => algorithms.chainWithBase(node, baseGuide, representationToUse.action)
+      case RefOption(term: Term[G]) => term
+      case _ =>
+        compute(RefSome(representationToUse), RefSome(baseGuide))
+        chain(representationToUse, baseGuide)
+    }
+}
+
 
 object Grp {
   def lattice[G](implicit algebra: FiniteGroup[G], representations: Representations[G], algorithms: BasicAlgorithms[G]): BoundedBelowLattice[Grp[G]] = new GrpLattice[G]
   def trivial[G](implicit algebra: FiniteGroup[G], rp: Representations[G]) = apply[G]()
   def defaultAlgorithms[G](implicit algebra: FiniteGroup[G]) = BasicAlgorithms.randomized(Random)
 
-  def fromChain[G](chain: Chain[G], givenRepresentation: RefOption[Representation[G]] = RefNone)(
+  def fromChain[G](chain: Chain[G], representation: Representation[G])(
     implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] = {
-    givenRepresentation.foreach { r => require(chain.generators.forall(r.represents(_))) } // TODO remove
-    val representation = givenRepresentation.getOrElse(rp.get(chain.generators))
+    chain match {
+      case node: Node[G] => require(representation.action == node.action)
+      case _: Term[G] =>
+    }
+    new GrpChain[G](defaultAlgorithms[G], chain.generators, representation, chain)
+  }
+
+  def fromChain[G](chain: Chain[G])(
+    implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] = {
+    val representation = rp.get(chain.generators)
     chain match {
       case node: Node[G] if representation.action != node.action =>
-        fromSubgroup[Chain[G], G](node, RefSome(representation))
-      case _ => new GrpImpl[G](defaultAlgorithms[G], chain.generators, RefSome(representation), givenChain = RefSome(chain))
+        new GrpLazy(defaultAlgorithms[G], chain.generators, RefSome(chain.order), RefSome(chain.randomElement(_)))
+      case _ => fromChain(chain, representation)
     }
   }
 
-  def fromGenerators[G](generators: Iterable[G], givenRepresentation: RefOption[Representation[G]])(
+  def fromGenerators[G](generators: Iterable[G])(
     implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
-    new GrpImpl[G](defaultAlgorithms[G], generators, givenRepresentation)
+    new GrpLazy[G](defaultAlgorithms[G], generators)
 
   def apply[G](generators: G*)(implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
-    new GrpImpl[G](defaultAlgorithms[G], generators, RefNone)
+    new GrpLazy[G](defaultAlgorithms[G], generators)
 
-  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt, givenRepresentation: RefOption[Representation[G]] = RefNone)(
+  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(
     implicit algebra: FiniteGroup[G], rp: Representations[G]): Grp[G] =
-    new GrpImpl[G](defaultAlgorithms[G], generators, givenRepresentation, givenOrder = RefSome(order))
+    new GrpLazy[G](defaultAlgorithms[G], generators, givenOrder = RefSome(order))
 
-  def fromSubgroup[S, G](subgroup: S, givenRepresentation: RefOption[Representation[G]] = RefNone)(
+  def fromSubgroup[S, G](subgroup: S)(
     implicit algebra: FiniteGroup[G], sg: Subgroup[S, G], rp: Representations[G]): Grp[G] =
-    new GrpImpl[G](defaultAlgorithms[G], subgroup.generators, givenRepresentation,
+    new GrpLazy[G](defaultAlgorithms[G], subgroup.generators,
       givenOrder = RefSome(subgroup.order), givenRandomElement = RefSome(subgroup.randomElement(_)))
 
   implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]

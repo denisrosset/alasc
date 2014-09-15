@@ -14,7 +14,7 @@ import bsgs._
 import algorithms._
 
 class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Representations[G], algorithms: BasicAlgorithms[G]) extends BoundedBelowLattice[Grp[G]] {
-  def zero = Grp.fromGenerators[G](Iterable.empty, RefNone)
+  def zero = Grp.fromGenerators[G](Iterable.empty)
 
   def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
     case RefOption(lhsRepr) => rhs.representationIfComputed match {
@@ -31,7 +31,7 @@ class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Repre
     val mutableChain = algorithms.mutableChainCopyWithAction(chain, rp.action)
     algorithms.insertGenerators(mutableChain, generators)
     algorithms.completeStrongGenerators(mutableChain)
-    Grp.fromChain(mutableChain.toChain, RefSome(rp))
+    Grp.fromChain(mutableChain.toChain, rp)
   }
 
   def join(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
@@ -55,7 +55,7 @@ class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Repre
       if (rhs.orderIfComputed.nonEmpty)
         unionByAdding(rhs.chain(rp), rp, lhs.generators)
       else
-        Grp.fromGenerators(lhs.generators ++ rhs.generators, RefSome(rp))
+        Grp.fromGenerators(lhs.generators ++ rhs.generators)
     }
   }
 

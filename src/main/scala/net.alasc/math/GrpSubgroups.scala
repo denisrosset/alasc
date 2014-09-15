@@ -50,7 +50,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) { // TODO: qualify all calls to grp.chain
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
     val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
-    (Grp.fromChain(nextChain, RefSome(rp)), transversal)
+    (Grp.fromChain(nextChain, rp), transversal)
   }
   def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)

@@ -14,9 +14,6 @@ class RefOption[+A <: AnyRef](val a: A) extends AnyVal {
 
   @inline final def orNull: A = a
 
-  @inline final def fold[B](ifEmpty: => B)(f: A => B): B =
-    if (isEmpty) ifEmpty else f(a)
-
   @inline final def nonEmpty = isDefined
 
   @inline final def contains[A1 >: A](elem: A1): Boolean =

@@ -23,6 +23,9 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
+  def completeChainFromGeneratorsRandomAndOrder(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
+    implicit action: FaithfulPermutationAction[P]): MutableChain[P]
+
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
 }
@@ -103,6 +106,10 @@ trait SchreierSimsDeterministic[P] extends SchreierSimsCommon[P] {
   def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     completeChainFromGeneratorsAndOrder(chain.generators, chain.order, givenBase)(newAction)
 
+  def completeChainFromGeneratorsRandomAndOrder(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
+    implicit action: FaithfulPermutationAction[P]) =
+    completeChainFromGeneratorsAndOrder(generators, order, givenBase)
+
   def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]) =
     completeChainFromGeneratorsAndOrder(s.generators, s.order, givenBase)(action)
@@ -116,6 +123,10 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) =
     randomizedSchreierSims(RandomBag(generators, randomGenerator).randomElement(_), order, givenBase)
+
+  def completeChainFromGeneratorsRandomAndOrder(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
+    implicit action: FaithfulPermutationAction[P]) =
+    randomizedSchreierSims(randomElement, order, givenBase)
 
   def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     randomizedSchreierSims(chain.randomElement(_), chain.order, givenBase)(newAction)

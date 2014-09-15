@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.collection.immutable
 import scala.collection.mutable
+import scala.util.Random
 
 import spire.algebra.Order
 import spire.syntax.groupAction._
@@ -61,6 +62,12 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
     mut
   }
 
+  def mutableChainWithBase(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): MutableChain[P] = {
+    val mut = completeChainFromGeneratorsRandomAndOrder(generators, randomElement, order, baseAnsatz(baseGuide, generators)(action))(action)
+    changeBaseSameAction(mut, baseGuide)(action)
+    mut
+  }
+
   def chainWithBase(generators: Iterable[P], baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): Chain[P] =
     mutableChainWithBase(generators, baseGuide, action).toChain
 
@@ -68,6 +75,8 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
   def chainWithBase(generators: Iterable[P], order: BigInt, baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): Chain[P] =
     mutableChainWithBase(generators, order, baseGuide, action).toChain
 
+  def chainWithBase(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): Chain[P] =
+    mutableChainWithBase(generators, randomElement, order, baseGuide, action).toChain
 
   def mutableChainCopyWithBase(chain: Chain[P], baseGuide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableChainCopyWithAction(chain, action)
