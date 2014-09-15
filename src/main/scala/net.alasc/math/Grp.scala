@@ -64,7 +64,7 @@ class GrpChain[G](val algorithms: BasicAlgorithms[G], val generators: Iterable[G
 /** Represents a conjugated group from an original group G (represented by `originalChain`) and an InversePair(g, gInv).
   * The represented group is `H = gInv G g`.
   */
-class GrpConjugated[G](val algorithms: BasicAlgorithms[G], val originalGenerators: Iterable[G], val representation: Representation[G], val originalChain: Chain[G], val conjugatedBy: InversePair[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
+case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: Iterable[G], representation: Representation[G], originalChain: Chain[G], conjugatedBy: InversePair[G])(implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends Grp[G] { lhs =>
   import conjugatedBy.{g, gInv}
   originalChain match {
     case node: Node[G] => require(node.action == representation.action)

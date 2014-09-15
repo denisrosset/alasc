@@ -5,6 +5,7 @@ import scala.util.Random
 import scala.collection.immutable.BitSet
 
 import spire.syntax.group._
+import spire.syntax.groupAction._
 
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
@@ -26,6 +27,24 @@ trait Transversal[P] extends Any {
 
 object Transversal {
   def empty[P](beta: Int)(implicit algebra: FiniteGroup[P]): Transversal[P] = new EmptyTransversal(beta)
+}
+
+case class ConjugatedTransversal[P](originalTransversal: Transversal[P], conjugatedBy: InversePair[P])(implicit algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]) extends Transversal[P] {
+  import conjugatedBy.{g, gInv}
+  def orbitSize = originalTransversal.orbitSize
+  def inOrbit(b: Int) = originalTransversal.inOrbit(b <|+| gInv)
+  def orbit = originalTransversal.orbit.map(b => b <|+| g)
+  def foreachOrbit[U](f: Int => U) = originalTransversal.foreachOrbit(b => f(b <|+| g))
+  def orbitSet: Set[Int] = orbitSet.map(b => b <|+| g)
+  def randomOrbit(rand: Random) = originalTransversal.randomOrbit(rand) <|+| g
+  def iterable = originalTransversal.iterable.map {
+    case (b, uIp) => (b <|+| g, conjugatedBy.inverse |+| uIp |+| conjugatedBy)
+  }
+  def foreachU[N](f: P => N): Unit = originalTransversal.foreachU(u => f(gInv |+| u |+| g))
+  def uPair(b: Int) = conjugatedBy.inverse |+| originalTransversal.uPair(b <|+| gInv) |+| conjugatedBy
+  def u(b: Int) = gInv |+| originalTransversal.u(b <|+| gInv) |+| g
+  def uInv(b: Int) = g |+| originalTransversal.uInv(b <|+| gInv) |+| gInv
+  def randomU(rand: Random) = gInv |+| originalTransversal.randomU(rand) |+| g
 }
 
 class EmptyTransversal[P](val beta: Int)(implicit algebra: FiniteGroup[P]) extends Transversal[P] {

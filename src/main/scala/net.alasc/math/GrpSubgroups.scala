@@ -20,7 +20,7 @@ trait GrpSubgroupsImplicits {
   implicit def GrpLexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
 }
 
-class GrpSubgroups[G](val lhs: Grp[G]) { // TODO: qualify all calls to grp.chain
+class GrpSubgroups[G](val lhs: Grp[G]) {
   import lhs.{representation, algebra, representations, algorithms}
   def union(rhs: Grp[G]): Grp[G] = lhs.lattice.join(lhs, rhs)
   def intersect(rhs: Grp[G]): Grp[G] = lhs.lattice.meet(lhs, rhs)
@@ -48,6 +48,36 @@ class GrpSubgroups[G](val lhs: Grp[G]) { // TODO: qualify all calls to grp.chain
     fixingPartition(partition, prp.forSize(partition.size))
 
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
+    implicit val algebra = lhs.algorithms.algebra
+    lhs match {
+      case grp: GrpConjugated[G] =>
+        grp.originalChain match {
+          case node: Node[G] if node.action == rp.action =>
+            import grp.conjugatedBy.{g, gInv}
+            implicit def action = node.action
+            val a = b <|+| gInv
+            if (node.inOrbit(a)) {
+              val ip = node.uPair(a)
+              val newConjugatedBy = ip |+| grp.conjugatedBy
+              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, newConjugatedBy), ConjugatedTransversal(node, newConjugatedBy))
+            } else if (node.isFixed(a))
+              return (grp, Transversal.empty(b))
+          case term: Term[G] => return (grp, Transversal.empty[G](b))
+          case _ =>
+        }
+      case grp =>
+        grp.chainIfComputed match {
+          case RefOption(node: Node[G]) if node.action == rp.action =>
+            implicit def action = node.action
+            if (node.inOrbit(b)) {
+              val ip = node.uPair(b)
+              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, ip), ConjugatedTransversal(node, ip))
+            } else if (node.isFixed(b))
+              return (grp, Transversal.empty(b))
+          case RefOption(term: Term[G]) => return (grp, Transversal.empty[G](b))
+          case _ =>
+        }
+    }
     val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
     (Grp.fromChain(nextChain, rp), transversal)
