@@ -81,7 +81,6 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     }
   }
 
-  // TODO: make TermBlock extends LexRepresentative
   case class TermBlock(level: Int, chain: Term[G], images: ULong, index: BigInt, permutation: G) extends Block with LexRepresentative[T, G] {
     def size = 1
     val element = permutation.inverse

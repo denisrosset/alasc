@@ -80,6 +80,5 @@ object RepresentativesOrdered {
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
-    } with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P] with SequencesOrdered[Seq[A], A, P] {
-    }
+    } with SequencesOrdered[Seq[A], A, P] with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P]
 }

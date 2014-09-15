@@ -7,6 +7,7 @@ import org.scalatest._
 import prop._
 import spire.algebra.Order
 import spire.syntax.eq._
+import spire.syntax.order._
 import spire.syntax.groupAction._
 import spire.std.int._
 import net.alasc.algebra._
@@ -34,5 +35,23 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") with Perm
       val bruteForceMinimal = grp.elements.iterator.map(g => seq <|+| g).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
       val cleverMinimal = RepresentativesOrdered(seq, grp).head.get
       cleverMinimal.sameElements(bruteForceMinimal)
+  }
+  property("Representatives are correctly retrieved by index") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
+      val reps = RepresentativesOrdered(seq, grp)
+      reps.iterator.map(_.get).sameElements((0 until reps.size.toInt).iterator.map(k => reps(k).get))
+  }
+  property("Representatives are lexicographically ordered") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
+      implicit val order = spire.std.seq.SeqOrder[Int, Seq]
+      val reps = RepresentativesOrdered(seq, grp)
+      val it = reps.iterator
+      var prev = it.next.get
+      var correct = true
+      while (it.hasNext) {
+        val current = it.next.get
+        if (current <= prev)
+          correct = false
+        prev = current
+      }
+      correct
   }
 }
