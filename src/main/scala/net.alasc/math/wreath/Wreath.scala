@@ -39,8 +39,11 @@ object Wr {
     Grp.fromGeneratorsAndOrder(aGenerators ++ hGenerators, order)
   }
 }
+/*
+class InhWrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
 
-// TODO: rewrite Seq support using iterators instead of linear access
+}
+ */
 class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
   self =>
   type AR = aReps.R
@@ -65,31 +68,31 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
     def meet(x: R, y: R) = R(x.n.min(y.n), aReps.lattice.meet(x.aRep, y.aRep))
   }
   case class R(n: Int, aRep: AR) extends Representation[Wr[A, H]] {
-    val size = n * aRep.size
+    val aSize = aRep.size
+    val size = n * aSize
+    val aDiv = Divisor(size - 1, aSize)
     val representations = self
     def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
-          val s = aRep.size
-          val sub = k % s
-          val block = k / s
+          val block = aDiv.divide(k)
+          val sub = k - block * aSize
           val newBlock = block <|+| w.h
           if (block >= w.aSeq.size)
-            newBlock * s + sub
+            newBlock * aSize + sub
           else
-            newBlock * s + aRep.action.actr(sub, w.aSeq(block))
+            newBlock * aSize + aRep.action.actr(sub, w.aSeq(block))
         }
       def actl(w: Wr[A, H], k: Int): Int =
         if (k >= size) k else {
-          val s = aRep.size
-          val sub = k % s
-          val block = k / s
+          val block = aDiv.divide(k)
+          val sub = k - block * aSize
           val newBlock = w.h |+|> block
           if (newBlock >= w.aSeq.size)
-            newBlock * s + sub
+            newBlock * aSize + sub
           else
-            newBlock * s + aRep.action.actl(w.aSeq(newBlock), sub)
+            newBlock * aSize + aRep.action.actl(w.aSeq(newBlock), sub)
         }
       def supportMaxElement = size
       def support(w: Wr[A, H]) = {
@@ -178,6 +181,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
     require(aSize > 1)
     val factors: Array[Int] = Array.fill(n)(aSize).scanLeft(1)(_*_)
     val size = factors.last
+    val aDiv = Divisor(size - 1, aSize)
     val representations = self
     def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
@@ -187,8 +191,9 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
           var i = 0
           var ind = 0
           while (i < n) {
-            val alphai = rem % aSize
-            rem = rem / aSize
+            val nextRem = aDiv.divide(rem)
+            val alphai = rem - nextRem * aSize
+            rem = nextRem
             ind += factors(i <|+| w.h) * aRep.action.actr(alphai, w.aSeq.applyOrElse(i, (x: Int) => aAlgebra.id))
             i += 1
           }
