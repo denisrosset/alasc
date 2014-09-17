@@ -24,13 +24,13 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
     case r: R if r.representations eq self => RefSome(r)
     case _ => RefNone
   }
-  def minimal = R(1, scalarReps.minimal)
   def get(generators: Iterable[SG]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.size) }
     val scalarRep = scalarReps.get(generators.flatMap(identity))
     R(n, scalarRep)
   }
-  implicit object lattice extends Lattice[R] {
+  implicit object lattice extends BoundedBelowLattice[R] {
+    def zero = R(1, scalarReps.lattice.zero)
     def partialCompare(x: R, y: R) = {
       val sizeC = (x.n - y.n).signum
       val compR = scalarReps.lattice.partialCompare(x.scalarRep, y.scalarRep)

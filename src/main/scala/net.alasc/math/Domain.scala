@@ -21,9 +21,36 @@ final class Domain private (val size: Int) {
     override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
     @inline def domain: Domain = Domain.this
     @inline def size: Int = Domain.this.size
+    def inDomain(newDomain: Domain): RefOption[newDomain.Partition] =
+      if (newDomain.size == size)
+        RefSome(Partition.this.asInstanceOf[newDomain.Partition])
+      else if (newDomain.size > size) {
+        val numEndPoints = newDomain.size - size
+        val newArray = new Array[immutable.BitSet](numBlocks + numEndPoints)
+        Array.copy(array, 0, newArray, 0, array.length)
+        val start = array.length
+        var i = start
+        while (i < newArray.length) {
+          newArray(i) = immutable.BitSet(size + (i - start))
+          i += 1
+        }
+        RefSome(new newDomain.Partition(newArray))
+      } else { // newDomain.size < size
+        val numEndPoints = size - newDomain.size
+        val start = array.length - numEndPoints - 1
+        var i = start
+        while (i < array.length) {
+          val point = newDomain.size + (i - start)
+          if (array(i).size != 1 || array(i).min != point)
+            return RefNone
+          i += 1
+        }
+        val newArray = new Array[immutable.BitSet](numBlocks - numEndPoints)
+        Array.copy(array, 0, newArray, 0, numBlocks - numEndPoints)
+        RefSome(new newDomain.Partition(newArray))
+      }
     def numBlocks = array.length
-    def blocks: Iterable[Set[Int]] = (array: Seq[Set[Int]])
-    // TODO: optimize by computing indices
+    def blocks: Seq[Set[Int]] = array
     def blockFor(k: Int): Set[Int] = array(blockIndex(k))
     lazy val blockIndex: Array[Int] = {
       val res = new Array[Int](size)
@@ -38,6 +65,7 @@ final class Domain private (val size: Int) {
     def sizeIncreasing: Seq[Set[Int]] = array.toSeq.sortBy(b => (b.size, b.min))
   }
   object Partition {
+// TODO    def fromPermutation[P]
     def fromSeq(seq: Seq[Any]): Partition = {
       require(seq.size == size)
       val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]

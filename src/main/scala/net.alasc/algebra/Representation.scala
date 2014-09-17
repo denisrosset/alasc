@@ -51,12 +51,10 @@ trait Representations[G] {
   /** Extraction of a specialized representation. */
   def tryCast(r: Representation[G]): RefOption[R]
 
-  def minimal: R
-
   def get(generators: Iterable[G]): R
 
   /** Lattice of representations. */
-  implicit def lattice: Lattice[R]
+  implicit def lattice: BoundedBelowLattice[R]
 
   // Members with default implementation
   object Typed {
@@ -110,9 +108,9 @@ trait Representations[G] {
 /** Implementation of representations for genuine permutation types such as `Perm` or `Cycles`. */
 final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends Representations[P] {
   self =>
-  def minimal = R(1)
   def forSize(size: Int): Representation[P] = R(size)
   case class R(size: Int) extends Representation[P] {
+    require(size >= 2) // to have primitive wreath action faithful
     def action = ev
     val representations = self
     def represents(p: P) = p.supportMax.getOrElse(-1) < size
@@ -123,13 +121,14 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
       if (iterator.hasNext)
         rec(size.max(iterator.next.supportMax.getOrElse(-1) + 1), iterator)
       else size
-    R(rec(1, generators.iterator))
+    R(rec(2, generators.iterator))
   }
   def tryCast(r: Representation[P]) = r match {
     case typed: R => RefSome(typed)
     case _ => RefNone
   }
-  implicit object lattice extends Lattice[R] {
+  implicit object lattice extends BoundedBelowLattice[R] {
+    def zero = R(2)
     def partialCompare(x: R, y: R) = (x.size - y.size).signum.toDouble
     def join(x: R, y: R) = if (x.size >= y.size) x else y
     def meet(x: R, y: R) = if (x.size <= y.size) x else y
