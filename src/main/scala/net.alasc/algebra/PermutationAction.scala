@@ -24,6 +24,17 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
   /** Returns an upper bound on the maximal element in the support of any element of `G`. */
   def supportMaxElement: Int
 
+  def orbit(g: G, i: Int): Set[Int] = {
+    val mut = mutable.BitSet(i)
+    @tailrec def rec(k: Int): Unit =
+      if (k != i) {
+        mut += k
+        rec(actr(k, g))
+      }
+    rec(actr(i, g))
+    mut.toImmutable
+  }
+
   // TODO: remove, as `to` is sufficient
   def images(g: G, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
     require(supportMax(g).getOrElse(-1) < n)

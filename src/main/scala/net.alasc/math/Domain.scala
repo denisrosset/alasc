@@ -8,7 +8,8 @@ import scala.collection.immutable
 
 import spire.algebra.PartialOrder
 
-import net.alasc.algebra.BoundedLattice
+import net.alasc.algebra.{BoundedLattice, PermutationAction}
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import partition._
 
@@ -65,7 +66,17 @@ final class Domain private (val size: Int) {
     def sizeIncreasing: Seq[Set[Int]] = array.toSeq.sortBy(b => (b.size, b.min))
   }
   object Partition {
-// TODO    def fromPermutation[P]
+    def fromPermutation[P: PermutationAction](p: P) = {
+      val rem = mutable.BitSet.empty ++= (0 until size)
+      var blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
+      while (rem.nonEmpty) {
+        val m = rem.min
+        val orbit = immutable.BitSet.empty ++ p.orbit(m)
+        blocks += orbit
+        rem --= orbit
+      }
+      fromArray(blocks.toArray)
+    }
     def fromSeq(seq: Seq[Any]): Partition = {
       require(seq.size == size)
       val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]
@@ -83,66 +94,66 @@ final class Domain private (val size: Int) {
     def unapply(gen: Domain#Partition): RefOption[Partition] =
       if (gen.domain eq Domain.this) RefSome(gen.asInstanceOf[Partition]) else RefNone
     def fromArray(array: Array[immutable.BitSet]) = new Partition(array)
-  }
-  implicit val lattice: BoundedLattice[Partition] = new BoundedLattice[Partition] {
-    def zero = Partition.fromArray(Array.tabulate(size)( i => immutable.BitSet(i) ))
-    def one = Partition.fromArray(Array(immutable.BitSet.empty ++ (0 until size)))
-    // union
-    def join(x: Partition, y: Partition): Partition = {
-      assert(x.domain eq y.domain)
-      val forest = DisjointSetForest(x)
-      y.blocks.foreach { block =>
-        val it = block.iterator
-        val el1 = it.next
-        while (it.hasNext) {
-          val el2 = it.next
-          forest.union(el1, el2)
-        }
-      }
-      forest.partition(Domain.this)
-    }
-
-    // refinement
-    def meet(x: Partition, y: Partition): Partition = {
-      assert(x.domain eq y.domain)
-      val refinement = PartitionRefinement(x)
-      y.blocks.foreach( refinement.refine(_) )
-      refinement.partition(Domain.this)
-    }
-
-    def isRefinementOf(x: Partition, y: Partition): Boolean = {
-      y.blocks.foreach { block =>
-        val mut = block match {
-          case bs: BitSet => mutable.BitSet.fromBitMaskNoCopy(bs.toBitMask)
-          case _ => mutable.BitSet.empty ++= block
-        }
-        while (!mut.isEmpty) {
-          val m = mut.min
-          x.blockFor(m) match {
-            case refBlock: BitSet =>
-              if (!refBlock.subsetOf(mut))
-                return false
-              mut --= refBlock
-            case other =>
-              if (!other.forall(mut.contains(_)))
-                return false
-              mut --= other
+    implicit object Algebra extends BoundedLattice[Partition] {
+      def zero = Partition.fromArray(Array.tabulate(size)( i => immutable.BitSet(i) ))
+      def one = Partition.fromArray(Array(immutable.BitSet.empty ++ (0 until size)))
+      // union
+      def join(x: Partition, y: Partition): Partition = {
+        assert(x.domain eq y.domain)
+        val forest = DisjointSetForest(x)
+        y.blocks.foreach { block =>
+          val it = block.iterator
+          val el1 = it.next
+          while (it.hasNext) {
+            val el2 = it.next
+            forest.union(el1, el2)
           }
         }
+        forest.partition(Domain.this)
       }
-      true
-    }
 
-    def partialCompare(x: Partition, y: Partition): Double = {
-      assert(x.domain eq y.domain)
+      // refinement
+      def meet(x: Partition, y: Partition): Partition = {
+        assert(x.domain eq y.domain)
+        val refinement = PartitionRefinement(x)
+        y.blocks.foreach( refinement.refine(_) )
+        refinement.partition(Domain.this)
+      }
 
-      (x.numBlocks - y.numBlocks).signum match {
-        case 0 =>
-          if (x.array.sameElements(y.array)) 0.0 else Double.NaN
-        case 1 => // x can be a refinement of y
-          if (isRefinementOf(x, y)) -1.0 else Double.NaN
-        case _ => // y can be a refinement of x
-          if (isRefinementOf(y, x)) 1.0 else Double.NaN
+      def isRefinementOf(x: Partition, y: Partition): Boolean = {
+        y.blocks.foreach { block =>
+          val mut = block match {
+            case bs: BitSet => mutable.BitSet.fromBitMaskNoCopy(bs.toBitMask)
+            case _ => mutable.BitSet.empty ++= block
+          }
+          while (!mut.isEmpty) {
+            val m = mut.min
+            x.blockFor(m) match {
+              case refBlock: BitSet =>
+                if (!refBlock.subsetOf(mut))
+                  return false
+                mut --= refBlock
+              case other =>
+                if (!other.forall(mut.contains(_)))
+                  return false
+                mut --= other
+            }
+          }
+        }
+        true
+      }
+
+      def partialCompare(x: Partition, y: Partition): Double = {
+        assert(x.domain eq y.domain)
+
+        (x.numBlocks - y.numBlocks).signum match {
+          case 0 =>
+            if (x.array.sameElements(y.array)) 0.0 else Double.NaN
+          case 1 => // x can be a refinement of y
+            if (isRefinementOf(x, y)) -1.0 else Double.NaN
+          case _ => // y can be a refinement of x
+            if (isRefinementOf(y, x)) 1.0 else Double.NaN
+        }
       }
     }
   }

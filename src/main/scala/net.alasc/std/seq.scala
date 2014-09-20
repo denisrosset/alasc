@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 import scala.collection.SeqLike
 import scala.collection.mutable
+import scala.reflect.classTag
 
 import spire.algebra._
 import spire.syntax.eq._
@@ -20,6 +21,7 @@ import net.alasc.util._
 class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalarReps: Representations[G], scalarAlgebra: FiniteGroup[G]) extends Representations[SG] {
   self =>
   type SR = scalarReps.R
+  def rClassTag = classTag[R]
   def tryCast(genR: Representation[SG]): RefOption[R] = genR match {
     case r: R if r.representations eq self => RefSome(r)
     case _ => RefNone

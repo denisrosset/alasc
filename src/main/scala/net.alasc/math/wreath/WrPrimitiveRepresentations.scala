@@ -6,7 +6,7 @@ import scala.language.higherKinds
 import scala.collection.generic.CanBuildFrom
 import scala.collection.SeqLike
 import scala.collection.mutable
-import scala.reflect.ClassTag
+import scala.reflect.{ClassTag, classTag}
 
 import spire.algebra._
 import spire.syntax.eq._
@@ -22,6 +22,7 @@ import net.alasc.util._
 class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
   self =>
   type AR = aReps.R
+  def rClassTag = classTag[R]
   def tryCast(genR: Representation[Wr[A, H]]): RefOption[R] = genR match {
     case r: R if r.representations eq self => RefSome(r)
     case _ => RefNone

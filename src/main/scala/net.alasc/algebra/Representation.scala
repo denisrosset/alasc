@@ -1,6 +1,7 @@
 package net.alasc.algebra
 
 import scala.annotation.tailrec
+import scala.reflect.{ClassTag, classTag}
 
 import net.alasc.syntax.lattice._
 import net.alasc.syntax.permutationAction._
@@ -51,6 +52,7 @@ trait Representations[G] {
   /** Extraction of a specialized representation. */
   def tryCast(r: Representation[G]): RefOption[R]
 
+  def rClassTag: ClassTag[R]
   def get(generators: Iterable[G]): R
 
   /** Lattice of representations. */
@@ -109,6 +111,7 @@ trait Representations[G] {
 final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends Representations[P] {
   self =>
   def forSize(size: Int): Representation[P] = R(size)
+  def rClassTag = classTag[R]
   case class R(size: Int) extends Representation[P] {
     require(size >= 2) // to have primitive wreath action faithful
     def action = ev

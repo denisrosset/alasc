@@ -6,7 +6,7 @@ case class Divisor(d: Int, max: Int, offset: Int, f: Long, shift: Int) {
     if (x > max)
       x / d
     else
-      (((x.toLong + offset) * f.toLong) >>> shift).toInt
+      (((x.toLong + offset) * f) >>> shift).toInt
 }
 
 object Divisor {

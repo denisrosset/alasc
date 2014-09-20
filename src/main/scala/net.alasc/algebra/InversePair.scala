@@ -6,12 +6,6 @@ import scala.language.implicitConversions
 import spire.syntax.group._
 import spire.NoImplicit
 
-/*import net.alasc.algebra._
-import scala.util.Random
-import net.alasc.syntax.subgroup._
-import net.alasc.syntax.permutation._
-*/
-
 case class InversePair[G](g: G, gInv: G)
 
 object InversePair {
