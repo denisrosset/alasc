@@ -171,7 +171,16 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
     val representations = selfReps
     def partition: Domain#Partition
     def repForBlock: Array[aReps.R]
-    def repForIndex(i: Int) = repForBlock(partition.blockIndex(i))
+    val repForIndex: Array[aReps.R] = {
+      val res = new Array[aReps.R](partition.size)
+      var i = 0
+      val n = partition.size
+      while (i < n) {
+        repForIndex(i) = repForBlock(partition.blockIndex(i))
+        i += 1
+      }
+      res
+    }
     def represents(w: Wr[A, H]): Boolean =
       if (w.aSeq.size > size) false else {
         val n = w.aSeq.size
