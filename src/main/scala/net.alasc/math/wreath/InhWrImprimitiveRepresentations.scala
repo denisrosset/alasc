@@ -36,6 +36,8 @@ class InhWrImprimitiveRepresentations[A, H](implicit val aReps: Representations[
     else
       generators.map(R(_)).reduce(_ join _)
   case class R(partition: Domain#Partition, repForBlock: Array[aReps.R]) extends ShapedR {
+    def repForBlockString = repForBlock.mkString("Array(", ",", ")")
+    override def toString = s"R($partition, $repForBlockString)"
     val startIndex: Array[Int] = {
       val n = partition.size
       val res = new Array[Int](n + 1)

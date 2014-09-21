@@ -38,8 +38,9 @@ final class Domain private (val size: Int) {
         RefSome(new newDomain.Partition(newArray))
       } else { // newDomain.size < size
         val numEndPoints = size - newDomain.size
-        val start = array.length - numEndPoints - 1
+        val start = array.length - numEndPoints
         var i = start
+        if (i < 0) return RefNone
         while (i < array.length) {
           val point = newDomain.size + (i - start)
           if (array(i).size != 1 || array(i).min != point)

@@ -32,9 +32,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   implicit object lattice extends BoundedBelowLattice[R] {
     def zero = R(Domain(1).Partition.fromArray(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
     override def lteqv(x: R, y: R): Boolean = // x <= y ?
-      if (y.size < x.size) false else {
-        val xSized = x.forSize(y.size).get
-        val domain = Domain(x.size)
+      if (y.partition.size < x.partition.size) false else {
+        val xSized = x.forPartitionSize(y.partition.size).get
+        val domain = Domain(y.partition.size)
         implicit def aRepLattice: Lattice[aReps.R] = aReps.lattice
         if (!(xSized.partition.inDomain(domain).get <= y.partition.inDomain(domain).get))
           false
@@ -64,9 +64,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       }
 
     def join(x: R, y: R): R = {
-      val newSize: Int = x.size.max(y.size)
-      val xSized = x.forSize(newSize).get
-      val ySized = y.forSize(newSize).get
+      val newSize: Int = x.partition.size.max(y.partition.size)
+      val xSized = x.forPartitionSize(newSize).get
+      val ySized = y.forPartitionSize(newSize).get
       val domain = Domain(newSize)
       implicit def aRepLattice: Lattice[aReps.R] = aReps.lattice
       val xPart = xSized.partition.inDomain(domain).get
@@ -91,14 +91,15 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
           mutBlock --= y.partition.blockFor(m)
         }
         newRepForBlock(i) = newRep
+        i += 1
       }
       R(newPartition, newRepForBlock)
     }
     def meet(x: R, y: R): R = {
-      val workSize: Int = x.size.max(y.size)
-      val newSize: Int = x.size.min(y.size)
-      val xSized = x.forSize(newSize).get
-      val ySized = y.forSize(newSize).get
+      val workSize: Int = x.partition.size.max(y.partition.size)
+      val newSize: Int = x.partition.size.min(y.partition.size)
+      val xSized = x.forPartitionSize(workSize).get
+      val ySized = y.forPartitionSize(workSize).get
       val workDomain = Domain(workSize)
       val newDomain = Domain(newSize)
       implicit def workPartitionLattice: BoundedLattice[workDomain.Partition] = workDomain.Partition.Algebra
@@ -128,6 +129,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
           mutBlock --=  y.partition.blockFor(m)
         }
         newRepForBlock(i) = newRep
+        i += 1
       }
       R(newPartition, newRepForBlock)
     }
@@ -154,7 +156,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   def R: RBuilder
   abstract class ShapedR extends Representation[Wr[A, H]] {
     selfR: R =>
-    trait DefaultAction extends FaithfulPermutationAction[Wr[A, H]] {
+    def partition: Domain#Partition
+    def repForBlock: Array[aReps.R]
+    abstract class DefaultAction extends FaithfulPermutationAction[Wr[A, H]] {
       def supportMaxElement = size - 1
       def support(w: Wr[A, H]): Set[Int] =
         (0 until size).filter(k => actr(k, w) != k).toSet
@@ -169,20 +173,18 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       def actl(w: Wr[A, H], k: Int): Int = actr(k, w.inverse)
     }
     val representations = selfReps
-    def partition: Domain#Partition
-    def repForBlock: Array[aReps.R]
-    val repForIndex: Array[aReps.R] = {
-      val res = new Array[aReps.R](partition.size)
+    lazy val repForIndex: Array[aReps.R] = {
       var i = 0
       val n = partition.size
+      val res = new Array[aReps.R](n)
       while (i < n) {
-        repForIndex(i) = repForBlock(partition.blockIndex(i))
+        res(i) = repForBlock(partition.blockIndex(i))
         i += 1
       }
       res
     }
     def represents(w: Wr[A, H]): Boolean =
-      if (w.aSeq.size > size) false else {
+      if (w.aSeq.size > partition.size) false else {
         val n = w.aSeq.size
         if (!partition.blocks.forall(_.forall( k => k > n || repForIndex(k).represents(w.aSeq(k)))))
           return false
@@ -191,7 +193,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
         val wPartition: domain.Partition = domain.Partition.fromPermutation(w.h)
         wPartition <= myPartition
       }
-    def forSize(newSize: Int): RefOption[R] =
+    def forPartitionSize(newSize: Int): RefOption[R] =
       if (newSize == partition.size)
         RefSome(this)
       else if (newSize > partition.size) {
