@@ -20,10 +20,17 @@ import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 /** Describes the wreath product of two objects. */
-case class Wr[A, H](aSeq: Seq[A], h: H)
+trait Wr[A, H] {
+  def aSeq: Seq[A]
+  def h: H
+}
 
-/** Type classes for wreath products. */
+/** Default wreath product object and type classes for wreath products. */
 object Wr {
+  def apply[A, H](aSeq0: Seq[A], h0: H) = new Wr[A, H] {
+    val aSeq = aSeq0
+    val h = h0
+  }
   implicit def wrImprimitiveRepresentations[A: FiniteGroup: Representations, H: Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
   implicit def wrFiniteGroup[A: FiniteGroup, H: Permutation]: FiniteGroup[Wr[A, H]] = new WrFiniteGroup[A, H]
   def grp[SA, SH, A: Representations, H](n: Int, sa: SA, sh: SH)(
