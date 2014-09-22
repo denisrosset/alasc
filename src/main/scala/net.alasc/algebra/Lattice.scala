@@ -9,8 +9,10 @@ trait Lattice[A] extends PartialOrder[A] {
 
 trait BoundedBelowLattice[A] extends Lattice[A] {
   def zero: A
+  def isZero(a: A) = eqv(zero, a)
 }
 
 trait BoundedLattice[A] extends BoundedBelowLattice[A] {
   def one: A
+  def isOne(a: A) = eqv(one, a)
 }
