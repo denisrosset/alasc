@@ -17,13 +17,16 @@ import net.alasc.syntax.lattice._
 import net.alasc.util._
 import partition._
 
+/** Describes a partition of the set `0 until size`, with a value `V` associated to each block. */
 final class PartitionMap[V: ClassTag](val partition: Domain#Partition, protected val values: Array[V]) {
   override def toString = partition.blocks.map( block => block.toString + " -> " + apply(block).toString).mkString("PartitionMap(", ", ", ")")
   def getOrElse(i: Int, defaultValue: => V) =
     if (i < partition.size) apply(i) else defaultValue
+  /** Returns the value associated with the block of which `i` is a member. */
   def apply(i: Int): V =
     if (i < 0 || i >= partition.size) throw new IndexOutOfBoundsException(i.toString) else
       values(partition.blockIndex(i))
+  /** Returns the value associated with the given `block`. `block` must be exact member of the partition. */
   def apply(block: Set[Int]): V =
     if (block.isEmpty) throw new NoSuchElementException(block.toString) else {
       val m = block.min
@@ -33,8 +36,12 @@ final class PartitionMap[V: ClassTag](val partition: Domain#Partition, protected
       else
         values(bi)
     }
+  /** Tests if `i` is in a block of the partition. */
   def isDefinedAt(i: Int): Boolean = (i >= 0 && i < partition.size)
+  /** Tests if `block` is in the partition. */
   def isDefinedAt(block: Set[Int]): Boolean = block.nonEmpty && partition.blocks(partition.blockIndex(block.min)) == block
+  /** Returns a resized partition map, using `defaultValue` when expanding, and testing whether elements can be removed
+    * using `removedSatisfy`. Returns `RefNone` if the resizing is not possible. */
   def forPartitionSize(newSize: Int, defaultValue: => V, removedSatisfy: V => Boolean): RefOption[PartitionMap[V]] =
     if (newSize == partition.size)
       RefSome(this)
@@ -52,6 +59,8 @@ final class PartitionMap[V: ClassTag](val partition: Domain#Partition, protected
         case _ => RefNone
       }
 }
+
+/** Induced lattice for partition maps, when the values are themselves member of a lattice bounded below. */
 final class PartitionMapLattice[V: ClassTag](implicit val scalar: BoundedBelowLattice[V]) extends BoundedBelowLattice[PartitionMap[V]] {
   def zero = new PartitionMap(Domain(1).Partition.Algebra.one, Array(scalar.zero))
   def join(x: PartitionMap[V], y: PartitionMap[V]): PartitionMap[V] = {
