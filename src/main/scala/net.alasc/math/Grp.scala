@@ -1,6 +1,8 @@
 package net.alasc
 package math
 
+import scala.language.implicitConversions
+
 import scala.annotation.tailrec
 import scala.util.Random
 
@@ -167,6 +169,8 @@ object Grp {
       givenOrder = RefSome(subgroup.order), givenRandomElement = RefSome(subgroup.randomElement(_)))
 
   implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
+  implicit def GrpSubgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
+  implicit def GrpLexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
 }
 
 class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {

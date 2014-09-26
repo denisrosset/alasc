@@ -15,11 +15,6 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 
-trait GrpSubgroupsImplicits {
-  implicit def GrpSubgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
-  implicit def GrpLexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
-}
-
 class GrpSubgroups[G](val lhs: Grp[G]) {
   import lhs.{representation, algebra, representations, algorithms}
   def union(rhs: Grp[G]): Grp[G] = lhs.lattice.join(lhs, rhs)
@@ -86,7 +81,6 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)
     stabilizer(b, rp)
   }
-
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
     Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
   def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
