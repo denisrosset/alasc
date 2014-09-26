@@ -14,7 +14,7 @@ import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
-import net.alasc.std.seq._
+import net.alasc.std._
 import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
@@ -48,7 +48,8 @@ object Wr {
 }
 
 class WrFiniteGroup[A, H](implicit aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends FiniteGroup[Wr[A, H]] {
-  def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && (x.aSeq === y.aSeq)
+  val aSeqFiniteGroup = new SeqFiniteGroup[Seq[A], A]
+  def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && aSeqFiniteGroup.eqv(x.aSeq, y.aSeq)
   def id = Wr(Seq.empty[A], hAlgebra.id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
     val hInv = w.h.inverse
