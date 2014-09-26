@@ -19,6 +19,8 @@ import partition._
 
 /** Describes a partition of the set `0 until size`, with a value `V` associated to each block. */
 final class PartitionMap[V: ClassTag](val partition: Domain#Partition, protected val values: Array[V]) {
+  /** Returns the size of the underlying domain. */
+  def size = partition.size
   override def toString = partition.blocks.map( block => block.toString + " -> " + apply(block).toString).mkString("PartitionMap(", ", ", ")")
   def getOrElse(i: Int, defaultValue: => V) =
     if (i < partition.size) apply(i) else defaultValue
