@@ -23,6 +23,12 @@ final class Domain private (val size: Int) {
     * stored in an array, sorted by their minimal element.
     */
   final class Partition(protected[alasc] val array: Array[immutable.BitSet]) {
+    def fixingGroupOrder: BigInt = blocks.map(block => factorial(block.size)).reduce(_*_)
+    def fixingGroupGenerators: Iterable[Perm] =
+      blocks.filter(_.size > 1).map(_.toSeq).flatMap { blockSeq =>
+        (blockSeq zip blockSeq.tail).map { case (x,y) => Perm(x,y) }
+      }
+    def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
     override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
     @inline def domain: Domain = Domain.this
     @inline def size: Int = Domain.this.size
