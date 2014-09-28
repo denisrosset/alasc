@@ -14,7 +14,6 @@ import spire.std.int._
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 
-
 trait PermutationGenerators[P] {
   implicit def permutation: Permutation[P]
   implicit def maximumSize: Int = permutation.supportMaxElement.min(100000)

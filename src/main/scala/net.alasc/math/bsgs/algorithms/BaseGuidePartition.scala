@@ -17,13 +17,14 @@ import net.alasc.syntax.check._
 import net.alasc.util._
 
 case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
-  val blocks = partition.sizeIncreasing
+  val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
   def iterator = new Iter(mutable.BitSet.empty,
     debox.Buffer.fromIterable(blocks.map(block => mutable.BitSet.empty ++= block)),
     debox.Buffer.fromIterable(blocks.map(_.size)))
 
   final class Iter(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
+    override def toString = s"Current: $currentBlock, Remaining: $remainingBlocks"
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty
 
     def next(beta: Int, easyPoints: collection.Set[Int], isFixed: Int => Boolean): Int =
@@ -50,9 +51,10 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
               if (block.isEmpty) {
                 remainingBlocks.remove(index)
                 remainingBlockSizes.remove(index)
-                if (easyNonFixed.nonEmpty)
-                  easyNonFixed
-                else
+                if (easyNonFixed.nonEmpty) {
+                  val OptionTuple2NN(point, blockIndex) = easyNonFixed
+                  SomeTuple2NN(point, blockIndex - 1)
+                } else
                   findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
               } else {
                 if (easyNonFixed.nonEmpty)
