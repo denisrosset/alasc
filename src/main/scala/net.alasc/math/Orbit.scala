@@ -7,9 +7,9 @@ import scala.collection.mutable.{Set => MutableSet, BitSet => MutableBitSet}
 
 object OrbitInstances {
   implicit def setElementOrbit[P, G](implicit scalarAction: GroupAction[P, G]): GroupAction[Set[P], G] = new SetElementOrbit
-  implicit def bitSetElementOrbit[P, G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, G] = new BitSetElementOrbit
+  implicit def bitSetElementOrbit[G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, G] = new BitSetElementOrbit
   implicit def setIterableOrbit[P, G](implicit scalarAction: GroupAction[P, G]): GroupAction[Set[P], Iterable[G]] = new SetIterableOrbit
-  implicit def bitSetIterableOrbit[P, G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, Iterable[G]] = new BitSetIterableOrbit
+  implicit def bitSetIterableOrbit[G](implicit intAction: GroupAction[Int, G]): GroupAction[BitSet, Iterable[G]] = new BitSetIterableOrbit
 }
 
 class SetElementOrbit[P, G](implicit scalarAction: GroupAction[P, G]) extends GroupAction[Set[P], G] {
