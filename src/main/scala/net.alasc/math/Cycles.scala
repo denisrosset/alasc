@@ -22,9 +22,10 @@ import net.alasc.util._
   *   by first elements.
   */
 class Cycles private[alasc](val seq: Seq[Cycle]) {
-  override def toString: String = seq.mkString
-  def toStringUsing(symbols: Int => String) =
-    seq.map(_.toStringUsing(symbols(_))).mkString
+  override def toString: String = "Cycles" + string
+  def string: String = seq.map(_.string).mkString
+  def stringUsing(symbols: Int => String): String =
+    seq.map(_.stringUsing(symbols(_))).mkString
   def apply(cycle: Int*) = Cycles.Algebra.op(this, Cycles(cycle: _*))
   def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
 }

@@ -21,9 +21,11 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 
   def length = seq.length
 
-  override def toString: String = seq.mkString("(", ",", ")")
+  override def toString: String = "Cycle" + string
 
-  def toStringUsing(symbols: Int => String) =
+  def string: String = seq.mkString("(", ",", ")")
+
+  def stringUsing(symbols: Int => String) =
     seq.map(symbols(_)).mkString("(", ",", ")")
 
   override def equals(any: Any) = any match {
