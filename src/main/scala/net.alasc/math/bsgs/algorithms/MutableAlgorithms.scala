@@ -136,8 +136,7 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
       }
     }
     mutableChain.findLastMutable() match {
-      case IsMutableNode(mn) =>
-        rec(mn)
+      case IsMutableNode(mn) => rec(mn)
       case _ =>
     }
   }

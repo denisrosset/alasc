@@ -53,37 +53,41 @@ final class MutableNodeExplicit[P](
     ownGeneratorsPairs += newGenerator
   }
 
-  import scala.collection.mutable.ArrayBuffer
+  import mutable.ArrayBuffer
 
-  protected[bsgs] def removeRedundantGenerators(implicit ct: ClassTag[P]): Unit = {
+  /** Remove redundant generators from this node generators. */
+  protected[bsgs] def removeRedundantGenerators: Unit = {
+    /* Tests if the orbit stays complete after removing each generator successively. 
+     * The redundant generators are removed from the
+     * end of the `ownGeneratorsPairs`, the non-redundant are swapped at its beginning, 
+     * at the position indicated by `swapHere`.
+     */
     val os = orbitSize
-    var testFrom = 0
+    var swapHere = 0
     var ogpLength = ownGeneratorsPairs.length
-    val nextGenerators = next.strongGeneratingSet.toArray
-    while (testFrom < ogpLength) {
+    while (swapHere < ogpLength) {
       val newOrbit = mutable.BitSet(beta)
-      var toCheck = debox.Buffer.empty[Int]
-      var newAdded = debox.Buffer.empty[Int]
-      @inline def swapBuffers: Unit = {
+      var toCheck = mutable.BitSet.empty
+      var newAdded = mutable.BitSet.empty
+      @inline def swapBitsets: Unit = {
         var temp = toCheck
         toCheck = newAdded
         newAdded = temp
-        newAdded.clear // TODO: use Buffer.reset when available
+        newAdded.clear
       }
-      var j = 0
-      while (j < ogpLength - 1) {
-        val b = beta <|+| ownGeneratorsPairs(j).g
-        newOrbit += b
-        newAdded += b
-        j += 1
+      {
+        var j = 0
+        while (j < ogpLength - 1) {
+          val b = beta <|+| ownGeneratorsPairs(j).g
+          newOrbit += b
+          newAdded += b
+          j += 1
+        }
       }
-      swapBuffers
+      swapBitsets
       while (toCheck.nonEmpty) {
-        var i = 0
-        val n = toCheck.length
-        while (i < n) {
-          val c = toCheck(i)
-          j = 0
+        toCheck.foreach { c =>
+          var j = 0
           while (j < ogpLength - 1) {
             val cg = c <|+| ownGeneratorsPairs(j).g
             if (!newOrbit.contains(cg)) {
@@ -92,35 +96,26 @@ final class MutableNodeExplicit[P](
             }
             j += 1
           }
-          j = 0
-          while (j < nextGenerators.length) {
-            val cg = c <|+| nextGenerators(j)
+          next.strongGeneratingSet.foreach { g =>
+            val cg = c <|+| g
             if (!newOrbit.contains(cg)) {
               newOrbit += cg
               newAdded += cg
             }
-            j += 1
           }
-          i += 1
         }
-        swapBuffers
+        swapBitsets
       }
       if (newOrbit.size == os)
         ogpLength -= 1
       else {
-        var temp = ownGeneratorsPairs(testFrom)
-        ownGeneratorsPairs(testFrom) = ownGeneratorsPairs(ogpLength - 1)
+        var temp = ownGeneratorsPairs(swapHere)
+        ownGeneratorsPairs(swapHere) = ownGeneratorsPairs(ogpLength - 1)
         ownGeneratorsPairs(ogpLength - 1) = temp
-        testFrom += 1
+        swapHere += 1
       }
     }
-    //    println(ownGeneratorsPairs.size -> ogpLength)
     ownGeneratorsPairs.reduceToSize(ogpLength)
-
-    {
-      import OrbitInstances._
-      assert((scala.collection.immutable.BitSet(beta) <|+| strongGeneratingSet).size == os)
-    }
   }
 
   protected[bsgs] def bulkAdd(beta: debox.Buffer[Int], pairs: ArrayBuffer[InversePair[P]])(implicit ev: FiniteGroup[P]) = {

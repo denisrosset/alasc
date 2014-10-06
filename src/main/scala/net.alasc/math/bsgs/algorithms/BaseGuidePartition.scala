@@ -54,8 +54,12 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
                 if (easyNonFixed.nonEmpty) {
                   val OptionTuple2NN(point, blockIndex) = easyNonFixed
                   SomeTuple2NN(point, blockIndex - 1)
-                } else
-                  findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
+                } else newNonFixed match {
+                  case OptionTuple2NN(point, blockIndex) =>
+                    findPointAndBlockIndex(lastIndex - 1, index - 1, SomeTuple2NN(point, blockIndex - 1))
+                  case _ =>
+                    findPointAndBlockIndex(lastIndex - 1, index - 1, newNonFixed)
+                }
               } else {
                 if (easyNonFixed.nonEmpty)
                   easyNonFixed

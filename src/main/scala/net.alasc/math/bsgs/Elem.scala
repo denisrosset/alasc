@@ -274,7 +274,7 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     prev = null
   }
 
-  protected[bsgs] def removeRedundantGenerators(implicit ct: ClassTag[P]): Unit
+  protected[bsgs] def removeRedundantGenerators: Unit
 
   /** Adds `newGenerators` (given as a traversable of `InversePair`) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */
