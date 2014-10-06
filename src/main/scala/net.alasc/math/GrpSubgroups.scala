@@ -4,6 +4,7 @@ package math
 import scala.language.implicitConversions
 
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.syntax.group._
@@ -16,7 +17,11 @@ import bsgs._
 import algorithms._
 
 class GrpSubgroups[G](val lhs: Grp[G]) {
-  import lhs.{representation, algebra, representations, algorithms}
+  import lhs.representation
+  implicit def gClassTag: ClassTag[G] = lhs.algorithms.gClassTag
+  implicit def algorithms: BasicAlgorithms[G] = lhs.algorithms
+  implicit def representations: Representations[G] = lhs.representations
+  implicit def algebra: FiniteGroup[G] = lhs.algebra
   def union(rhs: Grp[G]): Grp[G] = lhs.lattice.join(lhs, rhs)
   def intersect(rhs: Grp[G]): Grp[G] = lhs.lattice.meet(lhs, rhs)
   def hasSubgroup(rhs: Grp[G]): Boolean = lhs.lattice.gteqv(lhs, rhs)
@@ -35,7 +40,6 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     require(lhs.generators.forall(rhs.contains(_)))
     new RightCosets(lhs, rhs)
   }
-  implicit def algorithms = lhs.algorithms
   def fixingPartition(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
     Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition))
 

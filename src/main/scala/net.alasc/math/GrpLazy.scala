@@ -18,11 +18,10 @@ import algorithms._
   * @param givenRandomElement  Function that provides a random element of the group, for use with randomized algorithms.
   */
 class GrpLazy[G](
-  val algorithms: BasicAlgorithms[G],
   val generators: Iterable[G],
   givenOrder: RefOption[BigInt] = RefNone,
   givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
-  implicit val algebra: FiniteGroup[G], val representations: Representations[G]) extends GrpLazyBase[G] { lhs =>
+  implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G]) extends GrpLazyBase[G] { lhs =>
 
   private[this] var computedRepresentation: RefOption[Representation[G]] = RefNone
   private[this] var computedChain: RefOption[Chain[G]] = RefNone

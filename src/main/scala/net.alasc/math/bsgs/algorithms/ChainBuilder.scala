@@ -40,12 +40,14 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
       if (baseGuide.isSatisfiedBy(from)) from else {
         val mut = mutableChain(from)(action)
         changeBaseSameAction(mut, baseGuide)(action)
+        removeRedundantGenerators(mut)
         mut.toChain
       }
     case node: Node[P] => // action != node.action
       val baseStart = baseAnsatz(baseGuide, node.strongGeneratingSet)(action)
       val mut = completeChainActionChange(node, action, baseStart)
       changeBaseSameAction(mut, baseGuide)(action)
+      removeRedundantGenerators(mut)
       mut.toChain
     case _: Term[P] => from
   }
@@ -53,18 +55,21 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
   def mutableChainWithBase(generators: Iterable[P], baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mut = completeChainFromGenerators(generators, baseAnsatz(baseGuide, generators)(action))(action)
     changeBaseSameAction(mut, baseGuide)(action)
+    removeRedundantGenerators(mut)
     mut
   }
 
   def mutableChainWithBase(generators: Iterable[P], order: BigInt, baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mut = completeChainFromGeneratorsAndOrder(generators, order, baseAnsatz(baseGuide, generators)(action))(action)
     changeBaseSameAction(mut, baseGuide)(action)
+    removeRedundantGenerators(mut)
     mut
   }
 
   def mutableChainWithBase(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, baseGuide: BaseGuide, action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mut = completeChainFromGeneratorsRandomAndOrder(generators, randomElement, order, baseAnsatz(baseGuide, generators)(action))(action)
     changeBaseSameAction(mut, baseGuide)(action)
+    removeRedundantGenerators(mut)
     mut
   }
 
@@ -81,6 +86,7 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
   def mutableChainCopyWithBase(chain: Chain[P], baseGuide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = mutableChainCopyWithAction(chain, action)
     changeBaseSameAction(mutableChain, baseGuide)
+    removeRedundantGenerators(mutableChain)
     mutableChain
   }
   def mutableChainCopyWithBase(chain: Chain[P], base: Seq[Int])(implicit action: FaithfulPermutationAction[P]): MutableChain[P] =

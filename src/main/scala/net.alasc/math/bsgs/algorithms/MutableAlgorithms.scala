@@ -4,6 +4,8 @@ package algorithms
 
 import scala.annotation.tailrec
 
+import scala.collection.mutable
+
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
@@ -126,6 +128,17 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
 
   /** Removes redundant strong generators in the given chain. */
   def removeRedundantGenerators(mutableChain: MutableChain[P]): Unit = {
-
+    @tailrec def rec(mutableNode: MutableNode[P]): Unit = {
+      mutableNode.removeRedundantGenerators
+      mutableNode.prev match {
+        case IsMutableNode(p) => rec(p)
+        case _ =>
+      }
+    }
+    mutableChain.findLastMutable() match {
+      case IsMutableNode(mn) =>
+        rec(mn)
+      case _ =>
+    }
   }
 }

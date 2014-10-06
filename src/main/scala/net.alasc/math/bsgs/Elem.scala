@@ -3,6 +3,7 @@ package bsgs
 
 import scala.language.implicitConversions
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
 import scala.collection
 import scala.collection.immutable
@@ -162,8 +163,8 @@ sealed trait Chain[P] extends Elem[P] {
 }
 
 object Chain {
-  implicit def ChainSubgroup[P](implicit algebra: FiniteGroup[P]): Subgroup[Chain[P], P] = new ChainSubgroup[P]
-  implicit def ChainCheck[P](implicit algebra: FiniteGroup[P]): Check[Chain[P]] = new ChainCheck[P]
+  implicit def ChainSubgroup[P: ClassTag: FiniteGroup]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
+  implicit def ChainCheck[P: ClassTag: FiniteGroup]: Check[Chain[P]] = new ChainCheck[P]
 }
 
 /** Node in a BSGS chain.
@@ -273,6 +274,8 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     prev = null
   }
 
+  protected[bsgs] def removeRedundantGenerators(implicit ct: ClassTag[P]): Unit
+
   /** Adds `newGenerators` (given as a traversable of `InversePair`) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */
   protected[bsgs] def addToOwnGenerators(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]): Unit
@@ -301,7 +304,7 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
   def contains(chain: Chain[P], g: P) = chain.sifts(g)
 }
 
-final class ChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[Chain[P]] {
+final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[P]) extends Check[Chain[P]] {
   def check(chain: Chain[P]): Unit = {
     chain match {
       case node: Node[P] =>

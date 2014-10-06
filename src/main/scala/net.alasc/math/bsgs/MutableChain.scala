@@ -3,6 +3,8 @@ package bsgs
 
 import scala.annotation.tailrec
 
+import scala.reflect.ClassTag
+
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
@@ -329,10 +331,10 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 
 object MutableChain {
   def empty[P: FiniteGroup](implicit action: FaithfulPermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
-  implicit def MutableChainCheck[P: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
+  implicit def MutableChainCheck[P: ClassTag: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
 }
 
-final class MutableChainCheck[P](implicit val algebra: FiniteGroup[P]) extends Check[MutableChain[P]] {
+final class MutableChainCheck[P: ClassTag: FiniteGroup] extends Check[MutableChain[P]] {
   @tailrec def checkAllAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Unit = chain match {
     case node: Node[P] =>
       assert(node.action eq action)

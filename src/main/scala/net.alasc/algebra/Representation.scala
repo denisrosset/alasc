@@ -107,6 +107,10 @@ trait Representations[G] {
     Typed.unapply(r1).getOrElse(get(generators1)) meet Typed.unapply(r2).getOrElse(get(generators2))
 }
 
+object Representations {
+  def apply[G](implicit ev: Representations[G]): Representations[G] = ev
+}
+
 /** Implementation of representations for genuine permutation types such as `Perm` or `Cycles`. */
 final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends Representations[P] {
   self =>

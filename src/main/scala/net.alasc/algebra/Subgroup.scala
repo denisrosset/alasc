@@ -2,6 +2,7 @@ package net.alasc
 package algebra
 
 import scala.util.Random
+import scala.reflect.ClassTag
 
 import spire.algebra.{Group, Eq}
 import spire.syntax.eq._
@@ -67,5 +68,5 @@ trait Subgroup[S, G] extends Eq[S] { sg =>
     }
     NNNone
   }
-  def toGrp(subgroup: S)(implicit representations: Representations[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(algebra, sg, representations)
+  def toGrp(subgroup: S)(implicit classTag: ClassTag[G], representations: Representations[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(classTag, algebra, representations, sg)
 }

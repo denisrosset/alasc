@@ -2,6 +2,7 @@ package net.alasc
 package math
 
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.syntax.group._
@@ -13,7 +14,10 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 
-class GrpLattice[G](implicit val algebra: FiniteGroup[G], representations: Representations[G], algorithms: BasicAlgorithms[G]) extends BoundedBelowLattice[Grp[G]] {
+class GrpLattice[G](implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G])
+    extends BoundedBelowLattice[Grp[G]] {
+  implicit def algebra: FiniteGroup[G] = algorithms.algebra
+  implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
   def zero = Grp.fromGenerators[G](Iterable.empty)
 
   def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {

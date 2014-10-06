@@ -33,11 +33,13 @@ object Intersection {
     }
   }
   def baseGuide[P](chain1: Chain[P]) = BaseGuideSeq(chain1.base)
-  def intersection[P](chain1: Chain[P], chain2WithGuidedBase: Chain[P])(implicit algebra: FiniteGroup[P], alg: BasicAlgorithms[P]): Chain[P] =
+  def intersection[P](chain1: Chain[P], chain2WithGuidedBase: Chain[P])(implicit alg: BasicAlgorithms[P]): Chain[P] =
     chain1 match {
       case node1: Node[P] => chain2WithGuidedBase match {
         case node2: Node[P] =>
-          implicit def action = node1.action
+          implicit def algebra: FiniteGroup[P] = alg.algebra
+          implicit def pClassTag: ClassTag[P] = alg.gClassTag
+          implicit def action: FaithfulPermutationAction[P] = node1.action
           val base1 = node1.base
           val base2 = node2.base
           val l = base1.length.min(base2.length)
