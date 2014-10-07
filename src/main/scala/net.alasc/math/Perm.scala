@@ -28,7 +28,7 @@ import perm._
   * Cycles is such a type.
   */
 sealed trait Perm extends Any {
-  override def toString = "Perm" + this.to[Cycles].toString
+  override def toString = "Perm" + this.to[Cycles].string
 
   @inline protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
