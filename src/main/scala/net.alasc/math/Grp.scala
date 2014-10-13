@@ -19,8 +19,6 @@ import algorithms._
 
 /** User-friendly representation of a group internally using a base and strong generating set data structure.
   *
-  * TODO: make thread-safe
-  * 
   * Can be constructed from any finite group with a faithful permutation action.
   */
 sealed abstract class Grp[G] { lhs =>

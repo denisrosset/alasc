@@ -28,20 +28,22 @@ class GrpLazy[G](
 
   protected def compute(givenRepresentation: RefOption[Representation[G]] = RefNone,
     givenBaseGuide: RefOption[BaseGuide] = RefNone): Unit =
-    if (computedRepresentation.nonEmpty) {
-      assert(computedChain.nonEmpty)
-    } else {
-      assert(computedChain.isEmpty)
-      val representation = givenRepresentation.getOrElse(representations.get(generators))
-      val baseGuide = givenBaseGuide.getOrElse(BaseGuide.empty)
-      computedRepresentation = RefSome(representation)
-      computedChain = RefSome(givenOrder match {
-        case RefOption(order) => givenRandomElement match {
-          case RefOption(randomElement) => algorithms.chainWithBase(generators, randomElement, order, baseGuide, representation.action)
-          case _ => algorithms.chainWithBase(generators, order, baseGuide, representation.action)
-        }
-        case _ => algorithms.chainWithBase(generators, baseGuide, representation.action)
-      })
+    this.synchronized {
+      if (computedRepresentation.nonEmpty) {
+        assert(computedChain.nonEmpty)
+      } else {
+        assert(computedChain.isEmpty)
+        val representation = givenRepresentation.getOrElse(representations.get(generators))
+        val baseGuide = givenBaseGuide.getOrElse(BaseGuide.empty)
+        computedChain = RefSome(givenOrder match {
+          case RefOption(order) => givenRandomElement match {
+            case RefOption(randomElement) => algorithms.chainWithBase(generators, randomElement, order, baseGuide, representation.action)
+            case _ => algorithms.chainWithBase(generators, order, baseGuide, representation.action)
+          }
+          case _ => algorithms.chainWithBase(generators, baseGuide, representation.action)
+        })
+        computedRepresentation = RefSome(representation)
+      }
     }
 
   def representation: Representation[G] = computedRepresentation match {
