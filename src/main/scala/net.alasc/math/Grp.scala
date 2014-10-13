@@ -38,6 +38,11 @@ sealed abstract class Grp[G] { lhs =>
   implicit def algebra: FiniteGroup[G] = algorithms.algebra
   implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
 
+  override def equals(any: Any) = any match {
+    case that: Grp[G] => this === that
+    case _ => false
+  }
+
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
   def chainIfComputed: RefOption[Chain[G]]
