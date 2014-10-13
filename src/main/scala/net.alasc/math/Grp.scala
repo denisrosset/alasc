@@ -22,6 +22,7 @@ import algorithms._
   * Can be constructed from any finite group with a faithful permutation action.
   */
 sealed abstract class Grp[G] { lhs =>
+  override def hashCode = sys.error("HashCode not defined for Grp")
   override def toString = generators.mkString("Grp(", ", ", ")") //+ (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
 
   /** Set of algorithms used in the computations. */

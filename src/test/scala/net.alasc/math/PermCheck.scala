@@ -4,11 +4,19 @@ import org.scalacheck._
 import org.scalacheck.Arbitrary._
 import org.scalatest._
 import prop._
+import spire.algebra.Eq
 import spire.syntax.group._
 import spire.syntax.groupAction._
 import spire.syntax.eq._
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
+
+class PermHashCheck extends HashCheck[Perm] with PermutationGenerators[Perm] {
+  implicit def permutation = Perm.Algebra
+  implicit def arb = Arbitrary { genP(30) }
+  def clone(p: Perm) = p.to[Cycles].to[Perm]
+  implicit def eq: Eq[Perm] = Perm.Algebra
+}
 
 class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] {
   implicit def permutation = Perm.Algebra

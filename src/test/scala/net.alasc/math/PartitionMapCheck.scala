@@ -21,6 +21,18 @@ class NonNegIntLatticeCheck extends BoundedBelowLatticeCheck[Int] {
   }
 }
 
+class PartitionMapHashCheck extends HashCheck[PartitionMap[Int]] {
+  implicit def arb = Arbitrary {
+    for {
+      size <- Gen.choose(1, 15)
+      seq <- Gen.containerOfN[Seq, Int](size, Gen.choose(0, 4))
+    } yield PartitionMap.tabulate(Domain(size).Partition.fromSeq(seq))( block => seq(block.min) )
+  }
+  def clone(pm: PartitionMap[Int]) = PartitionMap.tabulate(pm.partition)(set => pm(set))
+  implicit def intLattice: BoundedBelowLattice[Int] = NonNegIntLattice
+  implicit val eq = PartitionMap.PartitionMapLattice[Int]
+}
+
 class PartitionMapCheck extends BoundedBelowLatticeCheck[PartitionMap[Int]] {
   implicit def intLattice: BoundedBelowLattice[Int] = NonNegIntLattice
   implicit def lattice = PartitionMap.PartitionMapLattice[Int]

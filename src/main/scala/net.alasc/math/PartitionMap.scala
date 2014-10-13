@@ -21,6 +21,7 @@ import partition._
 final class PartitionMap[V: ClassTag](val partition: Domain#Partition, protected val values: Array[V]) {
   /** Returns the size of the underlying domain. */
   def size = partition.size
+  override def hashCode = scala.util.hashing.MurmurHash3.unorderedHash(partition.blocks zip values)
   override def toString = partition.blocks.map( block => block.toString + " -> " + apply(block).toString).mkString("PartitionMap(", ", ", ")")
   def getOrElse(i: Int, defaultValue: => V) =
     if (i < partition.size) apply(i) else defaultValue
@@ -133,4 +134,3 @@ object PartitionMap {
   def tabulate[V: ClassTag](partition: Domain#Partition)(f: Set[Int] => V): PartitionMap[V] =
     new PartitionMap(partition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
 }
-

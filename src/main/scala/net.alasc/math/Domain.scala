@@ -30,6 +30,7 @@ final class Domain private (val size: Int) {
       }
     def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
     override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
+    override def hashCode = scala.util.hashing.MurmurHash3.arrayHash(array)
     @inline def domain: Domain = Domain.this
     @inline def size: Int = Domain.this.size
     /** Returns the partition in a domain of possibly a different size. The resized part, to be
