@@ -31,11 +31,4 @@ class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with E
   test ("Sign of (1,3,5)(2,4) is -1 -- Wikipedia/parity of a permutation") {
     Perm(1,3,5)(2,4).signum shouldBe -1
   }
-  /*
-  test ("(1,2,3) + 1 === (2,3,4)") {
-    ((Cycles(1,2,3) + 1) === Cycles(2,3,4)) shouldBe true
-  }
-  test ("(1,2,3) - 1 === (0,1,2)") {
-    ((Cycles(1,2,3) - 1) === Cycles(0,1,2)) shouldBe true
-  }*/
 }

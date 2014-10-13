@@ -49,4 +49,3 @@ class Perm32Check extends PropSpec with Matchers with EqMatchers with GeneratorD
     }
   }
 }
-
