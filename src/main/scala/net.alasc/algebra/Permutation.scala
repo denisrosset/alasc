@@ -2,6 +2,9 @@ package net.alasc.algebra
 
 import scala.{ specialized => spec }
 import scala.annotation.tailrec
+
+import scala.util.Random
+
 import spire.algebra._
 import spire.syntax.groupAction._
 
@@ -30,6 +33,11 @@ trait Permutation[P] extends FiniteGroup[P] with FaithfulPermutationAction[P] {
     fromSupportAndImageFun(evQ.support(q), k => evQ.actr(k, q))
 
   def compatibleWith(p: P) = true
+
+  def random(size: Int)(implicit gen: scala.util.Random): P = {
+    import spire.std.int._
+    sorting(Seq.tabulate(size)(k => gen.nextInt))
+  }
 }
 
 object Permutation {
