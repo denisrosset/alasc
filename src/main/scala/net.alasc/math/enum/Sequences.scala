@@ -50,3 +50,12 @@ trait SequencesOrdered[T, A, G] extends RepresentativesOrdered[T, G] {
     case None => NNNone
   }
 }
+
+object SequencesOrdered {
+  def computeIntegerArray[T, A](t: T)(implicit sequenceTA: Sequence[T, A], orderA: Order[A]): Array[Int] = {
+    val tLength = sequenceTA.length(t)
+    val sortedSet = mutable.SortedSet.empty[A](Order.ordering(orderA)) ++ (0 until tLength).map(i => sequenceTA.elemAt(t, i))
+    val aMap = mutable.HashMap.empty[A, Int] ++ sortedSet.zipWithIndex
+    Array.tabulate(tLength) { i => aMap(sequenceTA.elemAt(t, i)) }
+  }
+}
