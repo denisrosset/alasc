@@ -79,11 +79,20 @@ trait Representations[G] {
     generators1: Iterable[G], generators2: Iterable[G]): R =
     r1 match {
       case Typed(rep1) => r2 match {
-        case Typed(rep2) => rep1 join rep2
-        case _ => rep1 join get(generators2)
+        case Typed(rep2) =>
+          if (rep1 eq rep2) rep1 else (rep1 join rep2)
+        case _ =>
+          if (generators2.forall(rep1.represents(_)))
+            rep1
+          else
+            (rep1 join get(generators2))
       }
       case _ => r2 match {
-        case Typed(rep2) => get(generators1) join rep2
+        case Typed(rep2) =>
+          if (generators1.forall(rep2.represents(_)))
+            rep2
+          else
+            (get(generators1) join rep2)
         case _ => get(generators1 ++ generators2)
       }
     }
