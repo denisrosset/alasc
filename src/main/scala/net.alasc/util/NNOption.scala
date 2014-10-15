@@ -14,6 +14,9 @@ class NNOption(val i: Int) extends AnyVal { lhs =>
   @inline final def getOrElse(default: => Int): Int =
     if (isEmpty) default else get
 
+  @inline final def getOrElseFast(default: Int): Int =
+    if (isEmpty) default else get
+
   @inline final def fold[B](ifEmpty: => B)(f: Int => B): B =
     if (isEmpty) ifEmpty else f(i)
 

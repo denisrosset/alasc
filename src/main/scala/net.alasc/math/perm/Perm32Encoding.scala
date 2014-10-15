@@ -120,7 +120,7 @@ object Perm32Encoding {
   }
 
   def toPerm16(long2: Long, long1: Long, long0: Long): Perm16 = {
-    var k = Perm32Encoding.supportMax(long2, long1, long0).getOrElse(-1)
+    var k = Perm32Encoding.supportMax(long2, long1, long0).getOrElseFast(-1)
     if (k > Perm16Encoding.supportMaxElement) sys.error("Cannot fit in Perm16.")
     var encoding = 0L
     var l1 = long1

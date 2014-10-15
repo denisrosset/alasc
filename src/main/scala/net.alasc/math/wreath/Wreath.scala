@@ -53,12 +53,12 @@ class WrFiniteGroup[A, H](implicit aAlgebra: FiniteGroup[A], hAlgebra: Permutati
   def id = Wr(Seq.empty[A], hAlgebra.id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
     val hInv = w.h.inverse
-    val n = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+    val n = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
     Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => aAlgebra.id).inverse), hInv)
   }
   def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
     val newH = x.h |+| y.h
-    val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElse(-1) + 1)
+    val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElseFast(-1) + 1)
     Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => aAlgebra.id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => aAlgebra.id) ), newH)
   }
 }

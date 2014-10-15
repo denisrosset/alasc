@@ -58,7 +58,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
 
   def support = {
     val bitset = mutable.BitSet.empty
-    var k = supportMax.getOrElse(-1)
+    var k = supportMax.getOrElseFast(-1)
     while (k >= 0) {
       if (image(k) != k)
         bitset += k
@@ -67,7 +67,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
     bitset.toImmutable
   }
 
-  def isValidPerm32 = supportMax.getOrElse(-1) <= Perm32Encoding.supportMaxElement
+  def isValidPerm32 = supportMax.getOrElseFast(-1) <= Perm32Encoding.supportMaxElement
 
   def toPerm32 = {
     assert(isValidPerm32)

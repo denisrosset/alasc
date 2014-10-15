@@ -211,8 +211,8 @@ abstract class PermBase extends AbstractPerm {
     * and delegates to `genOpLarge` or `genRevOpLarge` otherwise.
     */
   def genOpDefaultImpl(lhs: Perm, rhs: Perm, isRev: Boolean): Perm = {
-    var k = lhs.supportMax.reduceMax(rhs.supportMax).getOrElse(-1)
-    val low = lhs.supportMin.reduceMin(rhs.supportMin).getOrElse(0)
+    var k = lhs.supportMax.reduceMax(rhs.supportMax).getOrElseFast(-1)
+    val low = lhs.supportMin.reduceMin(rhs.supportMin).getOrElseFast(0)
     @inline def img(preimage: Int) = rhs.image(lhs.image(preimage))
     while (k >= low) {
       val i = img(k)
@@ -264,7 +264,7 @@ abstract class PermBase extends AbstractPerm {
     val lhsSM = lhs.supportMax
     val rhsSM = rhs.supportMax
     if (lhsSM != rhsSM) false else {
-      var k = lhsSM.getOrElse(-1)
+      var k = lhsSM.getOrElseFast(-1)
       while (k >= 0) {
         if (image(k) != rhs.image(k))
           return false

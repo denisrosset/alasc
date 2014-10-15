@@ -28,7 +28,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
     case _ => RefNone
   }
   def get(generators: Iterable[Wr[A, H]]) = {
-    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElse(-1) + 1) }
+    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }
     val aRep = aReps.get(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
@@ -48,7 +48,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
     val size = n * aSize
     val aDiv = Divisor(size - 1, aSize)
     val representations = self
-    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
+    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
@@ -73,7 +73,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
       def supportMaxElement = size - 1
       def support(w: Wr[A, H]) = {
         val bitset = mutable.BitSet.empty
-        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
         var block = 0
         var offset = 0
         val s = aRep.size
@@ -90,7 +90,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
       def supportMin(w: Wr[A, H]): NNOption = {
         var block = 0
         var offset = 0
-        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
         val s = aRep.size
         while (block < m) {
           if ((block <|+| w.h) != block)
@@ -107,7 +107,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
         NNNone
       }
       def supportMax(w: Wr[A, H]): NNOption = {
-        val m = w.aSeq.size.max(w.h.supportMax.getOrElse(-1) + 1)
+        val m = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
         var block = m - 1
         val s = aRep.size
         var offset = block * s

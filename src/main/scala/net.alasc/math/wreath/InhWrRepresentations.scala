@@ -137,7 +137,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   trait RBuilder {
     def apply(partition: Domain#Partition, repForBlock: Array[aReps.R]): R
     def apply(wr: Wr[A, H]): R = {
-      val size = wr.aSeq.size.max(wr.h.supportMax.getOrElse(0) + 1)
+      val size = wr.aSeq.size.max(wr.h.supportMax.getOrElseFast(0) + 1)
       val partition = Domain(size).Partition.fromPermutation(wr.h)
       val repForBlock = new Array[aReps.R](partition.numBlocks)
       var i = 0

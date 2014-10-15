@@ -7,7 +7,7 @@ import net.alasc.syntax.permutationAction._
 
 /** Lexicographically ordered sequence of permutations acting on `n` elements. */
 final case class Perms(n: Int) extends coll.big.IndexedSet[Perm] {
-  def contains(perm: Perm): Boolean = perm.supportMax.getOrElse(-1) < n
+  def contains(perm: Perm): Boolean = perm.supportMax.getOrElseFast(-1) < n
   @tailrec def fact(k: Int, acc: BigInt = 1): BigInt =
     if (k < 2) acc else fact(k - 1, acc * k)
   def length = fact(n)
@@ -18,7 +18,7 @@ final case class Perms(n: Int) extends coll.big.IndexedSet[Perm] {
     * Inspired by sympy.combinatorics.permutations.
     */
   def find(perm: Perm): Option[BigInt] =
-    if (perm.supportMax.getOrElse(-1) >= n) None else {
+    if (perm.supportMax.getOrElseFast(-1) >= n) None else {
       var rank = BigInt(0)
       val rho: Array[Int] = perm.images(n).toArray
       var k = n - 1

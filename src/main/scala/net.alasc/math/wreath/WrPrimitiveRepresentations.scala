@@ -28,7 +28,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
     case _ => RefNone
   }
   def get(generators: Iterable[Wr[A, H]]) = {
-    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElse(-1) + 1) }
+    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }
     val aRep = aReps.get(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
@@ -50,7 +50,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
     val size = factors.last
     val aDiv = Divisor(size - 1, aSize)
     val representations = self
-    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElse(-1) < n && w.aSeq.forall(aRep.represents(_))
+    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {

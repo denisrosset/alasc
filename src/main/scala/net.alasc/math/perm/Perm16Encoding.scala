@@ -34,9 +34,9 @@ object Perm16Encoding {
   @inline def idEncoding: Long = 0L
   @inline def id: Perm16 = new Perm16(idEncoding)
   @inline def invImage(encoding: Long, i: Int): Int = {
-    val low = supportMin(encoding).getOrElse(-1)
+    val low = supportMin(encoding).getOrElseFast(-1)
     if (i < low) return i
-    var k = supportMax(encoding).getOrElse(0)
+    var k = supportMax(encoding).getOrElseFast(0)
     if (i > k) return i
     while (k >= low) {
       if (decode(encoding, k) == i)

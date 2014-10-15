@@ -129,13 +129,13 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
     require(size >= 2) // to have primitive wreath action faithful
     def action = ev
     val representations = self
-    def represents(p: P) = p.supportMax.getOrElse(-1) < size
-    override def conjugatedBy(ip: InversePair[P]) = R(size.max(ip.g.supportMax.getOrElse(-1) + 1))
+    def represents(p: P) = p.supportMax.getOrElseFast(-1) < size
+    override def conjugatedBy(ip: InversePair[P]) = R(size.max(ip.g.supportMax.getOrElseFast(-1) + 1))
   }
   def get(generators: Iterable[P]) = {
     @tailrec def rec(size: Int, iterator: Iterator[P]): Int =
       if (iterator.hasNext)
-        rec(size.max(iterator.next.supportMax.getOrElse(-1) + 1), iterator)
+        rec(size.max(iterator.next.supportMax.getOrElseFast(-1) + 1), iterator)
       else size
     R(rec(2, generators.iterator))
   }

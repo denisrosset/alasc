@@ -37,7 +37,7 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
 
   // TODO: remove, as `to` is sufficient
   def images(g: G, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
-    require(supportMax(g).getOrElse(-1) < n)
+    require(supportMax(g).getOrElseFast(-1) < n)
     def length = n
     def apply(idx: Int) = actr(idx, g)
   }
