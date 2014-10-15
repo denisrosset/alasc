@@ -35,7 +35,7 @@ class GrpLattice[G](implicit val algorithms: BasicAlgorithms[G], val representat
     val mutableChain = algorithms.mutableChainCopyWithAction(chain, rp.action)
     algorithms.insertGenerators(mutableChain, generators)
     algorithms.completeStrongGenerators(mutableChain)
-    Grp.fromChain(mutableChain.toChain, rp)
+    Grp.fromChain(mutableChain.toChain, RefSome(rp))
   }
 
   def join(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {

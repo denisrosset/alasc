@@ -16,25 +16,40 @@ import algorithms._
 /**
   * @param givenOrder          Known order for the group, enabling the use of faster randomized algorithms.
   * @param givenRandomElement  Function that provides a random element of the group, for use with randomized algorithms.
+  * @param givenRepresentation Representation to be used by default to compute the group chain.
   */
 class GrpLazy[G](
   val generators: Iterable[G],
   givenOrder: RefOption[BigInt] = RefNone,
-  givenRandomElement: RefOption[Function1[Random, G]] = RefNone)(
+  givenRandomElement: RefOption[Function1[Random, G]] = RefNone,
+  givenRepresentation: RefOption[Representation[G]] = RefNone)(
   implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G]) extends GrpLazyBase[G] { lhs =>
 
-  private[this] var computedRepresentation: RefOption[Representation[G]] = RefNone
-  private[this] var computedChain: RefOption[Chain[G]] = RefNone
-
-  protected def compute(givenRepresentation: RefOption[Representation[G]] = RefNone,
-    givenBaseGuide: RefOption[BaseGuide] = RefNone): Unit =
+  private[this] var computedRepresentation: RefOption[Representation[G]] = givenRepresentation
+  /** Forces the computation of the representation.
+    *
+    * @param givenRepresentation   Representation to be used to avoid computation
+    */
+  protected def computeRepresentation(givenRepresentation: RefOption[Representation[G]] = RefNone): Representation[G] =
     this.synchronized {
-      if (computedRepresentation.nonEmpty) {
-        assert(computedChain.nonEmpty)
-      } else {
-        assert(computedChain.isEmpty)
-        val representation = givenRepresentation.getOrElse(representations.get(generators))
-        val baseGuide = givenBaseGuide.getOrElse(BaseGuide.empty)
+      if (computedRepresentation.isEmpty) {
+        if (givenRepresentation.nonEmpty)
+          computedRepresentation = givenRepresentation
+        else
+          computedRepresentation = RefSome(representations.get(generators))
+      }
+      computedRepresentation.get
+    }
+
+  private[this] var computedChain: RefOption[Chain[G]] = RefNone
+  /** Forces the computation of the group chain.
+    *
+    * @param givenRepresentation   Representation to be used; the one given during `GrpLazy` has priority.
+    */
+  protected def computeChain(givenRepresentation: RefOption[Representation[G]] = RefNone): Chain[G] =
+    this.synchronized {
+      val baseGuide = BaseGuide.empty
+      if (computedChain.isEmpty) {
         computedChain = RefSome(givenOrder match {
           case RefOption(order) => givenRandomElement match {
             case RefOption(randomElement) => algorithms.chainWithBase(generators, randomElement, order, baseGuide, representation.action)
@@ -42,14 +57,13 @@ class GrpLazy[G](
           }
           case _ => algorithms.chainWithBase(generators, baseGuide, representation.action)
         })
-        computedRepresentation = RefSome(representation)
       }
+      computedChain.get
     }
 
   def representation: Representation[G] = computedRepresentation match {
     case RefOption(r) => r
-    case _ => compute()
-      representation
+    case _ => computeRepresentation()
   }
 
   def isChainComputed = computedChain.nonEmpty

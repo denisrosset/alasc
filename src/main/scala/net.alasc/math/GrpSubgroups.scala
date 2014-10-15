@@ -41,7 +41,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     new RightCosets(lhs, rhs)
   }
   def fixingPartition(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
-    Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition), rp)
+    Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition), RefSome(rp))
 
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartition(partition, prp.forSize(partition.size))
@@ -79,7 +79,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     }
     val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
-    (Grp.fromChain(nextChain, rp), transversal)
+    (Grp.fromChain(nextChain, RefSome(rp)), transversal)
   }
   def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)

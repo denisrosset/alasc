@@ -121,7 +121,7 @@ abstract class GrpLazyBase[G] extends Grp[G] {
   def orderIfComputed: RefOption[BigInt]
   def chainIfComputed: RefOption[Chain[G]]
 
-  protected def compute(givenRepresentation: RefOption[Representation[G]] = RefNone, givenBaseGuide: RefOption[BaseGuide] = RefNone): Unit
+  protected def computeChain(givenRepresentation: RefOption[Representation[G]] = RefNone): Chain[G]
 
   def chain: Chain[G] = chain(representation)
 
@@ -130,7 +130,7 @@ abstract class GrpLazyBase[G] extends Grp[G] {
       case RefOption(node: Node[G]) => algorithms.chainWithBase(node, baseGuide, representationToUse.action)
       case RefOption(term: Term[G]) => term
       case _ =>
-        compute(RefSome(representationToUse), RefSome(baseGuide))
+        computeChain(RefSome(representationToUse))
         chain(representationToUse, baseGuide)
     }
 }
@@ -141,34 +141,34 @@ object Grp {
   def trivial[G: ClassTag: FiniteGroup: Representations] = apply[G]()
   implicit def defaultAlgorithms[G: ClassTag: FiniteGroup] = BasicAlgorithms.randomized(Random)
 
-  def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G], representation: Representation[G]): Grp[G] = {
-    chain match {
-      case node: Node[G] => require(representation.action == node.action)
-      case _: Term[G] =>
-    }
-    new GrpChain[G](chain.generators, representation, chain)
-  }
-
-  def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G]): Grp[G] = {
-    val representation = Representations[G].get(chain.generators)
+  def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G],
+    representationOption: RefOption[Representation[G]] = RefNone): Grp[G] = {
+    val representation = representationOption.getOrElse(Representations[G].get(chain.generators))
     chain match {
       case node: Node[G] if representation.action != node.action =>
-        new GrpLazy(chain.generators, RefSome(chain.order), RefSome(chain.randomElement(_)))
-      case _ => fromChain(chain, representation)
+        new GrpLazy(chain.generators, RefSome(chain.order), RefSome(chain.randomElement(_)), representationOption)
+      case _ =>
+        new GrpChain[G](chain.generators, representation, chain)
     }
   }
 
-  def fromGenerators[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G]): Grp[G] =
-    new GrpLazy[G](generators)
+  def fromGenerators[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G],
+    representationOption: RefOption[Representation[G]] = RefNone): Grp[G] =
+    new GrpLazy[G](generators, givenRepresentation = representationOption)
 
   def apply[G: ClassTag: FiniteGroup: Representations](generators: G*): Grp[G] =
     new GrpLazy[G](generators)
 
-  def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt): Grp[G] =
-    new GrpLazy[G](generators, givenOrder = RefSome(order))
+  def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
+    representationOption: RefOption[Representation[G]] = RefNone): Grp[G] =
+    new GrpLazy[G](generators, givenOrder = RefSome(order), givenRepresentation = representationOption)
 
-  def fromSubgroup[S, G: ClassTag: FiniteGroup: Representations](subgroup: S)(implicit sg: Subgroup[S, G]): Grp[G] =
-    new GrpLazy[G](subgroup.generators, givenOrder = RefSome(subgroup.order), givenRandomElement = RefSome(subgroup.randomElement(_)))
+  def fromSubgroup[S, G: ClassTag: FiniteGroup: Representations](subgroup: S,
+    representationOption: RefOption[Representation[G]] = RefNone)(implicit sg: Subgroup[S, G]): Grp[G] =
+    new GrpLazy[G](subgroup.generators,
+      givenOrder = RefSome(subgroup.order),
+      givenRandomElement = RefSome(subgroup.randomElement(_)),
+      givenRepresentation = representationOption)
 
   implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
   implicit def GrpSubgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
