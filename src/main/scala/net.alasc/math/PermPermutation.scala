@@ -54,7 +54,7 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
   @inline override def actl(p: Perm, i: Int): Int = p.invImage(i)
   @inline override def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
   @inline def inverse(p: Perm): Perm = p.inverse
-  @inline def id = Perm16Encoding.id
+  val id = Perm16Encoding.id
   @inline def supportMaxElement = PermArray.supportMaxElement
   @inline def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
   @inline def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
