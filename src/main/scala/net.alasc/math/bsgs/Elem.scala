@@ -138,9 +138,76 @@ sealed trait Chain[P] extends Elem[P] {
     * @note The strong generating set is stored piece by piece by having each
     *       node storing explicitly only the generators appearing at its level.
     */
-  def strongGeneratingSet: Iterable[P] = nodesNext.flatMap(_.ownGenerators) // TODO: replace by view, now it is allocating ListBuffer
+  def strongGeneratingSet: Iterable[P] = new Iterable[P] {
+    override def foreach[U](f: P => U): Unit = {
+      @tailrec def rec(current: Chain[P]): Unit = current match {
+        case node: Node[P] =>
+          node.ownGeneratorsPairs.foreach( ip => f(ip.g) )
+          rec(node.next)
+        case _: Term[P] =>
+      }
+      rec(chain)
+    }
+    def iterator = chain match {
+      case _: Term[P] => Iterator.empty
+      case thisNode: Node[P] => new Iterator[P] {
+        var node: Node[P] = thisNode
+        def hasNextNode = !node.next.isTerminal
+        var nodeIterator = node.ownGeneratorsPairs.iterator
+        def findNonEmptyIterator: Boolean = {
+          while(!nodeIterator.hasNext) {
+            node.next match {
+              case nextNode: Node[P] => node = nextNode
+              case _: Term[P] => return false
+            }
+            nodeIterator = node.ownGeneratorsPairs.iterator
+          }
+          true
+        }
+        def hasNext = nodeIterator.hasNext || findNonEmptyIterator
+        def next: P = {
+          if (!findNonEmptyIterator) return Iterator.empty.next
+          nodeIterator.next.g
+        }
+      }
+    }
+  }
 
-  def strongGeneratingSetPairs: Iterable[InversePair[P]] = nodesNext.flatMap(_.ownGeneratorsPairs)
+  /** Returns the strong generating set pairs for the BSGS chain starting from this node. */
+  def strongGeneratingSetPairs: Iterable[InversePair[P]] = new Iterable[InversePair[P]] {
+    override def foreach[U](f: InversePair[P] => U): Unit = {
+      @tailrec def rec(current: Chain[P]): Unit = current match {
+        case node: Node[P] =>
+          node.ownGeneratorsPairs.foreach(f)
+          rec(node.next)
+        case _: Term[P] =>
+      }
+      rec(chain)
+    }
+    def iterator = chain match {
+      case _: Term[P] => Iterator.empty
+      case thisNode: Node[P] => new Iterator[InversePair[P]] {
+        var node: Node[P] = thisNode
+        def hasNextNode = !node.next.isTerminal
+        var nodeIterator = node.ownGeneratorsPairs.iterator
+        def findNonEmptyIterator: Boolean = {
+          while(!nodeIterator.hasNext) {
+            node.next match {
+              case nextNode: Node[P] => node = nextNode
+              case _: Term[P] => return false
+            }
+            nodeIterator = node.ownGeneratorsPairs.iterator
+          }
+          true
+        }
+        def hasNext = nodeIterator.hasNext || findNonEmptyIterator
+        def next: InversePair[P] = {
+          if (!findNonEmptyIterator) return Iterator.empty.next
+          nodeIterator.next
+        }
+      }
+    }
+  }
 
   def length: Int = ChainRec.length(chain)
 
