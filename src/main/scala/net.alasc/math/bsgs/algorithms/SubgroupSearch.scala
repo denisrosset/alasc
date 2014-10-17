@@ -110,6 +110,7 @@ trait SubgroupSearchImpl[P] extends SchreierSims[P] with BaseChange[P] with Base
     }
     val Tuple2Int(restartFrom, levelCompleted) = rec(0, length, givenChain, subgroupChain.start.next, algebra.id, test)
     assert(levelCompleted == 0)
+    cutRedundantAfter(subgroupChain, subgroupChain.start)
     subgroupChain
   }
 
