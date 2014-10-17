@@ -141,7 +141,7 @@ trait PermCompanion {
   * or as part of the `Perm` hierarchy, as it extends the universal trait `Perm`. In that case,
   * the value class will be wrapped.
   */
-final case class Perm16 private[math](val encoding: Long) extends AnyVal with Perm { lhs16 =>
+final case class Perm16(val encoding: Long) extends AnyVal with Perm { lhs16 =>
   @inline def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
   @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
   @inline def isId = encoding == 0L
@@ -154,6 +154,7 @@ final case class Perm16 private[math](val encoding: Long) extends AnyVal with Pe
 }
 
 object Perm16 extends PermCompanion {
+  def fromEncoding(encoding: Long): Perm16 = new Perm16(encoding)
   def supportMaxElement = 15
   def tooBig(supportMax: Int) = sys.error(s"Permutation too big (supportMax = $supportMax) to be encoded in Perm16.")
   def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): Perm =
