@@ -17,62 +17,74 @@ import net.alasc.syntax.lattice._
 import net.alasc.util._
 import partition._
 
-final class Domain private (val size: Int) {
+final class Domain private (val size: Int) { domainSelf =>
   override def toString = s"Domain($size)"
   /** Represents an union of disjoint subsets. The subsets are internally
     * stored in an array, sorted by their minimal element.
+    * 
+    * @param linkArray  Linked list encoded in array; `linkArray(i)` gives the next element in the
+    *                   block of `i`, with `linkArray(i) > i`, or `-1` if at the end of the block
+    * @param indexArray Index of the block in which `i` is contained
+    * @param startArray Minimal element of the `k`-th block
     */
-  final class Partition(protected[alasc] val array: Array[immutable.BitSet]) {
-    def fixingGroupOrder: BigInt = blocks.map(block => factorial(block.size)).reduce(_*_)
-    def fixingGroupGenerators: Iterable[Perm] =
-      blocks.filter(_.size > 1).map(_.toSeq).flatMap { blockSeq =>
-        (blockSeq zip blockSeq.tail).map { case (x,y) => Perm(x,y) }
-      }
-    def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
-    override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
-    override def hashCode = scala.util.hashing.MurmurHash3.arrayHash(array)
-    @inline def domain: Domain = Domain.this
-    @inline def size: Int = Domain.this.size
-    /** Returns the partition in a domain of possibly a different size. The resized part, to be
-      * added or removed, is composed of single points. Returns RefNone if the resizing is not possible,
-      * e.g. because the removed last points are not single in a partition.
+  final class Partition(linkArray: Array[Int],
+    indexArray: Array[Int],
+    startArray: Array[Int]) {
+
+    /** Returns the minimal representative of the block in which `k` is contained.
+      * Must have `0 <= k < size`.
       */
-    def inDomain(newDomain: Domain): RefOption[newDomain.Partition] =
-      if (newDomain.size == size)
-        RefSome(Partition.this.asInstanceOf[newDomain.Partition])
-      else if (newDomain.size > size) {
-        val numEndPoints = newDomain.size - size
-        val newArray = new Array[immutable.BitSet](numBlocks + numEndPoints)
-        Array.copy(array, 0, newArray, 0, array.length)
-        val start = array.length
-        var i = start
-        while (i < newArray.length) {
-          newArray(i) = immutable.BitSet(size + (i - start))
-          i += 1
-        }
-        RefSome(new newDomain.Partition(newArray))
-      } else { // newDomain.size < size
-        val numEndPoints = size - newDomain.size
-        val start = array.length - numEndPoints
-        var i = start
-        if (i < 0) return RefNone
-        while (i < array.length) {
-          val point = newDomain.size + (i - start)
-          if (array(i).size != 1 || array(i).min != point)
-            return RefNone
-          i += 1
-        }
-        val newArray = new Array[immutable.BitSet](numBlocks - numEndPoints)
-        Array.copy(array, 0, newArray, 0, numBlocks - numEndPoints)
-        RefSome(new newDomain.Partition(newArray))
-      }
+    def representative(k: Int): Int = startArray(indexArray(k))
+
+    override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
+    override def hashCode = scala.util.hashing.MurmurHash3.arrayHash(indexArray)
+
+    def domain: Domain = Domain.this
+    def size: Int = Domain.this.size
+
     /** Returns the number of blocks. */
-    def numBlocks = array.length
+    def numBlocks = startArray.length
+
+    /** Returns the sequence of blocks, the block size increasing. */
+    def sizeIncreasing: Seq[Set[Int]] = blocks.sortBy(b => (b.size, b.min))
+
+    def fixingGroupOrder: BigInt = blocks.map(_.symGroupOrder).reduce(_*_)
+    def fixingGroupGenerators: Iterable[Perm] = blocks.flatMap(_.symGroupGenerators)
+    def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
+
+    /** Describes the set of points contained in a block. */
+    class Block(index: Int) extends FastSetInt {
+      override def min[B >: Int](implicit cmp: Ordering[B]): Int = startArray(index)
+      override def isEmpty = false
+      override def nonEmpty = true
+      def start = startArray(index)
+      def hasNext(l: Int) = linkArray(l) != -1
+      def next(l: Int) = {
+        val n = linkArray(l)
+        if (n == -1) Iterator.empty.next
+        n
+      }
+      def contains(l: Int) = if (l < Domain.this.size) indexArray(l) == index else false
+      def symGroupOrder = factorial(size)
+      def symGroupGenerators =
+        if (size <= 1) Iterable.empty else (this zip tail) map { case (x,y) => Perm(x,y) }
+    }
+
+    /** Returns the block in which `k` is contained. Must have `0 <= k < size`. */
+    def blockFor(k: Int): Block = new Block(indexArray(k))
+
+    /** Returns the index of the block in which `k` is contained. */
+    def blockIndex(k: Int): Int = indexArray(k)
+
     /** Returns the blocks in the partition, ordered by their minimal element. */
-    def blocks: Seq[Set[Int]] = array
+    def blocks: Seq[Block] = new IndexedSeq[Block] {
+      def length = startArray.length
+      def apply(index: Int) = new Block(index)
+    }
+
     /** Returns the blocks that intersect the set `points`. */
-    def blocksFor(points: Set[Int]): Seq[Set[Int]] = {
-      val buf = mutable.ArrayBuffer.empty[Set[Int]]
+    def blocksFor(points: Set[Int]): Seq[Block] = {
+      val buf = mutable.ArrayBuffer.empty[Block]
       var remaining = mutable.BitSet.empty ++= points
       while (remaining.nonEmpty && remaining.min < size) {
         val m = remaining.min
@@ -82,23 +94,21 @@ final class Domain private (val size: Int) {
       }
       buf.result
     }
-    /** Returns the block in which `k` is contained. Must have `0 <= k < size`. */
-    def blockFor(k: Int): Set[Int] = array(blockIndex(k))
-    lazy val blockIndex: Array[Int] = {
-      val res = new Array[Int](size)
-      var i = 0
-      while (i < array.length) {
-        array(i).foreach { k => res(k) = i }
-        i += 1
-      }
-      res
-    }
-    /** Returns the minimal representative of the block in which `k` is contained.
-      * Must have `0 <= k < size`.
+
+    /** Returns the partition in a domain of possibly a different size. The resized part, to be
+      * added or removed, is composed of single points. Returns RefNone if the resizing is not possible,
+      * e.g. because the removed last points are not single in a partition.
       */
-    def representative(k: Int): Int = blockFor(k).min
-    /** Returns the sequence of blocks, the block size increasing. */
-    def sizeIncreasing: Seq[Set[Int]] = array.sortBy(b => (b.size, b.min))
+    def inDomain(newDomain: Domain): RefOption[newDomain.Partition] =
+      if (newDomain.size == size)
+        RefSome(Partition.this.asInstanceOf[newDomain.Partition])
+      else if (newDomain.size > size)
+        RefSome(newDomain.Partition.fromSeq(indexArray ++ (numBlocks until numBlocks + (newDomain.size - size))))
+      else { // newDomain.size < size
+        for (k <- newDomain.size until size)
+          if (blockFor(k).size > 1) return RefNone
+        RefSome(newDomain.Partition.fromSeq(indexArray.take(newDomain.size)))
+      }
   }
   object Partition {
     def fromPermutation[P: PermutationAction](p: P) = {
@@ -110,7 +120,7 @@ final class Domain private (val size: Int) {
         blocks += orbit
         rem --= orbit
       }
-      fromArray(blocks.toArray)
+      fromSortedBlocks(blocks)
     }
     def fromSeq(seq: Seq[Any]): Partition = {
       require(seq.size == size)
@@ -124,14 +134,32 @@ final class Domain private (val size: Int) {
             blocks += mutable.BitSet(i)
         }
       }
-      fromArray(blocks.map(_.toImmutable).toArray)
+      fromSortedBlocks(blocks)
     }
     def unapply(gen: Domain#Partition): RefOption[Partition] =
       if (gen.domain eq Domain.this) RefSome(gen.asInstanceOf[Partition]) else RefNone
-    def fromArray(array: Array[immutable.BitSet]) = new Partition(array)
+    def fromSortedBlocks(blocks: Seq[scala.collection.Set[Int]]) = {
+      val n = Domain.this.size
+      val la = new Array[Int](n)
+      val ia = new Array[Int](n)
+      val sa = new Array[Int](blocks.size)
+      blocks.indices.foreach { index =>
+        val block = blocks(index)
+        sa(index) = block.min
+        la(block.max) = -1
+        var prev = -1
+        block.foreach { k =>
+          ia(k) = index
+          if (prev != -1)
+            la(prev) = k
+          prev = k
+        }
+      }
+      new Partition(la, ia, sa)
+    }
     implicit object Algebra extends BoundedLattice[Partition] {
-      def zero = Partition.fromArray(Array.tabulate(size)( i => immutable.BitSet(i) ))
-      def one = Partition.fromArray(Array(immutable.BitSet.empty ++ (0 until size)))
+      def zero = Partition.fromSortedBlocks(Seq.tabulate(size)( i => immutable.BitSet(i) ))
+      def one = Partition.fromSortedBlocks(Seq(immutable.BitSet.empty ++ (0 until size)))
       // union
       def join(x: Partition, y: Partition): Partition = {
         assert(x.domain eq y.domain)
@@ -183,7 +211,7 @@ final class Domain private (val size: Int) {
 
         (x.numBlocks - y.numBlocks).signum match {
           case 0 =>
-            if (x.array.sameElements(y.array)) 0.0 else Double.NaN
+            if (x.blocks.sameElements(y.blocks)) 0.0 else Double.NaN // TODO: can be optimized
           case 1 => // x can be a refinement of y
             if (isRefinementOf(x, y)) -1.0 else Double.NaN
           case _ => // y can be a refinement of x

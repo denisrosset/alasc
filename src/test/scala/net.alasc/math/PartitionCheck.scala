@@ -24,5 +24,5 @@ class PartitionHashCheck extends HashCheck[PartitionCheck.domain.Partition] {
   import PartitionCheck.domain
   implicit def arb = Arbitrary { PartitionCheck.genPartition }
   implicit def eq = domain.Partition.Algebra
-  def clone(h: domain.Partition) = domain.Partition.fromSeq(h.blockIndex)
+  def clone(h: domain.Partition) = domain.Partition.fromSortedBlocks(h.blocks)
 }

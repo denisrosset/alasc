@@ -30,7 +30,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   type AR = aReps.R
   implicit def aRepsRClassTag: ClassTag[aReps.R] = aReps.rClassTag
   implicit object lattice extends BoundedBelowLattice[R] {
-    def zero = R(Domain(1).Partition.fromArray(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
+    def zero = R(Domain(1).Partition.fromSortedBlocks(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
     override def lteqv(x: R, y: R): Boolean = // x <= y ?
       if (y.partition.size < x.partition.size) false else {
         val xSized = x.forPartitionSize(y.partition.size).get

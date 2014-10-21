@@ -26,7 +26,7 @@ class PartitionRefinement(val blocks: debox.Buffer[mutable.BitSet], val size: In
     }
     blocks.sort(Order.from[mutable.BitSet]( (x, y) => (x.min - y.min).signum ))
   }
-  def partition(domain: Domain): domain.Partition = domain.Partition.fromArray(blocks.iterator.map(_.toImmutable).toArray)
+  def partition(domain: Domain): domain.Partition = domain.Partition.fromSortedBlocks(blocks.toArray)
 }
 
 object PartitionRefinement {
