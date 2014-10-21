@@ -11,6 +11,8 @@ import net.alasc.math.Cycle
 import net.alasc.util._
 
 trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
+  def abs(g: G) = sys.error("Abs is not supported")
+  
   /** Returns a bit set of all integers k that are changed by the action of the permutation,
     * i.e. `S = { k | k <|+| g != k }`.
     */

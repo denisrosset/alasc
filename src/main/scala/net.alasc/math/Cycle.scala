@@ -59,6 +59,7 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 
 class CycleSigned extends Signed[Cycle] {
   override def signum(c: Cycle) = if (c.length % 2 == 0) 1 else -1
+  def abs(c: Cycle) = sys.error("Abs is not supported")
 }
 
 class CyclePermutationAction extends FaithfulPermutationAction[Cycle] {

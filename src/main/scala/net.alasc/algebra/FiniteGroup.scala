@@ -7,13 +7,13 @@ import spire.syntax.eq._
   * 
   * Combines Eq and Group.
   */
-trait FiniteGroup[F] extends Group[F] with Eq[F] {
+trait FiniteGroup[F] extends Group[F] with Eq[F] { self =>
   /** Order of `f`, i.e. the number `k` such that
     * `f |+| f ... k times ... |+| f === id`
     */
   def order(f: F): Int = {
     @annotation.tailrec def rec(k: Int, acc: F): Int =
-      if (isId(acc)) k else rec(k + 1, op(f, acc))
+      if (isId(acc)(self)) k else rec(k + 1, op(f, acc))
     rec(1, f)
   }
 
