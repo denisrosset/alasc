@@ -88,7 +88,7 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
     implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = incompleteChainWithGenerators(generators, givenBase)
     completeStrongGenerators(mutableChain)
-    removeRedundantGenerators(mutableChain)
+    // TODO removeRedundantGenerators(mutableChain)
     mutableChain
   }
 }
@@ -148,7 +148,7 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
       for ( (nodeForGenerator, generator) <- siftAndUpdateBaseFrom(mutableChain, mutableChain.start, randomElement(randomGenerator)).toOption )
         addStrongGeneratorHere(mutableChain, nodeForGenerator, generator)
     }
-    removeRedundantGenerators(mutableChain)
+    // TODO removeRedundantGenerators(mutableChain)
     mutableChain
   }
 }
