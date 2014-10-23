@@ -2,7 +2,7 @@ organization := "net.alasc"
 
 name := "Alasc"
 
-version := "0.96-SNAPSHOT"
+version := "0.1-SNAPSHOT"
 
 scalaVersion := "2.11.2"
 
