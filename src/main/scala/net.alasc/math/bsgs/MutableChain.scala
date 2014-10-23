@@ -228,6 +228,13 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     case _: Term[P] => current
   }
 
+  def makeFullyMutable(after: MutableStartOrNode[P] = start)(
+    implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): Unit =
+    findLast(after) match {
+      case node: Node[P] => mutable(node)
+      case _ =>
+    }
+
   /** Makes the chain starting after `elem` fully immutable.
     * 
     * @param elem  Element with tail to be made immutable. Default = `start`, which will
