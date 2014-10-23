@@ -115,14 +115,14 @@ trait SubgroupSearchImpl[P] extends SchreierSims[P] with BaseChange[P] with Base
   }
 
   def basePointGroups(chain: Chain[P], domainSize: Int): Array[Array[Int]] = {
-    val remaining = mutable.BitSet((0 until domainSize): _*)
+    val remaining = MutableBitSet((0 until domainSize): _*)
     val groups = debox.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[P]): Array[Array[Int]] = current match {
       case node: Node[P] =>
         import node.action
         val fixed = debox.Buffer[Int](node.beta)
         remaining -= node.beta
-        remaining.foreach { k =>
+        remaining.foreachFast { k =>
           if (node.next.strongGeneratingSet.forall( g => (k <|+| g) == k))
             fixed += k
         }
