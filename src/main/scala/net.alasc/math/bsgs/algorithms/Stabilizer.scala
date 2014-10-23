@@ -54,14 +54,14 @@ object Stabilizer {
       // not moved by the next subgroup in the stabilizer chain.
       // The points considered are those contained in `set`.
       val pointSetsToTest: Array[BitSet] = {
-        val remaining = mutable.BitSet.empty ++= set
+        val remaining = MutableBitSet.empty ++= set
         val groups = debox.Buffer.empty[BitSet]
         @tailrec @inline def rec(current: Chain[P]): Array[BitSet] = current match {
           case node: Node[P] if remaining.contains(node.beta) =>
             import node.action
             val fixed = mutable.BitSet(node.beta)
             remaining -= node.beta
-            remaining.foreach { k =>
+            remaining.foreachFast { k =>
               if (node.next.isFixed(k)) fixed += k
             }
             remaining --= fixed

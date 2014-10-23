@@ -19,11 +19,11 @@ import net.alasc.util._
 case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
-  def iterator = new Iter(mutable.BitSet.empty,
-    debox.Buffer.fromIterable(blocks.map(block => mutable.BitSet.empty ++= block)),
+  def iterator = new Iter(MutableBitSet.empty,
+    debox.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
     debox.Buffer.fromIterable(blocks.map(_.size)))
 
-  final class Iter(val currentBlock: mutable.BitSet, val remainingBlocks: debox.Buffer[mutable.BitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
+  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: debox.Buffer[MutableBitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
     override def toString = s"Current: $currentBlock, Remaining: $remainingBlocks"
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty
 
@@ -38,8 +38,8 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
               var newNonFixed = nonFixed
               var easyNonFixed = NoneTuple2NN
               val block = remainingBlocks(index)
-              val toRemove = mutable.BitSet.empty
-              block.foreach { k =>
+              val toRemove = MutableBitSet.empty
+              block.foreachFast { k =>
                 if (isFixed(k))
                   toRemove += k
                 else if (easyPoints.contains(k))
@@ -80,7 +80,7 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
         }
       } else {
         var nonFixed = NNNone
-        val toRemove = mutable.BitSet.empty
+        val toRemove = MutableBitSet.empty
         currentBlock.foreach { k =>
           if (isFixed(k))
             toRemove += k

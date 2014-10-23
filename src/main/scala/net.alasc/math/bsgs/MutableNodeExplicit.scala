@@ -66,9 +66,9 @@ final class MutableNodeExplicit[P](
     var swapHere = 0
     var ogpLength = ownGeneratorsPairs.length
     while (swapHere < ogpLength) {
-      val newOrbit = mutable.BitSet(beta)
-      var toCheck = mutable.BitSet.empty
-      var newAdded = mutable.BitSet.empty
+      val newOrbit = MutableBitSet(beta)
+      var toCheck = MutableBitSet.empty
+      var newAdded = MutableBitSet.empty
       @inline def swapBitsets: Unit = {
         var temp = toCheck
         toCheck = newAdded
@@ -86,7 +86,7 @@ final class MutableNodeExplicit[P](
       }
       swapBitsets
       while (toCheck.nonEmpty) {
-        toCheck.foreach { c =>
+        toCheck.foreachFast { c =>
           var j = 0
           while (j < ogpLength - 1) {
             val cg = c <|+| ownGeneratorsPairs(j).g
@@ -128,7 +128,7 @@ final class MutableNodeExplicit[P](
   }
 
   protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]) = {
-    var toCheck = mutable.BitSet.empty
+    var toCheck = MutableBitSet.empty
     val sb = new StringBuilder
     val toAddBeta = debox.Buffer.empty[Int]
     val toAddIP = ArrayBuffer.empty[InversePair[P]]
@@ -145,8 +145,8 @@ final class MutableNodeExplicit[P](
     toAddBeta.clear
     toAddIP.clear
     while (!toCheck.isEmpty) {
-      val newAdded = mutable.BitSet.empty
-      toCheck.foreach { b =>
+      val newAdded = MutableBitSet.empty
+      toCheck.foreachFast { b =>
         strongGeneratingSetPairs.foreach { ip =>
           val newB = b <|+| ip.g
           if (!inOrbit(newB)) {
@@ -165,7 +165,7 @@ final class MutableNodeExplicit[P](
   }
 
   protected[bsgs] def updateTransversal(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]) = {
-    var toCheck = mutable.BitSet.empty
+    var toCheck = MutableBitSet.empty
     val sb = new StringBuilder
     var toAddBeta = debox.Buffer.empty[Int]
     var toAddIP = ArrayBuffer.empty[InversePair[P]]
@@ -184,8 +184,8 @@ final class MutableNodeExplicit[P](
     toAddBeta.clear
     toAddIP.clear
     while (!toCheck.isEmpty) {
-      val newAdded = mutable.BitSet.empty
-      toCheck.foreach { b =>
+      val newAdded = MutableBitSet.empty
+      toCheck.foreachFast { b =>
         strongGeneratingSetPairs.foreach { ip =>
           val InversePair(g, gInv) = ip
           val newB = b <|+| g
