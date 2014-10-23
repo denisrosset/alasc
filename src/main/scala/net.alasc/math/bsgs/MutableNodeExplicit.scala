@@ -24,7 +24,7 @@ final class MutableNodeExplicit[P](
 
   def orbitSize = transversal.size
   def inOrbit(b: Int) = transversal.contains(b)
-  def foreachOrbit(f: Int => Unit): Unit = transversal.foreachKey( k => f(k.toInt) )
+  def foreachOrbit(f: Int => Unit): Unit = transversal.foreachKey(f)
   def orbit = new Iterable[Int] {
     override def stringPrefix = "Iterable"
     override def foreach[U](f: Int => U) = foreachOrbit { k => f(k) }
