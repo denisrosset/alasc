@@ -47,19 +47,14 @@ trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
   def signum(g: G) = {
     // optimized for dense permutation on non-huge domains
     val toCheck = mutable.BitSet.empty ++= support(g)
-    var parity = 0
+    var parity = 1
     while (!toCheck.isEmpty) {
       val start = toCheck.head
-      @tailrec def rec(k: Int): Unit = {
-        toCheck -= k
-        parity ^= 1
-        val next = actr(k, g)
-        if (next != start)
-          rec(next)
-      }
-      rec(start)
+      val o = orbit(g, start)
+      if (o.size % 2 == 0) parity *= -1
+      toCheck --= o
     }
-    if (parity == 0) 1 else -1
+    parity
   }
 
   def to[P](g: G)(implicit evP: Permutation[P]): P =

@@ -6,6 +6,7 @@ import org.scalatest._
 import prop._
 import spire.algebra.Eq
 import spire.syntax.group._
+import spire.syntax.signed._
 import spire.syntax.groupAction._
 import spire.syntax.eq._
 import net.alasc.algebra._
@@ -21,6 +22,9 @@ class PermHashCheck extends HashCheck[Perm] with PermutationGenerators[Perm] {
 class PermCheck extends PermutationCheck[Perm] with PermutationGenerators[Perm] {
   implicit def permutation = Perm.Algebra
 
+  property("(x.signum * y.signum) == (x |+| y).signum") {
+    forAll { (x: Perm, y: Perm) => (x.signum * y.signum) shouldBe (x |+| y).signum }
+  }
   property("x === fromImages(x.images)") {
     forAll { (x: Perm) =>
       Perm.Algebra.fromImages((0 to x.supportMax.getOrElse(16)).map(_ <|+| x)) shouldEqv x
