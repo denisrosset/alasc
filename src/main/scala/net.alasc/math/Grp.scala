@@ -53,6 +53,16 @@ sealed abstract class Grp[G] { lhs =>
   def randomElement(random: Random): G
   def contains(g: G): Boolean
 
+  def reducedGenerators: Grp[G] = {
+    implicit def builder = algorithms.nodeBuilder
+    val mutableChain = algorithms.mutableChain(chain)(representation.action)
+    mutableChain.makeFullyMutable()
+    algorithms.removeRedundantGenerators(mutableChain)
+    val newChain = mutableChain.toChain
+    val newGenerators = if (generators.size < newChain.strongGeneratingSet.size) generators else newChain.strongGeneratingSet
+    new GrpChain[G](newGenerators, representation, newChain)
+  }
+
   implicit def lattice = Grp.lattice[G]
 }
 
