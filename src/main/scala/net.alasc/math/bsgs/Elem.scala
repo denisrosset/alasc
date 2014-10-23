@@ -269,7 +269,7 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
 
   def inOrbit(b: Int): Boolean
   def orbit: Iterable[Int]
-  def foreachOrbit[U](f: Int => U): Unit
+  def foreachOrbit(f: Int => Unit): Unit
   def orbitSet: Set[Int] = {
     val bitset = mutable.BitSet.empty
     foreachOrbit { bitset += _ }
@@ -288,7 +288,7 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
 case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action: FaithfulPermutationAction[P]) extends Node[P] {
   def isImmutable = true
   def isMutable = false
-  def foreachOrbit[U](f: Int => U) = f(beta)
+  def foreachOrbit(f: Int => Unit) = f(beta)
   def foreachU[N](f: P => N): Unit = f(id)
   def inOrbit(b: Int) = b == beta
   def isStandalone = false
