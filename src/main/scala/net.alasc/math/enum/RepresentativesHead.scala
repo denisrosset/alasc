@@ -63,7 +63,7 @@ trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.H
           val b = candidates(i)
           val bg = b <|+| g
           val (nextSym, transversal) = chainSym.stabilizer(bg, representation)
-          if (transversal.orbit.min == bg) {
+          if (transversal.orbitMin == bg) {
             val nextG = node.u(b) |+| g
             rec(level + 1, toLevel, nextG, node.next, nextSym)
           }

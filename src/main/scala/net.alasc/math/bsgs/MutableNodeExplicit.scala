@@ -25,12 +25,7 @@ final class MutableNodeExplicit[P](
   def orbitSize = transversal.size
   def inOrbit(b: Int) = transversal.contains(b)
   def foreachOrbit(f: Int => Unit): Unit = transversal.foreachKey(f)
-  def orbit = new Iterable[Int] {
-    override def stringPrefix = "Iterable"
-    override def foreach[U](f: Int => U) = foreachOrbit { k => f(k) }
-    def iterator = transversal.keysIterator.map(_.toInt)
-  }
-  def randomOrbit(rand: Random): Int = orbit.drop(rand.nextInt(orbitSize)).head
+  def orbitIterator = transversal.keysIterator
 
   def foreachU[N](f: P => N) = transversal.foreachValue { case InversePair(u, _) => f(u) }
   def uPair(b: Int) = transversal(b)
@@ -38,8 +33,7 @@ final class MutableNodeExplicit[P](
   def uInv(b: Int) = transversal(b).gInv
   def iterable = new Iterable[(Int, InversePair[P])] {
     override def stringPrefix = "Iterable"
-    override def foreach[U](f: ((Int, InversePair[P])) => U) = transversal.foreach { case (k, v) => f((k.toInt, v)) }
-    def iterator = transversal.iterator.map { case (k, v) => (k.toInt, v) }
+    def iterator = transversal.iterator
   }
   def randomU(rand: Random): P = u(randomOrbit(rand))
 
@@ -209,7 +203,7 @@ final class MutableNodeExplicit[P](
     val newTransversal = debox.spkey.Map.empty[Int, InversePair[P]]
     transversal.foreachKey { k =>
       val newG: P = ip.gInv |+| transversal(k).g |+| ip.g
-      newTransversal.update(k.toInt <|+| ip.g, InversePair(newG, newG.inverse))
+      newTransversal.update(k <|+| ip.g, InversePair(newG, newG.inverse))
     }
     transversal = newTransversal
     ownGeneratorsPairs.transform {

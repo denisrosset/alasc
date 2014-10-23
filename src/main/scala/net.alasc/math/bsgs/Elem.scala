@@ -265,16 +265,6 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   def ownGenerators: Iterable[P]
   def ownGeneratorsPairs: Iterable[InversePair[P]]
 
-  def orbitSize: Int
-
-  def inOrbit(b: Int): Boolean
-  def orbit: Iterable[Int]
-  def foreachOrbit(f: Int => Unit): Unit
-  def orbitSet: Set[Int] = {
-    val bitset = mutable.BitSet.empty
-    foreachOrbit { bitset += _ }
-    bitset.toImmutable
-  }
   def randomOrbit(rand: Random): Int
 
   def iterable: Iterable[(Int, InversePair[P])]
@@ -293,11 +283,10 @@ case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action:
   def inOrbit(b: Int) = b == beta
   def isStandalone = false
   def iterable = Iterable(beta -> InversePair(id, id))
-  def orbit = Iterable(beta)
+  def orbitIterator = Iterator(beta)
   def orbitSize = 1
   def ownGenerators = Iterable.empty
   def ownGeneratorsPairs = Iterable.empty
-  def randomOrbit(rand: Random) = beta
   def randomU(rand: Random) = id
   def u(b: Int) = if (b == beta) id else sys.error("Not in orbit")
   def uInv(b: Int) = if (b == beta) id else sys.error("Not in orbit")
