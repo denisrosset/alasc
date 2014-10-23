@@ -102,8 +102,8 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     assert(beta < chainNextBeta)
     val nextBeta = chainNextBeta.min(beta + maxSkip)
 
-    protected lazy val candidatesForImages: debox.Map[Long, NextCandidate] = {
-      val map = debox.Map.empty[Long, NextCandidate]
+    protected lazy val candidatesForImages: debox.spkey.Map[Long, NextCandidate] = {
+      val map = debox.spkey.Map.empty[Long, NextCandidate]
       var c = 0
       val n = candidates.length
       while (c < n) {

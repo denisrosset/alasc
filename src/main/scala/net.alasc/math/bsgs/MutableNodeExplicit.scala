@@ -11,10 +11,11 @@ import spire.syntax.group._
 import spire.syntax.eq._
 
 import net.alasc.algebra._
+import net.alasc.util._
 
 final class MutableNodeExplicit[P](
   var beta: Int,
-  var transversal: mutable.LongMap[InversePair[P]],
+  var transversal: debox.spkey.Map[Int, InversePair[P]],
   var ownGeneratorsPairs: mutable.ArrayBuffer[InversePair[P]],
   var prev: MutableStartOrNode[P] = null,
   var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
@@ -22,7 +23,7 @@ final class MutableNodeExplicit[P](
   def ownGenerators = ownGeneratorsPairs.view.map(_.g)
 
   def orbitSize = transversal.size
-  def inOrbit(b: Int) = transversal.isDefinedAt(b)
+  def inOrbit(b: Int) = transversal.contains(b)
   def foreachOrbit[U](f: Int => U): Unit =
     transversal.foreachKey( k => f(k.toInt) )
   def orbit = new Iterable[Int] {
@@ -206,7 +207,7 @@ final class MutableNodeExplicit[P](
 
   protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P]) = {
     beta = beta <|+| ip.g
-    val newTransversal = mutable.LongMap.empty[InversePair[P]]
+    val newTransversal = debox.spkey.Map.empty[Int, InversePair[P]]
     transversal.foreachKey { k =>
       val newG: P = ip.gInv |+| transversal(k).g |+| ip.g
       newTransversal.update(k.toInt <|+| ip.g, InversePair(newG, newG.inverse))
@@ -223,14 +224,14 @@ final class MutableNodeExplicit[P](
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
   def standaloneClone(node: Node[P])(implicit algebra: FiniteGroup[P]) = node match {
     case mne: MutableNodeExplicit[P] =>
-      new MutableNodeExplicit(mne.beta, mne.transversal.clone, mne.ownGeneratorsPairs.clone)(mne.action)
+      new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.ownGeneratorsPairs.clone)(mne.action)
     case _ =>
-      val newTransversal = mutable.LongMap.empty[InversePair[P]] ++= node.iterable.map { case (k, v) => (k.toLong, v) }
+      val newTransversal = debox.spkey.Map.fromIterable[Int, InversePair[P]](node.iterable)
       val newOwnGeneratorsPairs = mutable.ArrayBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
   }
   def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P]) =
     new MutableNodeExplicit(beta,
-      mutable.LongMap(beta.toLong -> InversePair(algebra.id, algebra.id)),
+      debox.spkey.Map(beta -> InversePair(algebra.id, algebra.id)),
       mutable.ArrayBuffer.empty[InversePair[P]])
 }

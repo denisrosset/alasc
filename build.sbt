@@ -13,7 +13,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.spire-math" %% "debox" % "0.6.0",
+  "org.spire-math" %% "debox" % "0.7.0-SNAPSHOT",
   "org.scalacheck" %% "scalacheck" % "1.11.4" % "test",
   "org.scalatest" % "scalatest_2.11" % "2.2.0" % "test",
 //  "com.storm-enroute" %% "scalameter" % "0.6" % "test",
