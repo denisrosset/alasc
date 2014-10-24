@@ -48,6 +48,8 @@ sealed abstract class Grp[G] { lhs =>
   def chainIfComputed: RefOption[Chain[G]]
   def chain: Chain[G]
   def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G]
+  def withComputedChain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Grp[G] =
+    Grp.fromChain(chain(representation, baseGuide))
   def representation: Representation[G]
   def representationIfComputed: RefOption[Representation[G]]
   def randomElement(random: Random): G
