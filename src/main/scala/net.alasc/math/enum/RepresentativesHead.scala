@@ -33,8 +33,7 @@ trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.H
           case nextNode: Node[G] => nextNode.beta
           case _: Term[G] => representation.size
         }
-        while (orbitIt.hasNext) {
-          val b = orbitIt.next
+        node.foreachOrbit { b =>
           val bg = b <|+| g
           var comp = (tInt(bg) - minimal(beta)).signum
           var k = beta + 1
