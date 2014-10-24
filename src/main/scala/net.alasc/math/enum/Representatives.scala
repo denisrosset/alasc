@@ -68,17 +68,42 @@ object Representatives {
     } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
       lazy val chainInRepresentation = grp.chain(representation)
     }
-}
-
-object RepresentativesOrdered {
-  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P], givenOrderA: Order[A], givenClassTagP: ClassTag[P]) =
+  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P], givenRep: Representation[P]) =
     new {
       val t = givenT
       val grp = givenGrp
-      implicit val classTagG = givenClassTagP
+      implicit val finiteGroup = givenGrp.algebra
+      implicit val permAction: FaithfulPermutationAction[P] = givenRep.action
+      implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
+      implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
+      val representation = givenRep
+    } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
+      lazy val chainInRepresentation = grp.chain(representation)
+    }
+}
+
+object RepresentativesOrdered {
+  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P])(implicit givenPR: PermutationRepresentations[P], givenP: Permutation[P], givenOrderA: Order[A]) =
+    new {
+      val t = givenT
+      val grp = givenGrp
+      implicit val finiteGroup = givenGrp.algebra
+      implicit val classTagG = givenGrp.gClassTag
       implicit val orderA: Order[A] = givenOrderA
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
       implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
+    } with SequencesOrdered[Seq[A], A, P] with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P]
+  def apply[A, P](givenT: Seq[A], givenGrp: Grp[P], givenRep: Representation[P])(implicit givenOrderA: Order[A]) =
+    new {
+      val t = givenT
+      val grp = givenGrp
+      implicit val finiteGroup = givenGrp.algebra
+      implicit val classTagG = givenGrp.gClassTag
+      implicit val orderA: Order[A] = givenOrderA
+      implicit val permAction: FaithfulPermutationAction[P] = givenRep.action
+      implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
+      implicit val actionTG: GroupAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
+      val representation = givenRep
     } with SequencesOrdered[Seq[A], A, P] with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P]
 }
