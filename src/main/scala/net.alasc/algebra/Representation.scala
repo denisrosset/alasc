@@ -25,11 +25,6 @@ trait Representation[G] extends AnyRef {
   /** Tests if this representation can represent the element `g`. */
   def represents(g: G): Boolean
   val representations: Representations[G]
-  def conjugatedBy(ip: InversePair[G]): Representation[G] =
-    if (represents(ip.g)) this else {
-      val reprG = representations.get(Seq(ip.g))
-      representations.lattice.join(representations.tryCast(self).get, reprG)
-    }
 }
 
 /** Describes a family of permutation representations of a group G. Depending on the particular subgroup H of G,
@@ -130,7 +125,6 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
     def action = ev
     val representations = self
     def represents(p: P) = p.supportMax.getOrElseFast(-1) < size
-    override def conjugatedBy(ip: InversePair[P]) = R(size.max(ip.g.supportMax.getOrElseFast(-1) + 1))
   }
   def get(generators: Iterable[P]) = {
     @tailrec def rec(size: Int, iterator: Iterator[P]): Int =

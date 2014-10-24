@@ -55,6 +55,20 @@ sealed abstract class Grp[G] { lhs =>
   def randomElement(random: Random): G
   def contains(g: G): Boolean
 
+  def conjBy(ip: InversePair[G]): Grp[G] = chainIfComputed match {
+    case RefOption(chain) if representation.represents(ip.g) =>
+      GrpConjugated(algorithms, generators, representation, chain, ip)
+    case _ =>
+      val conjRepresentation = representationIfComputed match {
+        case RefOption(rep) if rep.represents(ip.g) => RefSome(rep)
+        case _ => RefNone
+      }
+      orderIfComputed match {
+        case RefOption(ord) => Grp.fromGeneratorsAndOrder(generators.map(_.conjBy(ip)), ord, conjRepresentation)
+        case _ => Grp.fromGenerators(generators.map(_.conjBy(ip)), conjRepresentation)
+      }
+  }
+
   def reducedGenerators: Grp[G] = {
     implicit def builder = algorithms.nodeBuilder
     val mutableChain = algorithms.mutableChain(chain)(representation.action)
@@ -85,6 +99,8 @@ class GrpChain[G](val generators: Iterable[G], val representation: Representatio
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`) and an InversePair(g, gInv).
   * The represented group is `H = gInv G g`.
+  * 
+  * @note The `representation` must be able to represent `conjugatedBy.g`.
   */
 case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: Iterable[G], representation: Representation[G], originalChain: Chain[G], conjugatedBy: InversePair[G])(implicit val representations: Representations[G]) extends Grp[G] { lhs =>
   import conjugatedBy.{g, gInv}
@@ -92,6 +108,7 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
     case node: Node[G] => require(node.action == representation.action)
     case _: Term[G] =>
   }
+  require(representation.represents(g)) // TODO: remove
   def representationIfComputed = RefSome(representation)
   def chainIfComputed = RefSome(chain)
   def chain = originalChain match {
@@ -103,17 +120,17 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
       mut.toChain
     case term: Term[G] => term
   }
-  def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty) = originalChain match {
+  def chain(givenRepresentation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty) = originalChain match {
     case node: Node[G] =>
-      if (node.action == representation.action) {
-        implicit def action = representation.action
+      if (node.action == givenRepresentation.action) {
+        implicit def action = givenRepresentation.action
         import algorithms.nodeBuilder
-        val mut = algorithms.mutableChain(node)(node.action)
+        val mut = algorithms.mutableChain(node)
         mut.conjugate(conjugatedBy)
         algorithms.changeBaseSameAction(mut, baseGuide)
         mut.toChain
       } else
-        algorithms.chainWithBase(generators, randomElement(_), order, baseGuide, representation.action)
+        algorithms.chainWithBase(generators, randomElement(_), order, baseGuide, givenRepresentation.action)
     case term: Term[G] => term
   }
   def order = originalChain.order
@@ -125,6 +142,11 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
   // `h in gInv G g` if and only if `g h gInv in G`.
   def contains(h: G) = originalChain.contains(g |+| h |+| gInv)
   def generators = originalChain.generators.map(h => gInv |+| h |+| g)
+  override def conjBy(by: InversePair[G]): Grp[G] =
+    if (representation.represents(by.g))
+      new GrpConjugated(algorithms, originalGenerators, representation, originalChain, conjugatedBy |+| by)
+    else
+      super.conjBy(by)
 }
 
 abstract class GrpLazyBase[G] extends Grp[G] {
