@@ -20,3 +20,7 @@ trait FiniteGroup[F] extends Group[F] with Eq[F] { self =>
   /** Returns `ip.gInv |+| f |+| ip.g`. */
   def conjBy(f: F, ip: InversePair[F]): F = op(ip.gInv, op(f, ip.g))
 }
+
+object FiniteGroup {
+  def apply[F](implicit ev: FiniteGroup[F]): FiniteGroup[F] = ev
+}
