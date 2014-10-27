@@ -20,6 +20,8 @@ import algorithms._
 /** User-friendly representation of a group internally using a base and strong generating set data structure.
   *
   * Can be constructed from any finite group with a faithful permutation action.
+  * 
+  * The generators must never contain the identity.
   */
 sealed abstract class Grp[G] { lhs =>
   override def hashCode = sys.error("HashCode not defined for Grp")
