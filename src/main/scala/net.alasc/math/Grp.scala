@@ -108,7 +108,6 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
     case node: Node[G] => require(node.action == representation.action)
     case _: Term[G] =>
   }
-  require(representation.represents(g)) // TODO: remove
   def representationIfComputed = RefSome(representation)
   def chainIfComputed = RefSome(chain)
   def chain = originalChain match {
