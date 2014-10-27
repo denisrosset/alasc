@@ -187,14 +187,14 @@ object Grp {
 
   def fromGenerators[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G],
     representationOption: RefOption[Representation[G]] = RefNone): Grp[G] =
-    new GrpLazy[G](generators, givenRepresentation = representationOption)
+    new GrpLazy[G](generators.filterNot(_.isId), givenRepresentation = representationOption)
 
   def apply[G: ClassTag: FiniteGroup: Representations](generators: G*): Grp[G] =
-    new GrpLazy[G](generators)
+    new GrpLazy[G](generators.filterNot(_.isId))
 
   def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
     representationOption: RefOption[Representation[G]] = RefNone): Grp[G] =
-    new GrpLazy[G](generators, givenOrder = RefSome(order), givenRepresentation = representationOption)
+    new GrpLazy[G](generators.filterNot(_.isId), givenOrder = RefSome(order), givenRepresentation = representationOption)
 
   def fromSubgroup[S, G: ClassTag: FiniteGroup: Representations](subgroup: S,
     representationOption: RefOption[Representation[G]] = RefNone)(implicit sg: Subgroup[S, G]): Grp[G] =
