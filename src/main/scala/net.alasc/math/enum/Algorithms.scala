@@ -54,13 +54,12 @@ object Algorithms {
           val bg = b <|+| curG
           var comp = (seq(bg) - minimal(beta))
           var k = beta + 1
-          val u = node.u(b)
+          lazy val nextG = node.u(b) |+| curG
           while (k < nextBeta && comp == 0) {
-            comp = (seq((k <|+| u) <|+| curG) - minimal(k))
+            comp = (seq(k <|+| nextG) - minimal(k))
             k += 1
           }
           if (comp <= 0) {
-            val nextG = u |+| curG
             if (comp < 0) {
               cforRange(beta until minimalCorrectBefore) { k =>
                 minimal(k) = seq(k <|+| nextG)
