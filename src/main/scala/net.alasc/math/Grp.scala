@@ -45,6 +45,7 @@ sealed abstract class Grp[G] { lhs =>
     case _ => false
   }
 
+  def isTrivial: Boolean = order == 1 // TODO: optimize
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
   def chainIfComputed: RefOption[Chain[G]]
