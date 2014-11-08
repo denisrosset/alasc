@@ -46,6 +46,24 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartition(partition, prp.forSize(partition.size))
 
+  def stabilizer(rp: Representation[G]): RefOption[(Grp[G], Transversal[G])] = {
+    lhs match {
+      case grp: GrpConjugated[G] => grp.originalChain match {
+        case node: Node[G] if node.action == rp.action =>
+          return RefSome(stabilizer(node.action.actr(node.beta, grp.conjugatedBy.g), rp))
+        case node: Node[G] =>
+        case _: Term[G] => return RefNone
+      }
+      case _ =>
+    }
+    lhs.chainIfComputed match {
+      case RefOption(node: Node[G]) if node.action == rp.action => RefSome(stabilizer(node.beta, rp))
+      case RefOption(_: Term[G]) => RefNone
+      case _ if lhs.isTrivial => RefNone
+      case _ => lhs.withComputedChain(rp).stabilizer(rp)
+    }
+  }
+
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
     implicit val algebra = lhs.algorithms.algebra
     lhs match {
