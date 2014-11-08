@@ -14,6 +14,7 @@ import net.alasc.util._
 import bsgs._
 import algorithms._
 /**
+  * @param generators          Generators of the group
   * @param givenOrder          Known order for the group, enabling the use of faster randomized algorithms.
   * @param givenRandomElement  Function that provides a random element of the group, for use with randomized algorithms.
   * @param givenRepresentation Representation to be used by default to compute the group chain.
