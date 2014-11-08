@@ -66,8 +66,18 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       def contains(l: Int) = if (l < Domain.this.size) indexArray(l) == index else false
       def symGroupOrder = factorial(size)
-      def symGroupGenerators =
-        if (size <= 1) Iterable.empty else (this zip tail) map { case (x,y) => Perm(x,y) }
+      def symGroupGenerators: Iterable[Perm] =
+        if (size <= 1) Iterable.empty else {
+          val builder = mutable.ArrayBuilder.make[Perm]
+          builder.sizeHint(size - 1)
+          var k = start
+          while (hasNext(k)) {
+            val k1 = next(k)
+            builder += Perm(k, k1)
+            k = k1
+          }
+          builder.result
+        }
     }
 
     /** Returns the block in which `k` is contained. Must have `0 <= k < size`. */
