@@ -183,13 +183,13 @@ object Grp {
   implicit def defaultAlgorithms[G: ClassTag: FiniteGroup] = BasicAlgorithms.randomized(Random)
 
   def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G],
-    representationOption: RefOption[Representation[G]] = RefNone): Grp[G] = {
+    representationOption: RefOption[Representation[G]] = RefNone, givenGenerators: RefOption[Iterable[G]] = RefNone): Grp[G] = {
     val representation = representationOption.getOrElse(Representations[G].get(chain.generators))
     chain match {
       case node: Node[G] if representation.action != node.action =>
-        new GrpLazy(chain.generators, RefSome(chain.order), RefSome(chain.randomElement(_)), representationOption)
+        new GrpLazy(givenGenerators.getOrElse(chain.generators), RefSome(chain.order), RefSome(chain.randomElement(_)), representationOption)
       case _ =>
-        new GrpChain[G](chain.generators, representation, chain)
+        new GrpChain[G](givenGenerators.getOrElse(chain.generators), representation, chain)
     }
   }
 
