@@ -53,6 +53,12 @@ object ChainRec {
     case _: Term[P] => acc
   }
 
+  @tailrec def isTrivial[P](chain: Chain[P]): Boolean = chain match {
+    case node: Node[P] if node.orbitSize != 1 => false
+    case node: Node[P] => isTrivial(node.next)
+    case _: Term[P] => true
+  }
+
   @tailrec final def base[P](chain: Chain[P], buffer: ArrayBuffer[Int] = ArrayBuffer.empty[Int]): Seq[Int] = chain match {
     case node: Node[P] => base(node.next, buffer += node.beta)
     case _: Term[P] => buffer.result

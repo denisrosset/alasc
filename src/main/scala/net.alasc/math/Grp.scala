@@ -45,7 +45,11 @@ sealed abstract class Grp[G] { lhs =>
     case _ => false
   }
 
-  def isTrivial: Boolean = order == 1 // TODO: optimize
+  def isTrivial: Boolean = chainIfComputed match {
+    case RefOption(c) => c.isTrivial
+    case _ => generators.isEmpty
+  }
+
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
   def chainIfComputed: RefOption[Chain[G]]
@@ -113,6 +117,7 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
   }
   def representationIfComputed = RefSome(representation)
   def chainIfComputed = RefSome(chain)
+  override def isTrivial: Boolean = originalChain.isTrivial
   def chain = originalChain match {
     case node: Node[G] =>
       implicit def action = representation.action

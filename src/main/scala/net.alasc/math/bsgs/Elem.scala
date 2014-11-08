@@ -121,6 +121,9 @@ sealed trait Chain[P] extends Elem[P] {
   /** Tests whether this node is mutable. */
   def isMutable: Boolean
 
+  /** Tests whether this chain is trivial, i.e. describes the trivial group. */
+  def isTrivial: Boolean = ChainRec.isTrivial(chain)
+
   /** Seq starting with this element and going for the next nodes of the chain, in order. */
   def nodesNext: Seq[Node[P]] = new NextSeq[P](chain)
 
