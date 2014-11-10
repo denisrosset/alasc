@@ -2,8 +2,8 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.util.Random
 import scala.reflect.ClassTag
+import scala.util.Random
 
 import net.alasc.algebra.FiniteGroup
 

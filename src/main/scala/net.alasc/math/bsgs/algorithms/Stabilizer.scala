@@ -3,19 +3,13 @@ package bsgs
 package algorithms
 
 import scala.annotation.tailrec
-import scala.reflect.ClassTag
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable
 import scala.collection.immutable.BitSet
+import scala.collection.mutable
 
-import spire.algebra.Order
 import spire.syntax.groupAction._
-import spire.syntax.group._
-import spire.math.Sorting
 
-import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.syntax.subgroup._
+import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
+import net.alasc.math.guide.BaseGuideSet
 import net.alasc.util._
 
 object Stabilizer {
@@ -58,7 +52,6 @@ object Stabilizer {
         val groups = debox.Buffer.empty[BitSet]
         @tailrec @inline def rec(current: Chain[P]): Array[BitSet] = current match {
           case node: Node[P] if remaining.contains(node.beta) =>
-            import node.action
             val fixed = mutable.BitSet(node.beta)
             remaining -= node.beta
             remaining.foreachFast { k =>
@@ -73,7 +66,7 @@ object Stabilizer {
       }
       def setwiseStabilized(g: P): Boolean =
         set.forall { k => set.contains(k <|+| g) }
-      alg.subgroupSearch(chainWithGuidedBase, setwiseStabilized(_), new FixingTest(0, set, pointSetsToTest)).toChain
+      alg.subgroupSearch(chainWithGuidedBase, setwiseStabilized, new FixingTest(0, set, pointSetsToTest)).toChain
     case term: Term[P] => term
   }
 }

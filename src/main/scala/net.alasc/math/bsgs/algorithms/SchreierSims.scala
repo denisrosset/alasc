@@ -9,9 +9,8 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, InversePair, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, InversePair, Subgroup}
 import net.alasc.syntax.subgroup._
-import net.alasc.util._
 
 trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[P] {
   def completeChainActionChange(oldChain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty): MutableChain[P] =

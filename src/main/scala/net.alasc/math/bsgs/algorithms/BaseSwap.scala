@@ -2,15 +2,13 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.collection.mutable
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, InversePair}
+import net.alasc.algebra.InversePair
 import net.alasc.syntax.subgroup._
-import net.alasc.syntax.check._
 
 trait BaseSwap[P] extends MutableAlgorithms[P] {
   /** Base swap.
@@ -37,7 +35,7 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
     * implementation.
     */
   def baseSwap(mutableChain: MutableChain[P], node1: MutableNode[P], node2: MutableNode[P]): MutableNodeAndNext[P] = {
-    import OrbitInstances._
+    import net.alasc.math.OrbitInstances._
     implicit def action = mutableChain.start.action
     val gammaSet = mutable.BitSet.empty ++ node1.orbit
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)

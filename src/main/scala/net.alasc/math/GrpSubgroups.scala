@@ -2,19 +2,17 @@ package net.alasc
 package math
 
 import scala.language.implicitConversions
-
-import scala.annotation.tailrec
 import scala.reflect.ClassTag
-import scala.util.Random
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
+import net.alasc.math.bsgs._
+import net.alasc.math.bsgs.algorithms._
+import net.alasc.math.guide.BaseGuideSeq
 import net.alasc.syntax.all._
 import net.alasc.util._
-import bsgs._
-import algorithms._
 
 class GrpSubgroups[G](val lhs: Grp[G]) {
   import lhs.representation
@@ -70,7 +68,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
       case grp: GrpConjugated[G] =>
         grp.originalChain match {
           case node: Node[G] if node.action == rp.action =>
-            import grp.conjugatedBy.{g, gInv}
+            import grp.conjugatedBy.gInv
             implicit def action = node.action
             val a = b <|+| gInv
             if (node.inOrbit(a)) {

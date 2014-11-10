@@ -1,20 +1,6 @@
-package net.alasc.math
-package bsgs
-package algorithms
+package net.alasc.math.guide
 
 import scala.annotation.tailrec
-
-import scala.collection.immutable.BitSet
-import scala.collection.immutable
-import scala.collection.mutable
-
-import spire.algebra.Order
-import spire.syntax.groupAction._
-import spire.syntax.group._
-
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.util._
 
 case class BaseGuideSeq(seq: Seq[Int]) extends BaseGuide {
   final class Iter(val it: Iterator[Int]) extends BaseGuideIterator {

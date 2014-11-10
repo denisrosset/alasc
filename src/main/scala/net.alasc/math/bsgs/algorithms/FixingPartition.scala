@@ -2,20 +2,11 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.annotation.tailrec
-import scala.reflect.ClassTag
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable
-import scala.collection.immutable.BitSet
-
-import spire.algebra.Order
-import spire.syntax.groupAction._
 import spire.syntax.group._
-import spire.math.Sorting
+import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.syntax.subgroup._
+import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
+import net.alasc.math.guide.BaseGuidePartition
 import net.alasc.util._
 
 object FixingPartition {

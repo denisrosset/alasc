@@ -3,20 +3,14 @@ package bsgs
 package algorithms
 
 import scala.annotation.tailrec
-
-import scala.collection.immutable.BitSet
-import scala.collection.immutable
 import scala.collection.mutable
 import scala.util.Random
 
-import spire.algebra.Order
 import spire.syntax.groupAction._
-import spire.syntax.group._
 
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.check._
+import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.math.guide.{BaseGuide, BaseGuideSeq}
 import net.alasc.syntax.permutationAction._
-import net.alasc.util._
 
 trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
   /** Returns an incomplete base for the given generators, used when base has to be computed from scratch. */

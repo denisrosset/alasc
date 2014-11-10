@@ -2,6 +2,8 @@ package net.alasc
 package math
 package enum
 
+import net.alasc.math.guide.BaseGuideLex
+
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
@@ -54,7 +56,7 @@ trait RepresentativesOrdered[T, G] extends Representatives[T, G] {
   /** Retrieves the (ordered) integer representation of element `t(idx)`, using non-negative integers. */
   def tInt(idx: Int): Int
 
-  def chainInRepresentation = grp.chain(representation, algorithms.BaseGuideLex(tLength))
+  def chainInRepresentation = grp.chain(representation, BaseGuideLex(tLength))
 }
 
 object Representatives {

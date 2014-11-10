@@ -4,12 +4,10 @@ package algorithms
 
 import scala.annotation.tailrec
 
-import scala.collection.mutable
-
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction, InversePair}
+import net.alasc.algebra.{FaithfulPermutationAction, InversePair}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 

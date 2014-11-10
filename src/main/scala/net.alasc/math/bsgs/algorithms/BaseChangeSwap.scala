@@ -4,17 +4,8 @@ package algorithms
 
 import scala.annotation.tailrec
 
-import scala.collection.immutable.BitSet
-import scala.collection.immutable
-import scala.collection.mutable
-
-import spire.algebra.Order
-import spire.syntax.groupAction._
-import spire.syntax.group._
-
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.util._
+import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.math.guide.BaseGuide
 
 trait BaseChangeSwap[P] extends BaseAlgorithms[P] with BaseChange[P] {
   def changeBaseSameAction(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {

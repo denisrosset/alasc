@@ -3,18 +3,13 @@ package bsgs
 package algorithms
 
 import scala.annotation.tailrec
-
-import scala.collection.immutable.BitSet
-import scala.collection.immutable
 import scala.collection.mutable
 
-import spire.algebra.Order
-import spire.syntax.groupAction._
 import spire.syntax.group._
+import spire.syntax.groupAction._
 
-import net.alasc.algebra.{FaithfulPermutationAction, InversePair, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.util._
+import net.alasc.algebra.{FaithfulPermutationAction, InversePair}
+import net.alasc.math.guide.BaseGuide
 
 trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] {
   def changeBaseConjugation(mutableChain: MutableChain[P], guide: BaseGuide)(

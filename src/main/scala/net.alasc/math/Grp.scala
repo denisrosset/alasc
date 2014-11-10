@@ -2,20 +2,18 @@ package net.alasc
 package math
 
 import scala.language.implicitConversions
-
-import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
 import spire.syntax.partialOrder._
 
 import net.alasc.algebra._
+import net.alasc.math.bsgs._
+import net.alasc.math.bsgs.algorithms._
+import net.alasc.math.guide.BaseGuide
 import net.alasc.syntax.all._
 import net.alasc.util._
-import bsgs._
-import algorithms._
 
 /** User-friendly representation of a group internally using a base and strong generating set data structure.
   *
@@ -218,7 +216,6 @@ object Grp {
 
 class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
   def iterator(grp: Grp[G]) = {
-    import grp.gClassTag
     grp.chain.iterator
   }
   def generators(grp: Grp[G]) = grp.generators

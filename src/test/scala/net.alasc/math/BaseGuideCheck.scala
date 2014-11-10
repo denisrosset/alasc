@@ -1,5 +1,6 @@
 package net.alasc.math
 
+import net.alasc.math.guide.BaseGuidePartition
 import org.scalacheck._
 import scala.util.Random
 import org.scalatest.FunSuite

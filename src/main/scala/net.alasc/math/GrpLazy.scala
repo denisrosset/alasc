@@ -1,18 +1,14 @@
 package net.alasc
 package math
 
-import scala.annotation.tailrec
 import scala.util.Random
 
-import spire.syntax.group._
-import spire.syntax.groupAction._
-import spire.syntax.partialOrder._
-
 import net.alasc.algebra._
+import net.alasc.math.bsgs._
+import net.alasc.math.bsgs.algorithms._
+import net.alasc.math.guide.BaseGuide
 import net.alasc.syntax.all._
 import net.alasc.util._
-import bsgs._
-import algorithms._
 /**
   * @param generators          Generators of the group
   * @param givenOrder          Known order for the group, enabling the use of faster randomized algorithms.

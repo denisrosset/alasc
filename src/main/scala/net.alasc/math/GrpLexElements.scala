@@ -1,19 +1,15 @@
 package net.alasc
 package math
 
-import scala.language.implicitConversions
-
 import scala.annotation.tailrec
-import scala.util.Random
+import scala.language.implicitConversions
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
 
 import net.alasc.algebra._
-import net.alasc.syntax.all._
-import net.alasc.util._
-import bsgs._
-import algorithms._
+import net.alasc.math.bsgs._
+import net.alasc.math.guide.BaseGuideLex
 
 class GrpLexElements[G](val lhs: Grp[G]) {
   import lhs._

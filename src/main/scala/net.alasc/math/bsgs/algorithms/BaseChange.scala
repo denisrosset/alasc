@@ -2,19 +2,8 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.annotation.tailrec
-
-import scala.collection.immutable.BitSet
-import scala.collection.immutable
-import scala.collection.mutable
-
-import spire.algebra.Order
-import spire.syntax.groupAction._
-import spire.syntax.group._
-
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.check._
-import net.alasc.util._
+import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.math.guide.{BaseGuide, BaseGuideSeq}
 
 trait BaseChange[P] extends SchreierSims[P] {
   /** Change the base in `mutableChain` using the base guide provided. Must not change the action.

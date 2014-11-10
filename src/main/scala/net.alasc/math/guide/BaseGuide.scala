@@ -1,14 +1,8 @@
-package net.alasc.math
-package bsgs
-package algorithms
+package net.alasc.math.guide
+
+import net.alasc.math.bsgs.{Chain, Node, Term}
 
 import scala.annotation.tailrec
-import scala.collection.mutable
-
-import spire.syntax.groupAction._
-
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.permutationAction._
 
 trait BaseGuide {
   def iterator: BaseGuideIterator
