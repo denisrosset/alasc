@@ -12,7 +12,7 @@ class Sym[P](val degree: Int) {
 }
 
 class SymPermutationSubgroup[P](implicit val algebra: Permutation[P]) extends Subgroup[Sym[P], P] {
-  protected def domainSequence(degree: Int): Seq[Int] = (0 until degree).toSeq
+  protected def domainSequence(degree: Int): Seq[Int] = 0 until degree
   def order(s: Sym[P]) = (BigInt(1) /: (1 to s.degree))(_*_)
   override def contains(s: Sym[P], p: P) = p.supportMax.fold(true)(_ < s.degree)
   def randomElement(s: Sym[P], gen: Random) = algebra.fromImages(gen.shuffle(domainSequence(s.degree)))
