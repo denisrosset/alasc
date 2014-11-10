@@ -97,12 +97,15 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     val (nextChain, transversal) = newChain.detach(b)
     (Grp.fromChain(nextChain, RefSome(rp)), transversal)
   }
+
   def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)
     stabilizer(b, rp)
   }
+
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
     Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
+
   def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
@@ -110,6 +113,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
     pointwiseStabilizer(set, rp)
   }
+
   def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
     Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
   def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
@@ -118,5 +122,23 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     val maxSet = set.max
     val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
     setwiseStabilizer(set, rp)
+  }
+
+  /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
+    * prune the search tree.
+    *
+  * @param backtrackTest Tests if a pair (preimage, image) is valid for an element of the subgroup. False
+  *                      positives are allowed, but a false negative would incorrectly prune the tree.
+  * @param rp Representation to use for `backtrackTest`
+  * @param predicate Tests if an element is member of the subgroup
+  * @return the subgroup satisfying `predicate`
+  */
+  def subgroupFor(backtrackTest: (Int, Int) => Boolean, rp: Representation[G], predicate: G => Boolean): Grp[G] = {
+    object ThisTest extends SubgroupTest {
+      def test(b: Int, orbitImage: Int, currentG: G, node: Node[G])(
+        implicit action: FaithfulPermutationAction[G]): RefOption[SubgroupTest[G]] =
+      if (backtrackTest(node.beta, orbitImage)) RefSome(this) else RefNone
+    }
+     Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain)
   }
 }
