@@ -139,6 +139,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
         implicit action: FaithfulPermutationAction[G]): RefOption[SubgroupTest[G]] =
       if (backtrackTest(node.beta, orbitImage)) RefSome(this) else RefNone
     }
-     Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain)
+    implicit def action = rp.action
+    Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain)
   }
 }
