@@ -134,7 +134,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   * @return the subgroup satisfying `predicate`
   */
   def subgroupFor(backtrackTest: (Int, Int) => Boolean, rp: Representation[G], predicate: G => Boolean): Grp[G] = {
-    object ThisTest extends SubgroupTest {
+    object ThisTest extends SubgroupTest[G] {
       def test(b: Int, orbitImage: Int, currentG: G, node: Node[G])(
         implicit action: FaithfulPermutationAction[G]): RefOption[SubgroupTest[G]] =
       if (backtrackTest(node.beta, orbitImage)) RefSome(this) else RefNone
