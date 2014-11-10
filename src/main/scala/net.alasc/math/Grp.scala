@@ -216,6 +216,7 @@ object Grp {
 
 class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
   def iterator(grp: Grp[G]) = {
+    import grp.gClassTag
     grp.chain.iterator
   }
   def generators(grp: Grp[G]) = grp.generators
