@@ -180,7 +180,6 @@ abstract class GrpLazyBase[G] extends Grp[G] {
 
 object Grp {
   def lattice[G: ClassTag: FiniteGroup: Representations: BasicAlgorithms]: BoundedBelowLattice[Grp[G]] = new GrpLattice[G]
-  def trivial[G: ClassTag: FiniteGroup: Representations] = apply[G]()
   implicit def defaultAlgorithms[G: ClassTag: FiniteGroup] = BasicAlgorithms.randomized(Random)
 
   def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G],
@@ -200,6 +199,8 @@ object Grp {
 
   def apply[G: ClassTag: FiniteGroup: Representations](generators: G*): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId))
+
+  def trivial[G: ClassTag: FiniteGroup: Representations]: Grp[G] = new GrpChain[G](Iterable.empty, Representations[G].lattice.zero, new Term[G])
 
   def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
     representationOption: RefOption[Representation[G]] = RefNone): Grp[G] =
