@@ -32,6 +32,7 @@ final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
 }
 
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
+  def inSupport(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
   def support(): Set[Int] = macro Ops.unop[Set[Int]]
   def supportMax(): NNOption = macro Ops.unop[NNOption]
   def supportMin(): NNOption = macro Ops.unop[NNOption]

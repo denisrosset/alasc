@@ -112,6 +112,13 @@ trait PermutationActionCheck[G] extends FiniteGroupCheck[G] {
       }
     }
   }
+  property("x.inSupport(x.supportMax)") {
+    forAll { x: G =>
+      whenever (!x.isId) {
+        x.inSupport(x.supportMax.get)
+      }
+    }
+  }
 }
 
 trait PermutationCheck[P] extends PermutationActionCheck[P] {
