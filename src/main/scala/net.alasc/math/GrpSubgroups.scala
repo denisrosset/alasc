@@ -104,8 +104,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   }
 
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
-
+    Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), RefSome(rp))
   def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
@@ -115,7 +114,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   }
 
   def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set))
+    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), RefSome(rp))
   def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
