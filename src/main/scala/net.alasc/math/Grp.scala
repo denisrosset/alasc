@@ -23,7 +23,10 @@ import net.alasc.util._
   */
 sealed abstract class Grp[G] { lhs =>
   override def hashCode = sys.error("HashCode not defined for Grp")
-  override def toString = generators.mkString("Grp(", ", ", ")") //+ (if (knownOrder.nonEmpty || knownChain.nonEmpty) s" of order ${order}" else "")
+  override def toString = generators.mkString("Grp(", ", ", ")") + (orderIfComputed match {
+    case RefOption(o) => s" of order $o"
+    case _ => ""
+  })
 
   /** Set of algorithms used in the computations. */
   implicit def algorithms: BasicAlgorithms[G]
