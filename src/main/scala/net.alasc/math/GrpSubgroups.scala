@@ -140,6 +140,6 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
       if (backtrackTest(node.beta, orbitImage)) RefSome(this) else RefNone
     }
     implicit def action = rp.action
-    Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain)
+    Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain, RefSome(rp))
   }
 }
