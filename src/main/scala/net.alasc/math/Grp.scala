@@ -53,6 +53,7 @@ sealed abstract class Grp[G] { lhs =>
 
   def order: BigInt
   def orderIfComputed: RefOption[BigInt]
+  def isChainComputed = chainIfComputed.nonEmpty
   def chainIfComputed: RefOption[Chain[G]]
   def chain: Chain[G]
   def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G]
@@ -158,10 +159,7 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
 }
 
 abstract class GrpLazyBase[G] extends Grp[G] {
-  def isChainComputed: Boolean
   def isOrderComputed: Boolean
-  def orderIfComputed: RefOption[BigInt]
-  def chainIfComputed: RefOption[Chain[G]]
 
   protected def computeChain(givenRepresentation: RefOption[Representation[G]] = RefNone): Chain[G]
 

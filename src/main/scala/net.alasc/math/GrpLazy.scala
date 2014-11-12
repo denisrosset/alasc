@@ -63,7 +63,6 @@ class GrpLazy[G](
     case _ => computeRepresentation()
   }
 
-  def isChainComputed = computedChain.nonEmpty
   def chainIfComputed: RefOption[Chain[G]] = computedChain
   def representationIfComputed: RefOption[Representation[G]] = computedRepresentation
 
