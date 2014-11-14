@@ -14,7 +14,7 @@ import net.alasc.util._
 import perm._
 
 final class PermPermutation extends ShiftablePermutation[Perm] {
-  @inline def eqv(x: Perm, y: Perm): Boolean = x match {
+  def eqv(x: Perm, y: Perm): Boolean = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => lhs16.encoding == rhs16.encoding
       case _ => false
@@ -30,7 +30,7 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
       case rhs: AbstractPerm => lhs.genEqv(rhs)
     }
   }
-  @inline def op(x: Perm, y: Perm): Perm = x match {
+  def op(x: Perm, y: Perm): Perm = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => new Perm16(Perm16Encoding.op(lhs16.encoding, rhs16.encoding))
       case rhs32: Perm32 => Perm32Encoding.op1632(lhs16, rhs32)
@@ -47,17 +47,17 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
       case rhs: Perm => lhs.genOp(rhs)
     }
   }
-  @inline def support(p: Perm): Set[Int] = p.support
-  @inline def supportMin(p: Perm): NNOption = p.supportMin
-  @inline def supportMax(p: Perm): NNOption = p.supportMax
-  @inline def actr(preimage: Int, p: Perm): Int = p.image(preimage)
-  @inline override def actl(p: Perm, i: Int): Int = p.invImage(i)
-  @inline override def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
-  @inline def inverse(p: Perm): Perm = p.inverse
+  def support(p: Perm): Set[Int] = p.support
+  def supportMin(p: Perm): NNOption = p.supportMin
+  def supportMax(p: Perm): NNOption = p.supportMax
+  def actr(preimage: Int, p: Perm): Int = p.image(preimage)
+  override def actl(p: Perm, i: Int): Int = p.invImage(i)
+  override def signum(p: Perm): Int = p.to[Cycles].signum // TODO: could be optimized
+  def inverse(p: Perm): Perm = p.inverse
   val id = Perm16Encoding.id
-  @inline def supportMaxElement = PermArray.supportMaxElement
-  @inline def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
-  @inline def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
+  def supportMaxElement = PermArray.supportMaxElement
+  def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
+  def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
     Perm.fromSupportAndImageFun(support, image)
   def plus(p: Perm, n: Int): Perm = {
     require(n >= 0)
