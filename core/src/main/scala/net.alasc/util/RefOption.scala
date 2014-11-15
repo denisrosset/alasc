@@ -3,7 +3,7 @@ package net.alasc.util
 import scala.language.implicitConversions
 
 /** Option class for reference types, using `null` as a special value for `None`. */
-class RefOption[+A <: AnyRef](val a: A) extends AnyVal {
+final class RefOption[+A <: AnyRef](val a: A) extends AnyVal {
   override def toString = if (a eq null) "none" else s"some($a)"
   @inline def isEmpty = a eq null
   @inline def isDefined = a ne null

@@ -31,27 +31,27 @@ object Perm32Encoding {
 
   import java.lang.Long.{numberOfLeadingZeros, numberOfTrailingZeros}
 
-  @inline def supportMin(long2: Long, long1: Long, long0: Long) =
+  def supportMin(long2: Long, long1: Long, long0: Long) =
     if (long0 != 0)
-      NNSome(numberOfTrailingZeros(long0) / maskWidth)
+      numberOfTrailingZeros(long0) / maskWidth
     else if (long1 != 0)
-      NNSome(long1Start + numberOfTrailingZeros(long1) / maskWidth)
+      long1Start + numberOfTrailingZeros(long1) / maskWidth
     else if (long2 != 0)
-      NNSome(long2Start + numberOfTrailingZeros(long2) / maskWidth)
+      long2Start + numberOfTrailingZeros(long2) / maskWidth
     else
-      NNNone
+      -1
 
-  @inline def supportMax(long2: Long, long1: Long, long0: Long) =
+  def supportMax(long2: Long, long1: Long, long0: Long) =
     if (long2 != 0)
-      NNSome(31 - (numberOfLeadingZeros(long2) - 24) / maskWidth)
+      31 - (numberOfLeadingZeros(long2) - 24) / maskWidth
     else if (long1 != 0)
-      NNSome(long2Start - 1 - (numberOfLeadingZeros(long1) - leftBlank) / maskWidth)
+      long2Start - 1 - (numberOfLeadingZeros(long1) - leftBlank) / maskWidth
     else if (long0 != 0)
-      NNSome(long1Start - 1 - (numberOfLeadingZeros(long0) - leftBlank) / maskWidth)
+      long1Start - 1 - (numberOfLeadingZeros(long0) - leftBlank) / maskWidth
     else
-      NNNone
+      -1
 
-  @inline def hash(long2: Long, long1: Long, long0: Long) = {
+  def hash(long2: Long, long1: Long, long0: Long) = {
     import scala.util.hashing.MurmurHash3.{mix, finalizeHash}
     var h = PermHash.seed
     h = mix(h, long0.toInt & mask6)
@@ -63,7 +63,7 @@ object Perm32Encoding {
     finalizeHash(h, 6)
   }
 
-  @inline def inSupport(long2: Long, long1: Long, long0: Long, preimage: Int): Boolean =
+  def inSupport(long2: Long, long1: Long, long0: Long, preimage: Int): Boolean =
     if (preimage < long1Start)
       ((long0 >>> (preimage * maskWidth)) & mask) != 0
     else if (preimage < long2Start)
@@ -73,7 +73,7 @@ object Perm32Encoding {
     else
       false
 
-  @inline def support(long2: Long, long1: Long, long0: Long): Set[Int] = {
+  def support(long2: Long, long1: Long, long0: Long): Set[Int] = {
     var bitset = 0L
     if (long2 != 0) {
       var k = 31
@@ -102,7 +102,7 @@ object Perm32Encoding {
     immutable.BitSet.fromBitMask(Array(bitset))
   }
 
-  @inline def decode(long2: Long, long1: Long, long0: Long, preimage: Int): Int =
+  def decode(long2: Long, long1: Long, long0: Long, preimage: Int): Int =
     if (preimage < long1Start)
       ((preimage + (long0 >>> (preimage * maskWidth))) & mask).toInt
     else if (preimage < long2Start)
@@ -110,7 +110,7 @@ object Perm32Encoding {
     else
       ((preimage + (long2 >>> ((preimage - long2Start) * maskWidth))) & mask).toInt
 
-  @inline def encode(perm: Perm32, preimage: Int, image: Int): Unit = {
+  def encode(perm: Perm32, preimage: Int, image: Int): Unit = {
     if (preimage < long1Start)
       perm.long0 |= ((image - preimage).toLong & mask) << (preimage * maskWidth)
     else if (preimage < long2Start)
@@ -120,7 +120,7 @@ object Perm32Encoding {
   }
 
   def toPerm16(long2: Long, long1: Long, long0: Long): Perm16 = {
-    var k = Perm32Encoding.supportMax(long2, long1, long0).getOrElseFast(-1)
+    var k = supportMax(long2, long1, long0)
     if (k > Perm16Encoding.supportMaxElement) sys.error("Cannot fit in Perm16.")
     var encoding = 0L
     var l1 = long1
@@ -137,15 +137,15 @@ object Perm32Encoding {
     new Perm16(encoding)
   }
 
-  @inline def image(long2: Long, long1: Long, long0: Long, preimage: Int): Int =
+  def image(long2: Long, long1: Long, long0: Long, preimage: Int): Int =
     if (preimage > supportMaxElement) preimage else decode(long2, long1, long0, preimage)
 
   def invImage(long2: Long, long1: Long, long0: Long, i: Int): Int = {
     if ((long2 == 0 && long1 == 0 && long0 == 0) || i > supportMaxElement)
       return i
-    var k = Perm32Encoding.supportMax(long2, long1, long0).get
+    var k = supportMax(long2, long1, long0)
     if (i > k) return i
-    val low = Perm32Encoding.supportMin(long2, long1, long0).get
+    val low = supportMin(long2, long1, long0)
     if (i < low) return i
     while (k >= low) {
       if (decode(long2, long1, long0, k) == i)
@@ -155,10 +155,10 @@ object Perm32Encoding {
     sys.error("Invalid permutation")
   }
 
-  @inline def inverse(p: Perm32): Perm32 = {
+  def inverse(p: Perm32): Perm32 = {
     if (p.long2 == 0 && p.long1 == 0 && p.long0 == 0) return p
-    val low = supportMin(p.long2, p.long1, p.long0).get
-    var k = supportMax(p.long2, p.long1, p.long0).get
+    val low = supportMin(p.long2, p.long1, p.long0)
+    var k = supportMax(p.long2, p.long1, p.long0)
     val res = new Perm32
     while (k >= low) {
       encode(res, decode(p.long2, p.long1, p.long0, k), k)
@@ -168,7 +168,7 @@ object Perm32Encoding {
   }
 
   // long2 contains indices 12..23, and the indices 12..15 occupy the right-most 20 bits of long1
-  @inline def isValidPerm16(long2: Long, long1: Long, long0: Long) = long2 == 0 && (long1 & leftFill(44)) == 0
+  def isValidPerm16(long2: Long, long1: Long, long0: Long) = long2 == 0 && (long1 & leftFill(44)) == 0
 
   def fromImages(images: Seq[Int], supportMax: Int = 31): Perm32 = {
     assert(supportMax <= supportMaxElement)
@@ -193,8 +193,8 @@ object Perm32Encoding {
   }
 
   def op3232(lhs: Perm32, rhs: Perm32): Perm = {
-    val low = Perm32Encoding.supportMin(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0).get
-    var k = Perm32Encoding.supportMax(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0).get
+    val low = Perm32Encoding.supportMin(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
+    var k = Perm32Encoding.supportMax(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
     var i = 0
     assert(k > Perm16Encoding.supportMaxElement)
     @inline def img(preimage: Int) = decode(rhs.long2, rhs.long1, rhs.long0, decode(lhs.long2, lhs.long1, lhs.long0, preimage))
@@ -225,12 +225,17 @@ object Perm32Encoding {
     Perm16Encoding.id
   }
 
+  def reduceMin(i: Int, j: Int): Int =
+    if (i < 0) j
+    else if (j < 0) i
+    else i.min(j)
+
+  def reduceMax(i: Int, j: Int): Int = i.max(j)
+
   def op1632(lhs: Perm16, rhs: Perm32): Perm = {
     if (lhs.isId) return rhs
-    val low = (Perm16Encoding.supportMin(lhs.encoding)
-      .reduceMin(Perm32Encoding.supportMin(rhs.long2, rhs.long1, rhs.long0))).get
-    var k = (Perm16Encoding.supportMax(lhs.encoding)
-      .reduceMax(Perm32Encoding.supportMax(rhs.long2, rhs.long1, rhs.long0))).get
+    val low = reduceMin(Perm16Encoding.supportMin(lhs.encoding), Perm32Encoding.supportMin(rhs.long2, rhs.long1, rhs.long0))
+    var k = reduceMax(Perm16Encoding.supportMax(lhs.encoding), Perm32Encoding.supportMax(rhs.long2, rhs.long1, rhs.long0))
     var i = 0
     assert(k > Perm16Encoding.supportMaxElement)
     @inline def img(preimage: Int) = {
@@ -266,10 +271,8 @@ object Perm32Encoding {
 
   def op3216(lhs: Perm32, rhs: Perm16): Perm = {
     if (rhs.isId) lhs
-    val low = Perm32Encoding.supportMin(lhs.long2, lhs.long1, lhs.long0)
-      .reduceMin(Perm16Encoding.supportMin(rhs.encoding)).get
-    var k = Perm32Encoding.supportMax(lhs.long2, lhs.long1, lhs.long0)
-      .reduceMax(Perm16Encoding.supportMax(rhs.encoding)).get
+    val low = reduceMin(Perm32Encoding.supportMin(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.supportMin(rhs.encoding))
+    var k = reduceMax(Perm32Encoding.supportMax(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.supportMax(rhs.encoding))
     var i = 0
     assert(k > Perm16Encoding.supportMaxElement)
     @inline def img(preimage: Int) = {

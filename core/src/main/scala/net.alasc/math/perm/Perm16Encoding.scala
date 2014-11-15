@@ -25,18 +25,19 @@ object Perm16Encoding {
     ((image - preimage) & 0xF).toLong << (preimage * 4)
   @inline def decode(encoding: Long, preimage: Int): Int =
     ((preimage + (encoding >>> (preimage*4))) & 0x0F).toInt
-  @inline def supportMin(encoding: Long): NNOption =
-    if (encoding == 0) NNNone else NNSome(numberOfTrailingZeros(encoding)/4)
-  @inline def supportMax(encoding: Long): NNOption =
-    if (encoding == 0) NNNone else NNSome(15 - numberOfLeadingZeros(encoding)/4)
+  def supportMin(encoding: Long): Int =
+    if (encoding == 0) -1 else numberOfTrailingZeros(encoding)/4
+  def supportMax(encoding: Long): Int =
+    if (encoding == 0) -1 else 15 - numberOfLeadingZeros(encoding)/4
 
   @inline def supportMaxElement = 15
   @inline def idEncoding: Long = 0L
   @inline def id: Perm16 = new Perm16(idEncoding)
-  @inline def invImage(encoding: Long, i: Int): Int = {
-    val low = supportMin(encoding).getOrElseFast(-1)
+  def invImage(encoding: Long, i: Int): Int = {
+    val low = supportMin(encoding)
     if (i < low) return i
-    var k = supportMax(encoding).getOrElseFast(0)
+    var k = supportMax(encoding)
+    if (k == -1) k = 0
     if (i > k) return i
     while (k >= low) {
       if (decode(encoding, k) == i)
@@ -53,7 +54,7 @@ object Perm16Encoding {
     var bitset = 0L
     var remaining = encoding
     while (remaining != 0) {
-      val preimage = Perm16Encoding.supportMin(remaining).get
+      val preimage = Perm16Encoding.supportMin(remaining)
       val image = Perm16Encoding.decode(remaining, preimage)
       bitset |= 1 << preimage
       bitset |= 1 << image
@@ -64,8 +65,8 @@ object Perm16Encoding {
 
   def inverse(encoding: Long): Long = {
     if (encoding >= 0 && encoding <= 0xFF) return encoding
-    val low = supportMin(encoding).get
-    var k = supportMax(encoding).get
+    val low = supportMin(encoding)
+    var k = supportMax(encoding)
     var res = 0L
     while (k >= low) {
       res |= encode(decode(encoding, k), k)
@@ -74,25 +75,25 @@ object Perm16Encoding {
     res
   }
 
-  @inline def minus(encoding: Long, n: Int): Long = {
+  def minus(encoding: Long, n: Int): Long = {
     assert(n >= 0 && n <= 16)
     assert((encoding & LongBits.rightFill(n*4)) == 0)
     encoding >>> (n*4)
   }
 
-  @inline def plus(encoding: Long, n: Int): Long = {
+  def plus(encoding: Long, n: Int): Long = {
     assert(n >= 0 && n <= 16)
     assert(n <= 16)
     assert((encoding & LongBits.leftFill(n*4)) == 0)
     encoding << (n*4)
   }
 
-  @inline def op(lhs: Long, rhs: Long): Long = {
+  def op(lhs: Long, rhs: Long): Long = {
     // both are either identity or (0,1)
     if (lhs >= 0L && lhs <= 0xFFL && rhs >= 0L && rhs <= 0xFFL) return lhs ^ rhs
 
-    val low = supportMin(lhs | rhs).get
-    var k = supportMax(lhs | rhs).get
+    val low = supportMin(lhs | rhs)
+    var k = supportMax(lhs | rhs)
     var res = 0L
     while (k >= low) {
       res |= encode(k, decode(rhs, decode(lhs, k)))
