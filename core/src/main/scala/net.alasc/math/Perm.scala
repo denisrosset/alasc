@@ -146,9 +146,9 @@ final case class Perm16(val encoding: Long) extends AnyVal with Perm { lhs16 =>
   @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
   @inline def isId = encoding == 0L
   @inline def support = Perm16Encoding.support(encoding)
-  @inline def supportMin = Perm16Encoding.supportMin(encoding)
-  @inline def supportMax = Perm16Encoding.supportMax(encoding)
   @inline def inverse = new Perm16(Perm16Encoding.inverse(encoding))
+  def supportMin = NNOption(Perm16Encoding.supportMin(encoding))
+  def supportMax = NNOption(Perm16Encoding.supportMax(encoding))
   def isValidPerm32 = false
   def toPerm32 = sys.error("A Perm16 is never a valid Perm32, because all permutation with support <= 15 are Perm16.")
 }
@@ -286,8 +286,8 @@ final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long =
   def image(preimage: Int) = Perm32Encoding.image(long2, long1, long0, preimage)
   def invImage(i: Int) = Perm32Encoding.invImage(long2, long1, long0, i)
   def inverse: Perm32 = Perm32Encoding.inverse(this)
-  def supportMax = Perm32Encoding.supportMax(long2, long1, long0)
-  def supportMin = Perm32Encoding.supportMin(long2, long1, long0)
+  def supportMax = NNOption(Perm32Encoding.supportMax(long2, long1, long0))
+  def supportMin = NNOption(Perm32Encoding.supportMin(long2, long1, long0))
   def support = Perm32Encoding.support(long2, long1, long0)
   def isValidPerm32 = true
   def toPerm32 = this
