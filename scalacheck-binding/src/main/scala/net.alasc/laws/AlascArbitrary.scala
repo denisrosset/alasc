@@ -3,7 +3,6 @@ package net.alasc.laws
 import scala.reflect.ClassTag
 
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.Arbitrary._
 
 import spire.syntax.group._
 import spire.syntax.groupAction._
@@ -12,6 +11,7 @@ import spire.std.int._
 
 import net.alasc.algebra._
 import net.alasc.math._
+import net.alasc.math.wreath._
 import net.alasc.syntax.permutationAction._
 
 object AlascArbitrary {
@@ -36,6 +36,8 @@ object AlascArbitrary {
     val images = randomImages(domainSize, parameters.rng)
     Permutation[P].fromImages(images)
   }
+
+  implicit def DomArbitrary: Arbitrary[Dom] = Arbitrary { Gen.choose(0, 100).map(Dom(_)) }
 
   implicit def PermutationArbitrary[P : Permutation]: Arbitrary[P] = Arbitrary { PermutationGen[P] }
 
@@ -69,4 +71,12 @@ object AlascArbitrary {
   implicit def PartitionMapArbitrary[V : Arbitrary : ClassTag]: Arbitrary[Domain#PartitionMap[V]] = Arbitrary {
     genDomain.flatMap(domain => genPartitionMap[V](domain))
   }
+  val wrSize = 4
+  val wrPermSize = 4
+  implicit def genWrPermPerm: Gen[Wr[Perm, Perm]] = for {
+    n <- Gen.choose(0, wrSize)
+    aSeq <- Gen.containerOfN[Seq, Perm](n, PermutationGen[Perm](wrPermSize))
+    h <- PermutationGen[Perm](wrPermSize)
+  } yield Wr(aSeq, h)
+  implicit def WrPermPerm: Arbitrary[Wr[Perm, Perm]] = Arbitrary(genWrPermPerm)
 }

@@ -10,19 +10,20 @@ import spire.syntax.group._
 
 import net.alasc.algebra._
 import net.alasc.syntax.finiteGroup._
+import net.alasc.laws._
 
-class GrpConjByCheck extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions with PermutationGenerators[Perm] {
-  implicit def permutation = Perm.Algebra
+class GrpConjByCheck extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions {
+  import AlascArbitrary._
   implicit def arbitraryGrp = Arbitrary {
     for {
-      gen1 <- genP(8)
-      gen2 <- genP(8)
-      gen3 <- genP(8)
+      gen1 <- PermutationGen[Perm](8)
+      gen2 <- PermutationGen[Perm](8)
+      gen3 <- PermutationGen[Perm](8)
       conj <- Gen.oneOf(true, false)
-      by <- genP(8)
+      by <- PermutationGen[Perm](8)
     } yield if(conj) Grp(gen1, gen2, gen3).conjBy(InversePair(by, by.inverse)) else Grp(gen1, gen2, gen3)
   }
-  implicit def arbitraryPerm = Arbitrary { genP(9) }
+  implicit def arbitraryPerm = Arbitrary { PermutationGen[Perm](9) }
 
   property("grp.generators.forall(g => grp.conjBy(h).contains(g.conjBy(h)))") {
     forAll { (grp: Grp[Perm], h: Perm) =>

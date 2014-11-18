@@ -13,13 +13,14 @@ import spire.std.int._
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.subgroup._
+import net.alasc.laws._
 
-object RepresentativesCheck extends Properties("RepresentativesCheck") with PermutationGenerators[Perm] {
-  implicit def permutation = Perm.Algebra
+object RepresentativesCheck extends Properties("RepresentativesCheck") {
+  import AlascArbitrary._
   def genGrp(sz: Int) = for {
-    gen1 <- genP(sz)
-    gen2 <- genP(sz)
-    gen3 <- genP(sz)
+    gen1 <- PermutationGen[Perm](sz)
+    gen2 <- PermutationGen[Perm](sz)
+    gen3 <- PermutationGen[Perm](sz)
   } yield Grp(gen1, gen2, gen3)
   def genSeqGrp = for {
     sz <- Gen.choose(1, 8)

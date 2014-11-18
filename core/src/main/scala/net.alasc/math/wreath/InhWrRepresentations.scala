@@ -10,16 +10,17 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra._
+import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.partialOrder._
 import spire.syntax.group._
 import spire.syntax.groupAction._
+import spire.syntax.lattice._
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
-import net.alasc.syntax.lattice._
 import net.alasc.util._
 
 abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
@@ -29,8 +30,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   implicit def hAlgebra: Permutation[H]
   type AR = aReps.R
   implicit def aRepsRClassTag: ClassTag[aReps.R] = aReps.rClassTag
-  implicit object lattice extends BoundedBelowLattice[R] {
-    def zero = R(Domain(1).Partition.fromSortedBlocks(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
+  implicit object partialOrder extends PartialOrder[R] {
     override def lteqv(x: R, y: R): Boolean = // x <= y ?
       if (y.partition.size < x.partition.size) false else {
         val xSized = x.forPartitionSize(y.partition.size).get
@@ -42,7 +42,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
           var i = 0
           while (i < xSized.partition.numBlocks) {
             val m = xSized.partition.blocks(i).min
-            if (!(xSized.repForBlock(i) <= y.repForIndex(m)))
+            if (!aReps.partialOrder.lteqv(xSized.repForBlock(i), y.repForIndex(m)))
               return false
             i += 1
           }
@@ -62,7 +62,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
         else
           Double.NaN
       }
-
+  }
+  implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
+    def zero = R(Domain(1).Partition.fromSortedBlocks(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
     def join(x: R, y: R): R = {
       val newSize: Int = x.partition.size.max(y.partition.size)
       val xSized = x.forPartitionSize(newSize).get

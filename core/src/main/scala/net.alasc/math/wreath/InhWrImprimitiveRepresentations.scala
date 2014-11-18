@@ -10,16 +10,17 @@ import scala.collection.mutable
 import scala.reflect.{ClassTag, classTag}
 
 import spire.algebra._
+import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.partialOrder._
 import spire.syntax.group._
 import spire.syntax.groupAction._
+import spire.syntax.lattice._
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
-import net.alasc.syntax.lattice._
 import net.alasc.util._
 
 class InhWrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A], val aAlgebra: FiniteGroup[A], val hAlgebra: Permutation[H]) extends InhWrRepresentations[A, H] {

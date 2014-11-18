@@ -13,8 +13,10 @@ import net.alasc.std.seq._
 import net.alasc.syntax.check._
 import net.alasc.syntax.subgroup._
 import net.alasc.syntax.shiftablePermutation._
+import net.alasc.laws._
 
-object FixingSeqCheck extends Properties("FixingCheck") with PermutationGenerators[Perm] {
+object FixingSeqCheck extends Properties("FixingCheck") {
+  import AlascArbitrary._
   implicit def permutation = Perm.Algebra
   val genSeq = for {
     n <- Gen.choose(1, 30)
@@ -24,7 +26,7 @@ object FixingSeqCheck extends Properties("FixingCheck") with PermutationGenerato
   val genSeqAndPerm = for {
     n <- Gen.choose(1, 30)
     seq <- Gen.containerOfN[Seq, Int](n, Gen.choose(0, 2))
-    g <- genP(n)
+    g <- PermutationGen[Perm](n)
   } yield (seq, g)
     
   property("FixingSeq") = Prop.forAllNoShrink(genSeq) { seq =>

@@ -21,6 +21,7 @@ import net.alasc.util._
 
 /** Describes the wreath product of two objects. */
 trait Wr[A, H] {
+  override def toString = s"Wr($aSeq, $h)"
   def aSeq: Seq[A]
   def h: H
 }

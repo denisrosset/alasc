@@ -9,6 +9,7 @@ import scala.collection.mutable
 import scala.reflect.{ClassTag, classTag}
 
 import spire.algebra._
+import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
@@ -32,14 +33,16 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
     val aRep = aReps.get(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
-  implicit object lattice extends BoundedBelowLattice[R] {
-    def zero = R(1, aReps.lattice.zero)
+  implicit object partialOrder extends PartialOrder[R] {
     def partialCompare(x: R, y: R) = {
       val sizeC = (x.n - y.n).signum
-      val compR = aReps.lattice.partialCompare(x.aRep, y.aRep)
+      val compR = aReps.partialOrder.partialCompare(x.aRep, y.aRep)
       if (compR == sizeC.toDouble) compR
       Double.NaN
     }
+  }
+  implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
+    def zero = R(1, aReps.lattice.zero)
     def join(x: R, y: R) = R(x.n.max(y.n), aReps.lattice.join(x.aRep, y.aRep))
     def meet(x: R, y: R) = R(x.n.min(y.n), aReps.lattice.meet(x.aRep, y.aRep))
   }

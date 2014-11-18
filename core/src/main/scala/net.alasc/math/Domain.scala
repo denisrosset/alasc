@@ -121,7 +121,23 @@ final class Domain private (val size: Int) { domainSelf =>
         RefSome(newDomain.Partition.fromSeq(indexArray.take(newDomain.size)))
       }
   }
+  object Typed {
+    def unapply(partition: Domain#Partition): RefOption[Partition] =
+      if (partition.domain eq Domain.this) RefSome(partition.asInstanceOf[Partition]) else RefNone
+    def unapply[V](partitionMap: Domain#PartitionMap[V]): RefOption[PartitionMap[V]] =
+      if (partitionMap.domain eq Domain.this) RefSome(partitionMap.asInstanceOf[PartitionMap[V]]) else RefNone
+  }
   object Partition {
+    def apply(sets: Set[Int]*): Partition = {
+      val cumSizes = sets.map(_.size).reduce(_+_)
+      val setOfSets = sets.flatten.toSet
+      val minP = setOfSets.min
+      val maxP = setOfSets.max
+      assert(setOfSets.size == cumSizes)
+      assert(cumSizes == maxP - minP + 1)
+      val sortedBlocks = sets.sortBy(_.min)
+      fromSortedBlocks(sortedBlocks)
+    }
     def fromPermutation[P: PermutationAction](p: P) = {
       val rem = mutable.BitSet.empty ++= (0 until size)
       var blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
@@ -147,8 +163,6 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       fromSortedBlocks(blocks)
     }
-    def unapply(gen: Domain#Partition): RefOption[Partition] =
-      if (gen.domain eq Domain.this) RefSome(gen.asInstanceOf[Partition]) else RefNone
     def fromSortedBlocks(blocks: Seq[scala.collection.Set[Int]]) = {
       val n = Domain.this.size
       val la = new Array[Int](n)
@@ -168,7 +182,6 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       new Partition(la, ia, sa)
     }
-
     trait PartitionBoundedLattice extends BoundedLattice[Partition] {
       def zero = Partition.fromSortedBlocks(Seq.tabulate(size)( i => immutable.BitSet(i) ))
       def one = Partition.fromSortedBlocks(Seq(immutable.BitSet.empty ++ (0 until size)))
@@ -237,8 +250,10 @@ final class Domain private (val size: Int) { domainSelf =>
 
   /** Describes a partition of the domain with a value `V` associated to each block. */
   final class PartitionMap[V: ClassTag](val partition: Partition, protected val values: Array[V]) {
+    assert(partition.domain eq Domain.this)
     /** Returns the size of the underlying domain. */
     def size = Domain.this.size
+    val domain = Domain.this
     override def hashCode = scala.util.hashing.MurmurHash3.unorderedHash(partition.blocks zip values)
     override def toString = partition.blocks.map( block => block.toString + " -> " + apply(block).toString).mkString("PartitionMap(", ", ", ")")
     def getOrElse(i: Int, defaultValue: => V) =
@@ -282,6 +297,15 @@ final class Domain private (val size: Int) { domainSelf =>
   }
 
   object PartitionMap {
+    def apply[V : ClassTag](blocks: (Set[Int], V)*): PartitionMap[V] = {
+      val map = blocks.toMap
+      val partition = Partition(blocks.map(_._1):_*)
+      tabulate(partition)(map(_))
+    }
+    def fill[V: ClassTag](partition: Partition)(elem: => V): PartitionMap[V] =
+      new PartitionMap(partition, Array.fill(partition.numBlocks)(elem))
+    def tabulate[V: ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap[V] =
+      new PartitionMap(partition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
     trait PartitionMapPartialOrder[V] extends Any with PartialOrder[PartitionMap[V]] {
       implicit def partialOrder: PartialOrder[V]
       override def lteqv(x: PartitionMap[V], y: PartitionMap[V]): Boolean = // x <= y ?
@@ -395,10 +419,6 @@ final class Domain private (val size: Int) { domainSelf =>
       def classTag = implicitly[ClassTag[V]]
       def lattice = implicitly[BoundedLattice[V]]
     }
-    def fill[V: ClassTag](partition: Partition)(elem: => V): PartitionMap[V] =
-      new PartitionMap(partition, Array.fill(partition.numBlocks)(elem))
-    def tabulate[V: ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap[V] =
-      new PartitionMap(partition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
   }
 }
 
@@ -472,28 +492,38 @@ object Domain extends UniquenessCache[Int, Domain] {
   trait PartitionT {
     def fromSeq(seq: Seq[Any]): Domain#Partition
     def empty: Domain#Partition
+    def apply(sets: Set[Int]*): Domain#Partition
   }
 
   val Partition = new PartitionT {
+    def apply(sets: Set[Int]*): Domain#Partition = {
+      val domain = Domain(sets.map(_.max).reduce(_.max(_)) + 1)
+      domain.Partition(sets:_*)
+    }
     def fromSeq(seq: Seq[Any]): Domain#Partition = Domain(seq.size).Partition.fromSeq(seq)
     def empty = new Domain.empty.Partition(new Array[Int](0), new Array[Int](0), new Array[Int](0))
   }
 
   trait PartitionMapT {
+    def apply[V : ClassTag](blocks: (Set[Int], V)*): Domain#PartitionMap[V]
     def empty[V : ClassTag]: Domain#PartitionMap[V]
     def fill[V: ClassTag](partition: Domain#Partition)(elem: => V): Domain#PartitionMap[V]
     def tabulate[V: ClassTag](partition: Domain#Partition)(f: Set[Int] => V): Domain#PartitionMap[V]
   }
 
   val PartitionMap = new PartitionMapT {
+    def apply[V : ClassTag](blocks: (Set[Int], V)*) = {
+      val domain = Domain(blocks.map(_._1.max).reduce(_.max(_)) + 1)
+      domain.PartitionMap(blocks:_*)
+    }
     def empty[V : ClassTag]: Domain#PartitionMap[V] = new Domain.empty.PartitionMap(Domain.Partition.empty, new Array[V](0))
     def fill[V : ClassTag](partition: Domain#Partition)(elem: => V): Domain#PartitionMap[V] = {
-      val partition.domain.Partition(thisPartition) = partition
-      new partition.domain.PartitionMap(thisPartition, Array.fill(partition.numBlocks)(elem))
+      val partition.domain.Typed(typedPartition) = partition
+      new partition.domain.PartitionMap(typedPartition, Array.fill(partition.numBlocks)(elem))
     }
     def tabulate[V : ClassTag](partition: Domain#Partition)(f: Set[Int] => V): Domain#PartitionMap[V] = {
-      val partition.domain.Partition(thisPartition) = partition
-      new partition.domain.PartitionMap(thisPartition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
+      val partition.domain.Typed(typedPartition) = partition
+      new partition.domain.PartitionMap(typedPartition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
     }
   }
 
