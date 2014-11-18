@@ -17,43 +17,43 @@ class NNOption(val i: Int) extends AnyVal { lhs =>
   @inline final def getOrElseFast(default: Int): Int =
     if (isEmpty) default else get
 
-  @inline final def fold[B](ifEmpty: => B)(f: Int => B): B =
+  final def fold[B](ifEmpty: => B)(f: Int => B): B =
     if (isEmpty) ifEmpty else f(i)
 
-  @inline final def nonEmpty = isDefined
+  final def nonEmpty = isDefined
 
-  @inline final def contains(elem: Int): Boolean =
+  final def contains(elem: Int): Boolean =
     !isEmpty && i == elem
 
-  @inline final def exists(p: Int => Boolean): Boolean =
+  final def exists(p: Int => Boolean): Boolean =
     !isEmpty && p(i)
 
-  @inline final def forall(p: Int => Boolean): Boolean = isEmpty || p(i)
+  final def forall(p: Int => Boolean): Boolean = isEmpty || p(i)
 
-  @inline final def foreach[U](f: Int => U): Unit =
+  final def foreach[U](f: Int => U): Unit =
     if (!isEmpty) f(i)
 
   def iterator: Iterator[Int] =
     if (isEmpty) collection.Iterator.empty else collection.Iterator.single(i)
 
-  @inline def toList: List[Int] =
+  def toList: List[Int] =
     if (isEmpty) List() else new ::(i, Nil)
 
-  @inline final def toRight[X](left: => X) =
+  final def toRight[X](left: => X) =
     if (isEmpty) Left(left) else Right(i)
 
-  @inline final def toLeft[X](right: => X) =
+  final def toLeft[X](right: => X) =
     if (isEmpty) Right(right) else Left(i)
 
-  @inline final def toOption: Option[Int] =
+  final def toOption: Option[Int] =
     if (isEmpty) None else Some(i)
 
-  @inline final def reduceMin(rhs: NNOption) =
+  final def reduceMin(rhs: NNOption) =
     if (i < 0) rhs
     else if (rhs.i < 0) this
     else NNSome(lhs.i.min(rhs.i))
 
-  @inline final def reduceMax(rhs: NNOption) =
+  final def reduceMax(rhs: NNOption) =
     if (i < 0) rhs
     else if (rhs.i < 0) this
     else NNSome(lhs.i.max(rhs.i))
@@ -61,14 +61,14 @@ class NNOption(val i: Int) extends AnyVal { lhs =>
 
 object NNOption {
   implicit def nnOptionToOption(nno: NNOption): Option[Int] = nno.toOption
-  @inline def apply(i: Int): NNOption = if (i >= 0) new NNOption(i) else NNNone
+  def apply(i: Int): NNOption = if (i >= 0) new NNOption(i) else NNNone
   def unapply(nno: NNOption): NNOption = nno
 }
 
 trait NNOptionTopLevel {
-  @inline final def NNSome(i: Int): NNOption = {
+  final def NNSome(i: Int): NNOption = {
     require(i >= 0)
     new NNOption(i)
   }
-  @inline final def NNNone: NNOption = new NNOption(-1)
+  final def NNNone: NNOption = new NNOption(-1)
 }

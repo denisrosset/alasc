@@ -3,7 +3,10 @@ package net.alasc.algebra
 import scala.annotation.tailrec
 import scala.reflect.{ClassTag, classTag}
 
-import net.alasc.syntax.lattice._
+import spire.algebra.PartialOrder
+import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
+import spire.syntax.lattice._
+
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
@@ -51,7 +54,8 @@ trait Representations[G] {
   def get(generators: Iterable[G]): R
 
   /** Lattice of representations. */
-  implicit def lattice: BoundedBelowLattice[R]
+  implicit def lattice: Lattice[R] with BoundedJoinSemilattice[R]
+  implicit def partialOrder: PartialOrder[R]
 
   // Members with default implementation
   object Typed {
@@ -137,9 +141,11 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
     case typed: R => RefSome(typed)
     case _ => RefNone
   }
-  implicit object lattice extends BoundedBelowLattice[R] {
-    def zero = R(2)
+  implicit object partialOrder extends PartialOrder[R] {
     def partialCompare(x: R, y: R) = (x.size - y.size).signum.toDouble
+  }
+  implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
+    def zero = R(2)
     def join(x: R, y: R) = if (x.size >= y.size) x else y
     def meet(x: R, y: R) = if (x.size <= y.size) x else y
   }

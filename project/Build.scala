@@ -7,6 +7,7 @@ object MyBuild extends Build {
 
   lazy val debox = "org.spire-math" %% "debox" % "0.7.0-SNAPSHOT"
   lazy val spire = "org.spire-math" %% "spire" % "0.8.3-SNAPSHOT"
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.8.3-SNAPSHOT"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.1.3"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.3"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
@@ -119,7 +120,8 @@ object MyBuild extends Build {
     name := "alasc-scalacheck-binding",
     libraryDependencies ++= Seq(
       discipline,
-      scalaCheck
+      scalaCheck,
+      spireScalaCheckBindings
     )
   )
 
@@ -132,7 +134,8 @@ object MyBuild extends Build {
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
-      scalaTest % "test"
+      scalaTest % "test",
+      spireScalaCheckBindings
     )
   ) ++ noPublish
 

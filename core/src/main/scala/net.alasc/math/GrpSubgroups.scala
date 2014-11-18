@@ -20,15 +20,8 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   implicit def algorithms: BasicAlgorithms[G] = lhs.algorithms
   implicit def representations: Representations[G] = lhs.representations
   implicit def algebra: FiniteGroup[G] = lhs.algebra
-  def union(rhs: Grp[G]): Grp[G] = lhs.lattice.join(lhs, rhs)
-  def intersect(rhs: Grp[G]): Grp[G] = lhs.lattice.meet(lhs, rhs)
-  def hasSubgroup(rhs: Grp[G]): Boolean = lhs.lattice.gteqv(lhs, rhs)
-  def hasProperSubgroup(rhs: Grp[G]): Boolean = lhs.lattice.gt(lhs, rhs)
-  def isSubgroupOf(rhs: Grp[G]): Boolean = lhs.lattice.lteqv(lhs, rhs)
-  def isProperSubgroupOf(rhs: Grp[G]): Boolean = lhs.lattice.lt(lhs, rhs)
-
-  def &(rhs: Grp[G]) = intersect(rhs)
-  def |(rhs: Grp[G]) = union(rhs)
+  def union(rhs: Grp[G]): Grp[G] = Grp.lattice[G].join(lhs, rhs)
+  def intersect(rhs: Grp[G]): Grp[G] = Grp.lattice[G].meet(lhs, rhs)
 
   def /(rhs: Grp[G]): LeftCosets[G] = {
     require(rhs.generators.forall(lhs.contains(_)))

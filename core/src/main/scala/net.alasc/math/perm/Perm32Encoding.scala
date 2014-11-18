@@ -19,7 +19,7 @@ object Perm32Encoding {
   import LongBits._
 
   @inline def maskWidth = 5
-  //                       FEDCBA9876543210
+  //                             FEDCBA9876543210
   @inline def longMask: Long = 0x0FFFFFFFFFFFFFFFL
   @inline def mask6: Int = 0x3FFFFFFF
   @inline def numPerLong = 12

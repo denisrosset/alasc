@@ -12,7 +12,7 @@ import scala.language.implicitConversions
 case class Conjugate[G: FiniteGroup, T](gInv: G, t: T, g: G) {
   override def toString =
     if (g.isId) t.toString else Seq(gInv.toString, "|+|", t.toString, "|+|", g.toString).mkString(" ")
-  @inline def iso(a: G): G = gInv |+| a |+| g
+  def iso(a: G): G = gInv |+| a |+| g
 }
 
 object Conjugate {

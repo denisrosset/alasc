@@ -5,49 +5,49 @@ import scala.language.implicitConversions
 /** Option class for reference types, using `null` as a special value for `None`. */
 final class RefOption[+A <: AnyRef](val a: A) extends AnyVal {
   override def toString = if (a eq null) "none" else s"some($a)"
-  @inline def isEmpty = a eq null
-  @inline def isDefined = a ne null
-  @inline def get: A = if (a ne null) a else sys.error("RefOption is empty")
+  def isEmpty = a eq null
+  def isDefined = a ne null
+  def get: A = if (a ne null) a else sys.error("RefOption is empty")
 
-  @inline final def getOrElse[B >: A](default: => B): B =
+  def getOrElse[B >: A](default: => B): B =
     if (isEmpty) default else get
 
-  @inline final def orNull: A = a
+  def orNull: A = a
 
-  @inline final def nonEmpty = isDefined
+  def nonEmpty = isDefined
 
-  @inline final def contains[A1 >: A](elem: A1): Boolean =
+  def contains[A1 >: A](elem: A1): Boolean =
     !isEmpty && a == elem
 
-  @inline final def exists(p: A => Boolean): Boolean =
+  def exists(p: A => Boolean): Boolean =
     !isEmpty && p(a)
 
-  @inline final def forall(p: A => Boolean): Boolean = isEmpty || p(a)
+  def forall(p: A => Boolean): Boolean = isEmpty || p(a)
 
-  @inline final def foreach[U](f: A => U): Unit =
+  def foreach[U](f: A => U): Unit =
     if (!isEmpty) f(a)
 
   def iterator: Iterator[A] =
     if (isEmpty) collection.Iterator.empty else collection.Iterator.single(a)
 
-  @inline def toList: List[A] =
+  def toList: List[A] =
     if (isEmpty) List() else new ::(a, Nil)
 
-  @inline final def toRight[X](left: => X) =
+  def toRight[X](left: => X) =
     if (isEmpty) Left(left) else Right(a)
 
-  @inline final def toLeft[X](right: => X) =
+  def toLeft[X](right: => X) =
     if (isEmpty) Right(right) else Left(a)
 
   def toOption: Option[A] = Option(a)
 }
 
 object RefOption {
-  @inline def apply[A <: AnyRef](a: A): RefOption[A] = new RefOption(a)
+  def apply[A <: AnyRef](a: A): RefOption[A] = new RefOption(a)
   def unapply[A <: AnyRef](ro: RefOption[A]): RefOption[A] = ro
 }
 
 trait RefOptionTopLevel {
-  @inline final def RefSome[A <: AnyRef](a: A): RefOption[A] = new RefOption(a)
-  @inline final def RefNone: RefOption[Null] = new RefOption[Null](null)
+  final def RefSome[A <: AnyRef](a: A): RefOption[A] = new RefOption(a)
+  final def RefNone: RefOption[Null] = new RefOption[Null](null)
 }

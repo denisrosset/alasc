@@ -30,7 +30,7 @@ import perm._
 sealed trait Perm extends Any {
   override def toString = "Perm" + this.to[Cycles].string
 
-  @inline protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
+  protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
   def image(preimage: Int): Int
   def invImage(image: Int): Int
@@ -142,13 +142,13 @@ trait PermCompanion {
   * the value class will be wrapped.
   */
 final case class Perm16(val encoding: Long) extends AnyVal with Perm { lhs16 =>
-  @inline def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
-  @inline def image(i: Int) = Perm16Encoding.image(encoding, i)
-  @inline def isId = encoding == 0L
-  @inline def support = Perm16Encoding.support(encoding)
-  @inline def inverse = new Perm16(Perm16Encoding.inverse(encoding))
+  def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
+  def image(i: Int) = Perm16Encoding.image(encoding, i)
+  def isId = encoding == 0L
+  def support = Perm16Encoding.support(encoding)
   def supportMin = NNOption(Perm16Encoding.supportMin(encoding))
   def supportMax = NNOption(Perm16Encoding.supportMax(encoding))
+  def inverse = new Perm16(Perm16Encoding.inverse(encoding))
   def isValidPerm32 = false
   def toPerm32 = sys.error("A Perm16 is never a valid Perm32, because all permutation with support <= 15 are Perm16.")
 }

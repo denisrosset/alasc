@@ -50,7 +50,7 @@ object Stabilizer {
       val pointSetsToTest: Array[BitSet] = {
         val remaining = MutableBitSet.empty ++= set
         val groups = debox.Buffer.empty[BitSet]
-        @tailrec @inline def rec(current: Chain[P]): Array[BitSet] = current match {
+        @tailrec def rec(current: Chain[P]): Array[BitSet] = current match {
           case node: Node[P] if remaining.contains(node.beta) =>
             val fixed = mutable.BitSet(node.beta)
             remaining -= node.beta

@@ -3,10 +3,6 @@ package net.alasc.syntax
 import net.alasc.algebra._
 import scala.language.implicitConversions
 
-trait LatticeSyntax {
-  implicit def latticeSyntax[A: Lattice](a: A) = new LatticeOps(a)
-}
-
 trait CheckSyntax {
   implicit def checkSyntax[A: Check](a: A) = new CheckOps(a)
 }
@@ -37,8 +33,7 @@ trait PermutationSubgroupSyntax {
 }
 
 trait AllSyntax
-    extends LatticeSyntax
-    with CheckSyntax
+    extends CheckSyntax
     with SequenceSyntax
     with FiniteGroupSyntax
     with PermutationActionSyntax

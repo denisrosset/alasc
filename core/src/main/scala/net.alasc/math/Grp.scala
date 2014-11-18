@@ -5,13 +5,15 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import scala.util.Random
 
+import spire.algebra.PartialOrder
+import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.group._
 import spire.syntax.partialOrder._
 
 import net.alasc.algebra._
 import net.alasc.math.bsgs._
 import net.alasc.math.bsgs.algorithms._
-import net.alasc.math.guide.BaseGuide
+import net.alasc.math.guide.{BaseGuide, BaseGuideSeq}
 import net.alasc.syntax.all._
 import net.alasc.util._
 
@@ -42,7 +44,7 @@ sealed abstract class Grp[G] { lhs =>
   implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
 
   override def equals(any: Any) = any match {
-    case that: Grp[G] => this === that
+    case that: Grp[G] => Grp.subgroup[G].eqv(this, that)
     case _ => false
   }
 
@@ -87,8 +89,6 @@ sealed abstract class Grp[G] { lhs =>
     val newGenerators = if (generators.size < newChain.strongGeneratingSet.size) generators else newChain.strongGeneratingSet
     new GrpChain[G](newGenerators, representation, newChain)
   }
-
-  implicit def lattice = Grp.lattice[G]
 }
 
 class GrpChain[G](val generators: Iterable[G], val representation: Representation[G], val chain: Chain[G])(implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G]) extends Grp[G] { lhs =>
@@ -177,7 +177,10 @@ abstract class GrpLazyBase[G] extends Grp[G] {
 
 
 object Grp {
-  def lattice[G: ClassTag: FiniteGroup: Representations: BasicAlgorithms]: BoundedBelowLattice[Grp[G]] = new GrpLattice[G]
+  implicit def lattice[G: ClassTag: FiniteGroup: Representations: BasicAlgorithms]: Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G] {
+    def algorithms = implicitly[BasicAlgorithms[G]]
+    def representations = implicitly[Representations[G]]
+  }
   implicit def defaultAlgorithms[G: ClassTag: FiniteGroup] = BasicAlgorithms.randomized(Random)
 
   def fromChain[G: ClassTag: FiniteGroup: Representations](chain: Chain[G],
@@ -211,9 +214,9 @@ object Grp {
       givenRandomElement = RefSome(subgroup.randomElement(_)),
       givenRepresentation = representationOption)
 
-  implicit def GrpSubgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
-  implicit def GrpSubgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
-  implicit def GrpLexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
+  implicit def subgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
+  implicit def subgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
+  implicit def lexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
 }
 
 class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
@@ -226,4 +229,74 @@ class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[
   def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
   override def contains(grp: Grp[G], g: G) = grp.contains(g)
   override def toGrp(grp: Grp[G])(implicit classTag: ClassTag[G], representations: Representations[G]): Grp[G] = grp
+}
+
+trait GrpLattice[G] extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] {
+  implicit def algorithms: BasicAlgorithms[G]
+  implicit def representations: Representations[G]
+
+  implicit def algebra: FiniteGroup[G] = algorithms.algebra
+  implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
+  def zero = Grp.fromGenerators[G](Iterable.empty)
+
+  def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
+    case RefOption(lhsRepr) => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
+      case _ => representations.repJoin(lhsRepr, lhs.generators, rhs.generators)
+    }
+    case _ => rhs.representationIfComputed match {
+      case RefOption(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
+      case _ => representations.get(lhs.generators ++ rhs.generators)
+    }
+  }
+
+  protected def unionByAdding(chain: Chain[G], rp: Representation[G], generators: Iterable[G]): Grp[G] = {
+    val mutableChain = algorithms.mutableChainCopyWithAction(chain, rp.action)
+    algorithms.insertGenerators(mutableChain, generators)
+    algorithms.completeStrongGenerators(mutableChain)
+    Grp.fromChain(mutableChain.toChain, RefSome(rp))
+  }
+
+  def join(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
+    // if one of the arguments has a computed chain with a representation compatible with the other argument generators,
+    // augment the computed chain with these generators
+    if (lhs.chainIfComputed.nonEmpty && rhs.generators.forall(g => lhs.representation.represents(g)))
+      return unionByAdding(lhs.chain, lhs.representation, rhs.generators)
+    if (rhs.chainIfComputed.nonEmpty && lhs.generators.forall(g => rhs.representation.represents(g)))
+      return unionByAdding(rhs.chain, rhs.representation, lhs.generators)
+    // if representations are known but not compatible, use the join of the representations for the union
+    val rp = joinRepresentation(lhs, rhs)
+    if (lhs.orderIfComputed.nonEmpty) {
+      if (rhs.orderIfComputed.nonEmpty) {
+        if (lhs.order >= rhs.order)
+          unionByAdding(lhs.chain(rp), rp, rhs.generators)
+        else
+          unionByAdding(rhs.chain(rp), rp, lhs.generators)
+      } else
+        unionByAdding(lhs.chain(rp), rp, rhs.generators)
+    } else {
+      if (rhs.orderIfComputed.nonEmpty)
+        unionByAdding(rhs.chain(rp), rp, lhs.generators)
+      else
+        Grp.fromGenerators(lhs.generators ++ rhs.generators)
+    }
+  }
+
+  def meet(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {
+    def grpFromChains(lChain: Chain[G], rChain: Chain[G], rp: Representation[G]): Grp[G] =
+      Grp.fromChain(Intersection.intersection(lChain, rChain))
+    if (lhs.chainIfComputed.nonEmpty && rhs.chainIfComputed.nonEmpty) {
+      val lCompatible = rhs.generators.forall(g => lhs.representation.represents(g))
+      val rCompatible = lhs.generators.forall(g => rhs.representation.represents(g))
+      if (lCompatible && (!rCompatible || lhs.order >= rhs.order))
+        grpFromChains(lhs.chain, rhs.chain(lhs.representation, BaseGuideSeq(lhs.chain.base)), lhs.representation)
+      else
+        grpFromChains(rhs.chain, lhs.chain(rhs.representation, BaseGuideSeq(rhs.chain.base)), rhs.representation)
+    } else {
+      val rp = joinRepresentation(lhs, rhs)
+      val lChain = lhs.chain(rp)
+      val rChain = rhs.chain(rp, BaseGuideSeq(lChain.base)) // TODO: use BaseGuideSeqStripped
+      grpFromChains(lChain, rChain, rp)
+    }
+  }
 }

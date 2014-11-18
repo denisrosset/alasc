@@ -2,7 +2,6 @@ package net.alasc
 
 package object syntax {
   object check extends CheckSyntax
-  object lattice extends LatticeSyntax
   object sequence extends SequenceSyntax
   object finiteGroup extends FiniteGroupSyntax
   object permutationAction extends PermutationActionSyntax

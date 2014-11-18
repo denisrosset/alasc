@@ -10,6 +10,7 @@ import scala.collection.mutable
 import scala.reflect.classTag
 
 import spire.algebra._
+import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.groupAction._
@@ -31,14 +32,16 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
     val scalarRep = scalarReps.get(generators.flatMap(identity))
     R(n, scalarRep)
   }
-  implicit object lattice extends BoundedBelowLattice[R] {
-    def zero = R(1, scalarReps.lattice.zero)
+  implicit object partialOrder extends PartialOrder[R] {
     def partialCompare(x: R, y: R) = {
       val sizeC = (x.n - y.n).signum
-      val compR = scalarReps.lattice.partialCompare(x.scalarRep, y.scalarRep)
+      val compR = scalarReps.partialOrder.partialCompare(x.scalarRep, y.scalarRep)
       if (compR == sizeC.toDouble) compR
       Double.NaN
     }
+  }
+  implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
+    def zero = R(1, scalarReps.lattice.zero)
     def join(x: R, y: R) = R(x.n.max(y.n), scalarReps.lattice.join(x.scalarRep, y.scalarRep))
     def meet(x: R, y: R) = R(x.n.min(y.n), scalarReps.lattice.meet(x.scalarRep, y.scalarRep))
   }

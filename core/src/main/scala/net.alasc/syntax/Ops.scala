@@ -11,11 +11,6 @@ import net.alasc.algebra._
 import net.alasc.math.Grp
 import net.alasc.util._
 
-final class LatticeOps[A](lhs: A)(implicit ev: Lattice[A]) {
-  def meet(rhs: A): A = macro Ops.binop[A, A]
-  def join(rhs: A): A = macro Ops.binop[A, A]
-}
-
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
   def check(): Unit = ev.check(lhs)
 }
@@ -48,6 +43,11 @@ final class ShiftablePermutationOps[A](lhs: A)(implicit ev: ShiftablePermutation
 }
 
 final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
+  def hasSubgroup(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
+  def hasProperSubgroup(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
+  def isSubgroupOf(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
+  def isProperSubgroupOf(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
+
   def iterator(): Iterator[G] = macro Ops.unop[Iterator[G]]
   def elements(): coll.Set[G] = macro Ops.unop[coll.Set[G]]
   def generators(): Iterable[G] = macro Ops.unop[Iterable[G]]

@@ -25,8 +25,8 @@ class OptionTuple2NN(val encoding: Long) extends AnyVal {
     assert(encoding >= 0)
       ((encoding & leftMask) >> 32).toInt
   }
-  @inline def isEmpty: Boolean = encoding < 0
-  @inline def nonEmpty: Boolean = encoding >= 0
+  def isEmpty: Boolean = encoding < 0
+  def nonEmpty: Boolean = encoding >= 0
   def get: Tuple2Int = Tuple2Int(_1, _2)
 }
 
@@ -39,9 +39,9 @@ object OptionTuple2NN {
 trait OptionTuple2NNTopLevel {
   import OptionTuple2NN._
 
-  @inline final def SomeTuple2NN(_1: Int, _2: Int): OptionTuple2NN = {
+  final def SomeTuple2NN(_1: Int, _2: Int): OptionTuple2NN = {
     require(_1 >= 0 && _2 >= 0)
     new OptionTuple2NN(((_1.toLong) & rightMask) + (_2.toLong << 32))
   }
-  @inline final def NoneTuple2NN: OptionTuple2NN = new OptionTuple2NN(-1L)
+  final def NoneTuple2NN: OptionTuple2NN = new OptionTuple2NN(-1L)
 }
