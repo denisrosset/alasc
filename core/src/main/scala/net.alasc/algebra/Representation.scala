@@ -125,7 +125,6 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
   def forSize(size: Int): Representation[P] = R(size)
   def rClassTag = classTag[R]
   case class R(size: Int) extends Representation[P] {
-    require(size >= 2) // to have primitive wreath action faithful
     def action = ev
     val representations = self
     def represents(p: P) = p.supportMax.getOrElseFast(-1) < size
@@ -135,7 +134,7 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
       if (iterator.hasNext)
         rec(size.max(iterator.next.supportMax.getOrElseFast(-1) + 1), iterator)
       else size
-    R(rec(2, generators.iterator))
+    R(rec(1, generators.iterator))
   }
   def tryCast(r: Representation[P]) = r match {
     case typed: R => RefSome(typed)
