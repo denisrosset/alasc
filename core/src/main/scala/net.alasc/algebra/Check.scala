@@ -15,6 +15,11 @@ case class CFail(log: Seq[(List[String], String)]) extends Checked {
   def assert: Unit = throw new RuntimeException(toString)
 }
 
+object CFail {
+  def here(message: String): Checked = CFail(Seq(Nil -> message))
+  def hereOn(test: Boolean, message: String) = if (test) here(message) else CSuccess
+}
+
 case object CSuccess extends Checked {
   def assert: Unit = { }
   def log = Seq.empty
