@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.syntax.groupAction._
+import spire.syntax.monoid._
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
@@ -342,23 +343,20 @@ object MutableChain {
 }
 
 final class MutableChainCheck[P: ClassTag: FiniteGroup] extends Check[MutableChain[P]] {
-  @tailrec def checkAllAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Unit = chain match {
+  @tailrec def checkAllAction(checked: Checked, chain: Chain[P], action: FaithfulPermutationAction[P]): Checked = chain match {
     case node: Node[P] =>
-      assert(node.action eq action)
-      checkAllAction(node.next, action)
-    case _: Term[P] =>
+      checkAllAction(checked |+| Checked.eq(node.action, action, "Same action for all nodes"), node.next, action)
+    case _: Term[P] => checked
   }
 
-  @tailrec def checkMutablePrev(elem: MutableStartOrNode[P]): Unit = elem.next match {
+  @tailrec def checkMutablePrev(checked: Checked, elem: MutableStartOrNode[P]): Checked = elem.next match {
     case IsMutableNode(mutableNode) =>
-      require(mutableNode.prev eq elem)
-      checkMutablePrev(mutableNode)
-    case _ =>
+      checkMutablePrev(checked |+| Checked.eq(mutableNode.prev, elem, "Chain consistency"), mutableNode)
+    case _ => checked
   }
 
-  def check(mutableChain: MutableChain[P]): Unit = {
-    checkAllAction(mutableChain.start.next, mutableChain.start.action)
-    checkMutablePrev(mutableChain.start)
-    mutableChain.start.next.check
-  }
+  def check(mutableChain: MutableChain[P]): Checked =
+    (checkAllAction(CSuccess, mutableChain.start.next, mutableChain.start.action) |+|
+      checkMutablePrev(CSuccess, mutableChain.start) |+|
+      mutableChain.start.next.check)
 }

@@ -1,10 +1,15 @@
 package net.alasc.syntax
 
+import spire.algebra.Monoid
 import net.alasc.algebra._
 import scala.language.implicitConversions
 
 trait CheckSyntax {
   implicit def checkSyntax[A: Check](a: A) = new CheckOps(a)
+}
+
+trait MonoidSyntax {
+  implicit def monoidSyntax[A: Monoid](as: TraversableOnce[A]) = new MonoidOps(as)
 }
 
 trait SequenceSyntax {
@@ -34,6 +39,7 @@ trait PermutationSubgroupSyntax {
 
 trait AllSyntax
     extends CheckSyntax
+    with MonoidSyntax
     with SequenceSyntax
     with FiniteGroupSyntax
     with PermutationActionSyntax

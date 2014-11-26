@@ -16,6 +16,7 @@ import spire.syntax.groupAction._
 
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
+import net.alasc.syntax.monoid._
 
 /** Generic element to describe BSGS data. */
 sealed trait Elem[P] extends AnyRef
@@ -364,28 +365,33 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
 }
 
 final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[P]) extends Check[Chain[P]] {
-  def check(chain: Chain[P]): Unit = {
-    chain match {
-      case node: Node[P] =>
-        implicit def action = node.action
-        val alg = algorithms.BasicAlgorithms.deterministic[P]
-        val checkChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
-        assert(checkChain.start.next.nodesNext.map(_.orbitSize).sameElements(node.nodesNext.map(_.orbitSize)))
-      case _ =>
-    }
-    val baseSoFar = mutable.ArrayBuffer.empty[Int]
-    @tailrec def rec(current: Chain[P], checkImmutable: Boolean = false): Unit = current match {
-      case node: Node[P] =>
-        implicit def action = node.action
-        for (g <- node.ownGenerators; b <- baseSoFar)
-          assert((b <|+| g) == b)
-        for (g <- node.ownGenerators)
-          assert((node.beta <|+| g) != node.beta)
-        baseSoFar += node.beta
-        if (checkImmutable)
-          assert(node.isImmutable)
-        rec(node.next, node.isImmutable)
-      case _: Term[P] =>
-    }
+  def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {
+    case node: Node[P] =>
+      implicit def action = node.action
+      val alg = algorithms.BasicAlgorithms.deterministic[P] // use deterministic algorithms to avoid looping forever on bad data
+      val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
+      val reconstructedOrbits = reconstructedChain.start.next.nodesNext.map(_.orbitSize)
+      val originalOrbits = node.nodesNext.map(_.orbitSize)
+      Checked.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")
+    case _ => CSuccess
   }
+  def checkOwnGenerators(chain: Chain[P]): Checked = {
+    val baseSoFar = mutable.ArrayBuffer.empty[Int]
+    @tailrec def rec(currentChecked: Checked, current: Chain[P], checkImmutable: Boolean): Checked = current match {
+      case node: Node[P] =>
+        implicit def action = node.action
+        val fixingBase =
+          node.ownGenerators.map(g => baseSoFar.map(b => Checked.equals(b <|+| g, b, s"Generator $g should fix")).combine).combine
+        val ownGeneratorsMoveBase =
+          node.ownGenerators.map(g => Checked.notEquals(node.beta <|+| g, node.beta, s"Generator $g should not fix")).combine
+        baseSoFar += node.beta
+        val immutableOk =
+          if (checkImmutable) Checked.equals(node.isImmutable, true, "All nodes after immutable node should be immutable") else CSuccess
+        rec(currentChecked |+| fixingBase |+| ownGeneratorsMoveBase |+| immutableOk, node.next, node.isImmutable)
+      case _: Term[P] => currentChecked
+    }
+    rec(CSuccess, chain, false)
+  }
+  def check(chain: Chain[P]): Checked =
+    checkBaseAndStrongGeneratingSet(chain) |+| checkOwnGenerators(chain)
 }

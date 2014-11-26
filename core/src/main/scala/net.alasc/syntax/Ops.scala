@@ -6,13 +6,18 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 import machinist.{DefaultOps => Ops}
+import spire.algebra.Monoid
 
 import net.alasc.algebra._
 import net.alasc.math.Grp
 import net.alasc.util._
 
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
-  def check(): Unit = ev.check(lhs)
+  def check(): Checked = ev.check(lhs)
+}
+
+final class MonoidOps[A](lhs: TraversableOnce[A])(implicit ev: Monoid[A]) {
+  def combine(): A = macro Ops.unop[A] //implicitly[Monoid[A]].combine(lhs)
 }
 
 final class SequenceOps[T, A](lhs: T)(implicit ev: Sequence[T, A]) {
