@@ -12,7 +12,8 @@ sealed trait Checked {
 case class CFail(log: Seq[(List[String], String)]) extends Checked {
   def withPath(pathElement: String) = CFail(log.map { case (path, entry) => (pathElement :: path, entry) })
   override def toString = log.map { case (path, entry) => path.reverse.mkString(".") + ": " + entry }.toString
-  def assert: Unit = throw new RuntimeException(toString)
+  def assert: Unit = throws
+  def throws: Nothing = throw new RuntimeException(toString)
 }
 
 object CFail {
