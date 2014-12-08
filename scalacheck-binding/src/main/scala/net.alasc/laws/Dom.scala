@@ -2,13 +2,11 @@ package net.alasc.laws
 
 import spire.algebra.{GroupAction, Eq}
 
-class Dom(val value: Int) extends AnyVal
+case class Dom(value: Int) {
+  require(value >= 0)
+}
 
 object Dom {
-  def apply(value: Int): Dom = {
-    require(value >= 0)
-    new Dom(value)
-  }
   implicit def domToInt(d: Dom): Int = d.value
   implicit def intToDom(k: Int): Dom = apply(k)
   implicit object Eq extends Eq[Dom] {
