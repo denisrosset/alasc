@@ -6,6 +6,7 @@ import net.alasc.util._
 trait Groupoid[G <: AnyRef] extends Any {
   def inverse(a: G): G
   def partialOp(x: G, y: G): RefOption[G]
+  def isIdentityArrow(a: G): Boolean
 }
 
 trait GroupoidAction[P <: AnyRef, G <: AnyRef] extends Any with GroupAction[P, G] {

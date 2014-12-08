@@ -69,6 +69,7 @@ final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], ac
 }
 
 final class GroupoidOps[G <: AnyRef](lhs: G)(implicit ev: Groupoid[G]) {
+  def isIdentityArrow(): Boolean = macro Ops.unop[Boolean]
   def inverse(): G = macro Ops.unop[G]
   def partialOp(rhs: G): RefOption[G] = macro Ops.binop[G, RefOption[G]]
 }
