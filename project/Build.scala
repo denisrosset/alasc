@@ -8,13 +8,11 @@ object MyBuild extends Build {
   lazy val debox = "org.spire-math" %% "debox" % "0.7.0-SNAPSHOT"
   lazy val spire = "org.spire-math" %% "spire" % "0.8.3-SNAPSHOT"
   lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.8.3-SNAPSHOT"
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.1.3"
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.3"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-  lazy val scalaXML = "org.scala-lang.modules" %% "scala-xml" % "1.0.1"
-  lazy val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.1"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -69,10 +67,7 @@ object MyBuild extends Build {
       CrossVersion.partialVersion(scalaVersion.value) match {
         // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
         case Some((2, scalaMajor)) if scalaMajor >= 11 =>
-          libraryDependencies.value ++ Seq(
-            scalaXML,
-            scalaParserCombinators
-          )
+          libraryDependencies.value
 
         // in Scala 2.10, quasiquotes are provided by macro-paradise
         case Some((2, 10)) =>
