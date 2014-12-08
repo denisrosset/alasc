@@ -67,3 +67,16 @@ final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], ac
   def supportMax(): NNOption = ev.supportMax(lhs)
   def supportAny(): NNOption = ev.supportAny(lhs)
 }
+
+final class GroupoidOps[G <: AnyRef](lhs: G)(implicit ev: Groupoid[G]) {
+  def inverse(): G = macro Ops.unop[G]
+  def partialOp(rhs: G): RefOption[G] = macro Ops.binop[G, RefOption[G]]
+}
+
+final class GroupoidActionGroupOps[G <: AnyRef](lhs: G) {
+  def ?|+|> [P <: AnyRef](rhs: P)(implicit ev: GroupoidAction[P, G]): RefOption[P] = ev.partialActl(lhs, rhs)
+}
+
+final class GroupoidActionPointOps[P <: AnyRef](lhs: P) {
+  def <|+|? [G <: AnyRef](rhs: G)(implicit ev: GroupoidAction[P, G]): RefOption[P] = ev.partialActr(lhs, rhs)
+}

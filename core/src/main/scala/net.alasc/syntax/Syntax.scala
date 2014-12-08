@@ -37,6 +37,16 @@ trait PermutationSubgroupSyntax {
     new PermutationSubgroupOps[S, G](s)
 }
 
+trait GroupoidSyntax {
+  implicit def groupoidOps[A <: AnyRef: Groupoid](a: A) = new GroupoidOps(a)
+}
+
+trait GroupoidActionSyntax {
+  implicit def groupoidActionGroupOps[G <: AnyRef](g: G) = new GroupoidActionGroupOps(g)
+  implicit def groupoidActionPointOps[P <: AnyRef](p: P) = new GroupoidActionPointOps(p)
+}
+
+
 trait AllSyntax
     extends CheckSyntax
     with MonoidSyntax
@@ -46,3 +56,5 @@ trait AllSyntax
     with ShiftablePermutationSyntax
     with SubgroupSyntax
     with PermutationSubgroupSyntax
+    with GroupoidSyntax
+    with GroupoidActionSyntax

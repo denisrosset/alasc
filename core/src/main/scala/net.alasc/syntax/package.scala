@@ -9,5 +9,7 @@ package object syntax {
   object shiftablePermutation extends ShiftablePermutationSyntax
   object subgroup extends SubgroupSyntax
   object permutationSubgroup extends PermutationSubgroupSyntax
+  object groupoid extends GroupoidSyntax
+  object groupoidAction extends GroupoidActionSyntax
   object all extends AllSyntax
 }
