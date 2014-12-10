@@ -172,27 +172,31 @@ class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
   def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
 }
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
-  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends GroupAction[SA, P] {
+class SeqPermutationAction[SA <: AnyRef with SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
+  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.groupAction._
 
-  def actl(p: P, s: SA): SA = {
-    val b = cbf()
-    b.sizeHint(s)
-    for (i <- 0 until s.length)
-      b += s(i <|+| p)
-    b.result
-  }
+  def isActlDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
+  def isActrDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
 
-  def actr(s: SA, p: P): SA = actl(p.inverse, s)
+  def partialActl(p: P, s: SA): RefOption[SA] =
+    if (p.supportMax.getOrElseFast(-1) >= s.length) RefNone.asInstanceOf[RefOption[SA]] else {
+      val b = cbf()
+      b.sizeHint(s)
+      for (i <- 0 until s.length)
+        b += s(i <|+| p)
+      RefSome(b.result)
+    }
+
+  def partialActr(s: SA, p: P): RefOption[SA] = partialActl(p.inverse, s)
 }
 
 trait SeqInstances0 {
   implicit def SeqSequence[CC[A] <: SeqLike[A, CC[A]], A]: Sequence[CC[A], A] = new SeqSequence[CC[A], A]
-  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
-    implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): GroupAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
+  implicit def SeqPermutationAction[CC[A] <: AnyRef with SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
+    implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): PartialAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
   implicit def seqFiniteGroup[CC[G] <: SeqLike[G, CC[G]], G](
     implicit scalar: FiniteGroup[G], cbf: CanBuildFrom[Nothing, G, CC[G]]): FiniteGroup[CC[G]] = new SeqFiniteGroup[CC[G], G]
   implicit def seqImprimitiveRepresentations[CC[G] <: SeqLike[G, CC[G]], G](

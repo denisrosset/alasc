@@ -10,9 +10,7 @@ import net.alasc.algebra._
 import bsgs._
 import algorithms._
 import net.alasc.std.seq._
-import net.alasc.syntax.check._
-import net.alasc.syntax.subgroup._
-import net.alasc.syntax.shiftablePermutation._
+import net.alasc.syntax.all._
 import net.alasc.laws._
 
 object FixingSeqCheck extends Properties("FixingCheck") {
@@ -31,11 +29,11 @@ object FixingSeqCheck extends Properties("FixingCheck") {
     
   property("FixingSeq") = Prop.forAllNoShrink(genSeq) { seq =>
     val subgroup = FixingSeq[Perm](seq)
-    subgroup.generators.forall( g => (seq <|+| g).sameElements(seq) )
+    subgroup.generators.forall( g => (seq <|+|! g).sameElements(seq) )
   }
 
   property("FixingSeq.contains") = Prop.forAllNoShrink(genSeqAndPerm) { case (seq, g) =>
       val grp1 = Grp(FixingSeq[Perm](seq).generators.toSeq:_*)
-      (seq <|+| g).sameElements(seq) == grp1.contains(g)
+      (seq <|+|! g).sameElements(seq) == grp1.contains(g)
   }
 }
