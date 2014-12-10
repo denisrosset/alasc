@@ -88,10 +88,24 @@ object MyBuild extends Build {
     name := "alasc-aggregate"
   ) ++ noPublish
 
+  // Macros
+
+  lazy val macros = Project("macros", file("macros")).
+    settings(macroSettings: _*)
+
+  lazy val macroSettings = Seq(
+    name := "alasc-macros",
+    libraryDependencies ++= Seq(
+      spire,
+      scalaCheck % "test",
+      scalaTest % "test")
+  )
+
   // Core
 
   lazy val core = Project("core", file("core")).
-    settings(coreSettings: _*)
+    settings(coreSettings: _*).
+    dependsOn(macros)
 
   lazy val coreSettings = Seq(
     name := "alasc",

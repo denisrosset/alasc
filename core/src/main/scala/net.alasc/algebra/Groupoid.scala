@@ -21,6 +21,10 @@ import net.alasc.util._
 trait Semigroupoid[G <: AnyRef] extends Any {
   def isOpDefined(f: G, g: G): Boolean
   def partialOp(f: G, g: G): RefOption[G]
+  def forceOp(f: G, g: G): G = partialOp(f, g) match {
+    case RefOption(result) => result
+    case _ => throw new IllegalArgumentException(s"$f |+|! $g is not defined")
+  }
 }
 
 /** Enrichs a partial algebraic structure of type `G` with a base `B` such that
@@ -29,7 +33,7 @@ trait Semigroupoid[G <: AnyRef] extends Any {
   * Additional laws can then be defined, they are given in the documentation
   * of `Semigroupoid`, `PartialMonoid` and `Groupoid`.
   */
-trait WithBase[G <: AnyRef, B] extends Any {
+trait WithBase[G, B] extends Any {
   def source(g: G): B
   def target(g: G): B
 }
@@ -53,6 +57,10 @@ trait PartialMonoid[G <: AnyRef] extends Any with Semigroupoid[G] {
   def rightId(g: G): G
 }
 
+trait PartialMonoidWithBase[G <: AnyRef, B] extends Any with Semigroupoid[G] with WithBase[G, B] {
+  def id(b: B): G
+}
+
 /** A groupoid is a partial monoid, where every element has an inverse.
   *
   *   (i) `inverse(a) |+|? a` and `a |+|? inverse(a)` are always defined
@@ -64,9 +72,18 @@ trait PartialMonoid[G <: AnyRef] extends Any with Semigroupoid[G] {
   */
 trait Groupoid[G <: AnyRef] extends Any with PartialMonoid[G] {
   def inverse(g: G): G
+  def partialOpInverse(f: G, g: G): RefOption[G]
 }
 
 trait PartialAction[P <: AnyRef, G] extends Any {
   def partialActl(g: G, p: P): RefOption[P]
   def partialActr(p: P, g: G): RefOption[P]
+  def forceActl(g: G, p: P): P = partialActl(g, p) match {
+    case RefOption(result) => result
+    case _ => throw new IllegalArgumentException(s"Action $g |+|> is not compatible with $p")
+  }
+  def forceActr(p: P, g: G): P = partialActr(p, g) match {
+    case RefOption(result) => result
+    case _ => throw new IllegalArgumentException(s"$p is not compatible with action <|+| $g")
+  }
 }
