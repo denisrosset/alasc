@@ -25,6 +25,16 @@ trait Semigroupoid[G <: AnyRef] extends Any {
     case RefOption(result) => result
     case _ => throw new IllegalArgumentException(s"$f |+|! $g is not defined")
   }
+
+  implicit def RefOptionSemigroup: Semigroup[RefOption[G]] = new Semigroup[RefOption[G]] {
+    def op(fOpt: RefOption[G], gOpt: RefOption[G]) = fOpt match {
+      case RefOption(f) => gOpt match {
+        case RefOption(g) => partialOp(f, g)
+        case _ => gOpt
+      }
+      case _ => fOpt
+    }
+  }
 }
 
 /** Enrichs a partial algebraic structure of type `G` with a base `B` such that
@@ -72,7 +82,11 @@ trait PartialMonoidWithBase[G <: AnyRef, B] extends Any with Semigroupoid[G] wit
   */
 trait Groupoid[G <: AnyRef] extends Any with PartialMonoid[G] {
   def inverse(g: G): G
-  def partialOpInverse(f: G, g: G): RefOption[G]
+  def partialOpInverse(f: G, g: G): RefOption[G] = partialOp(f, inverse(g))
+  def forceOpInverse(f: G, g: G): G = forceOp(f, inverse(g))
+  def isOpInverseDefined(f: G, g: G): Boolean = isOpDefined(f, inverse(g))
+  def leftId(g: G): G = forceOp(g, inverse(g))
+  def rightId(g: G): G = forceOp(inverse(g), g)
 }
 
 trait PartialAction[P <: AnyRef, G] extends Any {
