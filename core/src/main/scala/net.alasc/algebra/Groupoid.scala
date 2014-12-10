@@ -102,4 +102,8 @@ trait PartialAction[P <: AnyRef, G] extends Any {
     case RefOption(result) => result
     case _ => throw new IllegalArgumentException(s"$p is not compatible with action <|+| $g")
   }
+  implicit def Forced: GroupAction[P, G] = new GroupAction[P, G] {
+    def actl(g: G, p: P): P = forceActl(g, p)
+    def actr(p: P, g: G): P = forceActr(p, g)
+  }
 }
