@@ -16,8 +16,8 @@ object Ops extends machinist.Ops {
       // partial actions ?|+|> <|+|? !|+|> <|+|!
       ("$qmark$bar$plus$bar$greater", "partialActl"),
       ("$less$bar$plus$bar$qmark", "partialActr"),
-      ("$qmark$bar$plus$bar$greater", "forceActl"),
-      ("$less$bar$plus$bar$qmark", "forceActr"),
+      ("$bang$bar$plus$bar$greater", "forceActl"),
+      ("$less$bar$plus$bar$bang", "forceActr"),
       ("$qmark$plus$bar$greater", "isActlDefined"),
       ("$less$bar$plus$qmark", "isActrDefined")
     )
