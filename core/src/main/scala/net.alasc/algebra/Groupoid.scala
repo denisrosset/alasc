@@ -92,6 +92,8 @@ trait Groupoid[G <: AnyRef] extends Any with PartialMonoid[G] {
 trait PartialAction[P <: AnyRef, G] extends Any {
   def partialActl(g: G, p: P): RefOption[P]
   def partialActr(p: P, g: G): RefOption[P]
+  def isActlDefined(g: G, p: P): Boolean
+  def isActrDefined(p: P, g: G): Boolean
   def forceActl(g: G, p: P): P = partialActl(g, p) match {
     case RefOption(result) => result
     case _ => throw new IllegalArgumentException(s"Action $g |+|> is not compatible with $p")
