@@ -7,8 +7,8 @@ import net.alasc.util._
 trait PartialAction[P, G] extends Any {
   def partialActl(g: G, p: P): Option[P]
   def partialActr(p: P, g: G): Option[P]
-  def isActlDefined(g: G, p: P): Boolean
-  def isActrDefined(p: P, g: G): Boolean
+  def isActlDefined(g: G, p: P): Boolean = partialActl(g, p).nonEmpty
+  def isActrDefined(p: P, g: G): Boolean = partialActr(p, g).nonEmpty
   def forceActl(g: G, p: P): P = partialActl(g, p) match {
     case Some(result) => result
     case None => throw new IllegalArgumentException(s"Action $g |+|> is not compatible with $p")

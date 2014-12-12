@@ -178,8 +178,8 @@ class SeqPermutationAction[SA <: AnyRef with SeqLike[A, SA], A, P: FiniteGroup: 
   import spire.syntax.group._
   import spire.syntax.action._
 
-  def isActlDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
-  def isActrDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
+  override def isActlDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
+  override def isActrDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
 
   def partialActl(p: P, s: SA): Option[SA] =
     if (p.supportMax.getOrElseFast(-1) >= s.length) None else {
