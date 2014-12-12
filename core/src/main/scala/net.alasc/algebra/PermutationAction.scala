@@ -5,12 +5,12 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 import spire.algebra._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.math.Cycle
 import net.alasc.util._
 
-trait PermutationAction[G] extends GroupAction[Int, G] with Signed[G] {
+trait PermutationAction[G] extends Action[Int, G] with Signed[G] {
   def abs(g: G) = sys.error("Abs is not supported")
 
   /** Tests if the point `i` is in the support of `g`. */

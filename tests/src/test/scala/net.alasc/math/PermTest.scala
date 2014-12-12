@@ -3,7 +3,7 @@ package net.alasc.math
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import spire.syntax.eq._
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.signed._
 import net.alasc.syntax.permutationAction._
 

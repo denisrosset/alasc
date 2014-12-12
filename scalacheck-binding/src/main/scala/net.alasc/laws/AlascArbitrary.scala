@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 import org.scalacheck.{Arbitrary, Gen}
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.std.int._
 

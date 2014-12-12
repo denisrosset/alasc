@@ -11,9 +11,9 @@ class SemigroupoidSuite extends FunSuite with NonImplicitAssertions with Matcher
       def isOpDefined(f: Seq[Int], g: Seq[Int]) = f.size == g.size
       def partialOp(f: Seq[Int], g: Seq[Int]) =
         if (f.size == g.size)
-          RefSome((f zip g).map { case (a,b) => a + b })
+          Some((f zip g).map { case (a,b) => a + b })
         else
-          RefNone
+          None
     }
 
     (Seq(1,2) ?+? Seq(1,2)) shouldBe true

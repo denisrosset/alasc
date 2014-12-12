@@ -1,6 +1,6 @@
 package net.alasc.math
 
-import spire.algebra.{GroupAction, Order}
+import spire.algebra.{Action, Order}
 
 import net.alasc.algebra._
 

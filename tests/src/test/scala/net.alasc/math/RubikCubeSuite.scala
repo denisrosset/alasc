@@ -2,7 +2,7 @@ package net.alasc.math
 
 import org.scalatest.{FunSuite, Matchers}
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.syntax.all._
 import net.alasc.std.seq._

@@ -13,7 +13,7 @@ import spire.algebra._
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra._
 import net.alasc.util._
@@ -176,21 +176,21 @@ class SeqPermutationAction[SA <: AnyRef with SeqLike[A, SA], A, P: FiniteGroup: 
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
-  import spire.syntax.groupAction._
+  import spire.syntax.action._
 
   def isActlDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
   def isActrDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
 
-  def partialActl(p: P, s: SA): RefOption[SA] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) RefNone.asInstanceOf[RefOption[SA]] else {
+  def partialActl(p: P, s: SA): Option[SA] =
+    if (p.supportMax.getOrElseFast(-1) >= s.length) None else {
       val b = cbf()
       b.sizeHint(s)
       for (i <- 0 until s.length)
         b += s(i <|+| p)
-      RefSome(b.result)
+      Some(b.result)
     }
 
-  def partialActr(s: SA, p: P): RefOption[SA] = partialActl(p.inverse, s)
+  def partialActr(s: SA, p: P): Option[SA] = partialActl(p.inverse, s)
 }
 
 trait SeqInstances0 {

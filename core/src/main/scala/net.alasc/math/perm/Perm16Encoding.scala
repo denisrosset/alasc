@@ -3,7 +3,7 @@ package perm
 
 import scala.collection.immutable
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.signed._
 
 import net.alasc.algebra.Permutation

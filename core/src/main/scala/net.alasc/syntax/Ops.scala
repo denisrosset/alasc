@@ -68,8 +68,8 @@ final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], ac
   def supportAny(): NNOption = ev.supportAny(lhs)
 }
 
-final class SemigroupoidOps[G <: AnyRef](lhs: G)(implicit ev: Semigroupoid[G]) {
-  def |+|? (rhs: G): RefOption[G] = macro Ops.binop[G, RefOption[G]]
+final class SemigroupoidOps[G](lhs: G)(implicit ev: Semigroupoid[G]) {
+  def |+|? (rhs: G): Option[G] = macro Ops.binop[G, Option[G]]
   def |+|! (rhs: G): G = macro Ops.binop[G, G]
   def ?+? (rhs: G): Boolean = macro Ops.binop[G, Boolean]
 }
@@ -79,35 +79,35 @@ final class WithBaseSemigroupoidOps[G, B](lhs: G)(implicit ev: WithBase[G, B]) {
   def target(): B = macro Ops.unop[B]
 }
 
-final class PartialMonoidOps[G <: AnyRef](lhs: G)(implicit ev: PartialMonoid[G]) {
+final class PartialMonoidOps[G](lhs: G)(implicit ev: PartialMonoid[G]) {
   def isId(): Boolean = macro Ops.unop[Boolean]
   def leftId(): G = macro Ops.unop[G]
   def rightId(): G = macro Ops.unop[G]
 }
 
-final class PartialMonoidWithBaseOps[G <: AnyRef, B](lhs: B)(implicit ev: PartialMonoidWithBase[G, B]) {
+final class PartialMonoidWithBaseOps[G, B](lhs: B)(implicit ev: PartialMonoidWithBase[G, B]) {
   def id(): G = macro Ops.unop[G]
 }
 
-final class GroupoidOps[G <: AnyRef](lhs: G)(implicit ev: Groupoid[G]) {
+final class GroupoidOps[G](lhs: G)(implicit ev: Groupoid[G]) {
   def inverse(): G = macro Ops.unop[G]
-  def |-|? (rhs: G): RefOption[G] = macro Ops.binop[G, RefOption[G]]
+  def |-|? (rhs: G): Option[G] = macro Ops.binop[G, Option[G]]
   def |-|! (rhs: G): G = macro Ops.binop[G, G]
   def ?-? (rhs: G): Boolean = macro Ops.binop[G, Boolean]
 }
 
 final class PartialActionGroupOps[G](lhs: G) {
-  def ?|+|> [P <: AnyRef](rhs: P)(implicit ev: PartialAction[P, G]): RefOption[P] =
-    macro Ops.binopWithEv[P, PartialAction[P, G], RefOption[P]]
-  def ?+|> [P <: AnyRef](rhs: P)(implicit ev: PartialAction[P, G]): Boolean =
+  def ?|+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): Option[P] =
+    macro Ops.binopWithEv[P, PartialAction[P, G], Option[P]]
+  def ?+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): Boolean =
     macro Ops.binopWithEv[P, PartialAction[P, G], Boolean]
-  def !|+|> [P <: AnyRef](rhs: P)(implicit ev: PartialAction[P, G]): RefOption[P] =
+  def !|+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): Option[P] =
     macro Ops.binopWithEv[P, PartialAction[P, G], P]
 }
 
-final class PartialActionPointOps[P <: AnyRef](lhs: P) {
-  def <|+|? [G](rhs: G)(implicit ev: PartialAction[P, G]): RefOption[P] =
-    macro Ops.binopWithEv[G, PartialAction[P, G], RefOption[P]]
+final class PartialActionPointOps[P](lhs: P) {
+  def <|+|? [G](rhs: G)(implicit ev: PartialAction[P, G]): Option[P] =
+    macro Ops.binopWithEv[G, PartialAction[P, G], Option[P]]
   def <|+? [G](rhs: G)(implicit ev: PartialAction[P, G]): Boolean =
     macro Ops.binopWithEv[G, PartialAction[P, G], Boolean]
   def <|+|! [G](rhs: G)(implicit ev: PartialAction[P, G]): P =

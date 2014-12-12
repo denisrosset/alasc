@@ -34,7 +34,7 @@ trait PermutationActionLaws[A] extends Laws {
   def permutationAction(implicit FG : FiniteGroup[A], A : PermutationAction[A]) = new PermutationActionProperties(
     name = "permutationAction",
     parent = None,
-    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> GroupActionLaws[A, Dom].groupAction),
+    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
 
     "supportMin" → forAll((x: A) =>
       x.supportMin match {
@@ -61,7 +61,7 @@ trait PermutationActionLaws[A] extends Laws {
   def faithfulPermutationAction(implicit FG : FiniteGroup[A], A : FaithfulPermutationAction[A]) = new PermutationActionProperties(
       name = "faithfulPermutationAction",
       parent = Some(permutationAction),
-      bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> GroupActionLaws[A, Dom].groupAction),
+      bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
       "support.isEmpty" → forAll((x: A) =>
         x.support.isEmpty === x.isId
       )
@@ -70,7 +70,7 @@ trait PermutationActionLaws[A] extends Laws {
   def permutation(implicit A : Permutation[A]) = new PermutationActionProperties(
     name = "permutation",
     parent = Some(faithfulPermutationAction),
-    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> GroupActionLaws[A, Dom].groupAction),
+    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
 
     "sign" -> forAll((x: A, y: A) =>
       (x.signum * y.signum) === (x |+| y).signum

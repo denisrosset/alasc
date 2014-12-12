@@ -3,7 +3,7 @@ package perm
 
 import scala.util.hashing.MurmurHash3.{orderedHash, unorderedHash}
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.cfor._
 
 import net.alasc.syntax.permutationAction._

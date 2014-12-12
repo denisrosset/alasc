@@ -37,9 +37,8 @@ trait PermutationSubgroupSyntax {
     new PermutationSubgroupOps[S, G](s)
 }
 
-
 trait SemigroupoidSyntax {
-  implicit def semigroupoidOps[G <: AnyRef: Semigroupoid](g: G) = new SemigroupoidOps[G](g)
+  implicit def semigroupoidOps[G: Semigroupoid](g: G) = new SemigroupoidOps[G](g)
 }
 
 trait WithBaseSyntax {
@@ -47,20 +46,20 @@ trait WithBaseSyntax {
 }
 
 trait PartialMonoidSyntax extends SemigroupoidSyntax {
-  implicit def partialMonoidOps[G <: AnyRef](g: G)(implicit ev: PartialMonoid[G]) = new PartialMonoidOps[G](g)
+  implicit def partialMonoidOps[G](g: G)(implicit ev: PartialMonoid[G]) = new PartialMonoidOps[G](g)
 }
 
 trait PartialMonoidWithBaseSyntax extends PartialMonoidSyntax with WithBaseSyntax {
-  implicit def partialMonoidWithBaseOps[G <: AnyRef, B](b: B)(implicit ev: PartialMonoidWithBase[G, B]) = new PartialMonoidWithBaseOps[G, B](b)
+  implicit def partialMonoidWithBaseOps[G, B](b: B)(implicit ev: PartialMonoidWithBase[G, B]) = new PartialMonoidWithBaseOps[G, B](b)
 }
 
 trait GroupoidSyntax extends PartialMonoidSyntax {
-  implicit def groupoidOps[G <: AnyRef](g: G)(implicit ev: Groupoid[G]) = new GroupoidOps[G](g)
+  implicit def groupoidOps[G](g: G)(implicit ev: Groupoid[G]) = new GroupoidOps[G](g)
 }
 
 trait PartialActionSyntax {
-  implicit def partialActionGroupOps[G <: AnyRef](g: G) = new PartialActionGroupOps(g)
-  implicit def partialActionPointOps[P <: AnyRef](p: P) = new PartialActionPointOps(p)
+  implicit def partialActionGroupOps[G](g: G) = new PartialActionGroupOps(g)
+  implicit def partialActionPointOps[P](p: P) = new PartialActionPointOps(p)
 }
 
 trait AllSyntax

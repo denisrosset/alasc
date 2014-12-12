@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 
 import scala.reflect.ClassTag
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.monoid._
 
 import net.alasc.algebra._

@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.{FaithfulPermutationAction, InversePair}
 import net.alasc.math.guide.BaseGuide

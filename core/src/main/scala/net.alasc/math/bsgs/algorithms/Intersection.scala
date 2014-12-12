@@ -5,7 +5,7 @@ package algorithms
 import scala.reflect.ClassTag
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
 import net.alasc.math.guide.BaseGuideSeq

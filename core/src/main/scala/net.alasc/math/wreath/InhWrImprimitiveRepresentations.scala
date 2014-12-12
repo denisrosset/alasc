@@ -14,7 +14,7 @@ import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.partialOrder._
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.lattice._
 
 import net.alasc.algebra._

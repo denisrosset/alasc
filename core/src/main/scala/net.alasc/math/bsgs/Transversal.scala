@@ -5,7 +5,7 @@ import scala.util.Random
 import scala.collection.immutable.BitSet
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._

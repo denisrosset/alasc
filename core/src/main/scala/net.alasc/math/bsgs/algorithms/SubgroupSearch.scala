@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
 import spire.algebra.Order
 import spire.math.Sorting
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._

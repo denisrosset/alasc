@@ -5,7 +5,7 @@ package algorithms
 import scala.collection.{immutable, mutable}
 
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.InversePair
 import net.alasc.syntax.subgroup._

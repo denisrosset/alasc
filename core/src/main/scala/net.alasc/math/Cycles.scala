@@ -7,7 +7,7 @@ import scala.runtime.RichInt
 
 import spire.algebra._
 import spire.syntax.eq._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.signed._
 
 import net.alasc.algebra._

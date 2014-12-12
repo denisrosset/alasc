@@ -7,7 +7,7 @@ import prop._
 
 import spire.algebra.Eq
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.eq._
 import spire.std.int._
 import spire.std.seq._

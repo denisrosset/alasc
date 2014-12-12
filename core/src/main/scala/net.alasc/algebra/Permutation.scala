@@ -6,17 +6,17 @@ import scala.annotation.tailrec
 import scala.util.Random
 
 import spire.algebra._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.math.Cycle
 import net.alasc.util._
 
 /** Type class for Permutation-like objects.
   * 
-  * Combines Eq, Group, Signed and GroupAction[Int, _], along with
+  * Combines Eq, Group, Signed and Action[Int, _], along with
   * additional methods.
   * 
-  * The standard action for the GroupAction[Int, P] is the right action.
+  * The standard action for the Action[Int, P] is the right action.
   */
 trait Permutation[P] extends FiniteGroup[P] with FaithfulPermutationAction[P] {
   self =>

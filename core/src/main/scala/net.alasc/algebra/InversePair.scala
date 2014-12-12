@@ -1,6 +1,6 @@
 package net.alasc.algebra
 
-import spire.algebra.{Group, GroupAction, Eq}
+import spire.algebra.{Group, Action, Eq}
 import scala.{ specialized => spec }
 import scala.language.implicitConversions
 import spire.syntax.group._

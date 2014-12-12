@@ -1,7 +1,7 @@
 package net.alasc.optional
 
 import spire.algebra.Order
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction}
 import net.alasc.syntax.permutationAction._
 

@@ -4,7 +4,7 @@ package algorithms
 
 import scala.annotation.tailrec
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._

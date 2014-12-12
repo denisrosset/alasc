@@ -4,7 +4,7 @@ import org.scalacheck._
 import scala.util.Random
 import org.scalatest.FunSuite
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra._
 import bsgs._

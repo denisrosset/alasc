@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.Random
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.math.guide.{BaseGuide, BaseGuideSeq}

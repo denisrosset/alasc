@@ -12,6 +12,7 @@ import spire.syntax.all._
 import spire.laws._
 import spire.std.boolean._
 import spire.std.int._
+import spire.std.option._
 
 import net.alasc.algebra._
 import net.alasc.syntax.all._
@@ -47,9 +48,9 @@ trait GroupoidLaws[A <: AnyRef] extends Laws {
     ),
 
     "associative: (a |+|? b) |+|? c === a |+|? (b |+|? c)" → forAll((a: A, b: A, c: A) => {
-      import A.RefOptionSemigroup
+      import A.OptionSemigroup
 
-      ((RefOption(a) |+| RefOption(b)) |+| RefOption(c)) === (RefOption(a) |+| (RefOption(b) |+| RefOption(c)))
+      ((Option(a) |+| Option(b)) |+| Option(c)) === (Option(a) |+| (Option(b) |+| Option(c)))
     }
     )
   )

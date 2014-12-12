@@ -6,7 +6,7 @@ import scala.collection.immutable
 import spire.syntax.eq._
 import spire.syntax.signed._
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._

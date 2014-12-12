@@ -3,7 +3,7 @@ package math
 
 import net.alasc.algebra._
 import scala.util.Random
-import spire.algebra.{Group, GroupAction}
+import spire.algebra.{Group, Action}
 import spire.syntax.group._
 import net.alasc.syntax.subgroup._
 import scala.language.implicitConversions
@@ -23,7 +23,7 @@ object Conjugate {
     Conjugate(algebra.id, subgroup, algebra.id)
 }
 
-class ConjugateGroupAction[G, S](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends GroupAction[Conjugate[G, S], G] {
+class ConjugateGroupAction[G, S](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Action[Conjugate[G, S], G] {
   type C = Conjugate[G, S]
   def actl(g: G, conj: C) = Conjugate(conj.gInv |+| g.inverse, conj.t, g |+| conj.g)
   def actr(conj: C, gInv: G) = Conjugate(conj.gInv |+| gInv, conj.t, gInv.inverse |+| conj.g)

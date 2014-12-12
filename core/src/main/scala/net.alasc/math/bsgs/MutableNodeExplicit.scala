@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.group._
 import spire.syntax.eq._
 

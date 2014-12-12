@@ -3,7 +3,7 @@ package bsgs
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.subgroup._

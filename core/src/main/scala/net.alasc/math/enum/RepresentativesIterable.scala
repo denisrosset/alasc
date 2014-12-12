@@ -4,9 +4,9 @@ package enum
 
 import scala.collection.mutable
 
-import spire.algebra.{Eq, GroupAction, Order}
+import spire.algebra.{Eq, Action, Order}
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra._
 import net.alasc.syntax.sequence._

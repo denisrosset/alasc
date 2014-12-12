@@ -7,7 +7,7 @@ import scala.collection.immutable.BitSet
 
 import spire.algebra._
 import spire.syntax.order._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.syntax.signed._
 
 import net.alasc.algebra.FaithfulPermutationAction

@@ -8,7 +8,7 @@ import prop._
 import spire.algebra.Order
 import spire.syntax.eq._
 import spire.syntax.order._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 import spire.std.int._
 import net.alasc.algebra._
 import net.alasc.std.seq._

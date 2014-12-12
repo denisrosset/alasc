@@ -7,7 +7,7 @@ import scala.util.Random
 
 import spire.syntax.eq._
 import spire.syntax.group._
-import spire.syntax.groupAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.{FaithfulPermutationAction, InversePair, Subgroup}
 import net.alasc.syntax.subgroup._
