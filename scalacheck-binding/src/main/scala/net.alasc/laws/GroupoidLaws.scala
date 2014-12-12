@@ -19,26 +19,16 @@ import net.alasc.syntax.all._
 import net.alasc.util._
 
 object GroupoidLaws {
-  def apply[A <: AnyRef : Eq : Arbitrary] = new GroupLaws[A] {
+  def apply[A : Eq : Arbitrary] = new GroupoidLaws[A] {
     def Equ = Eq[A]
     def Arb = implicitly[Arbitrary[A]]
   }
 }
 
-trait GroupoidLaws[A <: AnyRef] extends Laws {
+trait GroupoidLaws[A] extends Laws {
 
   implicit def Equ: Eq[A]
   implicit def Arb: Arbitrary[A]
-
-  implicit def RefOptionEqu: Eq[RefOption[A]] = new Eq[RefOption[A]] {
-    def eqv(aOpt: RefOption[A], bOpt: RefOption[A]): Boolean = aOpt match {
-      case RefOption(a) => bOpt match {
-        case RefOption(b) => a === b
-        case _ => false
-      }
-      case _ => bOpt.isEmpty
-    }
-  }
 
   def semigroupoid(implicit A: Semigroupoid[A]) = new GroupoidProperties(
     name = "semigroupoid",

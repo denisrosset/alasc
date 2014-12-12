@@ -101,7 +101,7 @@ final class PartialActionGroupOps[G](lhs: G) {
     macro Ops.binopWithEv[P, PartialAction[P, G], Option[P]]
   def ?+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): Boolean =
     macro Ops.binopWithEv[P, PartialAction[P, G], Boolean]
-  def !|+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): Option[P] =
+  def !|+|> [P](rhs: P)(implicit ev: PartialAction[P, G]): P =
     macro Ops.binopWithEv[P, PartialAction[P, G], P]
 }
 
