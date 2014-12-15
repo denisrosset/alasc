@@ -37,30 +37,14 @@ trait PermutationSubgroupSyntax {
     new PermutationSubgroupOps[S, G](s)
 }
 
-trait SemigroupoidSyntax {
-  implicit def semigroupoidOps[G: Semigroupoid](g: G) = new SemigroupoidOps[G](g)
-}
-
 trait WithBaseSyntax {
   implicit def withBaseOps[G, B](g: G)(implicit ev: WithBase[G, B]) = new WithBaseSemigroupoidOps[G, B](g)
 }
 
-trait PartialMonoidSyntax extends SemigroupoidSyntax {
-  implicit def partialMonoidOps[G](g: G)(implicit ev: PartialMonoid[G]) = new PartialMonoidOps[G](g)
-}
-
-trait PartialMonoidWithBaseSyntax extends PartialMonoidSyntax with WithBaseSyntax {
+trait PartialMonoidWithBaseSyntax {
   implicit def partialMonoidWithBaseOps[G, B](b: B)(implicit ev: PartialMonoidWithBase[G, B]) = new PartialMonoidWithBaseOps[G, B](b)
 }
 
-trait GroupoidSyntax extends PartialMonoidSyntax {
-  implicit def groupoidOps[G](g: G)(implicit ev: Groupoid[G]) = new GroupoidOps[G](g)
-}
-
-trait PartialActionSyntax {
-  implicit def partialActionGroupOps[G](g: G) = new PartialActionGroupOps(g)
-  implicit def partialActionPointOps[P](p: P) = new PartialActionPointOps(p)
-}
 
 trait AllSyntax
     extends CheckSyntax
@@ -71,9 +55,5 @@ trait AllSyntax
     with ShiftablePermutationSyntax
     with SubgroupSyntax
     with PermutationSubgroupSyntax
-    with SemigroupoidSyntax
     with WithBaseSyntax
-    with PartialMonoidSyntax
     with PartialMonoidWithBaseSyntax
-    with GroupoidSyntax
-    with PartialActionSyntax
