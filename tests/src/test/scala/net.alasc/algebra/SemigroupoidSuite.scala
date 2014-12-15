@@ -2,8 +2,10 @@ package net.alasc.algebra
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
+import spire.algebra.Semigroupoid
+import spire.syntax.semigroupoid._
+
 import net.alasc.util._
-import net.alasc.syntax.semigroupoid._
 
 class SemigroupoidSuite extends FunSuite with NonImplicitAssertions with Matchers {
   test("Test semigroupoid of addition of Seq[Int] with compatible sizes") {
