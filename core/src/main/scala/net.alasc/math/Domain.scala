@@ -545,10 +545,9 @@ object Domain extends UniquenessCache[Int, Domain] {
       }
   }
 
-  trait PartitionMapBoundedJoinSemilattice[V] extends Any with BoundedJoinSemilattice[Domain#PartitionMap[V]] {
+  trait PartitionMapJoinSemilattice[V] extends Any with JoinSemilattice[Domain#PartitionMap[V]] {
     implicit def classTag: ClassTag[V]
     implicit def lattice: JoinSemilattice[V]
-    def zero: Domain#PartitionMap[V] = Domain.PartitionMap.empty[V]
     def join(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Domain#PartitionMap[V] =
       if (y.partition.size > x.partition.size) join(y, x) else {
         val newPartition = x.partition join y.partition
@@ -584,10 +583,33 @@ object Domain extends UniquenessCache[Int, Domain] {
     }
   }
 
-  trait PartitionMapBoundedBelowLattice[V] extends Any
-      with Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]]
-      with PartitionMapBoundedJoinSemilattice[V] with PartitionMapMeetSemilattice[V] {
+  trait PartitionMapLattice[V] extends Any with Lattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] with PartitionMapMeetSemilattice[V] {
     implicit def lattice: Lattice[V]
+  }
+
+  trait PartitionMapBoundedJoinSemilattice[V] extends Any with BoundedJoinSemilattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] {
+    def zero: Domain#PartitionMap[V] = Domain.PartitionMap.empty[V]
+  }
+
+  trait PartitionMapBoundedJoinSemilatticeNonEmpty[V] extends Any with BoundedJoinSemilattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] {
+    implicit def lattice: BoundedJoinSemilattice[V]
+
+    def zero: Domain#PartitionMap[V] = Domain.PartitionMap(Set(0) -> lattice.zero)
+  }
+
+  trait PartitionMapBoundedBelowLattice[V] extends Any
+      with PartitionMapLattice[V]
+      with PartitionMapBoundedJoinSemilattice[V] {
+    implicit def lattice: Lattice[V]
+  }
+
+  trait PartitionMapBoundedBelowLatticeNonEmpty[V] extends Any
+      with PartitionMapLattice[V]
+      with PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+    implicit def lattice: Lattice[V] with BoundedJoinSemilattice[V]
   }
 
   implicit def PartitionMapPartialOrder[V: PartialOrder]: PartialOrder[Domain#PartitionMap[V]] =
@@ -595,8 +617,8 @@ object Domain extends UniquenessCache[Int, Domain] {
       def partialOrder = implicitly[PartialOrder[V]]
     }
 
-  implicit def PartitionMapBoundedJoinSemilattice[V : ClassTag : JoinSemilattice]: BoundedJoinSemilattice[Domain#PartitionMap[V]] =
-    new PartitionMapBoundedJoinSemilattice[V] {
+  implicit def PartitionMapJoinSemilattice[V : ClassTag : JoinSemilattice]: JoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapJoinSemilattice[V] {
       def classTag = implicitly[ClassTag[V]]
       def lattice = implicitly[JoinSemilattice[V]]
     }
@@ -607,8 +629,33 @@ object Domain extends UniquenessCache[Int, Domain] {
       def lattice = implicitly[MeetSemilattice[V]]
     }
 
-  implicit def PartitionMapBoundedBelowLattice[V : ClassTag: Lattice]: Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]] = new PartitionMapBoundedBelowLattice[V] {
-    def classTag = implicitly[ClassTag[V]]
-    def lattice = implicitly[Lattice[V]]
-  }
+  implicit def PartitionMapLattice[V : ClassTag: Lattice]: Lattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def PartitionMapBoundedJoinSemilattice[V : ClassTag : JoinSemilattice]: BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+
+  def PartitionMapBoundedJoinSemilatticeNonEmpty[V : ClassTag : BoundedJoinSemilattice]: BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedJoinSemilattice[V]]
+    }
+
+  def PartitionMapBoundedBelowLattice[V : ClassTag: Lattice]: Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def PartitionMapBoundedBelowLatticeNonEmpty[V : ClassTag](implicit ev: Lattice[V] with BoundedJoinSemilattice[V]): Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = ev
+    }
 }
