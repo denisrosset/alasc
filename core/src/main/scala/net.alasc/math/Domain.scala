@@ -12,6 +12,7 @@ import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.partialOrder._
 import spire.syntax.lattice._
+import spire.util.Nullbox
 
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.syntax.permutationAction._
@@ -110,22 +111,28 @@ final class Domain private (val size: Int) { domainSelf =>
       * added or removed, is composed of single points. Returns RefNone if the resizing is not possible,
       * e.g. because the removed last points are not single in a partition.
       */
-    def inDomain(newDomain: Domain): RefOption[newDomain.Partition] =
+    def inDomain(newDomain: Domain): Nullbox[newDomain.Partition] =
       if (newDomain.size == size)
-        RefSome(Partition.this.asInstanceOf[newDomain.Partition])
+        Nullbox(Partition.this.asInstanceOf[newDomain.Partition])
       else if (newDomain.size > size)
-        RefSome(newDomain.Partition.fromSeq(indexArray ++ (numBlocks until numBlocks + (newDomain.size - size))))
+        Nullbox(newDomain.Partition.fromSeq(indexArray ++ (numBlocks until numBlocks + (newDomain.size - size))))
       else { // newDomain.size < size
         for (k <- newDomain.size until size)
-          if (blockFor(k).size > 1) return RefNone
-        RefSome(newDomain.Partition.fromSeq(indexArray.take(newDomain.size)))
+          if (blockFor(k).size > 1) return Nullbox.empty[newDomain.Partition]
+        Nullbox(newDomain.Partition.fromSeq(indexArray.take(newDomain.size)))
       }
   }
   object Typed {
-    def unapply(partition: Domain#Partition): RefOption[Partition] =
-      if (partition.domain eq Domain.this) RefSome(partition.asInstanceOf[Partition]) else RefNone
-    def unapply[V](partitionMap: Domain#PartitionMap[V]): RefOption[PartitionMap[V]] =
-      if (partitionMap.domain eq Domain.this) RefSome(partitionMap.asInstanceOf[PartitionMap[V]]) else RefNone
+    def unapply(partition: Domain#Partition): Nullbox[Partition] =
+      if (partition.domain eq Domain.this)
+        Nullbox(partition.asInstanceOf[Partition])
+      else
+        Nullbox.empty[Partition]
+    def unapply[V](partitionMap: Domain#PartitionMap[V]): Nullbox[PartitionMap[V]] =
+      if (partitionMap.domain eq Domain.this)
+        Nullbox(partitionMap.asInstanceOf[PartitionMap[V]])
+      else
+        Nullbox.empty[PartitionMap[V]]
   }
   object Partition {
     def apply(sets: Set[Int]*): Partition = {
@@ -278,21 +285,21 @@ final class Domain private (val size: Int) { domainSelf =>
     def isDefinedAt(block: Set[Int]): Boolean = block.nonEmpty && partition.blocks(partition.blockIndex(block.min)) == block
     /** Returns a resized partition map, using `defaultValue` when expanding, and testing whether elements can be removed
       * using `removedSatisfy`. Returns `RefNone` if the resizing is not possible. */
-    def forDomain(newDomain: Domain, defaultValue: => V, removedSatisfy: V => Boolean): RefOption[newDomain.PartitionMap[V]] =
+    def forDomain(newDomain: Domain, defaultValue: => V, removedSatisfy: V => Boolean): Nullbox[newDomain.PartitionMap[V]] =
       if (newDomain.size == size)
-        RefSome(this.asInstanceOf[newDomain.PartitionMap[V]])
+        Nullbox(this.asInstanceOf[newDomain.PartitionMap[V]])
       else if (newDomain.size > size) {
         val newPartition = partition.inDomain(newDomain).get
         val newValues = values ++ Array.fill(newPartition.numBlocks - partition.numBlocks)(defaultValue)
-        RefSome(new newDomain.PartitionMap(newPartition, newValues))
+        Nullbox(new newDomain.PartitionMap(newPartition, newValues))
       } else // newSize < partition.size
         partition.inDomain(newDomain) match {
-          case RefOption(newPartition) =>
+          case Nullbox(newPartition) =>
             if ((newDomain.size until size).forall( i => removedSatisfy(apply(i)) ))
-              RefSome(new newDomain.PartitionMap(newPartition, values.take(values.length - (size - newDomain.size))))
+              Nullbox(new newDomain.PartitionMap(newPartition, values.take(values.length - (size - newDomain.size))))
             else
-              RefNone
-          case _ => RefNone
+              Nullbox.empty[newDomain.PartitionMap[V]]
+          case _ => Nullbox.empty[newDomain.PartitionMap[V]]
         }
   }
 

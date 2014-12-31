@@ -11,6 +11,7 @@ import spire.algebra.{Eq, Action, Order}
 import spire.math.ULong
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.syntax.sequence._
@@ -31,7 +32,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   def find(seq: T): Option[LexRepresentative[T, G]] = {
     @tailrec def rec(block: Block): Option[LexRepresentative[T, G]] = block match {
       case nb: NodeBlock => nb.blockForSeq(seq) match {
-        case RefOption(nextBlock) => rec(nextBlock)
+        case Nullbox(nextBlock) => rec(nextBlock)
         case _ => None
       }
       case tb: TermBlock => Some(tb)
@@ -42,7 +43,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   def apply(idx: BigInt) = {
     @tailrec def rec(block: Block): LexRepresentative[T, G] = block match {
       case nb: NodeBlock => nb.blockForIndex(idx) match {
-        case RefOption(nextBlock) => rec(nextBlock)
+        case Nullbox(nextBlock) => rec(nextBlock)
         case _ => throw new IndexOutOfBoundsException
       }
       case tb: TermBlock => tb
@@ -92,7 +93,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: debox.Buffer[G], symGrps: debox.Buffer[Grp[G]]) extends Block {
     implicit def action = representation.action
 
-    case class NextCandidate(b: Int, c: Int, tail: RefOption[NextCandidate] = RefNone)
+    case class NextCandidate(b: Int, c: Int, tail: Nullbox[NextCandidate] = Nullbox.empty[NextCandidate])
 
     val beta = chain.beta
     val chainNextBeta = chain.next match {
@@ -118,7 +119,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
             images = (images << intBits) + ULong.fromInt(tInt((k <|+| u) <|+| g))
             k += 1
           }
-          val nextCandidate = NextCandidate(b, c, RefOption(map.getOrElse(images.toLong, null)))
+          val nextCandidate = NextCandidate(b, c, Nullbox(map.getOrElse(images.toLong, null)))
           map.update(images.toLong, nextCandidate)
         }
         c += 1
@@ -141,13 +142,13 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
       (BigInt(0) /: symGrps.iterator) { case (sm, symGrp) => sm + co / symGrp.order }
     }
 
-    def blockForSeq(seq: T): RefOption[Block] = {
+    def blockForSeq(seq: T): Nullbox[Block] = {
       var seqImages = ULong(0)
       var k = beta
       while (k < nextBeta) {
         seqInt(seq, k) match {
           case NNOption(i) => seqImages = (seqImages << intBits) + ULong.fromInt(i)
-          case _ => return RefNone
+          case _ => return Nullbox.empty[Block]
         }
         k += 1
       }
@@ -156,21 +157,21 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         while (it.hasNext) {
           val block = it.next
           if (block.images == seqImages)
-            return RefSome(block)
+            return Nullbox(block)
         }
         sys.error("Map defined => block in children")
       }
-      RefNone
+      Nullbox.empty[Block]
     }
 
-    def blockForIndex(idx: BigInt): RefOption[Block] = {
+    def blockForIndex(idx: BigInt): Nullbox[Block] = {
       val it = children
       while (it.hasNext) {
         val block = it.next
         if (block.index <= idx && idx < block.index + block.size)
-          return RefSome(block)
+          return Nullbox(block)
       }
-      RefNone
+      Nullbox.empty[Block]
     }
 
     def children: Iterator[Block] = new ChildrenIterator
@@ -185,9 +186,9 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         val images = ULong.fromLong(sortedImages(i))
         val newBlockCandidates = debox.Buffer.empty[G]
         val newBlockSymGrps = debox.Buffer.empty[Grp[G]]
-        var it = RefOption(candidatesForImages(images.toLong))
+        var it = Nullbox(candidatesForImages(images.toLong))
         while (it.nonEmpty) {
-          val NextCandidate(b, c, next) = it.a
+          val NextCandidate(b, c, next) = it.get
           val u = chain.u(b)
           val g = candidates(c)
           val bg = b <|+| g

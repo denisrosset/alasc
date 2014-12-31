@@ -13,6 +13,7 @@ import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
@@ -24,9 +25,9 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
   self =>
   type AR = aReps.R
   def rClassTag = classTag[R]
-  def tryCast(genR: Representation[Wr[A, H]]): RefOption[R] = genR match {
-    case r: R if r.representations eq self => RefSome(r)
-    case _ => RefNone
+  def tryCast(genR: Representation[Wr[A, H]]): Nullbox[R] = genR match {
+    case r: R if r.representations eq self => Nullbox(r)
+    case _ => Nullbox.empty[R]
   }
   def get(generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }

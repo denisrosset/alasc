@@ -19,7 +19,7 @@ import net.alasc.syntax.subgroup._
 import net.alasc.syntax.monoid._
 
 /** Generic element to describe BSGS data. */
-sealed trait Elem[P] extends AnyRef
+sealed trait Elem[P]
 
 sealed trait StartOrNode[P] extends Elem[P] { elem =>
   implicit def action: FaithfulPermutationAction[P]

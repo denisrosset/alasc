@@ -2,7 +2,7 @@ package net.alasc
 package math
 package enum
 
-import spire.algebra.Action
+import spire.algebra.RightPartialAction
 import spire.syntax.action._
 
 trait Representative[T, G] {
@@ -10,7 +10,7 @@ trait Representative[T, G] {
   def get: T = original <|+| element
   def element: G
   protected def original: T
-  implicit def actionTG: Action[T, G]
+  implicit def actionTG: RightPartialAction[T, G]
 }
 
 trait LexRepresentative[T, G] extends Representative[T, G] {

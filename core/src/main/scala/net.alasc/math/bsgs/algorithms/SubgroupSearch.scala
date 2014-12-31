@@ -9,16 +9,17 @@ import spire.algebra.Order
 import spire.math.Sorting
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
-trait SubgroupTest[P] extends AnyRef {
-  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[SubgroupTest[P]]
+trait SubgroupTest[P] {
+  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Nullbox[SubgroupTest[P]]
 }
 
 class TrivialSubgroupTest[P] extends SubgroupTest[P] {
-  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]) = RefSome(this)
+  def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]) = Nullbox(this)
 }
 
 trait SubgroupSearch[P] {

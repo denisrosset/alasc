@@ -4,7 +4,7 @@ package enum
 
 import scala.collection.mutable
 
-import spire.algebra.{Eq, Action, Order}
+import spire.algebra.{Eq,  Order}
 import spire.syntax.group._
 import spire.syntax.action._
 

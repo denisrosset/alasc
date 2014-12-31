@@ -6,8 +6,8 @@ object MyBuild extends Build {
   // Dependencies
 
   lazy val debox = "org.spire-math" %% "debox" % "0.7.0-SNAPSHOT"
-  lazy val spire = "org.spire-math" %% "spire" % "0.8.3-SNAPSHOT"
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.8.3-SNAPSHOT"
+  lazy val spire = "org.spire-math" %% "spire" % "0.9.1-SNAPSHOT"
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.1-SNAPSHOT"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
@@ -72,8 +72,8 @@ object MyBuild extends Build {
         // in Scala 2.10, quasiquotes are provided by macro-paradise
         case Some((2, 10)) =>
           libraryDependencies.value ++ Seq(
-            compilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full),
-            "org.scalamacros" %% "quasiquotes" % "2.0.0")
+            compilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
+            "org.scalamacros" %% "quasiquotes" % "2.0.1")
       }
     }
   )

@@ -7,6 +7,7 @@ import scala.collection.immutable.BitSet
 import scala.collection.mutable
 
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
 import net.alasc.math.guide.BaseGuideSet
@@ -26,19 +27,19 @@ object Stabilizer {
     case term: Term[P] => term
   }
   class FixingTest[P](level: Int, set: Set[Int], pointSetsToTest: Array[BitSet]) extends SubgroupTest[P] {
-    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): RefOption[FixingTest[P]] =
+    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Nullbox[FixingTest[P]] =
       if (level < pointSetsToTest.length) {
         if (!set.contains(orbitImage))
-          return RefNone
+          return Nullbox.empty[FixingTest[P]]
         val pointSet = pointSetsToTest(level)
         if (pointSet.size > 1) {
           val nodeU = node.u(b)
           if (pointSet.exists( k => k != node.beta && !set.contains((k <|+| nodeU) <|+| currentG) ))
-            return RefNone
+            return Nullbox.empty[FixingTest[P]]
         }
-        RefSome(new FixingTest(level + 1, set, pointSetsToTest))
+        Nullbox(new FixingTest(level + 1, set, pointSetsToTest))
       } else {
-        RefSome(this)
+        Nullbox(this)
       }
   }
   def setwiseStabilizer[P](chainWithGuidedBase: Chain[P], set: Set[Int])(implicit algebra: FiniteGroup[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {

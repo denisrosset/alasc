@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra.{FaithfulPermutationAction, InversePair}
 import net.alasc.syntax.permutationAction._
@@ -17,14 +18,14 @@ trait MutableAlgorithms[P] extends Algorithms[P] {
 
 trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
   /** Returns an element obtained by sifting `p` through the BSGS chain starting at `elem`, inserting new
-    * base points as required, returns `RefNone` if `p` can be sifted completely.
+    * base points as required, returns `Nullbox.empty` if `p` can be sifted completely.
     * 
-    * @return the sifted element `RefSome((node, p1))` where `node` is where the sifting stopped,
+    * @return the sifted element `Nullbox((node, p1))` where `node` is where the sifting stopped,
     *         and `p1` is the remaining element, or `RefNone` if `p` can be sifted completely.
     * 
     * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
     */
-  @tailrec final def siftAndUpdateBaseFrom(mutableChain: MutableChain[P], elem: StartOrNode[P], p: P): RefOption[(MutableNode[P], P)] = {
+  @tailrec final def siftAndUpdateBaseFrom(mutableChain: MutableChain[P], elem: StartOrNode[P], p: P): Nullbox[(MutableNode[P], P)] = {
     implicit def action = mutableChain.start.action
     elem.next match {
       case _: Term[P] =>
@@ -32,13 +33,13 @@ trait AppendBaseAlgorithms[P] extends MutableAlgorithms[P] {
           case NNOption(k) =>
             val newNode = nodeBuilder.standalone(k)
             mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
-            RefSome(newNode -> p)
-          case _ => RefNone
+            Nullbox(newNode -> p)
+          case _ => Nullbox.empty[(MutableNode[P], P)]
         }
       case node: Node[P] =>
         val b = node.beta <|+| p
         if (!node.inOrbit(b))
-          RefSome(mutableChain.mutable(node) -> p)
+          Nullbox(mutableChain.mutable(node) -> p)
         else {
           val h = p |+| node.uInv(b)
           siftAndUpdateBaseFrom(mutableChain, node, h)

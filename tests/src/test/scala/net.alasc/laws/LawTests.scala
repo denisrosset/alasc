@@ -37,6 +37,7 @@ class LawTests extends FunSuite with Discipline {
   checkAll("Partition",                 LatticeLaws[domain.Partition].boundedLattice)
   checkAll("Partition",                 LatticeLaws[Domain#Partition].boundedBelowLattice)
   checkAll("domain.PartitionMap[Int]",  LatticeLaws[domain.PartitionMap[Int]].boundedLattice)
+  implicit def partitionMapLattice = Domain.PartitionMapBoundedBelowLattice[Int]
   checkAll("Domain#PartitionMap[Int]",  LatticePartialOrderLaws[Domain#PartitionMap[Int]].boundedBelowLatticePartialOrder)
   checkAll("Grp[Perm]",                 LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
   checkAll("Perm",                      PermutationActionLaws[Perm].permutation)

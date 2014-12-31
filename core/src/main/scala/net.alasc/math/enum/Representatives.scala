@@ -7,7 +7,7 @@ import net.alasc.math.guide.BaseGuideLex
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, Action, Order}
+import spire.algebra.{Eq, RightPartialAction, Order}
 import spire.syntax.group._
 import spire.syntax.action._
 
@@ -29,7 +29,7 @@ trait Representatives[T, G] {
   implicit def finiteGroupG: FiniteGroup[G] = grp.algorithms.algebra
 
   /** Permutation action of `G` on sequence-like `T`. */
-  implicit def actionTG: Action[T, G]
+  implicit def actionTG: RightPartialAction[T, G]
 
   /** Length of the sequence `t`. */
   def tLength: Int
@@ -65,7 +65,7 @@ object Representatives {
       val t = givenT
       val grp = givenGrp
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
-      implicit val actionTG: Action[Seq[A], P] = Action.forced[Seq[A], P](net.alasc.std.seq.SeqPermutationAction[Seq, A, P])
+      implicit val actionTG: RightPartialAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
     } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
       lazy val chainInRepresentation = grp.chain(representation)
@@ -77,7 +77,7 @@ object Representatives {
       implicit val finiteGroup = givenGrp.algebra
       implicit val permAction: FaithfulPermutationAction[P] = givenRep.action
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
-      implicit val actionTG: Action[Seq[A], P] = Action.forced[Seq[A], P](net.alasc.std.seq.SeqPermutationAction[Seq, A, P])
+      implicit val actionTG: RightPartialAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenRep
     } with RepresentativesIterableUnordered[Seq[A], P] with RepresentativesSearchable[Seq[A], P] with SequencesHash[Seq[A], A, P] {
       lazy val chainInRepresentation = grp.chain(representation)
@@ -93,7 +93,7 @@ object RepresentativesOrdered {
       implicit val classTagG = givenGrp.gClassTag
       implicit val orderA: Order[A] = givenOrderA
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
-      implicit val actionTG: Action[Seq[A], P] = Action.forced[Seq[A], P](net.alasc.std.seq.SeqPermutationAction[Seq, A, P])
+      implicit val actionTG: RightPartialAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenPR.forSize(t.size)
     } with SequencesOrdered[Seq[A], A, P] with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P]
   def apply[A, P](givenT: Seq[A], givenGrp: Grp[P], givenRep: Representation[P])(implicit givenOrderA: Order[A]) =
@@ -105,7 +105,7 @@ object RepresentativesOrdered {
       implicit val orderA: Order[A] = givenOrderA
       implicit val permAction: FaithfulPermutationAction[P] = givenRep.action
       implicit val sequenceTA: Sequence[Seq[A], A] = net.alasc.std.seq.SeqSequence[Seq, A]
-      implicit val actionTG: Action[Seq[A], P] = Action.forced[Seq[A], P](net.alasc.std.seq.SeqPermutationAction[Seq, A, P])
+      implicit val actionTG: RightPartialAction[Seq[A], P] = net.alasc.std.seq.SeqPermutationAction[Seq, A, P]
       val representation = givenRep
     } with SequencesOrdered[Seq[A], A, P] with RepresentativesSeq[Seq[A], P] with RepresentativesHead[Seq[A], P]
 }

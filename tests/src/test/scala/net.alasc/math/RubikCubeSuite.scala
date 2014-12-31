@@ -32,6 +32,6 @@ class RubikCubeSuite extends FunSuite with Matchers {
       4,4,4,4,4,4,4,4,
       5,5,5,5,5,5,5,5,
       6,6,6,6,6,6,6,6)
-    chain.generators.exists { g => (colors <|+|! g).sameElements(colors) } shouldBe false
+    chain.generators.exists { g => (colors <|+| g).sameElements(colors) } shouldBe false
   }
 }

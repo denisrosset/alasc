@@ -14,6 +14,7 @@ import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.util._
@@ -23,9 +24,9 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
   self =>
   type SR = scalarReps.R
   def rClassTag = classTag[R]
-  def tryCast(genR: Representation[SG]): RefOption[R] = genR match {
-    case r: R if r.representations eq self => RefSome(r)
-    case _ => RefNone
+  def tryCast(genR: Representation[SG]): Nullbox[R] = genR match {
+    case r: R if r.representations eq self => Nullbox(r)
+    case _ => Nullbox.empty[R]
   }
   def get(generators: Iterable[SG]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.size) }
@@ -172,30 +173,30 @@ class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
   def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
 }
 
-class SeqPermutationAction[SA <: AnyRef with SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
-  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
+  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends NullboxPartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.action._
 
-  override def isActlDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
-  override def isActrDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
+  override def actlIsDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
+  override def actrIsDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
 
-  def partialActl(p: P, s: SA): Option[SA] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) None else {
+  def partialActl(p: P, s: SA): Nullbox[SA] =
+    if (p.supportMax.getOrElseFast(-1) >= s.length) Nullbox.empty[SA] else {
       val b = cbf()
       b.sizeHint(s)
       for (i <- 0 until s.length)
         b += s(i <|+| p)
-      Some(b.result)
+      Nullbox(b.result)
     }
 
-  def partialActr(s: SA, p: P): Option[SA] = partialActl(p.inverse, s)
+  def partialActr(s: SA, p: P): Nullbox[SA] = partialActl(p.inverse, s)
 }
 
 trait SeqInstances0 {
   implicit def SeqSequence[CC[A] <: SeqLike[A, CC[A]], A]: Sequence[CC[A], A] = new SeqSequence[CC[A], A]
-  implicit def SeqPermutationAction[CC[A] <: AnyRef with SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
+  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
     implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): PartialAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
   implicit def seqFiniteGroup[CC[G] <: SeqLike[G, CC[G]], G](
     implicit scalar: FiniteGroup[G], cbf: CanBuildFrom[Nothing, G, CC[G]]): FiniteGroup[CC[G]] = new SeqFiniteGroup[CC[G], G]

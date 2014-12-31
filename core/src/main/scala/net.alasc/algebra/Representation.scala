@@ -6,9 +6,9 @@ import scala.reflect.{ClassTag, classTag}
 import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.syntax.lattice._
+import spire.util.Nullbox
 
 import net.alasc.syntax.permutationAction._
-import net.alasc.util._
 
 /** Faithful permutation representation of a finite group on the domain 0 ... n - 1, where
   * n is the size of the representation.
@@ -18,7 +18,7 @@ import net.alasc.util._
   * used to check the validity of the representation of a given element. The usage of `action` on
   * invalid elements produces undefined results.
   */
-trait Representation[G] extends AnyRef {
+trait Representation[G] {
   self =>
   /** Size of the representation, constraining the support of any permutation in 0 ... n-1. */
   def size: Int
@@ -48,7 +48,7 @@ trait Representations[G] {
   type R <: Representation[G]
 
   /** Extraction of a specialized representation. */
-  def tryCast(r: Representation[G]): RefOption[R]
+  def tryCast(r: Representation[G]): Nullbox[R]
 
   def rClassTag: ClassTag[R]
   def get(generators: Iterable[G]): R
@@ -59,7 +59,7 @@ trait Representations[G] {
 
   // Members with default implementation
   object Typed {
-    def unapply(r: Representation[G]): RefOption[R] = tryCast(r)
+    def unapply(r: Representation[G]): Nullbox[R] = tryCast(r)
   }
 
   /** If `r` is a representation of the correct type, returns `r`, or creates a new representation from
@@ -137,8 +137,8 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
     R(rec(1, generators.iterator))
   }
   def tryCast(r: Representation[P]) = r match {
-    case typed: R => RefSome(typed)
-    case _ => RefNone
+    case typed: R => Nullbox(typed)
+    case _ => Nullbox.empty[R]
   }
   implicit object partialOrder extends PartialOrder[R] {
     def partialCompare(x: R, y: R) = (x.size - y.size).signum.toDouble

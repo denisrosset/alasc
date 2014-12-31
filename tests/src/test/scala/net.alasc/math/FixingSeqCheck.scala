@@ -29,11 +29,11 @@ object FixingSeqCheck extends Properties("FixingCheck") {
     
   property("FixingSeq") = Prop.forAllNoShrink(genSeq) { seq =>
     val subgroup = FixingSeq[Perm](seq)
-    subgroup.generators.forall( g => (seq <|+|! g).sameElements(seq) )
+    subgroup.generators.forall( g => (seq <|+| g).sameElements(seq) )
   }
 
   property("FixingSeq.contains") = Prop.forAllNoShrink(genSeqAndPerm) { case (seq, g) =>
       val grp1 = Grp(FixingSeq[Perm](seq).generators.toSeq:_*)
-      (seq <|+|! g).sameElements(seq) == grp1.contains(g)
+      (seq <|+| g).sameElements(seq) == grp1.contains(g)
   }
 }

@@ -16,6 +16,7 @@ import spire.syntax.partialOrder._
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.lattice._
+import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
@@ -30,9 +31,9 @@ import net.alasc.util._
   */
 class InhWrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], val aAlgebra: FiniteGroup[A], val hAlgebra: Permutation[H]) extends InhWrRepresentations[A, H] {
   self =>
-  def tryCast(genR: Representation[Wr[A, H]]): RefOption[R] = genR match {
-    case r: R if r.representations eq self => RefSome(r)
-    case _ => RefNone
+  def tryCast(genR: Representation[Wr[A, H]]): Nullbox[R] = genR match {
+    case r: R if r.representations eq self => Nullbox(r)
+    case _ => Nullbox.empty[R]
   }
   object R extends RBuilder
   implicit def rClassTag: ClassTag[R] = classTag[R]
