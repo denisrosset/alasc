@@ -13,7 +13,7 @@ import net.alasc.math.Grp
 import net.alasc.util._
 
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
-  def check(): Checked = ev.check(lhs)
+  def check(): Check.Checked = ev.check(lhs)
 }
 
 final class MonoidOps[A](lhs: TraversableOnce[A])(implicit ev: Monoid[A]) {

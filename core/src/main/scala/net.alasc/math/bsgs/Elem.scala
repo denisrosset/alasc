@@ -365,6 +365,8 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
 }
 
 final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[P]) extends Check[Chain[P]] {
+  import Check._
+
   def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {
     case node: Node[P] =>
       implicit def action = node.action
@@ -372,8 +374,8 @@ final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[
       val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
       val reconstructedOrbits = reconstructedChain.start.next.nodesNext.map(_.orbitSize)
       val originalOrbits = node.nodesNext.map(_.orbitSize)
-      Checked.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")
-    case _ => CSuccess
+      Check.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")
+    case _ => Check.success
   }
   def checkOwnGenerators(chain: Chain[P]): Checked = {
     val baseSoFar = mutable.ArrayBuffer.empty[Int]
@@ -381,16 +383,16 @@ final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[
       case node: Node[P] =>
         implicit def action = node.action
         val fixingBase =
-          node.ownGenerators.map(g => baseSoFar.map(b => Checked.equals(b <|+| g, b, s"Generator $g should fix")).combine).combine
+          node.ownGenerators.map(g => baseSoFar.map(b => Check.equals(b <|+| g, b, s"Generator $g should fix")).combine).combine
         val ownGeneratorsMoveBase =
-          node.ownGenerators.map(g => Checked.notEquals(node.beta <|+| g, node.beta, s"Generator $g should not fix")).combine
+          node.ownGenerators.map(g => Check.notEquals(node.beta <|+| g, node.beta, s"Generator $g should not fix")).combine
         baseSoFar += node.beta
         val immutableOk =
-          if (checkImmutable) Checked.equals(node.isImmutable, true, "All nodes after immutable node should be immutable") else CSuccess
+          if (checkImmutable) Check.equals(node.isImmutable, true, "All nodes after immutable node should be immutable") else Check.success
         rec(currentChecked |+| fixingBase |+| ownGeneratorsMoveBase |+| immutableOk, node.next, node.isImmutable)
       case _: Term[P] => currentChecked
     }
-    rec(CSuccess, chain, false)
+    rec(Check.success, chain, false)
   }
   def check(chain: Chain[P]): Checked =
     checkBaseAndStrongGeneratingSet(chain) |+| checkOwnGenerators(chain)

@@ -8,6 +8,7 @@ object MyBuild extends Build {
   lazy val debox = "org.spire-math" %% "debox" % "0.7.0-SNAPSHOT"
   lazy val spire = "org.spire-math" %% "spire" % "0.9.1-SNAPSHOT"
   lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.1-SNAPSHOT"
+  lazy val scalaz = "org.scalaz" %% "scalaz-core" % "7.1.0"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
@@ -32,7 +33,8 @@ object MyBuild extends Build {
 
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      machinist
+      machinist,
+      scalaz
     ),
 
     scalacOptions ++= Seq(
