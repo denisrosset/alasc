@@ -29,9 +29,9 @@ final class Domain private (val size: Int) { domainSelf =>
     * @param indexArray Index of the block in which `i` is contained
     * @param startArray Minimal element of the `k`-th block
     */
-  final class Partition(linkArray: Array[Int],
-    indexArray: Array[Int],
-    startArray: Array[Int]) {
+  final class Partition(val linkArray: Array[Int],
+    val indexArray: Array[Int],
+    val startArray: Array[Int]) {
 
     /** Returns the minimal representative of the block in which `k` is contained.
       * Must have `0 <= k < size`.
@@ -40,6 +40,10 @@ final class Domain private (val size: Int) { domainSelf =>
 
     override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
     override def hashCode = scala.util.hashing.MurmurHash3.arrayHash(indexArray)
+    override def equals(other: Any) = other match {
+      case that: Domain#Partition => this.indexArray.sameElements(that.indexArray)
+      case _ => false
+    }
 
     val domain: Domain = Domain.this
     def size: Int = Domain.this.size
@@ -136,8 +140,9 @@ final class Domain private (val size: Int) { domainSelf =>
   }
   object Partition {
     def apply(sets: Set[Int]*): Partition = {
-      val cumSizes = sets.map(_.size).reduce(_+_)
+      val cumSizes = (0 /: sets.map(_.size))(_+_)
       val setOfSets = sets.flatten.toSet
+      if (setOfSets.isEmpty) return fromSortedBlocks(Seq.empty[Set[Int]])
       val minP = setOfSets.min
       val maxP = setOfSets.max
       assert(setOfSets.size == cumSizes)
@@ -261,6 +266,11 @@ final class Domain private (val size: Int) { domainSelf =>
     /** Returns the size of the underlying domain. */
     def size = Domain.this.size
     val domain = Domain.this
+    def blocks: Seq[(Set[Int], V)] = partition.blocks.map(block => (block -> PartitionMap.this(block)))
+    override def equals(other: Any) = other match {
+      case that: Domain#PartitionMap[_] => (this.partition == that.partition) && (this.partition.blocks.forall(block => this(block) == that(block)))
+      case _ => false
+    }
     override def hashCode = scala.util.hashing.MurmurHash3.unorderedHash(partition.blocks zip values)
     override def toString = partition.blocks.map( block => block.toString + " -> " + apply(block).toString).mkString("PartitionMap(", ", ", ")")
     def getOrElse(i: Int, defaultValue: => V) =
@@ -504,7 +514,7 @@ object Domain extends UniquenessCache[Int, Domain] {
 
   val Partition = new PartitionT {
     def apply(sets: Set[Int]*): Domain#Partition = {
-      val domain = Domain(sets.map(_.max).reduce(_.max(_)) + 1)
+      val domain = Domain((0 /: sets) { case (mx, set) => mx.max(set.max + 1) } )
       domain.Partition(sets:_*)
     }
     def fromSeq(seq: Seq[Any]): Domain#Partition = Domain(seq.size).Partition.fromSeq(seq)
@@ -520,7 +530,7 @@ object Domain extends UniquenessCache[Int, Domain] {
 
   val PartitionMap = new PartitionMapT {
     def apply[V : ClassTag](blocks: (Set[Int], V)*) = {
-      val domain = Domain(blocks.map(_._1.max).reduce(_.max(_)) + 1)
+      val domain = Domain((0 /: blocks) { case (acc, block) => acc.max(block._1.max + 1) })
       domain.PartitionMap(blocks:_*)
     }
     def empty[V : ClassTag]: Domain#PartitionMap[V] = new Domain.empty.PartitionMap(Domain.Partition.empty, new Array[V](0))

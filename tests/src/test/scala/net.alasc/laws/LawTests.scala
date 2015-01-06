@@ -34,15 +34,35 @@ class LawTests extends FunSuite with Discipline {
     def one = Int.MaxValue
   }
   implicit def partitionMapArbitrary[V : Arbitrary : ClassTag]: Arbitrary[domain.PartitionMap[V]] = PartitionMapArbitrary[V](domain)
-  checkAll("Partition",                 LatticeLaws[domain.Partition].boundedLattice)
-  checkAll("Partition",                 LatticeLaws[Domain#Partition].boundedBelowLattice)
+  checkAll("domain.Partition",                 LatticeLaws[domain.Partition].boundedLattice)
+  checkAll("Domain#Partition",                 LatticeLaws[Domain#Partition].boundedBelowLattice)
+
+  implicit object DomainPartitionCloner extends Cloner[Domain#Partition] {
+    def makeClone(p: Domain#Partition): Domain#Partition = Domain.Partition(p.blocks: _*)
+  }
+  implicit object DomainPartitionTwoInstances extends TwoInstances[Domain#Partition] {
+    def first = Domain.Partition.fromSeq(Seq(0,0,1))
+    def second = Domain.Partition.fromSeq(Seq(0,1,1))
+  }
+
+  checkAll("Domain#Partition",          AnyRefLaws[Domain#Partition]._anyRef)
   checkAll("domain.PartitionMap[Int]",  LatticeLaws[domain.PartitionMap[Int]].boundedLattice)
   implicit def partitionMapLattice = Domain.PartitionMapBoundedBelowLattice[Int]
+  implicit def DomainPartitionMapCloner[V: ClassTag]: Cloner[Domain#PartitionMap[V]] =
+    new Cloner[Domain#PartitionMap[V]] {
+      def makeClone(pm: Domain#PartitionMap[V]) = Domain.PartitionMap(pm.blocks: _*)
+    }
+  implicit object PartitionMapIntTwoInstances extends TwoInstances[Domain#PartitionMap[Int]] {
+    def first = Domain.PartitionMap(Set(0) -> 0, Set(1) -> 1)
+    def second = Domain.PartitionMap(Set(0, 1) -> 0)
+  }
+  checkAll("Domain#PartitionMap[Int]",  AnyRefLaws[Domain#PartitionMap[Int]]._anyRef)
   checkAll("Domain#PartitionMap[Int]",  LatticePartialOrderLaws[Domain#PartitionMap[Int]].boundedBelowLatticePartialOrder)
   checkAll("Grp[Perm]",                 LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
   checkAll("Perm",                      PermutationActionLaws[Perm].permutation)
   checkAll("Cycles",                    PermutationActionLaws[Cycles].permutation)
 
+  /*
   {
     implicit def action = {
       val wrir = new WrImprimitiveRepresentations[Perm, Perm]
@@ -89,5 +109,6 @@ class LawTests extends FunSuite with Discipline {
     checkAll("InhWrImprimitiveRepresentations[Perm, Perm].lattice",
       LatticePartialOrderLaws[wrir.R].boundedBelowLatticePartialOrder)
   }
+   */
   // checkAll Hash Partition / PartitionMap
 }
