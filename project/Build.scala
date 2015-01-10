@@ -116,6 +116,7 @@ object MyBuild extends Build {
     libraryDependencies ++= Seq(
       discipline,
       scalaCheck,
+      scalaTest,
       spireScalaCheckBindings
     )
   )

@@ -14,18 +14,13 @@ import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.all._
 import net.alasc.laws._
+import generators._
 
 object RepresentativesCheck extends Properties("RepresentativesCheck") {
-  import AlascArbitrary._
-  def genGrp(sz: Int) = for {
-    gen1 <- PermutationGen[Perm](sz)
-    gen2 <- PermutationGen[Perm](sz)
-    gen3 <- PermutationGen[Perm](sz)
-  } yield Grp(gen1, gen2, gen3)
   def genSeqGrp = for {
     sz <- Gen.choose(1, 8)
     seq <- Gen.containerOfN[Seq, Int](sz, Gen.choose(0, 3))
-    grp <- genGrp(sz)
+    grp <- Grps.fromElements(Permutations.forSize[Perm](sz))
   } yield (seq, grp)
   property("All representatives are generated") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
       val bruteForceSet = grp.elements.iterator.map(g => seq <|+| g).toSet

@@ -5,13 +5,13 @@ import scala.reflect.ClassTag
 import spire.algebra._
 import spire.algebra.lattice._
 import spire.math._
-
 import spire.laws._
 
 import scala.{ specialized => spec }
 
 import org.typelevel.discipline.scalatest.Discipline
 import org.scalacheck.{Gen, Arbitrary}
+  import spire.std.int.IntAlgebra
 
 import org.scalatest.FunSuite
 
@@ -19,66 +19,61 @@ import net.alasc.algebra._
 import net.alasc.math._
 import net.alasc.math.wreath._
 
-class LawTests extends FunSuite with Discipline {
+import generators._
 
-  import AlascArbitrary._
+class LawTests extends FunSuite with NestedDiscipline {
+  implicit def intArbitrary: Arbitrary[Int] =
+    Arbitrary(Gen.choose(Int.MinValue, Int.MaxValue))
+  import Domains.{arbPartition, arbPartitionMap, arbDomain}
 
-  implicit def intArbitrary: Arbitrary[Int] = Arbitrary(Gen.choose(0, 100))
-
-  implicit def basicAlgorithms: net.alasc.math.bsgs.algorithms.BasicAlgorithms[Perm] = Grp.defaultAlgorithms[Perm]
-  val domain = Domain(32)
-  implicit def domainArbitrary: Arbitrary[domain.Partition] = PartitionArbitrary(domain)
-  implicit def intOrder: Order[Int] = spire.std.int.IntAlgebra
+  nestedCheckAll[Domain]("Domain.Partition", Domain(1)) { implicit domain =>
+    LatticeLaws[domain.Partition].boundedLattice
+  }
   implicit object intMinMaxLattice extends MinMaxLattice[Int] with BoundedLattice[Int]  {
     def zero = Int.MinValue
     def one = Int.MaxValue
   }
-  implicit def partitionMapArbitrary[V : Arbitrary : ClassTag]: Arbitrary[domain.PartitionMap[V]] = PartitionMapArbitrary[V](domain)
-  checkAll("domain.Partition",                 LatticeLaws[domain.Partition].boundedLattice)
-  checkAll("Domain#Partition",                 LatticeLaws[Domain#Partition].boundedBelowLattice)
-
-  implicit object DomainPartitionCloner extends Cloner[Domain#Partition] {
-    def makeClone(p: Domain#Partition): Domain#Partition = Domain.Partition(p.blocks: _*)
-  }
-  implicit object DomainPartitionTwoInstances extends TwoInstances[Domain#Partition] {
-    def first = Domain.Partition.fromSeq(Seq(0,0,1))
-    def second = Domain.Partition.fromSeq(Seq(0,1,1))
+  nestedCheckAll[Domain]("Domain.PartitionMap[Int]", Domain(1)) { implicit domain =>
+    LatticeLaws[domain.PartitionMap[Int]].boundedLattice
   }
 
-  checkAll("Domain#Partition",          AnyRefLaws[Domain#Partition]._anyRef)
-  checkAll("domain.PartitionMap[Int]",  LatticeLaws[domain.PartitionMap[Int]].boundedLattice)
-  implicit def partitionMapLattice = Domain.PartitionMapBoundedBelowLattice[Int]
-  implicit def DomainPartitionMapCloner[V: ClassTag]: Cloner[Domain#PartitionMap[V]] =
-    new Cloner[Domain#PartitionMap[V]] {
-      def makeClone(pm: Domain#PartitionMap[V]) = Domain.PartitionMap(pm.blocks: _*)
+  // TODO use implicit trait priority
+  implicit def basicAlgorithms: net.alasc.math.bsgs.algorithms.BasicAlgorithms[Perm] = Grp.defaultAlgorithms[Perm]
+  import Permutations.{arbPermutation, arbDom}
+  import Grps.arbGrp
+  import Wrs.arbWr
+
+  checkAll("Grp[Perm]", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
+  checkAll("Perm",      PermutationActionLaws[Perm].permutation)
+  checkAll("Cycles",    PermutationActionLaws[Cycles].permutation)
+
+  {
+    import Domains.Projections.{arbPartition, arbPartitionMap}
+    import Domains.Projections._
+    implicit def partitionMapLattice = Domain.PartitionMapBoundedBelowLattice[Int]
+
+    checkAll("Domain#Partition", AnyRefLaws[Domain#Partition]._eq)
+    checkAll("Domain#PartitionMap[Int]", AnyRefLaws[Domain#PartitionMap[Int]]._eq)
+    checkAll("Domain#PartitionMap[Int]",  LatticePartialOrderLaws[Domain#PartitionMap[Int]].boundedBelowLatticePartialOrder)
+  }
+
+  nestedCheckAll[WrSize]("Wr[Perm,Perm] (imprimitive)", WrSize(1, 1)) { implicit wrSize =>
+    implicit def action = wrSize.imprimitiveRepresentation[Perm, Perm].action
+    PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
+  }
+
+  {
+    implicit def arbWrSize = WrSize.arbWrSizeForPrimitive
+    nestedCheckAll[WrSize]("Wr[Perm,Perm] (primitive)", WrSize(2, 2)) { implicit wrSize =>
+      implicit def action = wrSize.primitiveRepresentation[Perm, Perm].action
+      PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
     }
-  implicit object PartitionMapIntTwoInstances extends TwoInstances[Domain#PartitionMap[Int]] {
-    def first = Domain.PartitionMap(Set(0) -> 0, Set(1) -> 1)
-    def second = Domain.PartitionMap(Set(0, 1) -> 0)
   }
-  checkAll("Domain#PartitionMap[Int]",  AnyRefLaws[Domain#PartitionMap[Int]]._anyRef)
-  checkAll("Domain#PartitionMap[Int]",  LatticePartialOrderLaws[Domain#PartitionMap[Int]].boundedBelowLatticePartialOrder)
-  checkAll("Grp[Perm]",                 LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
-  checkAll("Perm",                      PermutationActionLaws[Perm].permutation)
-  checkAll("Cycles",                    PermutationActionLaws[Cycles].permutation)
+
+ 
+/*
 
   /*
-  {
-    implicit def action = {
-      val wrir = new WrImprimitiveRepresentations[Perm, Perm]
-      val permR = wrir.aReps.get(Iterable(Perm(0, wrPermSize - 1)))
-      wrir.R(wrSize, permR).action
-    }
-    checkAll("Wr[Perm, Perm] (imprimitive)",          PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction)
-  }
-  {
-    implicit def action = {
-      val wrir = new WrPrimitiveRepresentations[Perm, Perm]
-      val permR = wrir.aReps.get(Iterable(Perm(0, wrPermSize - 1)))
-      wrir.R(wrSize, permR).action
-    }
-    checkAll("Wr[Perm, Perm] (primitive)",            PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction)
-  }
   {
     implicit def action = {
       val wrir = new InhWrImprimitiveRepresentations[Perm, Perm]
@@ -110,5 +105,5 @@ class LawTests extends FunSuite with Discipline {
       LatticePartialOrderLaws[wrir.R].boundedBelowLatticePartialOrder)
   }
    */
-  // checkAll Hash Partition / PartitionMap
+ */
 }
