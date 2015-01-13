@@ -19,8 +19,6 @@ import net.alasc.algebra._
 import net.alasc.math._
 import net.alasc.math.wreath._
 
-import generators._
-
 class LawTests extends FunSuite with NestedDiscipline {
   implicit def intArbitrary: Arbitrary[Int] =
     Arbitrary(Gen.choose(Int.MinValue, Int.MaxValue))
@@ -70,9 +68,7 @@ class LawTests extends FunSuite with NestedDiscipline {
     }
   }
 
- 
 /*
-
   /*
   {
     implicit def action = {

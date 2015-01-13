@@ -13,7 +13,6 @@ import algorithms._
 import net.alasc.std.seq._
 import net.alasc.syntax.all._
 import net.alasc.laws._
-import generators._
 
 object FixingSeqCheck extends Properties("FixingCheck") {
 

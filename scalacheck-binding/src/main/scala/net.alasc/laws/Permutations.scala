@@ -1,5 +1,4 @@
 package net.alasc.laws
-package generators
 
 import scala.reflect.ClassTag
 import scala.util.Random

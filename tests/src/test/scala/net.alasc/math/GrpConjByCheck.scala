@@ -11,7 +11,6 @@ import spire.syntax.group._
 import net.alasc.algebra._
 import net.alasc.syntax.finiteGroup._
 import net.alasc.laws._
-import generators._
 
 class GrpConjByCheck extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions {
 

@@ -1,5 +1,4 @@
 package net.alasc.laws
-package generators
 
 import scala.reflect.ClassTag
 import scala.util.Random
@@ -16,6 +15,8 @@ import net.alasc.math._
 import net.alasc.syntax.permutationAction._
 
 object Grps {
+  def genFromGrp[P](grp: Grp[P]): Gen[P] = Gen.parameterized { params => grp.randomElement(params.rng) }
+
   def fromElements[G:FiniteGroup:Representations:ClassTag](elements: Gen[G]): Gen[Grp[G]] =
     for {
       n <- Gen.choose(2, 4)
