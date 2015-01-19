@@ -29,7 +29,7 @@ trait SubgroupSearch[P] {
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  // TODO: consider returning array of additional domain points, not including the base point itself
+  // TODO: consider returning array of additional domain points, not including the base point itself, or could even be changed to bitset, because the position of the base point is not important anymore 
   /** Finds for each base point the additional domain points that are stabilized (i.e. are
     * not moved by the next subgroup in the stabilizer chain. The first element of each group
     * is the original base point.

@@ -49,7 +49,7 @@ final class Domain private (val size: Int) { domainSelf =>
     def size: Int = Domain.this.size
 
     /** Returns the number of blocks. */
-    def numBlocks = startArray.length
+    def nBlocks = startArray.length
 
     /** Returns the sequence of blocks, the block size increasing. */
     def sizeIncreasing: Seq[Set[Int]] = blocks.sortBy(b => (b.size, b.min))
@@ -119,7 +119,7 @@ final class Domain private (val size: Int) { domainSelf =>
       if (newDomain.size == size)
         Nullbox(Partition.this.asInstanceOf[newDomain.Partition])
       else if (newDomain.size > size)
-        Nullbox(newDomain.Partition.fromSeq(indexArray ++ (numBlocks until numBlocks + (newDomain.size - size))))
+        Nullbox(newDomain.Partition.fromSeq(indexArray ++ (nBlocks until nBlocks + (newDomain.size - size))))
       else { // newDomain.size < size
         for (k <- newDomain.size until size)
           if (blockFor(k).size > 1) return Nullbox.empty[newDomain.Partition]
@@ -247,9 +247,9 @@ final class Domain private (val size: Int) { domainSelf =>
       def partialCompare(x: Partition, y: Partition): Double = {
         assert(x.domain eq y.domain)
 
-        (x.numBlocks - y.numBlocks).signum match {
+        (x.nBlocks - y.nBlocks).signum match {
           case 0 =>
-            if (x.blocks.sameElements(y.blocks)) 0.0 else Double.NaN // TODO: can be optimized
+            if (x.blocks.sameElements(y.blocks)) 0.0 else Double.NaN
           case 1 => // x can be a refinement of y
             if (isRefinementOf(x, y)) -1.0 else Double.NaN
           case _ => // y can be a refinement of x
@@ -300,7 +300,7 @@ final class Domain private (val size: Int) { domainSelf =>
         Nullbox(this.asInstanceOf[newDomain.PartitionMap[V]])
       else if (newDomain.size > size) {
         val newPartition = partition.inDomain(newDomain).get
-        val newValues = values ++ Array.fill(newPartition.numBlocks - partition.numBlocks)(defaultValue)
+        val newValues = values ++ Array.fill(newPartition.nBlocks - partition.nBlocks)(defaultValue)
         Nullbox(new newDomain.PartitionMap(newPartition, newValues))
       } else // newSize < partition.size
         partition.inDomain(newDomain) match {
@@ -320,9 +320,9 @@ final class Domain private (val size: Int) { domainSelf =>
       tabulate(partition)(map(_))
     }
     def fill[V: ClassTag](partition: Partition)(elem: => V): PartitionMap[V] =
-      new PartitionMap(partition, Array.fill(partition.numBlocks)(elem))
+      new PartitionMap(partition, Array.fill(partition.nBlocks)(elem))
     def tabulate[V: ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap[V] =
-      new PartitionMap(partition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
+      new PartitionMap(partition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
     trait PartitionMapPartialOrder[V] extends Any with PartialOrder[PartitionMap[V]] {
       implicit def partialOrder: PartialOrder[V]
       override def lteqv(x: PartitionMap[V], y: PartitionMap[V]): Boolean = // x <= y ?
@@ -536,11 +536,11 @@ object Domain extends UniquenessCache[Int, Domain] {
     def empty[V : ClassTag]: Domain#PartitionMap[V] = new Domain.empty.PartitionMap(Domain.Partition.empty, new Array[V](0))
     def fill[V : ClassTag](partition: Domain#Partition)(elem: => V): Domain#PartitionMap[V] = {
       val partition.domain.Typed(typedPartition) = partition
-      new partition.domain.PartitionMap(typedPartition, Array.fill(partition.numBlocks)(elem))
+      new partition.domain.PartitionMap(typedPartition, Array.fill(partition.nBlocks)(elem))
     }
     def tabulate[V : ClassTag](partition: Domain#Partition)(f: Set[Int] => V): Domain#PartitionMap[V] = {
       val partition.domain.Typed(typedPartition) = partition
-      new partition.domain.PartitionMap(typedPartition, Array.tabulate(partition.numBlocks)(i => f(partition.blocks(i))))
+      new partition.domain.PartitionMap(typedPartition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
     }
   }
 

@@ -87,7 +87,6 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
     implicit action: FaithfulPermutationAction[P]): MutableChain[P] = {
     val mutableChain = incompleteChainWithGenerators(generators, givenBase)
     completeStrongGenerators(mutableChain)
-    // TODO removeRedundantGenerators(mutableChain)
     mutableChain
   }
 }

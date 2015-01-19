@@ -22,6 +22,11 @@ import net.alasc.util._
   *   by first elements.
   */
 class Cycles private[alasc](val seq: Seq[Cycle]) {
+  override def equals(other: Any) = other match {
+    case that: Cycles => Cycles.Algebra.eqv(this, that)
+    case _ => false
+  }
+  override def hashCode = seq.hashCode
   override def toString: String = "Cycles" + string
   def string: String = seq.map(_.string).mkString
   def stringUsing(symbols: Int => String): String =

@@ -27,11 +27,11 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
           mutableNode.foreachOrbit { k => easyPoints += (k <|+| conj.g) }
           val beta = iter.next(mutableNode.beta <|+| conj.g, easyPoints, k => mutableNode.isFixed(k <|+| conj.gInv))
           val alpha = beta <|+| conj.gInv
-          if (mutableNode.beta == alpha) // TODO: check conjugation of k
-            rec(mutableNode, mutablePrev, conj) // replace mutablePrev by mutableNode ?
+          if (mutableNode.beta == alpha)
+            rec(mutableNode, mutablePrev, conj)
           else if (mutableNode.inOrbit(alpha)) {
             val nextConj = mutableNode.uPair(alpha) |+| conj
-            rec(mutableNode, mutablePrev, nextConj)  // replace mutablePrev by mutableNode ?
+            rec(mutableNode, mutablePrev, nextConj)
           } else {
             val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
             rec(newNode, mutablePrev, conj)
@@ -45,11 +45,11 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
             rec(node, lastMutableStartOrNode, conj)
           else if (node.inOrbit(alpha)) {
             val nextConj = node.uPair(alpha) |+| conj
-            rec(node, lastMutableStartOrNode, nextConj)  // replace mutablePrev by mutableNode ?
+            rec(node, lastMutableStartOrNode, nextConj)
           } else {
             val mutablePrev = mutableChain.mutableStartOrNode(prev, lastMutableStartOrNode)
             val newNode = changeBasePointAfter(mutableChain, mutablePrev, alpha)
-            rec(newNode, mutablePrev, conj)  // replace mutablePrev by mutableNode ?
+            rec(newNode, mutablePrev, conj)
           }
         case term: Term[P] => conj
       }

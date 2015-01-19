@@ -13,7 +13,11 @@ import spire.syntax.signed._
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
-/** Represent a cyclic permutation of non-negative indices. */
+/** Represent a cyclic permutation of non-negative indices.
+  * 
+  * The cycle elements are presented such that the first
+  * element is the minimal one.
+  */
 class Cycle private[alasc](val seq: Seq[Int]) {
   require(seq.size > 1)
 
@@ -29,15 +33,11 @@ class Cycle private[alasc](val seq: Seq[Int]) {
     seq.map(symbols(_)).mkString("(", ",", ")")
 
   override def equals(any: Any) = any match {
-    // TODO: canEqual
-    case that: Cycle => 
-      implicit def order = implicitly[Order[Cycle]]
-      this === that
-     // case that: Perm => TODO
+    case that: Cycle => Cycle.Order.eqv(this, that)
     case _ => false
   }
 
-  // TODO override def hashCode: Int
+  override def hashCode: Int = seq.hashCode
 
   def +(n: Int): Cycle =
     if (n < 0) (this - (-n)) else {
@@ -94,9 +94,9 @@ class CycleOrder extends Order[Cycle] {
 }
 
 object Cycle {
-  implicit final val CyclePermutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
-  implicit final val CycleSigned: Signed[Cycle] = new CycleSigned
-  implicit final val CycleOrder: Order[Cycle] = new CycleOrder
+  implicit final val PermutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
+  implicit final val Signed: Signed[Cycle] = new CycleSigned
+  implicit final val Order: Order[Cycle] = new CycleOrder
 
   def id = new Cycle(Seq.empty[Int])
   def apply(seq: Int*): Cycle = seq match {

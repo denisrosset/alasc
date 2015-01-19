@@ -37,13 +37,15 @@ class LawTests extends FunSuite with NestedDiscipline {
 
   // TODO use implicit trait priority
   implicit def basicAlgorithms: net.alasc.math.bsgs.algorithms.BasicAlgorithms[Perm] = Grp.defaultAlgorithms[Perm]
-  import Permutations.{arbPermutation, arbDom}
+  import Permutations.{arbPermutation, arbDom, permutationInstances, permutationCloner}
   import Grps.arbGrp
   import Wrs.arbWr
 
   checkAll("Grp[Perm]", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
   checkAll("Perm",      PermutationActionLaws[Perm].permutation)
   checkAll("Cycles",    PermutationActionLaws[Cycles].permutation)
+  checkAll("Perm",      AnyRefLaws[Perm]._eq)
+  checkAll("Cycles",      AnyRefLaws[Perm]._eq)
 
   {
     import Domains.Projections.{arbPartition, arbPartitionMap}

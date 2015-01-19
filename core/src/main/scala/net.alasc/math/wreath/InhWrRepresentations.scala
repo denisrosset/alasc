@@ -41,7 +41,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
           false
         else {
           var i = 0
-          while (i < xSized.partition.numBlocks) {
+          while (i < xSized.partition.nBlocks) {
             val m = xSized.partition.blocks(i).min
             if (!aReps.partialOrder.lteqv(xSized.repForBlock(i), y.repForIndex(m)))
               return false
@@ -75,9 +75,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       val xPart = xSized.partition.inDomain(domain).get
       val yPart = ySized.partition.inDomain(domain).get
       val newPartition = xPart.join(yPart)
-      val newRepForBlock = new Array[aReps.R](newPartition.numBlocks)
+      val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
       var i = 0
-      while (i < newPartition.numBlocks) {
+      while (i < newPartition.nBlocks) {
         val block = newPartition.blocks(i)
         var newRep = aReps.lattice.zero
         var mutBlock = mutable.BitSet.empty ++= block
@@ -112,9 +112,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       val yPart = ySized.partition.inDomain(workDomain).get
       val workPartition = xPart meet yPart
       val newPartition = workPartition.inDomain(newDomain).get
-      val newRepForBlock = new Array[aReps.R](newPartition.numBlocks)
+      val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
       var i = 0
-      while (i < newPartition.numBlocks) {
+      while (i < newPartition.nBlocks) {
         val block = newPartition.blocks(i)
         var newRep: aReps.R = x.repForIndex(block.min)
         var mutBlock = mutable.BitSet.empty ++= block
@@ -142,7 +142,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
     def apply(wr: Wr[A, H]): R = {
       val size = wr.aSeq.size.max(wr.h.supportMax.getOrElseFast(0) + 1)
       val partition = Domain(size).Partition.fromPermutation(wr.h)
-      val repForBlock = new Array[aReps.R](partition.numBlocks)
+      val repForBlock = new Array[aReps.R](partition.nBlocks)
       var i = 0
       while (i < repForBlock.length) {
         val blockInSeq = partition.blocks(i).filter(_ < wr.aSeq.length)
@@ -202,10 +202,10 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       else if (newSize > partition.size) {
         val newPartition = partition.inDomain(Domain(newSize)).getOrElse(sys.error("Partition enlargement always succeeds."))
         val minR = aReps.lattice.zero
-        val newRepForBlock = new Array[aReps.R](newPartition.numBlocks)
-        Array.copy(repForBlock, 0, newRepForBlock, 0, partition.numBlocks)
-        var i = partition.numBlocks
-        while (i < newPartition.numBlocks) {
+        val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
+        Array.copy(repForBlock, 0, newRepForBlock, 0, partition.nBlocks)
+        var i = partition.nBlocks
+        while (i < newPartition.nBlocks) {
           newRepForBlock(i) = minR
           i += 1
         }
@@ -222,8 +222,8 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
             return Nullbox.empty[R]
           i += 1
         }
-        val newRepForBlock = new Array[aReps.R](newPartition.numBlocks)
-        Array.copy(repForBlock, 0, newRepForBlock, 0, newPartition.numBlocks)
+        val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
+        Array.copy(repForBlock, 0, newRepForBlock, 0, newPartition.nBlocks)
         Nullbox(R(newPartition, newRepForBlock))
       }
   }

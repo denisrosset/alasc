@@ -85,7 +85,6 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
           ind
         }
       def supportMaxElement = size
-      // TODO: optimized implementation of support??? stuff
       def support(w: Wr[A, H]) = {
         val bitset = mutable.BitSet.empty
         var i = 0
