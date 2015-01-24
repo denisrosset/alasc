@@ -7,7 +7,7 @@ import spire.syntax.eq._
   * 
   * Combines Eq and Group.
   */
-trait FiniteGroup[F] extends Group[F] with Eq[F] { self =>
+trait FiniteGroup[F] extends Any with Group[F] with Eq[F] { self =>
   /** Order of `f`, i.e. the number `k` such that
     * `f |+| f ... k times ... |+| f === id`
     */
