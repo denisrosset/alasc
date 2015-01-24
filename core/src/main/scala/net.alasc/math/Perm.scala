@@ -28,7 +28,8 @@ import perm._
   * Cycles is such a type.
   */
 sealed trait Perm extends Any {
-  override def toString = "Perm" + this.to[Cycles].string
+  override def toString =
+    if (isId) "Perm.id" else "Perm" + this.to[Cycles].string
 
   protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
@@ -53,6 +54,8 @@ sealed trait Perm extends Any {
 }
 
 object Perm extends PermCompanion {
+  def id = Algebra.id
+
   def supportMaxElement = PermArray.supportMaxElement
 
   implicit val Algebra: ShiftablePermutation[Perm] = new PermPermutation
