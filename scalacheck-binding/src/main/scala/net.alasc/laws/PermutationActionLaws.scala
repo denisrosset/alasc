@@ -38,23 +38,28 @@ trait PermutationActionLaws[A] extends Laws {
 
     "supportMin" → forAll((x: A) =>
       x.supportMin match {
-        case NNOption(sm) => x.support.min === sm
+        case NNOption(sm) => x.support.min === sm && ((sm <|+| x) != sm)
         case _ => x.support.isEmpty
       }
     ),
 
     "supportMax" → forAll((x: A) =>
       x.supportMax match {
-        case NNOption(sm) => x.support.max === sm
+        case NNOption(sm) => x.support.max === sm && ((sm <|+| x) != sm)
         case _ => x.support.isEmpty
       }
     ),
 
     "supportAny" → forAll((x: A) =>
       x.supportAny match {
-        case NNOption(sa) => x.inSupport(sa)
+        case NNOption(sa) => x.inSupport(sa) && ((sa <|+| x) != sa)
         case _ => x.support.isEmpty
       }
+    ),
+
+    "support" → forAll((x: A) =>
+      (0 to (x.supportMax.getOrElse(-1) + 10))
+        .filter(i => (i <|+| x) != i).toSet == x.support
     )
   )
 

@@ -11,17 +11,32 @@ import scala.{ specialized => spec }
 
 import org.typelevel.discipline.scalatest.Discipline
 import org.scalacheck.{Gen, Arbitrary}
-  import spire.std.int.IntAlgebra
+import spire.std.int.IntAlgebra
 
 import org.scalatest.FunSuite
 
 import net.alasc.algebra._
 import net.alasc.math._
 import net.alasc.math.wreath._
+import net.alasc.std.product._
 
 class LawTests extends FunSuite with NestedDiscipline {
   implicit def intArbitrary: Arbitrary[Int] =
     Arbitrary(Gen.choose(Int.MinValue, Int.MaxValue))
+
+  {
+    import Permutations.arbDom
+    implicit def permTupleArbitrary: Arbitrary[(Perm, Perm)] =
+      Arbitrary( for {
+        g1 <- Permutations.forSize[Perm](16)
+        g2 <- Permutations.forSize[Perm](5)
+      } yield (g1, g2) )
+
+    implicit def permPermAction: FaithfulPermutationAction[(Perm, Perm)] = implicitly[Representations[(Perm, Perm)]].get(Seq((Perm(0, 15), Perm(0, 4)))).action
+
+    checkAll("(Perm, Perm)",      PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
+  }
+
   import Domains.{arbPartition, arbPartitionMap, arbDomain}
 
   nestedCheckAll[Domain]("Domain.Partition", Domain(1)) { implicit domain =>
