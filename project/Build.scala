@@ -26,7 +26,7 @@ object MyBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
     organization := "net.alasc",
 
-    scalaVersion := "2.11.4",
+    scalaVersion := "2.11.5",
 
     licenses := Seq("BSD-style" -> url("http://opensource.org/licenses/MIT")),
     homepage := Some(url("https://github.com/denisrosset/alasc")),
