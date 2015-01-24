@@ -1,3 +1,5 @@
 package net.alasc.std
 
-trait AnyInstances extends SeqInstances
+trait AnyInstances extends
+    SeqInstances with
+    ProductInstances

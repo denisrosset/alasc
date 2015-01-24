@@ -30,7 +30,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
   implicit def aAlgebra: FiniteGroup[A]
   implicit def hAlgebra: Permutation[H]
   type AR = aReps.R
-  implicit def aRepsRClassTag: ClassTag[aReps.R] = aReps.rClassTag
+  implicit def aRepsRClassTag: ClassTag[aReps.R] = aReps.RClassTag
   implicit object partialOrder extends PartialOrder[R] {
     override def lteqv(x: R, y: R): Boolean = // x <= y ?
       if (y.partition.size < x.partition.size) false else {

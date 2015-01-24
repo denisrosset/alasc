@@ -24,11 +24,7 @@ import net.alasc.util._
 class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
   self =>
   type AR = aReps.R
-  def rClassTag = classTag[R]
-  def tryCast(genR: Representation[Wr[A, H]]): Nullbox[R] = genR match {
-    case r: R if r.representations eq self => Nullbox(r)
-    case _ => Nullbox.empty[R]
-  }
+  val RClassTag = classTag[R]
   def get(generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }
     val aRep = aReps.get(generators.flatMap(_.aSeq))

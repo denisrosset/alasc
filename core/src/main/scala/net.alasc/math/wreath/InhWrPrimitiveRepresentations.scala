@@ -31,12 +31,8 @@ import net.alasc.util._
   */
 class InhWrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], val aAlgebra: FiniteGroup[A], val hAlgebra: Permutation[H]) extends InhWrRepresentations[A, H] {
   self =>
-  def tryCast(genR: Representation[Wr[A, H]]): Nullbox[R] = genR match {
-    case r: R if r.representations eq self => Nullbox(r)
-    case _ => Nullbox.empty[R]
-  }
   object R extends RBuilder
-  implicit def rClassTag: ClassTag[R] = classTag[R]
+  implicit val RClassTag: ClassTag[R] = classTag[R]
   def get(generators: Iterable[Wr[A, H]]) =
     if (generators.isEmpty)
       lattice.zero

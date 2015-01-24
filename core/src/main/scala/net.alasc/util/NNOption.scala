@@ -57,6 +57,15 @@ class NNOption(val i: Int) extends AnyVal { lhs =>
     if (i < 0) rhs
     else if (rhs.i < 0) this
     else NNSome(lhs.i.max(rhs.i))
+
+  final def mapInt(f: Int => Int): NNOption =
+    if (isEmpty) this else new NNOption(f(i))
+
+  final def flatMapInt(f: Int => NNOption): NNOption =
+    if (isEmpty) this else f(i)
+
+  final def orElseInt(alt: => NNOption): NNOption =
+    if (nonEmpty) this else alt
 }
 
 object NNOption {
