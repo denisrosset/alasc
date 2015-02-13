@@ -13,9 +13,11 @@ import spire.syntax.eq._
 import net.alasc.algebra._
 import net.alasc.util._
 
+import debox.external._
+
 final class MutableNodeExplicit[P](
   var beta: Int,
-  var transversal: debox.spkey.Map[Int, InversePair[P]],
+  var transversal: SpecKeyMap[Int, InversePair[P]],
   var ownGeneratorsPairs: mutable.ArrayBuffer[InversePair[P]],
   var prev: MutableStartOrNode[P] = null,
   var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
@@ -200,7 +202,7 @@ final class MutableNodeExplicit[P](
 
   protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P]) = {
     beta = beta <|+| ip.g
-    val newTransversal = debox.spkey.Map.empty[Int, InversePair[P]]
+    val newTransversal = SpecKeyMap.empty[Int, InversePair[P]]
     transversal.foreachKey { k =>
       val newG: P = ip.gInv |+| transversal(k).g |+| ip.g
       newTransversal.update(k <|+| ip.g, InversePair(newG, newG.inverse))
@@ -219,12 +221,12 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
     case mne: MutableNodeExplicit[P] =>
       new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.ownGeneratorsPairs.clone)(mne.action)
     case _ =>
-      val newTransversal = debox.spkey.Map.fromIterable[Int, InversePair[P]](node.iterable)
+      val newTransversal = SpecKeyMap.fromIterable[Int, InversePair[P]](node.iterable)
       val newOwnGeneratorsPairs = mutable.ArrayBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
   }
   def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P]) =
     new MutableNodeExplicit(beta,
-      debox.spkey.Map(beta -> InversePair(algebra.id, algebra.id)),
+      SpecKeyMap(beta -> InversePair(algebra.id, algebra.id)),
       mutable.ArrayBuffer.empty[InversePair[P]])
 }

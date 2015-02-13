@@ -11,7 +11,7 @@ import spire.algebra.{Eq, Action, Order}
 import spire.math.ULong
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.syntax.sequence._
@@ -19,6 +19,8 @@ import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 import bsgs._
+
+import debox.external._
 
 trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.big.IndexedSeq[Representative[T, G]] {
   self =>
@@ -32,7 +34,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   def find(seq: T): Option[LexRepresentative[T, G]] = {
     @tailrec def rec(block: Block): Option[LexRepresentative[T, G]] = block match {
       case nb: NodeBlock => nb.blockForSeq(seq) match {
-        case Nullbox(nextBlock) => rec(nextBlock)
+        case Opt(nextBlock) => rec(nextBlock)
         case _ => None
       }
       case tb: TermBlock => Some(tb)
@@ -43,7 +45,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   def apply(idx: BigInt) = {
     @tailrec def rec(block: Block): LexRepresentative[T, G] = block match {
       case nb: NodeBlock => nb.blockForIndex(idx) match {
-        case Nullbox(nextBlock) => rec(nextBlock)
+        case Opt(nextBlock) => rec(nextBlock)
         case _ => throw new IndexOutOfBoundsException
       }
       case tb: TermBlock => tb
@@ -93,7 +95,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
   case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: debox.Buffer[G], symGrps: debox.Buffer[Grp[G]]) extends Block {
     implicit def action = representation.action
 
-    case class NextCandidate(b: Int, c: Int, tail: Nullbox[NextCandidate] = Nullbox.empty[NextCandidate])
+    case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
 
     val beta = chain.beta
     val chainNextBeta = chain.next match {
@@ -103,8 +105,8 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     assert(beta < chainNextBeta)
     val nextBeta = chainNextBeta.min(beta + maxSkip)
 
-    protected lazy val candidatesForImages: debox.spkey.Map[Long, NextCandidate] = {
-      val map = debox.spkey.Map.empty[Long, NextCandidate]
+    protected lazy val candidatesForImages: SpecKeyMap[Long, NextCandidate] = {
+      val map = SpecKeyMap.empty[Long, NextCandidate]
       var c = 0
       val n = candidates.length
       while (c < n) {
@@ -119,7 +121,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
             images = (images << intBits) + ULong.fromInt(tInt((k <|+| u) <|+| g))
             k += 1
           }
-          val nextCandidate = NextCandidate(b, c, Nullbox(map.getOrElse(images.toLong, null)))
+          val nextCandidate = NextCandidate(b, c, Opt(map.getOrElse(images.toLong, null)))
           map.update(images.toLong, nextCandidate)
         }
         c += 1
@@ -142,13 +144,13 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
       (BigInt(0) /: symGrps.iterator) { case (sm, symGrp) => sm + co / symGrp.order }
     }
 
-    def blockForSeq(seq: T): Nullbox[Block] = {
+    def blockForSeq(seq: T): Opt[Block] = {
       var seqImages = ULong(0)
       var k = beta
       while (k < nextBeta) {
         seqInt(seq, k) match {
           case NNOption(i) => seqImages = (seqImages << intBits) + ULong.fromInt(i)
-          case _ => return Nullbox.empty[Block]
+          case _ => return Opt.empty[Block]
         }
         k += 1
       }
@@ -157,21 +159,21 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         while (it.hasNext) {
           val block = it.next
           if (block.images == seqImages)
-            return Nullbox(block)
+            return Opt(block)
         }
         sys.error("Map defined => block in children")
       }
-      Nullbox.empty[Block]
+      Opt.empty[Block]
     }
 
-    def blockForIndex(idx: BigInt): Nullbox[Block] = {
+    def blockForIndex(idx: BigInt): Opt[Block] = {
       val it = children
       while (it.hasNext) {
         val block = it.next
         if (block.index <= idx && idx < block.index + block.size)
-          return Nullbox(block)
+          return Opt(block)
       }
-      Nullbox.empty[Block]
+      Opt.empty[Block]
     }
 
     def children: Iterator[Block] = new ChildrenIterator
@@ -186,7 +188,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
         val images = ULong.fromLong(sortedImages(i))
         val newBlockCandidates = debox.Buffer.empty[G]
         val newBlockSymGrps = debox.Buffer.empty[Grp[G]]
-        var it = Nullbox(candidatesForImages(images.toLong))
+        var it = Opt(candidatesForImages(images.toLong))
         while (it.nonEmpty) {
           val NextCandidate(b, c, next) = it.get
           val u = chain.u(b)

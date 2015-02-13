@@ -6,7 +6,7 @@ import scala.reflect.ClassTag
 
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
 import net.alasc.math.guide.BaseGuideSeq
@@ -15,15 +15,15 @@ import net.alasc.util._
 
 object Intersection {
   class IntersectionTest[P](level: Int, chain2: Chain[P], prev2Inv: P)(implicit algebra: FiniteGroup[P]) extends SubgroupTest[P] {
-    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Nullbox[IntersectionTest[P]] = {
+    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Opt[IntersectionTest[P]] = {
       val b2 = orbitImage <|+| prev2Inv
       chain2 match {
         case node2: Node[P] if node2.inOrbit(b2) =>
-          Nullbox(new IntersectionTest(level + 1, node2.next, prev2Inv |+| node2.uInv(b2)))
+          Opt(new IntersectionTest(level + 1, node2.next, prev2Inv |+| node2.uInv(b2)))
         case _ if node.beta == b2 =>
-          Nullbox(new IntersectionTest(level + 1, chain2, prev2Inv))
+          Opt(new IntersectionTest(level + 1, chain2, prev2Inv))
         case _ =>
-          Nullbox.empty[IntersectionTest[P]]
+          Opt.empty[IntersectionTest[P]]
       }
     }
   }

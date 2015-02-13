@@ -1,6 +1,7 @@
 package net.alasc.algebra
 
-import spire.algebra.{Eq, Action, Group, Semigroup, Semigroupoid}
+import spire.algebra.{Eq, Action, Group, Semigroup}
+import spire.algebra.partial.Semigroupoid
 import net.alasc.util._
 
 

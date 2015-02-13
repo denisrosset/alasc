@@ -2,8 +2,7 @@ package net.alasc.math
 
 import org.scalatest.{FunSuite, Matchers}
 
-import spire.syntax.action._
-
+import spire.syntax.partialAction._
 import net.alasc.syntax.all._
 import net.alasc.std.seq._
 import bsgs._
@@ -32,6 +31,6 @@ class RubikCubeSuite extends FunSuite with Matchers {
       4,4,4,4,4,4,4,4,
       5,5,5,5,5,5,5,5,
       6,6,6,6,6,6,6,6)
-    chain.generators.exists { g => (colors <|+| g).sameElements(colors) } shouldBe false
+    chain.generators.exists { g => (colors <|+|? g).get.sameElements(colors) } shouldBe false
   }
 }

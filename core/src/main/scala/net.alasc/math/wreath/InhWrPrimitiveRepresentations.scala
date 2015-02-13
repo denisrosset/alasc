@@ -16,7 +16,6 @@ import spire.syntax.partialOrder._
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.lattice._
-import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.std.seq._

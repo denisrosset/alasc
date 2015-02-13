@@ -8,7 +8,7 @@ import prop._
 import spire.algebra.Order
 import spire.syntax.eq._
 import spire.syntax.order._
-import spire.syntax.action._
+import spire.syntax.partialAction._
 import spire.std.int._
 import net.alasc.algebra._
 import net.alasc.std.seq._
@@ -22,12 +22,12 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") {
     grp <- Grps.fromElements(Permutations.forSize[Perm](sz))
   } yield (seq, grp)
   property("All representatives are generated") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val bruteForceSet = grp.elements.iterator.map(g => seq <|+| g).toSet
+      val bruteForceSet = grp.elements.iterator.map(g => (seq <|+|? g).get).toSet
       val cleverSeq = Representatives(seq, grp).iterator.map(_.get).toSeq
         (cleverSeq.size == bruteForceSet.size) && (cleverSeq.toSet == bruteForceSet)
   }
   property("Minimal representative is found") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val bruteForceMinimal = grp.elements.iterator.map(g => seq <|+| g).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
+      val bruteForceMinimal = grp.elements.iterator.map(g => (seq <|+|? g).get).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
       val cleverMinimal = RepresentativesOrdered(seq, grp).head.get
       cleverMinimal.sameElements(bruteForceMinimal)
   }

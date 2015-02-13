@@ -4,7 +4,7 @@ package bsgs
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.subgroup._
@@ -28,11 +28,11 @@ class HoltSuite extends FunSuite with NonImplicitAssertions with Matchers with E
     assert(mchain.start.next.order == 16)
     class Test(level: Int) extends SubgroupTest[Perm] {
       def test(b: Int, orbitImage: Int, currentG: Perm, node: Node[Perm])(
-        implicit action: FaithfulPermutationAction[Perm]): Nullbox[Test] =
+        implicit action: FaithfulPermutationAction[Perm]): Opt[Test] =
         (level, orbitImage) match {
-          case (0, 1) | (0, 3) | (1, 2) => Nullbox(new Test(level + 1))
-          case (0, _) | (1, _) => Nullbox.empty[Test]
-          case _ => Nullbox(new Test(level + 1))
+          case (0, 1) | (0, 3) | (1, 2) => Opt(new Test(level + 1))
+          case (0, _) | (1, _) => Opt.empty[Test]
+          case _ => Opt(new Test(level + 1))
         }
     }
     def predicate(k: Perm) = ((1 <|+| k) == 1 || (1 <|+| k == 3)) && ((2 <|+| k) == 2)

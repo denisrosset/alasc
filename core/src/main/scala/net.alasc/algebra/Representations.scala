@@ -6,7 +6,7 @@ import scala.reflect.{ClassTag, classTag}
 import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.syntax.lattice._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.syntax.permutationAction._
 
@@ -36,9 +36,9 @@ trait Representations[G] { self =>
   implicit def partialOrder: PartialOrder[R]
 
   trait RCastTrait {
-    def unapply(r: Representation[G]): Nullbox[R] = r match {
-      case RClassTag(typed) if typed.representations eq self => Nullbox(typed)
-      case _ => Nullbox.empty[R]
+    def unapply(r: Representation[G]): Opt[R] = r match {
+      case RClassTag(typed) if typed.representations eq self => Opt(typed)
+      case _ => Opt.empty[R]
     }
   }
 
@@ -123,9 +123,9 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
   }
   /** Permutation representations are unique. */
   override val RCast = new RCastTrait {
-    override def unapply(r: Representation[P]): Nullbox[R] = r match {
-      case typed: R if typed.representations.isInstanceOf[PermutationRepresentations[_]] => Nullbox(typed)
-      case _ => Nullbox.empty[R]
+    override def unapply(r: Representation[P]): Opt[R] = r match {
+      case typed: R if typed.representations.isInstanceOf[PermutationRepresentations[_]] => Opt(typed)
+      case _ => Opt.empty[R]
     }
   }
   implicit object partialOrder extends PartialOrder[R] {

@@ -14,7 +14,6 @@ import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.util._
@@ -107,4 +106,3 @@ trait RepresentationsProductInstances {
 trait ProductInstances extends
     FiniteGroupProductInstances with
     RepresentationsProductInstances
-

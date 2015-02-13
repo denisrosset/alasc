@@ -6,7 +6,6 @@ import scala.reflect.{ClassTag, classTag}
 import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.syntax.lattice._
-import spire.util.Nullbox
 
 import net.alasc.syntax.permutationAction._
 

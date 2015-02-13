@@ -7,7 +7,8 @@ import net.alasc.math.guide.BaseGuideLex
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, RightPartialAction, Order}
+import spire.algebra.{Eq, Order}
+import spire.algebra.partial.RightPartialAction
 import spire.syntax.group._
 import spire.syntax.action._
 

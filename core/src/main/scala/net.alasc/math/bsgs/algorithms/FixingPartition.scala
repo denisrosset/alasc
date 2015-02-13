@@ -4,7 +4,7 @@ package algorithms
 
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
 import net.alasc.math.guide.BaseGuidePartition
@@ -13,21 +13,21 @@ import net.alasc.util._
 object FixingPartition {
   // TODO: change pointSetsToTest to bitsets
   class FixingTest[P](level: Int, partition: Domain#Partition, pointSetsToTest: Array[Array[Int]])(implicit algebra: FiniteGroup[P]) extends SubgroupTest[P] {
-    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Nullbox[FixingTest[P]] = {
+    def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Opt[FixingTest[P]] = {
       val pointSet = pointSetsToTest(level)
       if (partition.representative(pointSet(0)) != partition.representative(orbitImage))
-        return Nullbox.empty[FixingTest[P]]
+        return Opt.empty[FixingTest[P]]
       if (pointSet.length > 1) {
         val nextG = node.u(b) |+| currentG
         var i = 1
         while (i < pointSet.length) {
           val k = pointSet(i)
           if (partition.representative(k) != partition.representative(k <|+| nextG))
-            return Nullbox.empty[FixingTest[P]]
+            return Opt.empty[FixingTest[P]]
           i += 1
         }
       }
-      Nullbox(new FixingTest[P](level + 1, partition, pointSetsToTest))
+      Opt(new FixingTest[P](level + 1, partition, pointSetsToTest))
     }
   }
   def baseGuide[P](partition: Domain#Partition) = BaseGuidePartition(partition)

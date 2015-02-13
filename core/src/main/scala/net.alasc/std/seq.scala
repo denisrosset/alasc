@@ -10,11 +10,12 @@ import scala.collection.mutable
 import scala.reflect.classTag
 
 import spire.algebra._
+import spire.algebra.partial._
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.util._
@@ -26,7 +27,7 @@ class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
 }
 
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
-  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends NullboxPartialAction[SA, P] {
+  implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.action._
@@ -34,16 +35,16 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPerm
   override def actlIsDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
   override def actrIsDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
 
-  def partialActl(p: P, s: SA): Nullbox[SA] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) Nullbox.empty[SA] else {
+  def partialActl(p: P, s: SA): Opt[SA] =
+    if (p.supportMax.getOrElseFast(-1) >= s.length) Opt.empty[SA] else {
       val b = cbf()
       b.sizeHint(s)
       for (i <- 0 until s.length)
         b += s(i <|+| p)
-      Nullbox(b.result)
+      Opt(b.result)
     }
 
-  def partialActr(s: SA, p: P): Nullbox[SA] = partialActl(p.inverse, s)
+  def partialActr(s: SA, p: P): Opt[SA] = partialActl(p.inverse, s)
 }
 
 trait SeqInstances0 {

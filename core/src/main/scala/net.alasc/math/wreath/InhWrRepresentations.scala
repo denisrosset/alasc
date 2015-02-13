@@ -16,7 +16,7 @@ import spire.syntax.partialOrder._
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.lattice._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
@@ -196,9 +196,9 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
         val wPartition: domain.Partition = domain.Partition.fromPermutation(w.h)
         wPartition <= myPartition
       }
-    def forPartitionSize(newSize: Int): Nullbox[R] =
+    def forPartitionSize(newSize: Int): Opt[R] =
       if (newSize == partition.size)
-        Nullbox(this)
+        Opt(this)
       else if (newSize > partition.size) {
         val newPartition = partition.inDomain(Domain(newSize)).getOrElse(sys.error("Partition enlargement always succeeds."))
         val minR = aReps.lattice.zero
@@ -209,22 +209,22 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
           newRepForBlock(i) = minR
           i += 1
         }
-        Nullbox(R(newPartition, newRepForBlock))
+        Opt(R(newPartition, newRepForBlock))
       } else { // newSize < partition.size
         val newPartition = partition.inDomain(Domain(newSize)) match {
-          case Nullbox(np) => np
-          case _ => return Nullbox.empty[R]
+          case Opt(np) => np
+          case _ => return Opt.empty[R]
         }
         var i = newSize + 1
         val minR = aReps.lattice.zero
         while (i < partition.size) {
           if (repForBlock(partition.blockIndex(i)) != minR)
-            return Nullbox.empty[R]
+            return Opt.empty[R]
           i += 1
         }
         val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
         Array.copy(repForBlock, 0, newRepForBlock, 0, newPartition.nBlocks)
-        Nullbox(R(newPartition, newRepForBlock))
+        Opt(R(newPartition, newRepForBlock))
       }
   }
 }

@@ -13,14 +13,14 @@ trait BaseOrder[P] extends Order[Int] {
   implicit def action: FaithfulPermutationAction[P]
 }
 
-class BaseMapOrder[P](val base: Seq[Int], val reorderedMap: debox.spall.Map[Int, Int])(implicit val action: FaithfulPermutationAction[P]) extends BaseOrder[P] {
+class BaseMapOrder[P](val base: Seq[Int], val reorderedMap: debox.Map[Int, Int])(implicit val action: FaithfulPermutationAction[P]) extends BaseOrder[P] {
   def compare(a: Int, b: Int): Int =
     (reorderedMap.getOrElse(a, a).toLong - reorderedMap.getOrElse(b, b).toLong).signum.toInt
 }
 
 object BaseMapOrder {
   def apply[P](base: Seq[Int])(implicit action: FaithfulPermutationAction[P]) = {
-    val reorderedMap = debox.spall.Map.empty[Int, Int]
+    val reorderedMap = debox.Map.empty[Int, Int]
     val iter = base.iterator
     var v = Int.MinValue + 1
     while (iter.hasNext) {

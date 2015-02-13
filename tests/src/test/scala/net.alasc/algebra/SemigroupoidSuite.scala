@@ -2,21 +2,21 @@ package net.alasc.algebra
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
-import spire.algebra.NullboxSemigroupoid
+import spire.algebra.partial.Semigroupoid
 import spire.syntax.semigroupoid._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.util._
 
 class SemigroupoidSuite extends FunSuite with NonImplicitAssertions with Matchers {
   test("Test semigroupoid of addition of Seq[Int] with compatible sizes") {
-    implicit object SeqSemigroupoid extends NullboxSemigroupoid[Seq[Int]] {
+    implicit object SeqSemigroupoid extends Semigroupoid[Seq[Int]] {
       override def opIsDefined(f: Seq[Int], g: Seq[Int]) = f.size == g.size
-      def partialOp(f: Seq[Int], g: Seq[Int]): Nullbox[Seq[Int]] =
+      def partialOp(f: Seq[Int], g: Seq[Int]): Opt[Seq[Int]] =
         if (f.size == g.size)
-          Nullbox((f zip g).map { case (a,b) => a + b })
+          Opt((f zip g).map { case (a,b) => a + b })
         else
-          Nullbox.empty[Seq[Int]]
+          Opt.empty[Seq[Int]]
     }
 
     (Seq(1,2) |+|?? Seq(1,2)) shouldBe true
@@ -27,6 +27,6 @@ class SemigroupoidSuite extends FunSuite with NonImplicitAssertions with Matcher
 
     (Seq(1,2) |+|? Seq(1,2)).get shouldBe Seq(2,4)
 
-    (Seq(1,2) |+| Seq(1,2)) shouldBe Seq(2,4)
+    (Seq(1,2) |+|? Seq(1,2)).get shouldBe Seq(2,4)
   }
 }

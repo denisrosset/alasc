@@ -3,7 +3,7 @@ package math
 
 import scala.util.Random
 
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.math.bsgs._
@@ -19,39 +19,39 @@ import net.alasc.syntax.all._
   */
 class GrpLazy[G](
   val generators: Iterable[G],
-  givenOrder: Nullbox[BigInt] = Nullbox.empty[BigInt],
-  givenRandomElement: Nullbox[Function1[Random, G]] = Nullbox.empty[Function1[Random, G]],
-  givenRepresentation: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]])(
+  givenOrder: Opt[BigInt] = Opt.empty[BigInt],
+  givenRandomElement: Opt[Function1[Random, G]] = Opt.empty[Function1[Random, G]],
+  givenRepresentation: Opt[Representation[G]] = Opt.empty[Representation[G]])(
   implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G]) extends GrpLazyBase[G] { lhs =>
 
-  private[this] var computedRepresentation: Nullbox[Representation[G]] = givenRepresentation
+  private[this] var computedRepresentation: Opt[Representation[G]] = givenRepresentation
   /** Forces the computation of the representation.
     *
     * @param givenRepresentation   Representation to be used to avoid computation
     */
-  protected def computeRepresentation(givenRepresentation: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]]): Representation[G] =
+  protected def computeRepresentation(givenRepresentation: Opt[Representation[G]] = Opt.empty[Representation[G]]): Representation[G] =
     this.synchronized {
       if (computedRepresentation.isEmpty) {
         if (givenRepresentation.nonEmpty)
           computedRepresentation = givenRepresentation
         else
-          computedRepresentation = Nullbox(representations.get(generators))
+          computedRepresentation = Opt(representations.get(generators))
       }
       computedRepresentation.get
     }
 
-  private[this] var computedChain: Nullbox[Chain[G]] = Nullbox.empty[Chain[G]]
+  private[this] var computedChain: Opt[Chain[G]] = Opt.empty[Chain[G]]
   /** Forces the computation of the group chain.
     *
     * @param givenRepresentation   Representation to be used; the one given during `GrpLazy` has priority.
     */
-  protected def computeChain(givenRepresentation: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]]): Chain[G] =
+  protected def computeChain(givenRepresentation: Opt[Representation[G]] = Opt.empty[Representation[G]]): Chain[G] =
     this.synchronized {
       val baseGuide = BaseGuide.empty
       if (computedChain.isEmpty) {
-        computedChain = Nullbox(givenOrder match {
-          case Nullbox(order) => givenRandomElement match {
-            case Nullbox(randomElement) => algorithms.chainWithBase(generators, randomElement, order, baseGuide, representation.action)
+        computedChain = Opt(givenOrder match {
+          case Opt(order) => givenRandomElement match {
+            case Opt(randomElement) => algorithms.chainWithBase(generators, randomElement, order, baseGuide, representation.action)
             case _ => algorithms.chainWithBase(generators, order, baseGuide, representation.action)
           }
           case _ => algorithms.chainWithBase(generators, baseGuide, representation.action)
@@ -61,21 +61,21 @@ class GrpLazy[G](
     }
 
   def representation: Representation[G] = computedRepresentation match {
-    case Nullbox(r) => r
+    case Opt(r) => r
     case _ => computeRepresentation()
   }
 
-  def chainIfComputed: Nullbox[Chain[G]] = computedChain
-  def representationIfComputed: Nullbox[Representation[G]] = computedRepresentation
+  def chainIfComputed: Opt[Chain[G]] = computedChain
+  def representationIfComputed: Opt[Representation[G]] = computedRepresentation
 
   def action: FaithfulPermutationAction[G] = representation.action
 
   def order: BigInt = givenOrder.getOrElse(chain.order)
   def isOrderComputed: Boolean = givenOrder.nonEmpty || computedChain.nonEmpty
-  def orderIfComputed: Nullbox[BigInt] = if (isOrderComputed) Nullbox(order) else Nullbox.empty[BigInt]
+  def orderIfComputed: Opt[BigInt] = if (isOrderComputed) Opt(order) else Opt.empty[BigInt]
 
   def randomElement(random: Random): G = givenRandomElement match {
-    case Nullbox(f) => f(random)
+    case Opt(f) => f(random)
     case _ => chain.randomElement(random)
   }
 

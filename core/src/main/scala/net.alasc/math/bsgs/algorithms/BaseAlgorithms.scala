@@ -5,7 +5,7 @@ package algorithms
 import scala.annotation.tailrec
 
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
@@ -21,27 +21,27 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
     case _: Term[P] => false
   }
 
-  /** Returns the node with base `basePoint` in `mutableChain` starting from `chain`, or `Nullbox.empty` if it cannot be found.  */
-  @tailrec final def findBasePoint(mutableChain: MutableChain[P], chain: Chain[P], basePoint: Int): Nullbox[Node[P]] = chain match {
+  /** Returns the node with base `basePoint` in `mutableChain` starting from `chain`, or `Opt.empty` if it cannot be found.  */
+  @tailrec final def findBasePoint(mutableChain: MutableChain[P], chain: Chain[P], basePoint: Int): Opt[Node[P]] = chain match {
     case node: Node[P] =>
       if (node.beta == basePoint)
-        Nullbox(node)
+        Opt(node)
       else
         findBasePoint(mutableChain, node.next, basePoint)
-    case _: Term[P] => Nullbox.empty[Node[P]]
+    case _: Term[P] => Opt.empty[Node[P]]
   }
 
   /** Finds the last redundant node in `mutableChain`, starting from `chain`. */
-  def findLastRedundant(mutableChain: MutableChain[P], from: Chain[P]): Nullbox[Node[P]] = {
-    @tailrec def rec(chain: Chain[P], lastRedundantOption: Nullbox[Node[P]]): Nullbox[Node[P]] = chain match {
+  def findLastRedundant(mutableChain: MutableChain[P], from: Chain[P]): Opt[Node[P]] = {
+    @tailrec def rec(chain: Chain[P], lastRedundantOption: Opt[Node[P]]): Opt[Node[P]] = chain match {
       case _: Term[P] => lastRedundantOption
       case node: Node[P] =>
         if (node.orbitSize == 1)
-          rec(node.next, Nullbox(node))
+          rec(node.next, Opt(node))
         else
           rec(node.next, lastRedundantOption)
     }
-    rec(from, Nullbox.empty[Node[P]])
+    rec(from, Opt.empty[Node[P]])
   }
 
   /** Removes redundant nodes in `mutableChain` after `afterThis`.
@@ -52,7 +52,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
     */
   def cutRedundantAfter(mutableChain: MutableChain[P], afterThis: StartOrNode[P]): Int =
     findLastRedundant(mutableChain, afterThis.next) match {
-      case Nullbox(lastR) =>
+      case Opt(lastR) =>
         @tailrec def eliminateRedundantTail(prev: StartOrNode[P], removed: Int): Int = prev.next match {
           case _: Term[P] => sys.error("lastR should have been encountered before")
           case node: Node[P] =>
@@ -108,13 +108,13 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
   /** Shifts the existing `beta` at the node after `after`, if the chain already contains `basePoint`.
     * 
     * @return The shifted node with base point `beta` if the chain contains `basePoint` 
-    and the shift was performed, `Nullbox.empty` otherwise.
+    and the shift was performed, `Opt.empty` otherwise.
     */
-  def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): Nullbox[Node[P]] = {
+  def putExistingBasePointAfter(mutableChain: MutableChain[P], after: MutableStartOrNode[P], beta: Int): Opt[Node[P]] = {
     findBasePoint(mutableChain, after.next, beta) match {
-      case Nullbox(toShift) =>
+      case Opt(toShift) =>
         val mutableToShift = mutableChain.mutable(toShift, after)
-        @tailrec def shift(pos: MutableNode[P]): Nullbox[Node[P]] =
+        @tailrec def shift(pos: MutableNode[P]): Opt[Node[P]] =
           if (pos.prev ne after) {
             pos.prev match {
               case prevNode: MutableNode[P] =>
@@ -123,9 +123,9 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
               case _: Start[P] => sys.error("mutableHere should be before mutableToShift")
             }
           } else
-            Nullbox(pos)
+            Opt(pos)
         shift(mutableToShift)
-      case _ => Nullbox.empty[Node[P]]
+      case _ => Opt.empty[Node[P]]
     }
   }
 }

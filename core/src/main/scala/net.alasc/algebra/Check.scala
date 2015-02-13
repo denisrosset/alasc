@@ -1,7 +1,6 @@
 package net.alasc.algebra
 
 import spire.syntax.semigroup._
-import scalaz.{NonEmptyList, Validation, ValidationNel}
 
 trait Check[A] extends Any {
   import Check._
@@ -11,15 +10,18 @@ trait Check[A] extends Any {
 
 object Check extends scalaz.std.ListInstances with scalaz.std.AnyValInstances {
   type Path = List[String]
+  object Path {
+    def empty = List.empty[String]
+  }
   type Error = (Path, String)
-  type Checked = scalaz.ValidationNel[Error, Unit]
+  type Checked = List[Error]
 
   def children(pathAndResults: (String, Checked)*): Checked =
     pathAndResults.map { case (pathElement, checked) => checked.withPath(pathElement) }.reduce(_ |+| _)
 
-  def success: Checked = Validation.success[NonEmptyList[Error], Unit](())
+  def success: Checked = List.empty[Error]
 
-  def failHere(message: String) = Validation.failureNel[Error, Unit](Nil -> message)
+  def failHere(message: String) = List(Path.empty -> message)
   def failHereOn(predicate: Boolean, message: String): Checked =
     if (predicate) failHere(message) else success
 
@@ -38,9 +40,9 @@ object Check extends scalaz.std.ListInstances with scalaz.std.AnyValInstances {
       failHere((if (prefix != "") s"$prefix " else "") + s"$first == $second")
 
   implicit class CheckWithPath(val checked: Checked) extends AnyVal {
-    def withPath(pathElement: String): Checked = checked.leftMap( _.map {
+    def withPath(pathElement: String): Checked = checked.map {
       case (path, message) => (pathElement :: path, message)
-    } )
-    def assert: Unit = ???
+    }
+    def assert: Unit = ??? // TODO
   }
 }

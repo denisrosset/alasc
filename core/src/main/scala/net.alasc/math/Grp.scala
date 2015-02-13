@@ -9,7 +9,7 @@ import spire.algebra.PartialOrder
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.group._
 import spire.syntax.partialOrder._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.math.bsgs._
@@ -26,7 +26,7 @@ import net.alasc.syntax.all._
 sealed abstract class Grp[G] { lhs =>
   override def hashCode = sys.error("HashCode not defined for Grp")
   override def toString = generators.mkString("Grp(", ", ", ")") + (orderIfComputed match {
-    case Nullbox(o) => s" of order $o"
+    case Opt(o) => s" of order $o"
     case _ => ""
   })
 
@@ -49,30 +49,30 @@ sealed abstract class Grp[G] { lhs =>
   }
 
   def isTrivial: Boolean = chainIfComputed match {
-    case Nullbox(c) => c.isTrivial
+    case Opt(c) => c.isTrivial
     case _ => generators.isEmpty
   }
 
   def order: BigInt
-  def orderIfComputed: Nullbox[BigInt]
+  def orderIfComputed: Opt[BigInt]
   def isChainComputed = chainIfComputed.nonEmpty
-  def chainIfComputed: Nullbox[Chain[G]]
+  def chainIfComputed: Opt[Chain[G]]
   def chain: Chain[G]
   def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G]
   def withComputedChain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Grp[G] =
-    Grp.fromChain(chain(representation, baseGuide), Nullbox(representation))
+    Grp.fromChain(chain(representation, baseGuide), Opt(representation))
   def representation: Representation[G]
-  def representationIfComputed: Nullbox[Representation[G]]
+  def representationIfComputed: Opt[Representation[G]]
   def randomElement(random: Random): G
   def contains(g: G): Boolean
 
   def conjBy(ip: InversePair[G]): Grp[G] = chainIfComputed match {
-    case Nullbox(chain) if representation.represents(ip.g) =>
+    case Opt(chain) if representation.represents(ip.g) =>
       GrpConjugated(algorithms, generators, representation, chain, ip)
     case _ =>
       val conjRepresentation = representationIfComputed.filter(_.represents(ip.g))
       orderIfComputed match {
-        case Nullbox(ord) => Grp.fromGeneratorsAndOrder(generators.map(_.conjBy(ip)), ord, conjRepresentation)
+        case Opt(ord) => Grp.fromGeneratorsAndOrder(generators.map(_.conjBy(ip)), ord, conjRepresentation)
         case _ => Grp.fromGenerators(generators.map(_.conjBy(ip)), conjRepresentation)
       }
   }
@@ -95,11 +95,11 @@ class GrpChain[G](val generators: Iterable[G], val representation: Representatio
   }
   def chain(representation: Representation[G], baseGuide: BaseGuide = BaseGuide.empty) =
     algorithms.chainWithBase(chain, baseGuide, representation.action)
-  def chainIfComputed = Nullbox(chain)
+  def chainIfComputed = Opt(chain)
   def order = chain.order
-  def orderIfComputed = Nullbox(order)
+  def orderIfComputed = Opt(order)
   def randomElement(random: Random) = chain.randomElement(random)
-  def representationIfComputed = Nullbox(representation)
+  def representationIfComputed = Opt(representation)
   def contains(g: G) = chain.contains(g)
 }
 
@@ -114,8 +114,8 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
     case node: Node[G] => require(node.action == representation.action)
     case _: Term[G] =>
   }
-  def representationIfComputed = Nullbox(representation)
-  def chainIfComputed = Nullbox(chain)
+  def representationIfComputed = Opt(representation)
+  def chainIfComputed = Opt(chain)
   override def isTrivial: Boolean = originalChain.isTrivial
   def chain = originalChain match {
     case node: Node[G] =>
@@ -140,7 +140,7 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
     case term: Term[G] => term
   }
   def order = originalChain.order
-  def orderIfComputed = Nullbox(order)
+  def orderIfComputed = Opt(order)
   def randomElement(random: Random) = {
     val h = originalChain.randomElement(random)
     h.conjBy(conjugatedBy)
@@ -158,16 +158,16 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
 abstract class GrpLazyBase[G] extends Grp[G] {
   def isOrderComputed: Boolean
 
-  protected def computeChain(givenRepresentation: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]]): Chain[G]
+  protected def computeChain(givenRepresentation: Opt[Representation[G]] = Opt.empty[Representation[G]]): Chain[G]
 
   def chain: Chain[G] = chain(representation)
 
   def chain(representationToUse: Representation[G], baseGuide: BaseGuide = BaseGuide.empty): Chain[G] =
     chainIfComputed match {
-      case Nullbox(node: Node[G]) => algorithms.chainWithBase(node, baseGuide, representationToUse.action)
-      case Nullbox(term: Term[G]) => term
+      case Opt(node: Node[G]) => algorithms.chainWithBase(node, baseGuide, representationToUse.action)
+      case Opt(term: Term[G]) => term
       case _ =>
-        computeChain(Nullbox(representationToUse))
+        computeChain(Opt(representationToUse))
         chain(representationToUse, baseGuide)
     }
 }
@@ -182,13 +182,13 @@ object Grp {
 
   def fromChain[G: ClassTag: FiniteGroup: Representations](
     chain: Chain[G],
-    representationOption: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]],
-    givenGenerators: Nullbox[Iterable[G]] = Nullbox.empty[Iterable[G]]
+    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]],
+    givenGenerators: Opt[Iterable[G]] = Opt.empty[Iterable[G]]
   ): Grp[G] = {
     val representation = representationOption.getOrElse(Representations[G].get(chain.generators))
     chain match {
       case node: Node[G] if representation.action != node.action =>
-        new GrpLazy(givenGenerators.getOrElse(chain.generators), Nullbox(chain.order), Nullbox(chain.randomElement(_)), representationOption)
+        new GrpLazy(givenGenerators.getOrElse(chain.generators), Opt(chain.order), Opt(chain.randomElement(_)), representationOption)
       case _ =>
         new GrpChain[G](givenGenerators.getOrElse(chain.generators), representation, chain)
     }
@@ -196,7 +196,7 @@ object Grp {
 
   def fromGenerators[G: ClassTag: FiniteGroup: Representations](
     generators: Iterable[G],
-    representationOption: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]]
+    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]]
   ): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId), givenRepresentation = representationOption)
 
@@ -206,14 +206,14 @@ object Grp {
   def trivial[G: ClassTag: FiniteGroup: Representations]: Grp[G] = new GrpChain[G](Iterable.empty, Representations[G].lattice.zero, new Term[G])
 
   def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
-    representationOption: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]]): Grp[G] =
-    new GrpLazy[G](generators.filterNot(_.isId), givenOrder = Nullbox(order), givenRepresentation = representationOption)
+    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]]): Grp[G] =
+    new GrpLazy[G](generators.filterNot(_.isId), givenOrder = Opt(order), givenRepresentation = representationOption)
 
   def fromSubgroup[S, G: ClassTag: FiniteGroup: Representations](subgroup: S,
-    representationOption: Nullbox[Representation[G]] = Nullbox.empty[Representation[G]])(implicit sg: Subgroup[S, G]): Grp[G] =
+    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]])(implicit sg: Subgroup[S, G]): Grp[G] =
     new GrpLazy[G](subgroup.generators,
-      givenOrder = Nullbox(subgroup.order),
-      givenRandomElement = Nullbox(subgroup.randomElement(_)),
+      givenOrder = Opt(subgroup.order),
+      givenRandomElement = Opt(subgroup.randomElement(_)),
       givenRepresentation = representationOption)
 
   implicit def subgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
@@ -242,12 +242,12 @@ trait GrpLattice[G] extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] 
   def zero = Grp.fromGenerators[G](Iterable.empty)
 
   def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {
-    case Nullbox(lhsRepr) => rhs.representationIfComputed match {
-      case Nullbox(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
+    case Opt(lhsRepr) => rhs.representationIfComputed match {
+      case Opt(rhsRepr) => representations.repJoin(lhsRepr, rhsRepr, lhs.generators, rhs.generators)
       case _ => representations.repJoin(lhsRepr, lhs.generators, rhs.generators)
     }
     case _ => rhs.representationIfComputed match {
-      case Nullbox(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
+      case Opt(rhsRepr) => representations.repJoin(rhsRepr, rhs.generators, lhs.generators)
       case _ => representations.get(lhs.generators ++ rhs.generators)
     }
   }
@@ -256,7 +256,7 @@ trait GrpLattice[G] extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] 
     val mutableChain = algorithms.mutableChainCopyWithAction(chain, rp.action)
     algorithms.insertGenerators(mutableChain, generators)
     algorithms.completeStrongGenerators(mutableChain)
-    Grp.fromChain(mutableChain.toChain, Nullbox(rp))
+    Grp.fromChain(mutableChain.toChain, Opt(rp))
   }
 
   def join(lhs: Grp[G], rhs: Grp[G]): Grp[G] = {

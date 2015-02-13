@@ -13,7 +13,6 @@ import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
 
 import net.alasc.algebra._
 import net.alasc.std.seq._

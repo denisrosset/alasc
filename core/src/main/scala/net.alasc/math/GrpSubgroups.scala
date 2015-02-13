@@ -6,7 +6,7 @@ import scala.reflect.ClassTag
 
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Nullbox
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.math.bsgs._
@@ -32,25 +32,25 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     new RightCosets(lhs, rhs)
   }
   def fixingPartition(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
-    Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition), Nullbox(rp))
+    Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition), Opt(rp))
 
   def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartition(partition, prp.forSize(partition.size))
 
-  def stabilizer(rp: Representation[G]): Nullbox[(Grp[G], Transversal[G])] = {
+  def stabilizer(rp: Representation[G]): Opt[(Grp[G], Transversal[G])] = {
     lhs match {
       case grp: GrpConjugated[G] => grp.originalChain match {
         case node: Node[G] if node.action == rp.action =>
-          return Nullbox(stabilizer(node.action.actr(node.beta, grp.conjugatedBy.g), rp))
+          return Opt(stabilizer(node.action.actr(node.beta, grp.conjugatedBy.g), rp))
         case node: Node[G] =>
-        case _: Term[G] => return Nullbox.empty[(Grp[G], Transversal[G])]
+        case _: Term[G] => return Opt.empty[(Grp[G], Transversal[G])]
       }
       case _ =>
     }
     lhs.chainIfComputed match {
-      case Nullbox(node: Node[G]) if node.action == rp.action => Nullbox(stabilizer(node.beta, rp))
-      case Nullbox(_: Term[G]) => Nullbox.empty[(Grp[G], Transversal[G])]
-      case _ if lhs.isTrivial => Nullbox.empty[(Grp[G], Transversal[G])]
+      case Opt(node: Node[G]) if node.action == rp.action => Opt(stabilizer(node.beta, rp))
+      case Opt(_: Term[G]) => Opt.empty[(Grp[G], Transversal[G])]
+      case _ if lhs.isTrivial => Opt.empty[(Grp[G], Transversal[G])]
       case _ => lhs.withComputedChain(rp).stabilizer(rp)
     }
   }
@@ -75,20 +75,20 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
         }
       case grp =>
         grp.chainIfComputed match {
-          case Nullbox(node: Node[G]) if node.action == rp.action =>
+          case Opt(node: Node[G]) if node.action == rp.action =>
             implicit def action = node.action
             if (node.inOrbit(b)) {
               val ip = node.uPair(b)
               return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, ip), ConjugatedTransversal(node, ip))
             } else if (node.isFixed(b))
               return (grp, Transversal.empty(b))
-          case Nullbox(term: Term[G]) => return (grp, Transversal.empty[G](b))
+          case Opt(term: Term[G]) => return (grp, Transversal.empty[G](b))
           case _ =>
         }
     }
     val newChain = lhs.chain(rp, BaseGuideSeq(Seq(b)))
     val (nextChain, transversal) = newChain.detach(b)
-    (Grp.fromChain(nextChain, Nullbox(rp)), transversal)
+    (Grp.fromChain(nextChain, Opt(rp)), transversal)
   }
 
   def stabilizer(b: Int)(implicit prp: PermutationRepresentations[G]): (Grp[G], Transversal[G]) = {
@@ -97,7 +97,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   }
 
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Nullbox(rp))
+    Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
   def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
@@ -107,7 +107,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   }
 
   def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Nullbox(rp))
+    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
   def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
     if (points.size == 0) return lhs
     val set = Set(points:_*)
@@ -128,10 +128,10 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   def subgroupFor(backtrackTest: (Int, Int) => Boolean, rp: Representation[G], predicate: G => Boolean): Grp[G] = {
     object ThisTest extends SubgroupTest[G] {
       def test(b: Int, orbitImage: Int, currentG: G, node: Node[G])(
-        implicit action: FaithfulPermutationAction[G]): Nullbox[SubgroupTest[G]] =
-      if (backtrackTest(node.beta, orbitImage)) Nullbox(this) else Nullbox.empty[SubgroupTest[G]]
+        implicit action: FaithfulPermutationAction[G]): Opt[SubgroupTest[G]] =
+      if (backtrackTest(node.beta, orbitImage)) Opt(this) else Opt.empty[SubgroupTest[G]]
     }
     implicit def action = rp.action
-    Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain, Nullbox(rp))
+    Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain, Opt(rp))
   }
 }
