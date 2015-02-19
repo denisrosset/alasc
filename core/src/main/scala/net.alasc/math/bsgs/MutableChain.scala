@@ -347,20 +347,20 @@ final class MutableChainCheck[P: ClassTag: FiniteGroup] extends Check[MutableCha
 
   @tailrec def checkAllAction(checked: Checked, chain: Chain[P], action: FaithfulPermutationAction[P]): Checked = chain match {
     case node: Node[P] =>
-      checkAllAction(checked |+| Check.eq(node.action, action, "Same action for all nodes"),
+      checkAllAction(checked ++ Check.eq(node.action, action, "Same action for all nodes"),
         node.next, action)
     case _: Term[P] => checked
   }
 
   @tailrec def checkMutablePrev(checked: Checked, elem: MutableStartOrNode[P]): Checked = elem.next match {
     case IsMutableNode(mutableNode) =>
-      checkMutablePrev(checked |+| Check.eq(mutableNode.prev, elem, "Chain consistency"),
+      checkMutablePrev(checked ++ Check.eq(mutableNode.prev, elem, "Chain consistency"),
         mutableNode)
     case _ => checked
   }
 
   def check(mutableChain: MutableChain[P]): Checked =
-    (checkAllAction(Check.success, mutableChain.start.next, mutableChain.start.action) |+|
-      checkMutablePrev(Check.success, mutableChain.start) |+|
+    (checkAllAction(Check.success, mutableChain.start.next, mutableChain.start.action) ++
+      checkMutablePrev(Check.success, mutableChain.start) ++
       mutableChain.start.next.check)
 }

@@ -8,7 +8,7 @@ trait Check[A] extends Any {
   def check(a: A): Checked
 }
 
-object Check extends scalaz.std.ListInstances with scalaz.std.AnyValInstances {
+object Check {
   type Path = List[String]
   object Path {
     def empty = List.empty[String]
@@ -17,7 +17,7 @@ object Check extends scalaz.std.ListInstances with scalaz.std.AnyValInstances {
   type Checked = List[Error]
 
   def children(pathAndResults: (String, Checked)*): Checked =
-    pathAndResults.map { case (pathElement, checked) => checked.withPath(pathElement) }.reduce(_ |+| _)
+    pathAndResults.map { case (pathElement, checked) => checked.withPath(pathElement) }.reduce(_ ++ _)
 
   def success: Checked = List.empty[Error]
 
