@@ -121,8 +121,8 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
     */
   def addStrongGeneratorHere(mutableChain: MutableChain[P], mutableNode: MutableNode[P], generatorPair: InversePair[P]): Unit = {
     implicit def action = mutableChain.start.action
-    mutableNode.addToOwnGenerators(generatorPair)
-    mutableNode.nodesPrev.foreach( _.updateTransversal(generatorPair) )
+    mutableNode.addToOwnGenerators(generatorPair.g, generatorPair.gInv)
+    mutableNode.nodesPrev.foreach( _.updateTransversal(generatorPair.g, generatorPair.gInv) )
   }
 
   /** Removes redundant strong generators in the given chain. */

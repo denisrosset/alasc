@@ -145,7 +145,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
     */
   def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])(
-    implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P]): (MutableNode[P], MutableNode[P], BigInt) = {
+    implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], BigInt) = {
     implicit def action = start.action
     require(prev.next eq node1)
     require(node1.prev eq prev)
@@ -171,15 +171,15 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     // which case they are copied to newNode2, or (newNode1.beta <|+| g) != newNode1.beta, in which case they
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
-    newNode2.updateTransversal(newNode2.strongGeneratingSetPairs)
+    newNode2.updateTransversal(newNode2.strongGeneratingSetPairs.map(_.g), newNode2.strongGeneratingSetPairs.map(_.gInv))
     node1.ownGeneratorsPairs.foreach { ip =>
       if ((newNode1.beta <|+| ip.g) == newNode1.beta) {
-        newNode2.addToOwnGenerators(ip)
-        newNode2.updateTransversal(ip)
-        newNode1.updateTransversal(ip)
+        newNode2.addToOwnGenerators(ip.g, ip.gInv)
+        newNode2.updateTransversal(ip.g, ip.gInv)
+        newNode1.updateTransversal(ip.g, ip.gInv)
       } else {
-        newNode1.addToOwnGenerators(ip)
-        newNode1.updateTransversal(ip)
+        newNode1.addToOwnGenerators(ip.g, ip.gInv)
+        newNode1.updateTransversal(ip.g, ip.gInv)
       }
     }
     val sizeGoal2 = ((node1.orbitSize.toLong * node2.orbitSize.toLong) / newNode1.orbitSize).toInt
@@ -193,7 +193,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the mutable node after `elem`.
     */  
-  def mutableNodeAfter(elem: MutableStartOrNode[P], beta: => Int)(implicit algebra: FiniteGroup[P], nodeBuilder: NodeBuilder[P]): MutableNode[P] = elem.next match {
+  def mutableNodeAfter(elem: MutableStartOrNode[P], beta: => Int)(implicit algebra: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): MutableNode[P] = elem.next match {
     case IsMutableNode(mutableNode) => mutableNode
     case immutableNode: Node[P] => immutableToMutable(elem, immutableNode)
     case term: Term[P] =>
@@ -210,7 +210,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the mutable copy of `immutableNode`
     */
   def immutableToMutable(prev: MutableStartOrNode[P], immutableNode: Node[P])(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): MutableNode[P] = {
+    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableNode[P] = {
     require(immutableNode.isImmutable)
     val mutableNode = builder.standaloneClone(immutableNode)
     replaceInChain(prev, immutableNode, immutableNode.next, mutableNode)
@@ -230,7 +230,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
   }
 
   def makeFullyMutable(after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): Unit =
+    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): Unit =
     findLast(after) match {
       case node: Node[P] => mutable(node)
       case _ =>
@@ -269,7 +269,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the mutable node corresponding `node`
     */
   def mutable(node: Node[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): MutableNode[P] = {
+    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableNode[P] = {
     @tailrec def rec(prev: MutableStartOrNode[P]): MutableNode[P] = {
       val nextIsNode = prev.next eq node
       prev.next match {
@@ -291,7 +291,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
   }
 
   def mutableStartOrNode(startOrNode: StartOrNode[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P]): MutableStartOrNode[P] =
+    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableStartOrNode[P] =
     startOrNode match {
       case node: Node[P] => mutable(node, after)
       case start: Start[P] => start
@@ -299,7 +299,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 
   /** Removes the first node from the chain and returns it. If the chain is empty,
     * an empty node with given base point is created. */
-  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]): Node[P] = start.next match {
+  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: FaithfulPermutationAction[P], classTag: ClassTag[P]): Node[P] = start.next match {
     case IsMutableNode(mn) =>
       start.next = mn.next
       IsMutableNode.unapply(mn.next).foreach { n => n.prev = start }
@@ -322,7 +322,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     start.next
   }
 
-  def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P]): Unit = {
+  def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
     @tailrec def rec(prev: MutableStartOrNode[P]): Unit = prev.next match {
       case IsMutableNode(mn) =>
         mn.conjugate(ip)

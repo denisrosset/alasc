@@ -53,8 +53,8 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
         val ipy = node2.uPair(b)
         val ipyx = ipy |+| ipx
         if (!newNode2.inOrbit(node2.beta <|+| ipyx.g)) {
-          newNode2.addToOwnGenerators(ipyx)
-          newNode2.updateTransversal(ipyx)
+          newNode2.addToOwnGenerators(ipyx.g, ipyx.gInv)
+          newNode2.updateTransversal(ipyx.g, ipyx.gInv)
           gammaSet --= newNode2.orbitSet
         }
       }
@@ -80,8 +80,8 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
       val h = g |+| newNode1.uInv(newNode1.beta <|+| g)
       val hPair = InversePair(h, h.inverse)
       if (!newNode2.inOrbit(newNode2.beta <|+| h)) {
-        newNode2.addToOwnGenerators(hPair)
-        newNode2.updateTransversal(hPair)
+        newNode2.addToOwnGenerators(hPair.g, hPair.gInv)
+        newNode2.updateTransversal(hPair.g, hPair.gInv)
       }
     }
     MutableNodeAndNext(newNode1, newNode2)

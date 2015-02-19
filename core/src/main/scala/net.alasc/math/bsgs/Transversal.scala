@@ -45,7 +45,7 @@ trait Transversal[P] {
     bitset.toImmutable
   }
   def iterable: Iterable[(Int, InversePair[P])]
-  def foreachU[N](f: P => N): Unit
+  def foreachU(f: P => Unit): Unit
   def uPair(b: Int): InversePair[P]
   def u(b: Int): P
   def uInv(b: Int): P
@@ -66,7 +66,7 @@ case class ConjugatedTransversal[P](originalTransversal: Transversal[P], conjuga
   def iterable = originalTransversal.iterable.map {
     case (b, uIp) => (b <|+| g, conjugatedBy.inverse |+| uIp |+| conjugatedBy)
   }
-  def foreachU[N](f: P => N): Unit = originalTransversal.foreachU(u => f(gInv |+| u |+| g))
+  def foreachU(f: P => Unit): Unit = originalTransversal.foreachU(u => f(gInv |+| u |+| g))
   def uPair(b: Int) = conjugatedBy.inverse |+| originalTransversal.uPair(b <|+| gInv) |+| conjugatedBy
   def u(b: Int) = gInv |+| originalTransversal.u(b <|+| gInv) |+| g
   def uInv(b: Int) = g |+| originalTransversal.uInv(b <|+| gInv) |+| gInv
@@ -79,7 +79,7 @@ class EmptyTransversal[P](val beta: Int)(implicit algebra: FiniteGroup[P]) exten
   def orbitIterator = Iterator(beta)
   def foreachOrbit(f: Int => Unit) = { f(beta) }
   def iterable = Iterable((beta -> algebra.id))
-  def foreachU[N](f: P => N) = { f(algebra.id) }
+  def foreachU(f: P => Unit) = { f(algebra.id) }
   def uPair(b: Int) = InversePair(algebra.id, algebra.id)
   def u(b: Int) = { require(b == beta); algebra.id }
   def uInv(b: Int) = u(b)

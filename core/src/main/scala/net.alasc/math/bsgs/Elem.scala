@@ -272,7 +272,7 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   def randomOrbit(rand: Random): Int
 
   def iterable: Iterable[(Int, InversePair[P])]
-  def foreachU[N](f: P => N): Unit
+  def foreachU(f: P => Unit): Unit
   def uPair(b: Int): InversePair[P]
   def u(b: Int): P
   def uInv(b: Int): P
@@ -283,7 +283,7 @@ case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action:
   def isImmutable = true
   def isMutable = false
   def foreachOrbit(f: Int => Unit) = f(beta)
-  def foreachU[N](f: P => N): Unit = f(id)
+  def foreachU(f: P => Unit): Unit = f(id)
   def inOrbit(b: Int) = b == beta
   def isStandalone = false
   def iterable = Iterable(beta -> InversePair(id, id))
@@ -336,24 +336,24 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
 
   protected[bsgs] def removeRedundantGenerators: Unit
 
-  /** Adds `newGenerators` (given as a traversable of `InversePair`) to this node `ownGenerators`,
+  /** Adds `newGenerators` (given with their inverses) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */
-  protected[bsgs] def addToOwnGenerators(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]): Unit
-  protected[bsgs] def addToOwnGenerators(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]): Unit
 
-  /** Updates this node transversal by the addition of `newGenerators`,
-    * provided as a traversable `InversePair`.
+  /** Updates this node transversal by the addition of `newGens`,
+    * provided with their inverses.
     * 
-    * @note `newGenerators` must be already part of the strong generating set, i.e.
+    * @note `newGens` must be already part of the strong generating set, i.e.
     *       have been added to this node or a children node `ownGenerators`
     *       by using addToOwnGenerators.
     */
-  protected[bsgs] def updateTransversal(newGenerators: Traversable[InversePair[P]])(implicit ev: FiniteGroup[P]): Unit
-  protected[bsgs] def updateTransversal(newGenerator: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]): Unit
 
   /** Conjugates the current node by the group element `ip`, provided as an input pair
     * to avoid multiple inverse element computations. */
-  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
 }
 
 final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
