@@ -44,7 +44,6 @@ trait Transversal[P] {
     foreachOrbit { bitset += _ }
     bitset.toImmutable
   }
-  def iterable: Iterable[(Int, InversePair[P])]
   def foreachU(f: P => Unit): Unit
   def uPair(b: Int): InversePair[P]
   def u(b: Int): P
@@ -56,16 +55,13 @@ object Transversal {
   def empty[P](beta: Int)(implicit algebra: FiniteGroup[P]): Transversal[P] = new EmptyTransversal(beta)
 }
 
-case class ConjugatedTransversal[P](originalTransversal: Transversal[P], conjugatedBy: InversePair[P])(implicit algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]) extends Transversal[P] {
-  import conjugatedBy.{g, gInv}
+case class ConjugatedTransversal[P](originalTransversal: Transversal[P], g: P, gInv: P)(implicit algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]) extends Transversal[P] {
+  def conjugatedBy = InversePair(g, gInv)
   def orbitSize = originalTransversal.orbitSize
   def beta = originalTransversal.beta <|+| g
   def inOrbit(b: Int) = originalTransversal.inOrbit(b <|+| gInv)
   def orbitIterator = originalTransversal.orbitIterator.map(b => b <|+| g)
   def foreachOrbit(f: Int => Unit) = originalTransversal.foreachOrbit(b => f(b <|+| g))
-  def iterable = originalTransversal.iterable.map {
-    case (b, uIp) => (b <|+| g, conjugatedBy.inverse |+| uIp |+| conjugatedBy)
-  }
   def foreachU(f: P => Unit): Unit = originalTransversal.foreachU(u => f(gInv |+| u |+| g))
   def uPair(b: Int) = conjugatedBy.inverse |+| originalTransversal.uPair(b <|+| gInv) |+| conjugatedBy
   def u(b: Int) = gInv |+| originalTransversal.u(b <|+| gInv) |+| g
@@ -78,7 +74,6 @@ class EmptyTransversal[P](val beta: Int)(implicit algebra: FiniteGroup[P]) exten
   def inOrbit(b: Int) = beta == b
   def orbitIterator = Iterator(beta)
   def foreachOrbit(f: Int => Unit) = { f(beta) }
-  def iterable = Iterable((beta -> algebra.id))
   def foreachU(f: P => Unit) = { f(algebra.id) }
   def uPair(b: Int) = InversePair(algebra.id, algebra.id)
   def u(b: Int) = { require(b == beta); algebra.id }

@@ -17,8 +17,8 @@ trait FiniteGroup[F] extends Any with Group[F] with Eq[F] { self =>
     rec(1, f)
   }
 
-  /** Returns `ip.gInv |+| f |+| ip.g`. */
-  def conjBy(f: F, ip: InversePair[F]): F = op(ip.gInv, op(f, ip.g))
+  /** Returns `g.inverse |+| f |+| g`. */
+  def conjBy(f: F, g: F): F = op(inverse(g), op(f, g))
 }
 
 object FiniteGroup {

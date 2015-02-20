@@ -8,7 +8,7 @@ import spire.syntax.group._
 import spire.syntax.action._
 import spire.util.Opt
 
-import net.alasc.algebra.{FaithfulPermutationAction, InversePair}
+import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
@@ -111,7 +111,7 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
       val (generatorsThere, forNext) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
       if (!forNext.isEmpty)
         rec(mutableChain.mutableNodeAfter(mutableNode, forNext.head.supportAny.getOrElse(badGen)), forNext)
-      generatorsThere.foreach( addStrongGeneratorHere(mutableChain, mutableNode, _) )
+      generatorsThere.foreach( g => addStrongGeneratorHere(mutableChain, mutableNode, g, g.inverse) )
     }
     rec(mutableChain.mutableNodeAfter(mutableChain.start, generators.head.supportAny.getOrElse(badGen)), generators)
   }
@@ -119,10 +119,10 @@ trait AddGeneratorsAlgorithms[P] extends AppendBaseAlgorithms[P] {
   /** Add a new strong generator `p` at the node `mutableNode`, and updates the transversal
     * of `mutableNode` and any previous node in the chain.
     */
-  def addStrongGeneratorHere(mutableChain: MutableChain[P], mutableNode: MutableNode[P], generatorPair: InversePair[P]): Unit = {
+  def addStrongGeneratorHere(mutableChain: MutableChain[P], mutableNode: MutableNode[P], gen: P, genInv: P): Unit = {
     implicit def action = mutableChain.start.action
-    mutableNode.addToOwnGenerators(generatorPair.g, generatorPair.gInv)
-    mutableNode.nodesPrev.foreach( _.updateTransversal(generatorPair.g, generatorPair.gInv) )
+    mutableNode.addToOwnGenerators(gen, genInv)
+    mutableNode.nodesPrev.foreach( _.updateTransversal(gen, genInv) )
   }
 
   /** Removes redundant strong generators in the given chain. */

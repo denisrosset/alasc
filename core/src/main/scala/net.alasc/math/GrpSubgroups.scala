@@ -41,7 +41,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     lhs match {
       case grp: GrpConjugated[G] => grp.originalChain match {
         case node: Node[G] if node.action == rp.action =>
-          return Opt(stabilizer(node.action.actr(node.beta, grp.conjugatedBy.g), rp))
+          return Opt(stabilizer(node.action.actr(node.beta, grp.g), rp))
         case node: Node[G] =>
         case _: Term[G] => return Opt.empty[(Grp[G], Transversal[G])]
       }
@@ -61,13 +61,15 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
       case grp: GrpConjugated[G] =>
         grp.originalChain match {
           case node: Node[G] if node.action == rp.action =>
-            import grp.conjugatedBy.gInv
+            import grp.{g, gInv}
             implicit def action = node.action
             val a = b <|+| gInv
             if (node.inOrbit(a)) {
-              val ip = node.uPair(a)
-              val newConjugatedBy = ip |+| grp.conjugatedBy
-              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, newConjugatedBy), ConjugatedTransversal(node, newConjugatedBy))
+              val u = node.u(a)
+              val uInv = node.uInv(a)
+              val newG = u |+| g
+              val newGInv = gInv |+| uInv
+              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, newG, newGInv), ConjugatedTransversal(node, newG, newGInv))
             } else if (node.isFixed(a))
               return (grp, Transversal.empty(b))
           case term: Term[G] => return (grp, Transversal.empty[G](b))
@@ -78,8 +80,9 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
           case Opt(node: Node[G]) if node.action == rp.action =>
             implicit def action = node.action
             if (node.inOrbit(b)) {
-              val ip = node.uPair(b)
-              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, ip), ConjugatedTransversal(node, ip))
+              val u = node.u(b)
+              val uInv = node.uInv(b)
+              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, u, uInv), ConjugatedTransversal(node, u, uInv))
             } else if (node.isFixed(b))
               return (grp, Transversal.empty(b))
           case Opt(term: Term[G]) => return (grp, Transversal.empty[G](b))

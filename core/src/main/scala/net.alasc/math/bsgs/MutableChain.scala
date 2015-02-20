@@ -322,14 +322,14 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     start.next
   }
 
-  def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
+  def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
     @tailrec def rec(prev: MutableStartOrNode[P]): Unit = prev.next match {
       case IsMutableNode(mn) =>
-        mn.conjugate(ip)
+        mn.conjugate(g, gInv)
         rec(mn)
       case node: Node[P] =>
         val mutableNode = mutable(node, prev)
-        mutableNode.conjugate(ip)
+        mutableNode.conjugate(g, gInv)
         rec(mutableNode)
       case _: Term[P] => // finished
     }

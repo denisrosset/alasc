@@ -9,24 +9,23 @@ import net.alasc.syntax.subgroup._
 import scala.language.implicitConversions
 
 /** Conjugate of an object `t` by a group element `g`. */
-case class Conjugate[G: FiniteGroup, T](gInv: G, t: T, g: G) {
+case class Conjugate[G: FiniteGroup, T](t: T, g: G, gInv: G) {
   override def toString =
     if (g.isId) t.toString else Seq(gInv.toString, "|+|", t.toString, "|+|", g.toString).mkString(" ")
   def iso(a: G): G = gInv |+| a |+| g
 }
 
 object Conjugate {
-  def apply[G: FiniteGroup, T](g: G, t: T): Conjugate[G, T] = Conjugate(g.inverse, t, g)
-  def apply[G: FiniteGroup, T](ip: InversePair[G], t: T): Conjugate[G, T] = Conjugate(ip.gInv, t, ip.g)
+  def apply[G: FiniteGroup, T](t: T, g: G): Conjugate[G, T] = Conjugate(t, g, g.inverse)
   implicit def ConjugateSubgroup[G, S](implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Subgroup[Conjugate[G, S], G] = new ConjugateSubgroup[G, S]
   implicit def conjugateSubgroup[G, S](subgroup: S)(implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Conjugate[G, S] =
-    Conjugate(algebra.id, subgroup, algebra.id)
+    Conjugate(subgroup, algebra.id, algebra.id)
 }
 
 class ConjugateGroupAction[G, S](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Action[Conjugate[G, S], G] {
   type C = Conjugate[G, S]
-  def actl(g: G, conj: C) = Conjugate(conj.gInv |+| g.inverse, conj.t, g |+| conj.g)
-  def actr(conj: C, gInv: G) = Conjugate(conj.gInv |+| gInv, conj.t, gInv.inverse |+| conj.g)
+  def actl(g: G, conj: C) = Conjugate(conj.t, g |+| conj.g, conj.gInv |+| g.inverse)
+  def actr(conj: C, gInv: G) = Conjugate(conj.t, gInv.inverse |+| conj.g, conj.gInv |+| gInv)
 }
 
 class ConjugateSubgroup[G, S](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Subgroup[Conjugate[G, S], G] {

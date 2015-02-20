@@ -93,7 +93,7 @@ object BaseSpec extends Properties("BSGS") {
       implicit def nb = alg.nodeBuilder
       val oldBase = mutableChain.start.next.base
       val oldOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
-      mutableChain.conjugate(g)
+      mutableChain.conjugate(g, g.inverse)
       mutableChain.check
       alg.changeBaseSameAction(mutableChain, oldBase)
       val newOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)

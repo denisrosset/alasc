@@ -9,7 +9,7 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
 
-import net.alasc.algebra.{FaithfulPermutationAction, InversePair, Subgroup}
+import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
 import net.alasc.syntax.subgroup._
 
 trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[P] {
@@ -72,7 +72,7 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
       case Some((where, newGenerator)) =>
         // there is a new strong generator at the node `where`, add it there and restart the search there
         implicit def action = mutableChain.start.action
-        addStrongGeneratorHere(mutableChain, where, InversePair(newGenerator, newGenerator.inverse))
+        addStrongGeneratorHere(mutableChain, where, newGenerator, newGenerator.inverse)
         completeStrongGeneratorsAt(mutableChain, where)
     }
 
@@ -144,7 +144,7 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
     val mutableChain = emptyChainWithBase(givenBase)
     while (mutableChain.start.next.order < order) {
       for ( (nodeForGenerator, generator) <- siftAndUpdateBaseFrom(mutableChain, mutableChain.start, randomElement(randomGenerator)).toOption )
-        addStrongGeneratorHere(mutableChain, nodeForGenerator, generator)
+        addStrongGeneratorHere(mutableChain, nodeForGenerator, generator, generator.inverse)
     }
     // TODO removeRedundantGenerators(mutableChain)
     mutableChain

@@ -351,9 +351,10 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
   protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]): Unit
   protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]): Unit
 
-  /** Conjugates the current node by the group element `ip`, provided as an input pair
-    * to avoid multiple inverse element computations. */
-  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
+  /** Conjugates the current node by the group element `g`, provided with its inverse
+    * `gInv` to avoid multiple inverse element computations. 
+    */
+  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
 }
 
 final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {

@@ -39,7 +39,7 @@ object FixingSeq {
         val images = indices.toSeq.sorted ++ remDomain.toSeq.sorted
         val perm = algebra.fromImages(images)
         val permInverse = perm.inverse
-        Some(Conjugate(permInverse, Sym[P](indices.size), perm))
+        Some(Conjugate(Sym[P](indices.size), perm, permInverse))
     }.toSeq
     DirectSum(groups)
   }

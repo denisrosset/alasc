@@ -59,6 +59,6 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
 
   def changeBaseSameAction(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {
     val conj = changeBaseConjugation(mutableChain, guide)
-    mutableChain.conjugate(conj)
+    mutableChain.conjugate(conj.g, conj.gInv)
   }
 }

@@ -229,21 +229,21 @@ final class MutableNodeExplicit[P](
     }
   }
 
-  protected[bsgs] def conjugate(ip: InversePair[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
-    beta = beta <|+| ip.g
+  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+    beta = beta <|+| g
     val newTransversal = SpecKeyMap.empty[Int, P]
     val newTransversalInv = SpecKeyMap.empty[Int, P]
     transversal.foreachKey { k =>
-      val newG: P = ip.gInv |+| transversal(k) |+| ip.g
+      val newG: P = gInv |+| transversal(k) |+| g
       val newGInv: P = newG.inverse
-      val newB = k <|+| ip.g
+      val newB = k <|+| g
       newTransversal.update(newB, newG)
       newTransversalInv.update(newB, newGInv)
     }
     transversal = newTransversal
     transversalInv = newTransversalInv
-    ownGenerators.transform { g => ip.gInv |+| g |+| ip.g }
-    ownGeneratorsInv.transform { gInv => ip.gInv |+| gInv |+| ip.g }
+    ownGenerators.transform { f => gInv |+| f |+| g }
+    ownGeneratorsInv.transform { fInv => gInv |+| fInv |+| g }
   }
 }
 
