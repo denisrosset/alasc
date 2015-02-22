@@ -13,6 +13,8 @@ import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.util._
+import net.alasc.ptrcoll
+import ptrcoll.syntax.all._
 
 import debox.external._
 
@@ -20,14 +22,14 @@ final class MutableNodeExplicit[P](
   var beta: Int,
   var transversal: SpecKeyMap[Int, P],
   var transversalInv: SpecKeyMap[Int, P],
-  var ownGenerators: mutable.ArrayBuffer[P],
-  var ownGeneratorsInv: mutable.ArrayBuffer[P],
+  var nOwnGenerators: Int,
+  var ownGeneratorsArray: Array[P],
+  var ownGeneratorsArrayInv: Array[P],
   var prev: MutableStartOrNode[P] = null,
   var next: Chain[P] = null)(implicit val action: FaithfulPermutationAction[P]) extends MutableNode[P] {
 
-  def ownGeneratorsPairs = (ownGenerators zip ownGeneratorsInv).map {
-    case (u, uInv) => InversePair(u, uInv)
-  }
+  def ownGenerator(i: Int): P = ownGeneratorsArray(i)
+  def ownGeneratorInv(i: Int): P = ownGeneratorsArrayInv(i)
 
   def orbitSize = transversal.size
   def inOrbit(b: Int) = transversal.contains(b)
@@ -49,20 +51,32 @@ final class MutableNodeExplicit[P](
     transversalInv.update(b, uInv)
   }
 
-  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]) = {
-    ownGenerators ++= newGens
-    ownGeneratorsInv ++= newGensInv
+  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+    if (nOwnGenerators == ownGeneratorsArray.length) {
+      ownGeneratorsArray = arrayGrow(ownGeneratorsArray)
+      ownGeneratorsArrayInv = arrayGrow(ownGeneratorsArrayInv)
+    }
+    ownGeneratorsArray(nOwnGenerators) = newGen
+    ownGeneratorsArrayInv(nOwnGenerators) = newGenInv
+    nOwnGenerators += 1
   }
 
-  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]) = {
-    ownGenerators += newGen
-    ownGeneratorsInv += newGenInv
+  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+    val it = newGens.iterator
+    val itInv = newGensInv.iterator
+    while (it.hasNext) {
+      val g = it.next
+      val gInv = itInv.next
+      addToOwnGenerators(g, gInv)
+    }
   }
 
   import mutable.ArrayBuffer
 
   /** Remove redundant generators from this node generators. */
-  protected[bsgs] def removeRedundantGenerators: Unit = {
+  protected[bsgs] def removeRedundantGenerators: Unit = {}
+
+  /*{
     /* Tests if the orbit stays complete after removing each generator successively. 
      * The redundant generators are removed from the
      * end of the `ownGeneratorsPairs`, the non-redundant are swapped at its beginning, 
@@ -126,7 +140,7 @@ final class MutableNodeExplicit[P](
     }
     ownGenerators.reduceToSize(ogpLength)
     ownGeneratorsInv.reduceToSize(ogpLength)
-  }
+  }*/
 
   protected[bsgs] def bulkAdd(beta: debox.Buffer[Int], u: ArrayBuffer[P], uInv: ArrayBuffer[P])(implicit ev: FiniteGroup[P]) = {
     cforRange(0 until beta.length) { i =>
@@ -135,8 +149,7 @@ final class MutableNodeExplicit[P](
   }
 
   protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]) = {
-    var toCheck = MutableBitSet.empty
-    val sb = new StringBuilder
+    var toCheck = ptrcoll.sets.BitSSet.empty[Int]
     val toAddBeta = debox.Buffer.empty[Int]
     val toAddU = ArrayBuffer.empty[P]
     val toAddUInv = ArrayBuffer.empty[P]
@@ -156,19 +169,32 @@ final class MutableNodeExplicit[P](
     toAddU.clear
     toAddUInv.clear
     while (!toCheck.isEmpty) {
-      val newAdded = MutableBitSet.empty
-      toCheck.foreachFast { b =>
-        strongGeneratingSetPairs.foreach { case InversePair(g, gInv) =>
-          val newB = b <|+| g
-          if (!inOrbit(newB)) {
-            val newU = u(b) |+| g
-            val newUInv = gInv |+| uInv(b)
-            toAddBeta += newB
-            toAddU += newU
-            toAddUInv += newUInv
-            newAdded += newB
-          }
+      val newAdded = ptrcoll.sets.BitSSet.empty[Int]
+      val iter = toCheck
+      import iter.PtrTC
+      var ptr = iter.pointer
+      while (ptr.hasAt) {
+        val b = ptr.at
+        @tailrec def rec(current: Chain[P]): Unit = current match {
+          case node: Node[P] =>
+            cforRange(0 until node.nOwnGenerators) { i =>
+              val g = node.ownGenerator(i)
+              val gInv = node.ownGeneratorInv(i)
+              val newB = b <|+| g
+              if (!inOrbit(newB)) {
+                val newU = u(b) |+| g
+                val newUInv = gInv |+| uInv(b)
+                toAddBeta += newB
+                toAddU += newU
+                toAddUInv += newUInv
+                newAdded += newB
+              }
+            }
+            rec(node.next)
+          case _: Term[P] =>
         }
+        rec(this)
+        ptr = ptr.next
       }
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
@@ -179,8 +205,7 @@ final class MutableNodeExplicit[P](
   }
 
   protected[bsgs] def updateTransversal(newGen: Iterable[P], newGenInv: Iterable[P])(implicit ev: FiniteGroup[P]) = {
-    var toCheck = MutableBitSet.empty
-    val sb = new StringBuilder
+    var toCheck = ptrcoll.sets.BitSSet.empty[Int]
     val toAddBeta = debox.Buffer.empty[Int]
     val toAddU = ArrayBuffer.empty[P]
     val toAddUInv = ArrayBuffer.empty[P]
@@ -206,20 +231,32 @@ final class MutableNodeExplicit[P](
     toAddU.clear
     toAddUInv.clear
     while (!toCheck.isEmpty) {
-      val newAdded = MutableBitSet.empty
-      toCheck.foreachFast { b =>
-        strongGeneratingSetPairs.foreach { ip =>
-          val InversePair(g, gInv) = ip
-          val newB = b <|+| g
-          if (!inOrbit(newB)) {
-            val newU = u(b) |+| g
-            val newUInv = gInv |+| uInv(b)
-            toAddBeta += newB
-            toAddU += newU
-            toAddUInv += newUInv
-            newAdded += newB
-          }
+      val newAdded = ptrcoll.sets.BitSSet.empty[Int]
+      val iter = toCheck
+      import iter.PtrTC
+      var ptr = iter.pointer
+      while (ptr.hasAt) {
+        val b = ptr.at
+        @tailrec def rec(current: Chain[P]): Unit = current match {
+          case node: Node[P] =>
+            cforRange(0 until node.nOwnGenerators) { i =>
+              val g = node.ownGenerator(i)
+              val gInv = node.ownGeneratorInv(i)
+              val newB = b <|+| g
+              if (!inOrbit(newB)) {
+                val newU = u(b) |+| g
+                val newUInv = gInv |+| uInv(b)
+                toAddBeta += newB
+                toAddU += newU
+                toAddUInv += newUInv
+                newAdded += newB
+              }
+            }
+            rec(node.next)
+          case _: Term[P] =>
         }
+        rec(this)
+        ptr = ptr.next
       }
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
@@ -242,15 +279,17 @@ final class MutableNodeExplicit[P](
     }
     transversal = newTransversal
     transversalInv = newTransversalInv
-    ownGenerators.transform { f => gInv |+| f |+| g }
-    ownGeneratorsInv.transform { fInv => gInv |+| fInv |+| g }
+    cforRange(0 until nOwnGenerators) { i =>
+      ownGeneratorsArray(i) = gInv |+| ownGeneratorsArray(i) |+| g
+      ownGeneratorsArrayInv(i) = gInv |+| ownGeneratorsArrayInv(i) |+| g
+    }
   }
 }
 
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
   def standaloneClone(node: Node[P])(implicit algebra: FiniteGroup[P], classTag: ClassTag[P]) = node match {
     case mne: MutableNodeExplicit[P] =>
-      new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.transversalInv.copy, mne.ownGenerators.clone, mne.ownGeneratorsInv.clone)(mne.action)
+      new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.transversalInv.copy, mne.nOwnGenerators, mne.ownGeneratorsArray.clone, mne.ownGeneratorsArrayInv.clone)(mne.action)
     case _ => ??? /* TODO
       val newTransversal = SpecKeyMap.fromIterable[Int, InversePair[P]](node.iterable)
       val newOwnGeneratorsPairs = mutable.ArrayBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
@@ -261,6 +300,7 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
     new MutableNodeExplicit(beta,
       SpecKeyMap(beta -> FiniteGroup[P].id),
       SpecKeyMap(beta -> FiniteGroup[P].id),
-      mutable.ArrayBuffer.empty[P],
-      mutable.ArrayBuffer.empty[P])
+      0,
+      Array.empty[P],
+      Array.empty[P])
 }

@@ -7,6 +7,7 @@ import scala.reflect.ClassTag
 
 import spire.syntax.action._
 import spire.syntax.monoid._
+import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
@@ -105,8 +106,6 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     */
   def remove(prev: MutableStartOrNode[P], node: Node[P], next: Chain[P]): Unit = {
     require(node.orbitSize == 1)
-    if(!node.ownGeneratorsPairs.isEmpty)
-      println(node.beta -> node.ownGeneratorsPairs)
     // remove node from chain
     prev.next = next
     IsMutableNode.unapply(next).foreach { n => n.prev = prev }
@@ -171,15 +170,27 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     // which case they are copied to newNode2, or (newNode1.beta <|+| g) != newNode1.beta, in which case they
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
-    newNode2.updateTransversal(newNode2.strongGeneratingSetPairs.map(_.g), newNode2.strongGeneratingSetPairs.map(_.gInv))
-    node1.ownGeneratorsPairs.foreach { ip =>
-      if ((newNode1.beta <|+| ip.g) == newNode1.beta) {
-        newNode2.addToOwnGenerators(ip.g, ip.gInv)
-        newNode2.updateTransversal(ip.g, ip.gInv)
-        newNode1.updateTransversal(ip.g, ip.gInv)
+    var chainIt = newNode2
+    @tailrec def rec(current: Chain[P]): Unit = current match {
+      case node: Node[P] =>
+        cforRange(0 until node.nOwnGenerators) { i =>
+          newNode2.updateTransversal(node.ownGenerator(i), node.ownGeneratorInv(i))
+        }
+        rec(node.next)
+      case _: Term[P] =>
+    }
+    rec(newNode2)
+
+    cforRange(0 until node1.nOwnGenerators) { i1 =>
+      val g1 = node1.ownGenerator(i1)
+      val gInv1 = node1.ownGeneratorInv(i1)
+      if ((newNode1.beta <|+| g1) == newNode1.beta) {
+        newNode2.addToOwnGenerators(g1, gInv1)
+        newNode2.updateTransversal(g1, gInv1)
+        newNode1.updateTransversal(g1, gInv1)
       } else {
-        newNode1.addToOwnGenerators(ip.g, ip.gInv)
-        newNode1.updateTransversal(ip.g, ip.gInv)
+        newNode1.addToOwnGenerators(g1, gInv1)
+        newNode1.updateTransversal(g1, gInv1)
       }
     }
     val sizeGoal2 = ((node1.orbitSize.toLong * node2.orbitSize.toLong) / newNode1.orbitSize).toInt

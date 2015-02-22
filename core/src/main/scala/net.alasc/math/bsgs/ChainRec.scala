@@ -8,6 +8,7 @@ import scala.util.Random
 import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.syntax.cfor._
 
 import net.alasc.algebra._
 
@@ -24,10 +25,10 @@ object MutableChainRec {
 object ChainRec {
   @tailrec def isFixed[P](chain: Chain[P], k: Int): Boolean = chain match {
     case node: Node[P] =>
-      if (node.ownGeneratorsPairs.exists( ip => node.action.actr(k, ip.g) != k ))
-        false
-      else
-        isFixed(node.next, k)
+      cforRange(0 until node.nOwnGenerators) { i =>
+        if (node.action.actr(k, node.ownGenerator(i)) != k) return false
+      }
+      isFixed(node.next, k)
     case _: Term[P] => true
   }
 

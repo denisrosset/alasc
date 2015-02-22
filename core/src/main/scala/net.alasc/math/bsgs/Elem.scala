@@ -13,6 +13,7 @@ import scala.util.Random
 import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
@@ -105,6 +106,25 @@ class Start[P](var next: Chain[P])(implicit val action: FaithfulPermutationActio
   }
 }
 
+final class StrongGeneratingSetIterator[P](private[this] var chain: Chain[P], private[this] var index: Int, private[this] var inverse: Boolean) extends Iterator[P] {
+  @inline @tailrec def hasNext: Boolean = chain match {
+    case term: Term[P] => false
+    case node: Node[P] =>
+      if (index == node.nOwnGenerators) {
+        index = 0
+        chain = node.next
+        hasNext
+      } else true
+  }
+  def next: P = if (hasNext) {
+    val node = chain.asInstanceOf[Node[P]]
+    val p = if (inverse) node.ownGeneratorInv(index) else node.ownGenerator(index)
+    index += 1
+    p
+  } else Iterator.empty.next
+}
+
+
 /** Base class for elements in a BSGS chain, i.e. nodes or terminal elements, implementing
   * the chain as a single-linked list, with a double-linked list for mutable elements.
   */
@@ -146,71 +166,17 @@ sealed trait Chain[P] extends Elem[P] {
     override def foreach[U](f: P => U): Unit = {
       @tailrec def rec(current: Chain[P]): Unit = current match {
         case node: Node[P] =>
-          node.ownGeneratorsPairs.foreach( ip => f(ip.g) )
+          cforRange(0 until node.nOwnGenerators)( i => f(node.ownGenerator(i)) )
           rec(node.next)
         case _: Term[P] =>
       }
       rec(chain)
     }
-    def iterator = chain match {
-      case _: Term[P] => Iterator.empty
-      case thisNode: Node[P] => new Iterator[P] {
-        var node: Node[P] = thisNode
-        def hasNextNode = !node.next.isTerminal
-        var nodeIterator = node.ownGeneratorsPairs.iterator
-        def findNonEmptyIterator: Boolean = {
-          while(!nodeIterator.hasNext) {
-            node.next match {
-              case nextNode: Node[P] => node = nextNode
-              case _: Term[P] => return false
-            }
-            nodeIterator = node.ownGeneratorsPairs.iterator
-          }
-          true
-        }
-        def hasNext = nodeIterator.hasNext || findNonEmptyIterator
-        def next: P = {
-          if (!findNonEmptyIterator) return Iterator.empty.next
-          nodeIterator.next.g
-        }
-      }
-    }
+    def iterator = new StrongGeneratingSetIterator[P](chain, 0, false)
   }
 
-  /** Returns the strong generating set pairs for the BSGS chain starting from this node. */
-  def strongGeneratingSetPairs: Iterable[InversePair[P]] = new Iterable[InversePair[P]] {
-    override def foreach[U](f: InversePair[P] => U): Unit = {
-      @tailrec def rec(current: Chain[P]): Unit = current match {
-        case node: Node[P] =>
-          node.ownGeneratorsPairs.foreach(f)
-          rec(node.next)
-        case _: Term[P] =>
-      }
-      rec(chain)
-    }
-    def iterator = chain match {
-      case _: Term[P] => Iterator.empty
-      case thisNode: Node[P] => new Iterator[InversePair[P]] {
-        var node: Node[P] = thisNode
-        def hasNextNode = !node.next.isTerminal
-        var nodeIterator = node.ownGeneratorsPairs.iterator
-        def findNonEmptyIterator: Boolean = {
-          while(!nodeIterator.hasNext) {
-            node.next match {
-              case nextNode: Node[P] => node = nextNode
-              case _: Term[P] => return false
-            }
-            nodeIterator = node.ownGeneratorsPairs.iterator
-          }
-          true
-        }
-        def hasNext = nodeIterator.hasNext || findNonEmptyIterator
-        def next: InversePair[P] = {
-          if (!findNonEmptyIterator) return Iterator.empty.next
-          nodeIterator.next
-        }
-      }
-    }
+  def strongGeneratingSetInv: Iterable[P] = new Iterable[P] {
+    def iterator = new StrongGeneratingSetIterator[P](chain, 0, true)
   }
 
   def length: Int = ChainRec.length(chain)
@@ -263,42 +229,29 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
   def beta: Int
 
   /** If the base is beta(1) -> ... -> beta(m-1) -> beta(m) current base -> tail.beta,
-    * ownGenerators contains all the strong generators g that have beta(i) <|+| g = beta(i) for i < m,
-    * and beta(m) <|+| g =!= beta(m).
+    * ownGenerator(0 .. numOwnGenerators - 1) contains all the strong generators g that
+    *  have beta(i) <|+| g = beta(i) for i < m, and beta(m) <|+| g =!= beta(m).
     */
-  def ownGenerators: Iterable[P]
-  def ownGeneratorsPairs: Iterable[InversePair[P]]
+  def ownGenerator(i: Int): P
+  /** Inverses of own generators, order of inverses corresponding to `generatorsArray`. */
+  def ownGeneratorInv(i: Int): P
+  def nOwnGenerators: Int
+
+  def ownGenerators: IndexedSeq[P] = new IndexedSeq[P] {
+    def apply(i: Int) = ownGenerator(i)
+    def length = nOwnGenerators
+  }
 
   def randomOrbit(rand: Random): Int
 
-  def iterable: Iterable[(Int, InversePair[P])]
   def foreachU(f: P => Unit): Unit
-  def uPair(b: Int): InversePair[P]
   def u(b: Int): P
   def uInv(b: Int): P
   def randomU(rand: Random): P
 }
 
-case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action: FaithfulPermutationAction[P]) extends Node[P] {
-  def isImmutable = true
-  def isMutable = false
-  def foreachOrbit(f: Int => Unit) = f(beta)
-  def foreachU(f: P => Unit): Unit = f(id)
-  def inOrbit(b: Int) = b == beta
-  def isStandalone = false
-  def iterable = Iterable(beta -> InversePair(id, id))
-  def orbitIterator = Iterator(beta)
-  def orbitSize = 1
-  def ownGenerators = Iterable.empty
-  def ownGeneratorsPairs = Iterable.empty
-  def randomU(rand: Random) = id
-  def u(b: Int) = if (b == beta) id else sys.error("Not in orbit")
-  def uInv(b: Int) = if (b == beta) id else sys.error("Not in orbit")
-  def uPair(b: Int) = if (b == beta) InversePair(id, id) else sys.error("Not in orbit")
-}
-
 object Node {
-  def trivial[P](beta: Int, next: Chain[P] = Term[P])(implicit action: FaithfulPermutationAction[P], ev: FiniteGroup[P]): Node[P] =
+  def trivial[P](beta: Int, next: Chain[P] = Term[P])(implicit action: FaithfulPermutationAction[P], ev: FiniteGroup[P], ct: ClassTag[P]): Node[P] =
     new TrivialNode[P](beta, ev.id, next)
   /** Extractor for `Node` from `Elem`. */
   def unapply[P](elem: Elem[P]): Option[Node[P]] = elem match {
@@ -338,8 +291,8 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
 
   /** Adds `newGenerators` (given with their inverses) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */
-  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]): Unit
-  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
 
   /** Updates this node transversal by the addition of `newGens`,
     * provided with their inverses.
@@ -363,38 +316,4 @@ final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgr
   def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
   def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), algebra.id)
   def contains(chain: Chain[P], g: P) = chain.sifts(g)
-}
-
-final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[P]) extends Check[Chain[P]] {
-  import Check._
-
-  def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {
-    case node: Node[P] =>
-      implicit def action = node.action
-      val alg = algorithms.BasicAlgorithms.deterministic[P] // use deterministic algorithms to avoid looping forever on bad data
-      val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
-      val reconstructedOrbits = reconstructedChain.start.next.nodesNext.map(_.orbitSize)
-      val originalOrbits = node.nodesNext.map(_.orbitSize)
-      Check.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")
-    case _ => Check.success
-  }
-  def checkOwnGenerators(chain: Chain[P]): Checked = {
-    val baseSoFar = mutable.ArrayBuffer.empty[Int]
-    @tailrec def rec(currentChecked: Checked, current: Chain[P], checkImmutable: Boolean): Checked = current match {
-      case node: Node[P] =>
-        implicit def action = node.action
-        val fixingBase =
-          node.ownGenerators.toList.flatMap(g => baseSoFar.flatMap(b => Check.equals(b <|+| g, b, s"Generator $g should fix")))
-        val ownGeneratorsMoveBase =
-          node.ownGenerators.toList.flatMap(g => Check.notEquals(node.beta <|+| g, node.beta, s"Generator $g should not fix"))
-        baseSoFar += node.beta
-        val immutableOk =
-          if (checkImmutable) Check.equals(node.isImmutable, true, "All nodes after immutable node should be immutable") else Check.success
-        rec(currentChecked ++ fixingBase ++ ownGeneratorsMoveBase ++ immutableOk, node.next, node.isImmutable)
-      case _: Term[P] => currentChecked
-    }
-    rec(Check.success, chain, false)
-  }
-  def check(chain: Chain[P]): Checked =
-    checkBaseAndStrongGeneratingSet(chain) ++ checkOwnGenerators(chain)
 }

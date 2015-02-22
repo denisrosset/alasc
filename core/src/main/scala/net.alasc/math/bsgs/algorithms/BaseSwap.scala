@@ -7,7 +7,6 @@ import scala.collection.{immutable, mutable}
 import spire.syntax.group._
 import spire.syntax.action._
 
-import net.alasc.algebra.InversePair
 import net.alasc.syntax.subgroup._
 
 trait BaseSwap[P] extends MutableAlgorithms[P] {
@@ -44,17 +43,20 @@ trait BaseSwapDeterministic[P] extends BaseSwapCommon[P] {
     gammaSet -= newNode2.beta
     while (newNode2.orbitSize < sizeGoal2) {
       val gamma = gammaSet.head
-      val ipx@InversePair(x, xInv) = node1.uPair(gamma)
+      val x = node1.u(gamma)
+      val xInv = node1.uInv(gamma)
       assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
       if (!node2.inOrbit(b))
         gammaSet --= immutable.BitSet(gamma) <|+| newNode2.strongGeneratingSet
       else {
-        val ipy = node2.uPair(b)
-        val ipyx = ipy |+| ipx
-        if (!newNode2.inOrbit(node2.beta <|+| ipyx.g)) {
-          newNode2.addToOwnGenerators(ipyx.g, ipyx.gInv)
-          newNode2.updateTransversal(ipyx.g, ipyx.gInv)
+        val y = node2.u(b)
+        val yInv = node2.uInv(b)
+        val yx = y |+| x
+        val yxInv = xInv |+| yInv
+        if (!newNode2.inOrbit(node2.beta <|+| yx)) {
+          newNode2.addToOwnGenerators(yx, yxInv)
+          newNode2.updateTransversal(yx, yxInv)
           gammaSet --= newNode2.orbitSet
         }
       }
@@ -78,10 +80,10 @@ trait BaseSwapRandomized[P] extends BaseSwapCommon[P] with RandomizedAlgorithms 
     while (newNode2.orbitSize < sizeGoal2) {
       val g = node2next.randomElement(randomGenerator) |+| node2.randomU(randomGenerator) |+| node1.randomU(randomGenerator)
       val h = g |+| newNode1.uInv(newNode1.beta <|+| g)
-      val hPair = InversePair(h, h.inverse)
+      val hInv = h.inverse
       if (!newNode2.inOrbit(newNode2.beta <|+| h)) {
-        newNode2.addToOwnGenerators(hPair.g, hPair.gInv)
-        newNode2.updateTransversal(hPair.g, hPair.gInv)
+        newNode2.addToOwnGenerators(h, hInv)
+        newNode2.updateTransversal(h, hInv)
       }
     }
     MutableNodeAndNext(newNode1, newNode2)
