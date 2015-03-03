@@ -26,7 +26,6 @@ case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action:
   def foreachU(f: P => Unit): Unit = f(id)
   def inOrbit(b: Int) = b == beta
   def isStandalone = false
-  def iterable = Iterable(beta -> InversePair(id, id))
   def orbitIterator = Iterator(beta)
   def orbitSize = 1
   def nOwnGenerators = 0

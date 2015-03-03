@@ -55,7 +55,6 @@ object Transversal {
 }
 
 case class ConjugatedTransversal[P](originalTransversal: Transversal[P], g: P, gInv: P)(implicit algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]) extends Transversal[P] {
-  def conjugatedBy = InversePair(g, gInv)
   def orbitSize = originalTransversal.orbitSize
   def beta = originalTransversal.beta <|+| g
   def inOrbit(b: Int) = originalTransversal.inOrbit(b <|+| gInv)

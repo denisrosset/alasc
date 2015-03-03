@@ -37,13 +37,8 @@ final class MutableNodeExplicit[P](
   def orbitIterator = transversal.keysIterator
 
   def foreachU(f: P => Unit) = transversal.foreachValue(f)
-  def uPair(b: Int) = InversePair(transversal(b), transversalInv(b))
   def u(b: Int) = transversal(b)
   def uInv(b: Int) = transversalInv(b)
-  def iterable = new Iterable[(Int, InversePair[P])] {
-    override def stringPrefix = "Iterable"
-    def iterator = orbitIterator.map(b => (b, uPair(b)))
-  }
   def randomU(rand: Random): P = u(randomOrbit(rand))
 
   protected def addTransversalElement(b: Int, u: P, uInv: P): Unit = {
