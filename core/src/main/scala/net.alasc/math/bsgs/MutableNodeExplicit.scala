@@ -14,14 +14,12 @@ import spire.syntax.cfor._
 import net.alasc.algebra._
 import net.alasc.util._
 import net.alasc.ptrcoll
+import ptrcoll.maps._
 import ptrcoll.syntax.all._
-
-import debox.external._
 
 final class MutableNodeExplicit[P](
   var beta: Int,
-  var transversal: SpecKeyMap[Int, P],
-  var transversalInv: SpecKeyMap[Int, P],
+  var transversal: MMap2[Int, P, P],
   var nOwnGenerators: Int,
   var ownGeneratorsArray: Array[P],
   var ownGeneratorsArrayInv: Array[P],
@@ -33,17 +31,46 @@ final class MutableNodeExplicit[P](
 
   def orbitSize = transversal.size
   def inOrbit(b: Int) = transversal.contains(b)
-  def foreachOrbit(f: Int => Unit): Unit = transversal.foreachKey(f)
-  def orbitIterator = transversal.keysIterator
+  def foreachOrbit(f: Int => Unit): Unit = {
+    val ct = transversal
+    import ct.PtrTC
+    var ptr = ct.pointer
+    while (ptr.hasAt) {
+      f(ptr.at)
+      ptr = ptr.next
+    }
+  }
+  def orbitIterator = new Iterator[Int] {
+    assert(transversal.nonEmpty)
+    private[this] val tr = transversal
+    import tr.PtrTC
+    private[this] var ptr = tr.pointer
+    def hasNext = ptr.hasAt
+    def next: Int = {
+      val res = ptr.at
+      ptr = ptr.next
+      res
+    }
+  }
 
-  def foreachU(f: P => Unit) = transversal.foreachValue(f)
-  def u(b: Int) = transversal(b)
-  def uInv(b: Int) = transversalInv(b)
+  def foreachU(f: P => Unit) = {
+    val ct = transversal
+    import ct.PtrTC
+    var ptr = ct.pointer
+    while (ptr.hasAt) {
+      f(ptr.atVal1)
+      ptr = ptr.next
+    }
+  }
+
+  def u(b: Int) = transversal.apply1(b)
+
+  def uInv(b: Int) = transversal.apply2(b)
+
   def randomU(rand: Random): P = u(randomOrbit(rand))
 
   protected def addTransversalElement(b: Int, u: P, uInv: P): Unit = {
-    transversal.update(b, u)
-    transversalInv.update(b, uInv)
+    transversal.update(b, u, uInv)
   }
 
   protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
@@ -261,19 +288,22 @@ final class MutableNodeExplicit[P](
     }
   }
 
-  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ctP: ClassTag[P]) = {
     beta = beta <|+| g
-    val newTransversal = SpecKeyMap.empty[Int, P]
-    val newTransversalInv = SpecKeyMap.empty[Int, P]
-    transversal.foreachKey { k =>
-      val newG: P = gInv |+| transversal(k) |+| g
+    val ct = transversal
+    import ct.PtrTC
+    val newTransversal = HashMMap2.ofSize[Int, P, P](ct.size)
+    var ptr = ct.pointer
+    while (ptr.hasAt) {
+      val k = ptr.at
+      val u = ptr.atVal1
+      val newG: P = gInv |+| u |+| g
       val newGInv: P = newG.inverse
       val newB = k <|+| g
-      newTransversal.update(newB, newG)
-      newTransversalInv.update(newB, newGInv)
+      newTransversal.update(newB, newG, newGInv)
+      ptr = ptr.next
     }
     transversal = newTransversal
-    transversalInv = newTransversalInv
     cforRange(0 until nOwnGenerators) { i =>
       ownGeneratorsArray(i) = gInv |+| ownGeneratorsArray(i) |+| g
       ownGeneratorsArrayInv(i) = gInv |+| ownGeneratorsArrayInv(i) |+| g
@@ -284,18 +314,21 @@ final class MutableNodeExplicit[P](
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
   def standaloneClone(node: Node[P])(implicit algebra: FiniteGroup[P], classTag: ClassTag[P]) = node match {
     case mne: MutableNodeExplicit[P] =>
-      new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.transversalInv.copy, mne.nOwnGenerators, mne.ownGeneratorsArray.clone, mne.ownGeneratorsArrayInv.clone)(mne.action)
+      new MutableNodeExplicit(mne.beta, mne.transversal.copy, mne.nOwnGenerators, mne.ownGeneratorsArray.clone, mne.ownGeneratorsArrayInv.clone)(mne.action)
     case _ => ??? /* TODO
       val newTransversal = SpecKeyMap.fromIterable[Int, InversePair[P]](node.iterable)
       val newOwnGeneratorsPairs = mutable.ArrayBuffer.empty[InversePair[P]] ++= node.ownGeneratorsPairs
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
                    */
   }
-  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P], classTag: ClassTag[P]) =
+  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P], classTag: ClassTag[P]) = {
+    val transversal = HashMMap2.empty[Int, P, P]
+    val id = FiniteGroup[P].id
+    transversal.update(beta, id, id)
     new MutableNodeExplicit(beta,
-      SpecKeyMap(beta -> FiniteGroup[P].id),
-      SpecKeyMap(beta -> FiniteGroup[P].id),
+      transversal,
       0,
       Array.empty[P],
       Array.empty[P])
+  }
 }

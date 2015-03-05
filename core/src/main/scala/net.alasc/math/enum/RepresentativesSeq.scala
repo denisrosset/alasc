@@ -20,7 +20,8 @@ import net.alasc.util._
 
 import bsgs._
 
-import debox.external._
+import ptrcoll._
+import maps._
 
 trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.big.IndexedSeq[Representative[T, G]] {
   self =>
@@ -105,8 +106,8 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     assert(beta < chainNextBeta)
     val nextBeta = chainNextBeta.min(beta + maxSkip)
 
-    protected lazy val candidatesForImages: SpecKeyMap[Long, NextCandidate] = {
-      val map = SpecKeyMap.empty[Long, NextCandidate]
+    protected lazy val candidatesForImages: MMap[Long, NextCandidate] = {
+      val map = HashMMap.empty[Long, NextCandidate]
       var c = 0
       val n = candidates.length
       while (c < n) {
@@ -130,7 +131,16 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     }
 
     protected lazy val sortedImages: Array[Long] = {
-      val res = candidatesForImages.mapToArray[Long]((images, next) => images)
+      import ptrcoll.syntax.all._
+      val res = new Array[Long](candidatesForImages.size)
+      var i = 0
+      var ptr = candidatesForImages.pointer
+      import candidatesForImages.PtrTC
+      while (ptr.hasAt) {
+        res(i) = ptr.at
+        i += 1
+        ptr = ptr.next
+      }
       object ULongOrder extends Order[Long] {
         import spire.syntax.order._
         def compare(x: Long, y: Long): Int = ULong(x) compare ULong(y)
