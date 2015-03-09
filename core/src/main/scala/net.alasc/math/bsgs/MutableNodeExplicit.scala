@@ -19,7 +19,7 @@ import ptrcoll.syntax.all._
 
 final class MutableNodeExplicit[P](
   var beta: Int,
-  var transversal: MMap2[Int, P, P],
+  var transversal: HashMMap2[Int, P, P],
   var nOwnGenerators: Int,
   var ownGeneratorsArray: Array[P],
   var ownGeneratorsArrayInv: Array[P],
@@ -37,7 +37,7 @@ final class MutableNodeExplicit[P](
     var ptr = ct.pointer
     while (ptr.hasAt) {
       f(ptr.at)
-      ptr = ptr.next
+      ptr = ptr.nextPtr
     }
   }
   def orbitIterator = new Iterator[Int] {
@@ -48,7 +48,7 @@ final class MutableNodeExplicit[P](
     def hasNext = ptr.hasAt
     def next: Int = {
       val res = ptr.at
-      ptr = ptr.next
+      ptr = ptr.nextPtr
       res
     }
   }
@@ -59,7 +59,7 @@ final class MutableNodeExplicit[P](
     var ptr = ct.pointer
     while (ptr.hasAt) {
       f(ptr.atVal1)
-      ptr = ptr.next
+      ptr = ptr.nextPtr
     }
   }
 
@@ -216,7 +216,7 @@ final class MutableNodeExplicit[P](
           case _: Term[P] =>
         }
         rec(this)
-        ptr = ptr.next
+        ptr = ptr.nextPtr
       }
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
@@ -278,7 +278,7 @@ final class MutableNodeExplicit[P](
           case _: Term[P] =>
         }
         rec(this)
-        ptr = ptr.next
+        ptr = ptr.nextPtr
       }
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
@@ -301,7 +301,7 @@ final class MutableNodeExplicit[P](
       val newGInv: P = newG.inverse
       val newB = k <|+| g
       newTransversal.update(newB, newG, newGInv)
-      ptr = ptr.next
+      ptr = ptr.nextPtr
     }
     transversal = newTransversal
     cforRange(0 until nOwnGenerators) { i =>

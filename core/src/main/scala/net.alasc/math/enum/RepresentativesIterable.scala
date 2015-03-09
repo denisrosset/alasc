@@ -13,16 +13,16 @@ import net.alasc.syntax.sequence._
 import net.alasc.util._
 
 import bsgs._
+import big._
 
-trait RepresentativesIterableUnordered[T, G] extends Representatives[T, G] with coll.Iterable[Representative[T, G]] {
+trait RepresentativesIterableUnordered[T, G] extends Representatives[T, G] with BigIterable[Representative[T, G]] {
   self =>
-  def stringPrefix = "RepresentativesIterable"
+  override def stringPrefix = "RepresentativesIterable"
 
-  def size = coll.BigIntSize(grp.order / symGrp.order)
+  def size = grp.order / symGrp.order
   def iterator = (symGrp \ grp).iterator.map { coset => new Representative[T, G] {
     val element = coset.g
     val original = t
     implicit val actionTG = self.actionTG
   } }
-  def foreach[U](f: Representative[T, G] => U): Unit = iterator.foreach(f)
 }

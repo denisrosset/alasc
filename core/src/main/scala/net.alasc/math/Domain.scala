@@ -36,7 +36,7 @@ final class Domain private (val size: Int) { domainSelf =>
     /** Returns the minimal representative of the block in which `k` is contained.
       * Must have `0 <= k < size`.
       */
-    def representative(k: Int): Int = startArray(indexArray(k))
+    @inline def representative(k: Int): Int = startArray(indexArray(k))
 
     override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
     override def hashCode = scala.util.hashing.MurmurHash3.arrayHash(indexArray)
@@ -46,10 +46,10 @@ final class Domain private (val size: Int) { domainSelf =>
     }
 
     val domain: Domain = Domain.this
-    def size: Int = Domain.this.size
+    @inline def size: Int = Domain.this.size
 
     /** Returns the number of blocks. */
-    def nBlocks = startArray.length
+    @inline def nBlocks = startArray.length
 
     /** Returns the sequence of blocks, the block size increasing. */
     def sizeIncreasing: Seq[Set[Int]] = blocks.sortBy(b => (b.size, b.min))
@@ -59,7 +59,21 @@ final class Domain private (val size: Int) { domainSelf =>
     def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
 
     /** Describes the set of points contained in a block. */
-    class Block(index: Int) extends FastSetInt {
+    class Block(index: Int) extends Set[Int] { self =>
+      def +(i: Int) = iterator.toSet + i
+      def -(i: Int) = iterator.toSet - i
+      def iterator = new Iterator[Int] {
+        private[this] var current = start
+        def hasNext = current != -1
+        def next: Int = {
+          val res = current
+          if (self.hasNext(current))
+            current = self.next(current)
+          else
+            current = -1
+          res
+        }
+      }
       override def min[B >: Int](implicit cmp: Ordering[B]): Int = startArray(index)
       override def isEmpty = false
       override def nonEmpty = true

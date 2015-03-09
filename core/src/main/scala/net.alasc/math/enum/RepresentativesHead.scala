@@ -12,9 +12,11 @@ import net.alasc.algebra._
 import net.alasc.syntax.sequence._
 import net.alasc.util._
 
+import big._
+
 import bsgs._
 
-trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with coll.HasHead[Representative[T, G]] {
+trait RepresentativesHead[T, G] extends RepresentativesOrdered[T, G] with BigIndexedHead[Representative[T, G]] {
   self =>
   implicit def finiteGroupG: FiniteGroup[G]
   /** Returns the minimal lexicographic representative under permutation. */

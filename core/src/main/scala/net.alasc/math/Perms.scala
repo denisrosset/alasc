@@ -3,22 +3,25 @@ package math
 
 import scala.annotation.tailrec
 
+import spire.util.Opt
+
 import net.alasc.syntax.permutationAction._
 
+import big._
+
 /** Lexicographically ordered sequence of permutations acting on `n` elements. */
-final case class Perms(n: Int) extends coll.big.IndexedSet[Perm] {
+final case class Perms(n: Int) extends BigIndexedSet[Perm] {
   def contains(perm: Perm): Boolean = perm.supportMax.getOrElseFast(-1) < n
   @tailrec def fact(k: Int, acc: BigInt = 1): BigInt =
     if (k < 2) acc else fact(k - 1, acc * k)
-  def length = fact(n)
-  def size = coll.BigIntSize(length)
+  def size = fact(n)
 
   /** Returns the lexicographic rank of the given permutation.
     * 
     * Inspired by sympy.combinatorics.permutations.
     */
-  def find(perm: Perm): Option[BigInt] =
-    if (perm.supportMax.getOrElseFast(-1) >= n) None else {
+  def find(perm: Perm): Opt[BigInt] =
+    if (perm.supportMax.getOrElseFast(-1) >= n) Opt.empty[BigInt] else {
       var rank = BigInt(0)
       val rho: Array[Int] = perm.images(n).toArray
       var k = n - 1
@@ -36,10 +39,8 @@ final case class Perms(n: Int) extends coll.big.IndexedSet[Perm] {
         k -= 1
         j += 1
       }
-      Some(rank)
+      Opt(rank)
     }
-
-  def foreach[U](f: Perm => U) = iterator.foreach(f)
 
   /** Iterates through all permutations, sorted lexicographically.
     * 

@@ -11,6 +11,7 @@ import spire.algebra.Monoid
 import net.alasc.algebra._
 import net.alasc.math.Grp
 import net.alasc.util._
+import big._
 
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
   def check(): Check.Checked = ev.check(lhs)
@@ -54,7 +55,7 @@ final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
   def isProperSubgroupOf(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
 
   def iterator(): Iterator[G] = macro Ops.unop[Iterator[G]]
-  def elements(): coll.Set[G] = macro Ops.unop[coll.Set[G]]
+  def elements(): BigSet[G] = macro Ops.unop[BigSet[G]]
   def generators(): Iterable[G] = macro Ops.unop[Iterable[G]]
   def order(): BigInt = macro Ops.unop[BigInt]
   def randomElement(rhs: Random): G = macro Ops.binop[Random, G]

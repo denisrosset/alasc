@@ -10,7 +10,7 @@ object MyBuild extends Build {
   lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.1"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
-  lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.1.0-SNAPSHOT"
+  lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.2.0-SNAPSHOT"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"

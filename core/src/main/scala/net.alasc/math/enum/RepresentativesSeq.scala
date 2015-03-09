@@ -22,23 +22,24 @@ import bsgs._
 
 import ptrcoll._
 import maps._
+import big._
 
-trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.big.IndexedSeq[Representative[T, G]] {
+trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with BigIndexed[Representative[T, G]] {
   self =>
   implicit def classTagG: ClassTag[G]
-  def stringPrefix = "RepresentativesIterable"
+  override def stringPrefix = "RepresentativesIterable"
 
-  def size = coll.BigIntSize(grp.order / symGrp.order)
+  def size = grp.order / symGrp.order
 
   def foreach[U](f: Representative[T, G] => U): Unit = iterator.foreach(f)
 
-  def find(seq: T): Option[LexRepresentative[T, G]] = {
-    @tailrec def rec(block: Block): Option[LexRepresentative[T, G]] = block match {
+  def find(seq: T): Opt[LexRepresentative[T, G]] = {
+    @tailrec def rec(block: Block): Opt[LexRepresentative[T, G]] = block match {
       case nb: NodeBlock => nb.blockForSeq(seq) match {
         case Opt(nextBlock) => rec(nextBlock)
-        case _ => None
+        case _ => Opt.empty[LexRepresentative[T, G]]
       }
-      case tb: TermBlock => Some(tb)
+      case tb: TermBlock => Opt(tb)
     }
     rec(Block.start)
   }
@@ -53,8 +54,6 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
     }
     rec(Block.start)
   }
-
-  def length = grp.order / symGrp.order
 
   def iterator = {
     def iteratorSearch(block: Block): Iterator[Representative[T, G]] = block match {
@@ -139,7 +138,7 @@ trait RepresentativesSeq[T, G] extends RepresentativesOrdered[T, G] with coll.bi
       while (ptr.hasAt) {
         res(i) = ptr.at
         i += 1
-        ptr = ptr.next
+        ptr = ptr.nextPtr
       }
       object ULongOrder extends Order[Long] {
         import spire.syntax.order._
