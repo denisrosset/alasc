@@ -21,12 +21,6 @@ final class MonoidOps[A](lhs: TraversableOnce[A])(implicit ev: Monoid[A]) {
   def combine(): A = macro Ops.unop[A]
 }
 
-final class SequenceOps[T, A](lhs: T)(implicit ev: Sequence[T, A]) {
-  def length(): Int = macro Ops.unop[Int]
-  def elemAt(rhs: Int): A = macro Ops.binop[Int, A]
-  def toIndexedSeq(): IndexedSeq[A] = macro Ops.unop[IndexedSeq[A]]
-}
-
 final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
   def order(): Int = macro Ops.unop[Int]
   def conjBy(rhs: A): A = macro Ops.binop[A, A]

@@ -166,12 +166,6 @@ class SeqFiniteGroup[SG <: SeqLike[G, SG], G](implicit scalar: FiniteGroup[G], c
   }
 }
 
-class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
-  def length(s: SA) = s.length
-  def elemAt(s: SA, i: Int): A = s(i)
-  def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
-}
-
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._

@@ -9,11 +9,12 @@ object MyBuild extends Build {
   lazy val spire = "org.spire-math" %% "spire" % "0.9.1"
   lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.1"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.1"
   lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.2.0-SNAPSHOT"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
+  lazy val qalg = "com.faacets" %% "qalg" % "0.9.1-SNAPSHOT"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -105,16 +106,32 @@ object MyBuild extends Build {
     )
   )
 
+    // QAlg binding
+
+  lazy val qalgBinding = Project("qalg-binding", file("qalg-binding")).
+    settings(qalgSettings: _*).
+    dependsOn(core)
+
+  lazy val qalgSettings = Seq(
+    name := "alasc-qalg-binding",
+    libraryDependencies ++= Seq(
+      discipline,
+      qalg
+    )
+  )
+
+
   // Scalacheck binding
 
   lazy val scalacheckBinding = Project("scalacheck-binding", file("scalacheck-binding")).
     settings(scalacheckSettings: _*).
-    dependsOn(core)
+    dependsOn(core, qalgBinding)
 
   lazy val scalacheckSettings = Seq(
     name := "alasc-scalacheck-binding",
     libraryDependencies ++= Seq(
       discipline,
+      qalg,
       scalaCheck,
       scalaTest,
       spireScalaCheckBindings
@@ -125,11 +142,12 @@ object MyBuild extends Build {
 
   lazy val tests = Project("tests", file("tests")).
     settings(testsSettings: _*).
-    dependsOn(core, scalacheckBinding)
+    dependsOn(core, qalgBinding, scalacheckBinding)
 
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
+      qalg,
       scalaTest % "test",
       spireScalaCheckBindings
     )

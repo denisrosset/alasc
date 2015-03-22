@@ -14,7 +14,6 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.syntax.sequence._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 

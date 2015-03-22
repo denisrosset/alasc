@@ -12,10 +12,6 @@ trait MonoidSyntax {
   implicit def monoidSyntax[A: Monoid](as: TraversableOnce[A]) = new MonoidOps(as)
 }
 
-trait SequenceSyntax {
-  implicit def sequenceSyntax[T, A](t: T)(implicit ev: Sequence[T, A]) = new SequenceOps(t)
-}
-
 trait FiniteGroupSyntax {
   implicit def finiteGroupSyntax[A: FiniteGroup](a: A) = new FiniteGroupOps(a)
 }
@@ -49,7 +45,6 @@ trait PartialMonoidWithBaseSyntax {
 trait AllSyntax
     extends CheckSyntax
     with MonoidSyntax
-    with SequenceSyntax
     with FiniteGroupSyntax
     with PermutationActionSyntax
     with ShiftablePermutationSyntax

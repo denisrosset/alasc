@@ -20,12 +20,6 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.util._
 
-class SeqSequence[SA <: SeqLike[A, SA], A] extends Sequence[SA, A] {
-  def length(s: SA) = s.length
-  def elemAt(s: SA, i: Int): A = s(i)
-  def toIndexedSeq(s: SA): IndexedSeq[A] = s.toIndexedSeq
-}
-
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
   import net.alasc.syntax.permutationAction._
@@ -48,7 +42,6 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPerm
 }
 
 trait SeqInstances0 {
-  implicit def SeqSequence[CC[A] <: SeqLike[A, CC[A]], A]: Sequence[CC[A], A] = new SeqSequence[CC[A], A]
   implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
     implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): PartialAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
 }
