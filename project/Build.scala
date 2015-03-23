@@ -84,7 +84,7 @@ object MyBuild extends Build {
   // Main
 
   lazy val alasc = Project("alasc", file(".")).
-    aggregate(core, scalacheckBinding, tests, benchmark).
+    aggregate(core, scalacheckBinding, tests, qalgBinding, benchmark).
     settings(alascSettings: _*)
 
   lazy val alascSettings = Seq(
