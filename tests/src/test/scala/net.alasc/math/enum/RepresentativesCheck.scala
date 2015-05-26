@@ -28,16 +28,16 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") {
   }
   property("Minimal representative is found") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
       val bruteForceMinimal = grp.elements.iterator.map(g => (seq <|+|? g).get).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
-      val cleverMinimal = RepresentativesOrdered(seq, grp).head.get
+      val cleverMinimal = Representatives.ordered(seq, grp).head.get
       cleverMinimal.sameElements(bruteForceMinimal)
   }
   property("Representatives are correctly retrieved by index") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val reps = RepresentativesOrdered(seq, grp)
+      val reps = Representatives.ordered(seq, grp)
       reps.iterator.map(_.get).sameElements((0 until reps.size.toInt).iterator.map(k => reps(k).get))
   }
   property("Representatives are lexicographically ordered") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
       implicit val order = spire.std.seq.SeqOrder[Int, Seq]
-      val reps = RepresentativesOrdered(seq, grp)
+      val reps = Representatives.ordered(seq, grp)
       val it = reps.iterator
       var prev = it.next.get
       var correct = true

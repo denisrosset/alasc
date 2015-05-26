@@ -17,8 +17,7 @@ import bsgs._
 object Algorithms {
   /** Returns the minimal lexicographic representative of a sequence under permutation.
     * 
-    * @param n              Sequence length
-    * @param seq            Sequence, defined as a function from index => value
+    * @param seq            Array representation of the sequence
     * @param chainGrp       Group of permutations, described as a BSGS chain with the action corresponding to
     *                       seq, with the base ordered lexicographically (i.e. `node.beta < node.next.beta`)
     * @param symGrp         Subgroup of the group described by `chainGrp` leaving `sym` invariant, i.e.
@@ -28,7 +27,8 @@ object Algorithms {
     * @return the permutation `g` in `chainGrp` such that `i => seq(i <|+| g)` describes a lexicographic minimal
     *         sequence
     */
-  def findMinimalPermutation[G: FiniteGroup](n: Int, seq: Int => Int, chainGrp: Chain[G], symGrp: Grp[G], representation: Representation[G]): G = {
+  def findMinimalPermutation[G: FiniteGroup](seq: Array[Int], chainGrp: Chain[G], symGrp: Grp[G], representation: Representation[G]): G = {
+    val n = seq.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0
     var minimalG = FiniteGroup[G].id
