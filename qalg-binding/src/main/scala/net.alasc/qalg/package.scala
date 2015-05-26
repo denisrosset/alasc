@@ -19,10 +19,7 @@ package object qalg {
     override def actrIsDefined(v: V, p: P) = p.supportMax.getOrElseFast(-1) < V.length(v)
     def partialActl(p: P, v: V): Opt[V] =
       if (p.supportMax.getOrElseFast(-1) >= v.length) Opt.empty[V] else
-        Opt(V.fromFunV(new FunV[A] {
-          def len = v.length
-          def f(k: Int) = v(k <|+| p)
-        }))
+        Opt(V.tabulate(v.length)( k => v(k <|+| p) ))
     def partialActr(v: V, p: P): Opt[V] = partialActl(p.inverse, v)
   }
   implicit def VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuilder[V, A]): PartialAction[V, P] = new VecPermutationAction[V, A, P]
