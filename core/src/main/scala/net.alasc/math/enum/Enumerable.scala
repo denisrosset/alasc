@@ -11,7 +11,7 @@ import spire.algebra.Order
   */
 trait Enumerable[T] {
   /** Size of the sequence `t`. */
-  def size(t: T): Int = partition(t).domain.size
+  def size(t: T): Int
   /** Partition of the domain corresponding to `t` where, for each partition of indices,
     * the elements corresponding to those indices have the same value.
     */

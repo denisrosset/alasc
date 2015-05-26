@@ -34,15 +34,17 @@ trait EnumerableOrdered[T, A] extends EnumerableSequence[T, A] {
 }
 
 final class EnumerableOrderedSeq[A](implicit val A: Order[A]) extends EnumerableOrdered[Seq[A], A] {
-  override def size(t: Seq[A]) = t.size
+  def size(t: Seq[A]) = t.size
   def element(t: Seq[A], k: Int) = t(k)
 }
 
-final class EnumerableOrderedSetInt[S <: Set[Int]] extends EnumerableOrdered[S, Boolean] {
-  implicit def A: Order[Boolean] = spire.std.boolean.BooleanStructure
+final class EnumerableOrderedSetInt[S <: Set[Int]](val domainSize: Int) extends EnumerableOrdered[S, Boolean] {
+  implicit def A: Order[Boolean] = spire.std.boolean.BooleanStructure.reverse
   def element(t: S, idx: Int): Boolean = t(idx)
+  def size(t: S): Int = domainSize
 }
+
 object EnumerableOrdered {
   implicit def seqWithOrder[A: Order]: EnumerableOrdered[Seq[A], A] = new EnumerableOrderedSeq[A]
-  implicit def setInt[S <: Set[Int]]: EnumerableOrdered[S, Boolean] = new EnumerableOrderedSetInt[S]
+  def setInt[S <: Set[Int]](domainSize: Int): EnumerableOrdered[S, Boolean] = new EnumerableOrderedSetInt[S](domainSize)
 }

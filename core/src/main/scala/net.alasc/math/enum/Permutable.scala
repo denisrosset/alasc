@@ -2,6 +2,8 @@ package net.alasc
 package math
 package enum
 
+import scala.collection.generic.CanBuildFrom
+import scala.collection.{Set, SetLike}
 import scala.reflect.ClassTag
 
 import spire.algebra.partial.RightPartialAction
@@ -24,12 +26,13 @@ trait Permutable[T, G] {
 object Permutable {
   implicit def seq[A, G: FiniteGroup: FaithfulPermutationAction: PermutationRepresentations]: Permutable[Seq[A], G] = new PermutableSeq[A, G]
   implicit def array[A: ClassTag, G: FaithfulPermutationAction: PermutationRepresentations]: Permutable[Array[A], G] = new PermutableArray[A, G]
-//  implicit def setInt[S <: Set[Int], G: FaithfulPermutationAction: PermutationRepresentations]: 
+  implicit def setInt[S <: SetLike[Int, S] with Set[Int], G: FiniteGroup](representation: Representation[G])(implicit cbf: CanBuildFrom[Nothing, Int, S]): Permutable[S, G] = new PermutableSetInt[S, G](representation)
 }
-/*
-final class PermutableSetInt[S <: Set[Int], G: FiniteGroup: FaithfulPermutationAction: PermutationRepresentations] extends Permutable[S, G] {
-  def action = net.alasc.std.bitset.SetPermutationAction[
-}*/
+final class PermutableSetInt[S <: SetLike[Int, S] with Set[Int], G: FiniteGroup](val representation: Representation[G])(implicit cbf: CanBuildFrom[Nothing, Int, S]) extends Permutable[S, G] {
+  implicit def faithfulAction: FaithfulPermutationAction[G] = representation.action
+  def action = RightPartialAction.fromRightAction(net.alasc.std.set.SetIntPermutationAction[S, G])
+  def representation(t: S): Representation[G] = representation
+}
 
 final class PermutableSeq[A, G: FiniteGroup: FaithfulPermutationAction: PermutationRepresentations] extends Permutable[Seq[A], G] {
   def action = net.alasc.std.seq.SeqPermutationAction[Seq, A, G]
