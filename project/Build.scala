@@ -6,15 +6,15 @@ object MyBuild extends Build {
   // Dependencies
 
   lazy val debox = "org.spire-math" %% "debox" % "0.7.0"
-  lazy val spire = "org.spire-math" %% "spire" % "0.9.1"
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.1"
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.1"
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.1"
-  lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.2.0-SNAPSHOT"
+  lazy val spire = "org.spire-math" %% "spire" % "0.9.2-SNAPSHOT"
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.2-SNAPSHOT"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.2"
+  lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.3.0-SNAPSHOT"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-  lazy val qalg = "com.faacets" %% "qalg" % "0.9.1-SNAPSHOT"
+  lazy val qalg = "com.faacets" %% "qalg" % "0.9.2-SNAPSHOT"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -27,7 +27,7 @@ object MyBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
     organization := "net.alasc",
 
-    scalaVersion := "2.11.5",
+    scalaVersion := "2.11.6",
 
     licenses := Seq("BSD-style" -> url("http://opensource.org/licenses/MIT")),
     homepage := Some(url("https://github.com/denisrosset/alasc")),

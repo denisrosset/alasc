@@ -6,25 +6,20 @@ import scala.annotation.tailrec
 
 import scala.collection.generic.CanBuildFrom
 import scala.collection.SeqLike
-import scala.collection.mutable
-import scala.reflect.classTag
 
 import spire.algebra._
 import spire.algebra.partial._
-import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
-import spire.syntax.eq._
+import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra._
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
-  import net.alasc.syntax.permutationAction._
-  import spire.syntax.group._
-  import spire.syntax.action._
 
   override def actlIsDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
   override def actrIsDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
@@ -33,8 +28,9 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPerm
     if (p.supportMax.getOrElseFast(-1) >= s.length) Opt.empty[SA] else {
       val b = cbf()
       b.sizeHint(s)
-      for (i <- 0 until s.length)
+      cforRange(0 until s.length) { i =>
         b += s(i <|+| p)
+      }
       Opt(b.result)
     }
 
