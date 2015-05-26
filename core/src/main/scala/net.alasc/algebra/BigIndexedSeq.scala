@@ -9,6 +9,7 @@ import net.alasc.util._
   * methods of IndexedSeq are defined as of now.
   */ 
 trait BigIndexedSeq[A] extends PartialFunction[BigInt, A] with Iterable[A] { self =>
+  override def toString = s"BigIndexedSeq($head, ... total of $length elements)"
   def length: BigInt
   def apply(idx: BigInt): A
   def isDefinedAt(idx: BigInt): Boolean = (idx >= 0 && idx < length)

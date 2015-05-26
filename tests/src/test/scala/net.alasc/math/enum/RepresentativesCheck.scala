@@ -22,12 +22,12 @@ object RepresentativesCheck extends Properties("RepresentativesCheck") {
     grp <- Grps.fromElements(Permutations.forSize[Perm](sz))
   } yield (seq, grp)
   property("All representatives are generated") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val bruteForceSet = grp.elements.iterator.map(g => (seq <|+|? g).get).toSet
+      val bruteForceSet = grp.iterator.map(g => (seq <|+|? g).get).toSet
       val cleverSeq = Representatives(seq, grp).iterator.map(_.get).toSeq
         (cleverSeq.size == bruteForceSet.size) && (cleverSeq.toSet == bruteForceSet)
   }
   property("Minimal representative is found") = Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val bruteForceMinimal = grp.elements.iterator.map(g => (seq <|+|? g).get).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
+      val bruteForceMinimal = grp.iterator.map(g => (seq <|+|? g).get).min(Order.ordering(spire.std.seq.SeqOrder[Int, Seq]))
       val cleverMinimal = Representatives.ordered(seq, grp).head.get
       cleverMinimal.sameElements(bruteForceMinimal)
   }

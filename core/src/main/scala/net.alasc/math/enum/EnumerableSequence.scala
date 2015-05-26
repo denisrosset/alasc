@@ -22,7 +22,8 @@ trait EnumerableSequence[T, A] extends EnumerableSearchable[T] {
   def groups(t: T): Groups
   /** Retrieves the element present at the index `idx` in the sequence `t`. */
   def element(t: T, idx: Int): A
-  def partition(t: T): Domain#Partition = Domain.Partition(groups(t).iterator.map(_._2).toSeq: _*)
+  def partition(t: T): Domain#Partition =
+    Domain.Partition(groups(t).iterator.map(_._2).toSeq: _*)
   def commonPartitions(from: T, to: T): Opt[Domain#PartitionMap[Set[Int]]] = {
     val fromGroups = groups(from)
     val toGroups = groups(to)

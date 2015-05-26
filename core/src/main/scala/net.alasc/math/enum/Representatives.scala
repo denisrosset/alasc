@@ -11,7 +11,7 @@ import net.alasc.algebra._
 import net.alasc.math.guide._
 
 trait Representatives[T, G] extends Iterable[Representative[T, G]] {
-  override def stringPrefix = "Representatives"
+  override def toString = s"Representatives($head, ... total of $length elements)"
   implicit def T: Enumerable[T]
   implicit def TG: Permutable[T, G]
   implicit def actionTG: RightPartialAction[T, G] = TG.action

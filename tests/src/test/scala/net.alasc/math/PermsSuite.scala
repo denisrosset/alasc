@@ -14,10 +14,10 @@ class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {
       import net.alasc.optional.lexPermutationOrder._
       assert((seqFromPermsIterator.iterator zip seqFromPermsIterator.iterator.drop(1)).forall { case (x, y) => (x < y) })
       val seqFromPermsApply = (0 until perms.size.toInt).map(perms(_)).toSeq
-      val setFromSym = sym.elements.iterator.toSet
+      val setFromSym = sym.iterator.toSet
       for (i <- 0 until perms.size.toInt) {
         val perm = perms(i)
-        assert(perms.find(perm).getOrElse(sys.error("Perm should be inside")) == i)
+        assert(perms.indexOf(perm).getOrElse(sys.error("Perm should be inside")) == i)
       }
       assert(seqFromPermsApply == seqFromPermsIterator)
       assert(seqFromPermsApply.toSet == setFromSym)
