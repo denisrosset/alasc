@@ -14,8 +14,8 @@ import spire.syntax.cfor._
 import net.alasc.algebra._
 import net.alasc.util._
 import net.alasc.ptrcoll
+import ptrcoll._
 import ptrcoll.maps._
-import ptrcoll.syntax.all._
 
 final class MutableNodeExplicit[P](
   var beta: Int,
@@ -32,35 +32,38 @@ final class MutableNodeExplicit[P](
   def orbitSize = transversal.size
   def inOrbit(b: Int) = transversal.contains(b)
   def foreachOrbit(f: Int => Unit): Unit = {
-    val ct = transversal
-    import ct.PtrTC
-    var ptr = ct.pointer
-    while (ptr.hasAt) {
-      f(ptr.at)
-      ptr = ptr.nextPtr
+    val st = transversal
+    @inline @tailrec def rec(ptr: st.Ptr): Unit = ptr match {
+      case Valid(vp) =>
+        f(st.ptrKey(vp))
+        rec(st.ptrNext(vp))
+      case _ =>
     }
+    rec(st.ptrStart)
   }
   def orbitIterator = new Iterator[Int] {
     assert(transversal.nonEmpty)
     private[this] val tr = transversal
-    import tr.PtrTC
-    private[this] var ptr = tr.pointer
-    def hasNext = ptr.hasAt
-    def next: Int = {
-      val res = ptr.at
-      ptr = ptr.nextPtr
-      res
+    private[this] var ptr = tr.ptrStart
+    def hasNext = ptr.nonNull
+    def next: Int = ptr match {
+      case Valid(vp) =>
+        val res = tr.ptrKey(vp)
+        ptr = tr.ptrNext(vp)
+        res
+      case _ => Iterator.empty.next
     }
   }
 
   def foreachU(f: P => Unit) = {
-    val ct = transversal
-    import ct.PtrTC
-    var ptr = ct.pointer
-    while (ptr.hasAt) {
-      f(ptr.atVal1)
-      ptr = ptr.nextPtr
+    val st = transversal
+    @inline @tailrec def rec(ptr: st.Ptr): Unit = ptr match {
+      case Valid(vp) =>
+        f(st.ptrVal1(vp))
+        rec(st.ptrNext(vp))
+      case _ =>
     }
+    rec(st.ptrStart)
   }
 
   def u(b: Int) = transversal.apply1(b)
@@ -193,31 +196,32 @@ final class MutableNodeExplicit[P](
     while (!toCheck.isEmpty) {
       val newAdded = ptrcoll.sets.BitSSet.empty[Int]
       val iter = toCheck
-      import iter.PtrTC
-      var ptr = iter.pointer
-      while (ptr.hasAt) {
-        val b = ptr.at
-        @tailrec def rec(current: Chain[P]): Unit = current match {
-          case node: Node[P] =>
-            cforRange(0 until node.nOwnGenerators) { i =>
-              val g = node.ownGenerator(i)
-              val gInv = node.ownGeneratorInv(i)
-              val newB = b <|+| g
-              if (!inOrbit(newB)) {
-                val newU = u(b) |+| g
-                val newUInv = gInv |+| uInv(b)
-                toAddBeta += newB
-                toAddU += newU
-                toAddUInv += newUInv
-                newAdded += newB
+      @tailrec def rec1(ptr: iter.Ptr): Unit = ptr match {
+        case Valid(vp) =>
+          val b = iter.ptrKey(vp)
+          @tailrec def rec(current: Chain[P]): Unit = current match {
+            case node: Node[P] =>
+              cforRange(0 until node.nOwnGenerators) { i =>
+                val g = node.ownGenerator(i)
+                val gInv = node.ownGeneratorInv(i)
+                val newB = b <|+| g
+                if (!inOrbit(newB)) {
+                  val newU = u(b) |+| g
+                  val newUInv = gInv |+| uInv(b)
+                  toAddBeta += newB
+                  toAddU += newU
+                  toAddUInv += newUInv
+                  newAdded += newB
+                }
               }
-            }
-            rec(node.next)
-          case _: Term[P] =>
-        }
-        rec(this)
-        ptr = ptr.nextPtr
+              rec(node.next)
+            case _: Term[P] =>
+          }
+          rec(this)
+          rec1(iter.ptrNext(vp))
+        case _ =>
       }
+      rec1(iter.ptrStart)
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
       toAddU.clear
@@ -255,31 +259,32 @@ final class MutableNodeExplicit[P](
     while (!toCheck.isEmpty) {
       val newAdded = ptrcoll.sets.BitSSet.empty[Int]
       val iter = toCheck
-      import iter.PtrTC
-      var ptr = iter.pointer
-      while (ptr.hasAt) {
-        val b = ptr.at
-        @tailrec def rec(current: Chain[P]): Unit = current match {
-          case node: Node[P] =>
-            cforRange(0 until node.nOwnGenerators) { i =>
-              val g = node.ownGenerator(i)
-              val gInv = node.ownGeneratorInv(i)
-              val newB = b <|+| g
-              if (!inOrbit(newB)) {
-                val newU = u(b) |+| g
-                val newUInv = gInv |+| uInv(b)
-                toAddBeta += newB
-                toAddU += newU
-                toAddUInv += newUInv
-                newAdded += newB
+      @inline @tailrec def rec1(ptr: iter.Ptr): Unit = ptr match {
+        case Valid(vp) =>
+          val b = iter.ptrKey(vp)
+          @inline @tailrec def rec(current: Chain[P]): Unit = current match {
+            case node: Node[P] =>
+              cforRange(0 until node.nOwnGenerators) { i =>
+                val g = node.ownGenerator(i)
+                val gInv = node.ownGeneratorInv(i)
+                val newB = b <|+| g
+                if (!inOrbit(newB)) {
+                  val newU = u(b) |+| g
+                  val newUInv = gInv |+| uInv(b)
+                  toAddBeta += newB
+                  toAddU += newU
+                  toAddUInv += newUInv
+                  newAdded += newB
+                }
               }
-            }
-            rec(node.next)
-          case _: Term[P] =>
-        }
-        rec(this)
-        ptr = ptr.nextPtr
+              rec(node.next)
+            case _: Term[P] =>
+          }
+          rec(this)
+          rec1(iter.ptrNext(vp))
+        case _ =>
       }
+      rec1(iter.ptrStart)
       bulkAdd(toAddBeta, toAddU, toAddUInv)
       toAddBeta.clear
       toAddU.clear
@@ -290,19 +295,20 @@ final class MutableNodeExplicit[P](
 
   protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ctP: ClassTag[P]) = {
     beta = beta <|+| g
-    val ct = transversal
-    import ct.PtrTC
-    val newTransversal = HashMMap2.ofSize[Int, P, P](ct.size)
-    var ptr = ct.pointer
-    while (ptr.hasAt) {
-      val k = ptr.at
-      val u = ptr.atVal1
-      val newG: P = gInv |+| u |+| g
-      val newGInv: P = newG.inverse
-      val newB = k <|+| g
-      newTransversal.update(newB, newG, newGInv)
-      ptr = ptr.nextPtr
+    val st = transversal
+    val newTransversal = HashMMap2.ofSize[Int, P, P](st.size)
+    @tailrec @inline def rec(ptr: st.Ptr): Unit = ptr match {
+      case Valid(vp) =>
+        val k = st.ptrKey(vp)
+        val u = st.ptrVal1(vp)
+        val newG: P = gInv |+| u |+| g
+        val newGInv: P = newG.inverse
+        val newB = k <|+| g
+        newTransversal.update(newB, newG, newGInv)
+        rec(st.ptrNext(vp))
+      case _ =>
     }
+    rec(st.ptrStart)
     transversal = newTransversal
     cforRange(0 until nOwnGenerators) { i =>
       ownGeneratorsArray(i) = gInv |+| ownGeneratorsArray(i) |+| g
