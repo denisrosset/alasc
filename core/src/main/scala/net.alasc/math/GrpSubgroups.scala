@@ -101,23 +101,29 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
 
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
     Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
-  def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
-    if (points.size == 0) return lhs
-    val set = Set(points:_*)
-    val maxSet = set.max
-    val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
-    pointwiseStabilizer(set, rp)
-  }
+  def pointwiseStabilizer(set: Set[Int])(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    if (set.isEmpty) lhs else {
+      val maxSet = set.max
+      val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
+      pointwiseStabilizer(set, rp)
+    }
+
+  def pointwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    pointwiseStabilizer(Set(points: _*))
 
   def setwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
-    Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
-  def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] = {
-    if (points.size == 0) return lhs
-    val set = Set(points:_*)
-    val maxSet = set.max
-    val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
-    setwiseStabilizer(set, rp)
-  }
+    if (set.isEmpty) lhs else
+      Grp.fromChain(Stabilizer.setwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
+
+  def setwiseStabilizer(set: Set[Int])(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    if (set.isEmpty) lhs else {
+      val maxSet = set.max
+      val rp = if (maxSet < representation.size) representation else prp.forSize(maxSet + 1)
+      setwiseStabilizer(set, rp)
+    }
+
+  def setwiseStabilizer(points: Int*)(implicit prp: PermutationRepresentations[G]): Grp[G] =
+    setwiseStabilizer(Set(points: _*))
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.
