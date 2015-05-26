@@ -10,15 +10,14 @@ import spire.syntax.action._
 import net.alasc.algebra._
 import net.alasc.math.bsgs._
 import net.alasc.math.guide.BaseGuideLex
-import big._
 
 class GrpLexElements[G](val lhs: Grp[G]) {
   import lhs._
   // enumeration of subgroup elements
-  def lexElements(implicit rp: Representation[G]): BigIndexedSet[G] = new BigIndexedSet[G] {
+  def lexElements(implicit rp: Representation[G]): BigIndexedSeq[G] = new BigIndexedSeq[G] {
     implicit val action = rp.action
     val lexChain = lhs.chain(rp, BaseGuideLex(rp.size))
-    def size = lhs.order
+    def length = lhs.order
     def contains(g: G) = (lhs: Grp[G]).contains(g)
     def apply(idx: BigInt): G = {
       @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {

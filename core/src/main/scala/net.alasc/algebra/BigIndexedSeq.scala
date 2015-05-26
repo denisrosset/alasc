@@ -1,6 +1,9 @@
 package net.alasc
-package math
-package enum
+package algebra
+
+import spire.util.Opt
+
+import net.alasc.util._
 
 /** An indexed sequence that allows for greater lengths than Int.MaxValue; only a few
   * methods of IndexedSeq are defined as of now.
@@ -9,6 +12,14 @@ trait BigIndexedSeq[A] extends PartialFunction[BigInt, A] with Iterable[A] { sel
   def length: BigInt
   def apply(idx: BigInt): A
   def isDefinedAt(idx: BigInt): Boolean = (idx >= 0 && idx < length)
+  def indexOf(a: A): Opt[BigInt] = {
+    val it: Iterator[(A, BigInt)] = iterator.zipWithBigIndex
+    while(it.hasNext) {
+      val (v, idx) = it.next
+      if (v == a) return Opt(idx)
+    }
+    Opt.empty[BigInt]
+  }
   def map[B](f: A => B): BigIndexedSeq[B] = new MappedBigIndexedSeq[A, B](self, f)
 }
 

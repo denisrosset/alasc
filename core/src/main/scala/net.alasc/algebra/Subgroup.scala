@@ -10,7 +10,6 @@ import spire.syntax.eq._
 import net.alasc.math.Grp
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
-import net.alasc.big._
 
 trait Subgroup[S, G] extends PartialOrder[S] { sg =>
   implicit val algebra: FiniteGroup[G]
@@ -38,13 +37,6 @@ trait Subgroup[S, G] extends PartialOrder[S] { sg =>
 
   /** Iterator through the subgroup elements. */
   def iterator(s: S): Iterator[G]
-  /** Set of subgroup elements. */
-  def elements(s: S): BigSet[G] = new BigSet[G] {
-    def contains(g: G) = sg.contains(s, g)
-    def foreach[U](f: G => U): Unit = sg.iterator(s).foreach(f)
-    def iterator = sg.iterator(s)
-    def size = sg.order(s)
-  }
   /** Iterable of the subgroup generators. */
   def generators(s: S): Iterable[G]
   /** Order of the subgroup `s`. */

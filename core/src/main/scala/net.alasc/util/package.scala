@@ -2,7 +2,7 @@ package net.alasc
 
 import scala.reflect.ClassTag
 
-package object util extends NNOptionTopLevel with OptionTuple2NNTopLevel {
+package object util extends NNOptionTopLevel with OptionTuple2NNTopLevel with RichIteratorOps {
   def arrayGrow[T: ClassTag](array: Array[T], minSize: Int = 8): Array[T] = {
     val newSize = scala.math.max(array.length * 2, minSize)
     val newArray = new Array[T](newSize)
@@ -17,4 +17,3 @@ package object util extends NNOptionTopLevel with OptionTuple2NNTopLevel {
       newArray
     }
 }
-

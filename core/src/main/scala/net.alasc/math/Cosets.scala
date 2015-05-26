@@ -21,7 +21,7 @@ class LeftCoset[G](val g: G, grpH: Grp[G]) {
   implicit def algebra = grpH.algebra
   def contains(el: G) = grpH.contains(g.inverse |+| el)
   def size: BigInt = grpH.order
-  def iterator: Iterator[G] = grpH.elements.iterator.map( h => g |+| h )
+  def iterator: Iterator[G] = grpH.iterator.map( h => g |+| h )
   def rightCoset: RightCoset[G] = new RightCoset(grpH, g.inverse)
 }
 

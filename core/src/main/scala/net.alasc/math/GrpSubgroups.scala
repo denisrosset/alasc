@@ -101,6 +101,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
 
   def pointwiseStabilizer(set: Set[Int], rp: Representation[G]): Grp[G] =
     Grp.fromChain(Stabilizer.pointwiseStabilizer(lhs.chain(rp, Stabilizer.baseGuide(set)), set), Opt(rp))
+
   def pointwiseStabilizer(set: Set[Int])(implicit prp: PermutationRepresentations[G]): Grp[G] =
     if (set.isEmpty) lhs else {
       val maxSet = set.max
