@@ -101,7 +101,7 @@ trait Representations[G] { self =>
 }
 
 object Representations {
-  def apply[G](implicit ev: Representations[G]): Representations[G] = ev
+  @inline final def apply[G](implicit ev: Representations[G]): Representations[G] = ev
 }
 
 /** Implementation of representations for genuine permutation types such as `Perm` or `Cycles`. */
@@ -136,4 +136,8 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
     def join(x: R, y: R) = if (x.size >= y.size) x else y
     def meet(x: R, y: R) = if (x.size <= y.size) x else y
   }
+}
+
+object PermutationRepresentations {
+  @inline final def apply[G](implicit ev: PermutationRepresentations[G]): PermutationRepresentations[G] = ev
 }
