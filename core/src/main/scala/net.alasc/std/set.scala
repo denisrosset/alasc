@@ -13,7 +13,7 @@ import net.alasc.syntax.permutationAction._
 class SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P: FiniteGroup: FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, Int, S]) extends Action[S, P] {
 
-  def actl(p: P, s: S): S = {
+  def actr(s: S, p: P): S = {
     val b = cbf()
     s.foreach { i: Int =>
       b += i <|+| p
@@ -21,7 +21,7 @@ class SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P: FiniteGroup
     b.result
   }
 
-  def actr(s: S, p: P): S = actl(p.inverse, s)
+  def actl(p: P, s: S): S = actr(s, p.inverse)
 }
 
 trait SetInstances0 {
