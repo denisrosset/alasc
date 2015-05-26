@@ -2,7 +2,7 @@ package net.alasc.math
 
 import scala.annotation.tailrec
 
-import scala.collection.BitSet
+import scala.collection.{BitSet, SortedSet}
 import scala.collection.mutable
 import scala.collection.immutable
 import scala.reflect.ClassTag
@@ -156,14 +156,15 @@ final class Domain private (val size: Int) { domainSelf =>
     def apply(sets: Set[Int]*): Partition = {
       val cumSizes = (0 /: sets.map(_.size))(_+_)
       val setOfSets = sets.flatten.toSet
-      if (setOfSets.isEmpty) return fromSortedBlocks(Seq.empty[Set[Int]])
+      if (setOfSets.isEmpty) return fromSortedBlocks(Seq.empty[SortedSet[Int]])
       val minP = setOfSets.min
       val maxP = setOfSets.max
       assert(setOfSets.size == cumSizes)
       assert(cumSizes == maxP - minP + 1)
-      val sortedBlocks = sets.sortBy(_.min)
+      val sortedBlocks = sets.map(setToSortedSet(_)).sortBy(_.min)
       fromSortedBlocks(sortedBlocks)
     }
+
     def fromPermutation[P: PermutationAction](p: P) = {
       val rem = mutable.BitSet.empty ++= (0 until size)
       var blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
@@ -175,6 +176,15 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       fromSortedBlocks(blocks)
     }
+
+    def setToSortedSet(set: Set[Int]): SortedSet[Int] = set match {
+      case sortedSet: SortedSet[Int] => sortedSet
+      case _ =>
+        val b = BitSet.newBuilder
+        set.foreach { b += _ }
+        b.result
+    }
+
     def fromSeq(seq: Seq[Any]): Partition = {
       require(seq.size == size)
       val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]
@@ -189,13 +199,14 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       fromSortedBlocks(blocks)
     }
-    def fromSortedBlocks(blocks: Seq[scala.collection.Set[Int]]) = {
+
+    def fromSortedBlocks(blocks: Seq[scala.collection.SortedSet[Int]]) = {
       val n = Domain.this.size
       val la = new Array[Int](n)
       val ia = new Array[Int](n)
       val sa = new Array[Int](blocks.size)
       blocks.indices.foreach { index =>
-        val block = blocks(index).toSeq.sorted // TODO: optimize
+        val block = blocks(index)
         sa(index) = block.min
         la(block.max) = -1
         var prev = -1
@@ -208,6 +219,7 @@ final class Domain private (val size: Int) { domainSelf =>
       }
       new Partition(la, ia, sa)
     }
+    
     trait PartitionBoundedLattice extends BoundedLattice[Partition] {
       def zero = Partition.fromSortedBlocks(Seq.tabulate(size)( i => immutable.BitSet(i) ))
       def one = Partition.fromSortedBlocks(Seq(immutable.BitSet.empty ++ (0 until size)))
