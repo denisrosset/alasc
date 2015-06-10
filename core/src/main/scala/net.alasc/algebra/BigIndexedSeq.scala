@@ -22,6 +22,13 @@ trait BigIndexedSeq[A] extends PartialFunction[BigInt, A] with Iterable[A] { sel
     Opt.empty[BigInt]
   }
   def map[B](f: A => B): BigIndexedSeq[B] = new MappedBigIndexedSeq[A, B](self, f)
+  override def toIndexedSeq: scala.collection.immutable.IndexedSeq[A] = {
+    require(length.isValidInt)
+    new scala.collection.immutable.IndexedSeq[A] {
+      def apply(idx: Int): A = self.apply(idx)
+      def length: Int = self.length.toInt
+    }
+  }
 }
 
 final class MappedBigIndexedSeq[A, B](original: BigIndexedSeq[A], f: A => B) extends BigIndexedSeq[B] {
