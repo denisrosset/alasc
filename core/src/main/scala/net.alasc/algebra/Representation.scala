@@ -6,6 +6,7 @@ import scala.reflect.{ClassTag, classTag}
 import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.syntax.lattice._
+import spire.util._
 
 import net.alasc.syntax.permutationAction._
 
@@ -26,5 +27,5 @@ trait Representation[G] {
   def images(g: G): IndexedSeq[Int] = action.images(g, size)
   /** Tests if this representation can represent the element `g`. */
   def represents(g: G): Boolean
-  val representations: Representations[G]
+  def representations: Opt[Representations[G]]
 }

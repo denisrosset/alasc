@@ -15,11 +15,8 @@ import net.alasc.math.guide.BaseGuideSeq
 import net.alasc.syntax.all._
 
 class GrpSubgroups[G](val lhs: Grp[G]) {
-  import lhs.representation
-  implicit def gClassTag: ClassTag[G] = lhs.algorithms.gClassTag
-  implicit def algorithms: BasicAlgorithms[G] = lhs.algorithms
-  implicit def representations: Representations[G] = lhs.representations
-  implicit def algebra: FiniteGroup[G] = lhs.algebra
+  import lhs.{algorithms, classTag, equality, finiteGroup, representation, representations}
+
   def union(rhs: Grp[G]): Grp[G] = Grp.lattice[G].join(lhs, rhs)
   def intersect(rhs: Grp[G]): Grp[G] = Grp.lattice[G].meet(lhs, rhs)
 
@@ -56,7 +53,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
   }
 
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
-    implicit val algebra = lhs.algorithms.algebra
+    implicit val finiteGroup = lhs.algorithms.finiteGroup
     lhs match {
       case grp: GrpConjugated[G] =>
         grp.originalChain match {

@@ -4,6 +4,7 @@ package algorithms
 
 import scala.reflect.ClassTag
 
+import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.util.Opt
@@ -32,15 +33,14 @@ object Intersection {
     chain1 match {
       case node1: Node[P] => chain2WithGuidedBase match {
         case node2: Node[P] =>
-          implicit def algebra: FiniteGroup[P] = alg.algebra
-          implicit def pClassTag: ClassTag[P] = alg.gClassTag
+          import alg.{equality, classTag, finiteGroup}
           implicit def action: FaithfulPermutationAction[P] = node1.action
           val base1 = node1.base
           val base2 = node2.base
           val l = base1.length.min(base2.length)
           assert(node1.base.take(l) == node2.base.take(l))
           assert(node1.action == node2.action)
-          alg.subgroupSearch(chain1, g => chain2WithGuidedBase.contains(g), new IntersectionTest(0, chain2WithGuidedBase, algebra.id)).toChain
+          alg.subgroupSearch(chain1, g => chain2WithGuidedBase.contains(g), new IntersectionTest(0, chain2WithGuidedBase, Group[P].id)).toChain
         case term2: Term[P] => term2
       }
       case term1: Term[P] => term1

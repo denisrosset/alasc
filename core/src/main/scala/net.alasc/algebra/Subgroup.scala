@@ -4,7 +4,7 @@ package algebra
 import scala.util.Random
 import scala.reflect.ClassTag
 
-import spire.algebra.{Group, PartialOrder}
+import spire.algebra.{Eq, Group, PartialOrder}
 import spire.syntax.eq._
 
 import net.alasc.math.Grp
@@ -12,7 +12,8 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 trait Subgroup[S, G] extends PartialOrder[S] { sg =>
-  implicit val algebra: FiniteGroup[G]
+  implicit def finiteGroup: FiniteGroup[G]
+  implicit def equality: Eq[G]
   /** Tests if two subgroups are equivalent. */
   override def eqv(x: S, y: S): Boolean = (order(x) == order(y)) && lteqv(x, y)
   override def lteqv(x: S, y: S): Boolean = generators(x).forall(contains(y, _))
@@ -81,5 +82,5 @@ trait Subgroup[S, G] extends PartialOrder[S] { sg =>
     }
     NNNone
   }
-  def toGrp(subgroup: S)(implicit classTag: ClassTag[G], representations: Representations[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(classTag, algebra, representations, sg)
+  def toGrp(subgroup: S)(implicit classTag: ClassTag[G], representations: Representations[G]): Grp[G] = Grp.fromSubgroup[S, G](subgroup)(classTag, representations, sg)
 }

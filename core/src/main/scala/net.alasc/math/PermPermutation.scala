@@ -3,6 +3,7 @@ package net.alasc.math
 import scala.annotation.tailrec
 import scala.collection.immutable
 
+import spire.algebra.Eq
 import spire.syntax.eq._
 import spire.syntax.signed._
 import spire.syntax.group._
@@ -13,7 +14,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import perm._
 
-final class PermPermutation extends ShiftablePermutation[Perm] {
+final class PermEq extends Eq[Perm] {
   def eqv(x: Perm, y: Perm): Boolean = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => lhs16.encoding == rhs16.encoding
@@ -30,6 +31,9 @@ final class PermPermutation extends ShiftablePermutation[Perm] {
       case rhs: AbstractPerm => lhs.genEqv(rhs)
     }
   }
+}
+
+final class PermPermutation extends ShiftablePermutation[Perm] {
   def op(x: Perm, y: Perm): Perm = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => new Perm16(Perm16Encoding.op(lhs16.encoding, rhs16.encoding))

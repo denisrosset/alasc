@@ -5,16 +5,17 @@ object MyBuild extends Build {
 
   // Dependencies
 
-  lazy val debox = "org.spire-math" %% "debox" % "0.7.0"
-  lazy val spire = "org.spire-math" %% "spire" % "0.9.2-SNAPSHOT"
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.9.2-SNAPSHOT"
+  lazy val debox = "org.spire-math" %% "debox" % "0.7.3"
+  lazy val spire = "org.spire-math" %% "spire" % "0.10.1"
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.10.1"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.2"
   lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.3.0-SNAPSHOT"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-  lazy val qalg = "com.faacets" %% "qalg" % "0.9.2-SNAPSHOT"
+  lazy val qalgIndup = "com.faacets" %% "qalg-indup" % "0.10.1-SNAPSHOT"
+  lazy val qalgCore = "com.faacets" %% "qalg-core" % "0.10.1-SNAPSHOT"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -27,7 +28,7 @@ object MyBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
     organization := "net.alasc",
 
-    scalaVersion := "2.11.6",
+    scalaVersion := "2.11.7",
 
     licenses := Seq("BSD-style" -> url("http://opensource.org/licenses/MIT")),
     homepage := Some(url("https://github.com/denisrosset/alasc")),
@@ -116,7 +117,8 @@ object MyBuild extends Build {
     name := "alasc-qalg-binding",
     libraryDependencies ++= Seq(
       discipline,
-      qalg
+      qalgCore,
+      qalgIndup
     )
   )
 
@@ -131,7 +133,8 @@ object MyBuild extends Build {
     name := "alasc-scalacheck-binding",
     libraryDependencies ++= Seq(
       discipline,
-      qalg,
+      qalgCore,
+      qalgIndup,
       scalaCheck,
       scalaTest,
       spireScalaCheckBindings
@@ -147,7 +150,8 @@ object MyBuild extends Build {
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
-      qalg,
+      qalgCore,
+      qalgIndup,
       scalaTest % "test",
       spireScalaCheckBindings
     )

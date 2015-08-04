@@ -5,6 +5,7 @@ package algorithms
 import scala.annotation.tailrec
 import scala.collection.mutable
 
+import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 
@@ -56,7 +57,7 @@ trait BaseChangeSwapConjugation[P] extends BaseAlgorithms[P] with BaseChange[P] 
         case term: Term[P] => (conj, conjInv)
       }
     }
-    rec(mutableChain.start, mutableChain.start, algebra.id, algebra.id)
+    rec(mutableChain.start, mutableChain.start, Group[P].id, Group[P].id)
   }
 
   def changeBaseSameAction(mutableChain: MutableChain[P], guide: BaseGuide)(implicit action: FaithfulPermutationAction[P]): Unit = {

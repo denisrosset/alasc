@@ -4,4 +4,5 @@ trait AnyInstances extends
     ArrayInstances with
     SetInstances with
     SeqInstances with
-    ProductInstances
+    ProductInstances with
+    UnitInstances

@@ -18,7 +18,7 @@ trait Permutable[T, G] {
   def representation(t: T): Representation[G]
   /** Symmetry subgroup of `grp` for the sequence `t`. */
   def symmetryGroup(t: T, grp: Grp[G])(implicit T: Enumerable[T]): Grp[G] = {
-    import grp.algebra
+    import grp.finiteGroup
     grp.fixingPartition(T.partition(t), representation(t))
   }
 }

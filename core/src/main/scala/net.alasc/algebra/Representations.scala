@@ -37,7 +37,7 @@ trait Representations[G] { self =>
 
   trait RCastTrait {
     def unapply(r: Representation[G]): Opt[R] = r match {
-      case RClassTag(typed) if typed.representations eq self => Opt(typed)
+      case RClassTag(typed) if typed.representations.nonEmpty && (typed.representations.get eq self) => Opt(typed)
       case _ => Opt.empty[R]
     }
   }
@@ -111,7 +111,7 @@ final class PermutationRepresentations[P](implicit ev: Permutation[P]) extends R
   val RClassTag = classTag[R]
   case class R(size: Int) extends Representation[P] {
     def action = ev
-    val representations = self
+    val representations = Opt(self)
     def represents(p: P) = p.supportMax.getOrElseFast(-1) < size
   }
   def get(generators: Iterable[P]) = {

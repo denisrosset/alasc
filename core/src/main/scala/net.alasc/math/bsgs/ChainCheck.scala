@@ -10,7 +10,7 @@ import scala.collection.immutable
 import scala.collection.mutable
 import scala.util.Random
 
-import spire.algebra.Group
+import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
@@ -19,7 +19,7 @@ import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
 import net.alasc.syntax.monoid._
 
-final class ChainCheck[P](implicit pClassTag: ClassTag[P], algebra: FiniteGroup[P]) extends Check[Chain[P]] {
+final class ChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[Chain[P]] {
   import Check._
 
   def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {

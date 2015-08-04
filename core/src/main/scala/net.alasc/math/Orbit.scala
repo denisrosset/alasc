@@ -5,6 +5,7 @@ import spire.algebra._
 import spire.syntax.action._
 import scala.collection.mutable.{Set => MutableSet, BitSet => MutableBitSet}
 
+// TODO: optimize
 // TODO: move these instances to optional
 object OrbitInstances {
   implicit def setElementOrbit[P, G](implicit scalarAction: Action[P, G]): Action[Set[P], G] = new SetElementOrbit

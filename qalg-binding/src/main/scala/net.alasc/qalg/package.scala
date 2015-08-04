@@ -7,10 +7,11 @@ import spire.util._
 
 import algebra._
 import com.faacets.qalg.algebra._
+import com.faacets.qalg.syntax.indup.all._
 import com.faacets.qalg.syntax.all._
 
 package object qalg {
-  final class VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuilder[V, A]) extends PartialAction[V, P]{
+  final class VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuild[V, A]) extends PartialAction[V, P]{
     import net.alasc.syntax.permutationAction._
     import spire.syntax.group._
     import spire.syntax.action._
@@ -22,6 +23,6 @@ package object qalg {
         Opt(V.tabulate(v.length)( k => v(k <|+| p) ))
     def partialActr(v: V, p: P): Opt[V] = partialActl(p.inverse, v)
   }
-  implicit def VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuilder[V, A]): PartialAction[V, P] = new VecPermutationAction[V, A, P]
+  implicit def VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuild[V, A]): PartialAction[V, P] = new VecPermutationAction[V, A, P]
 }
 

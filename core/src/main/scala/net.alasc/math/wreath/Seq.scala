@@ -115,7 +115,7 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
   }
 }
  */
-class SeqFiniteGroup[SG <: SeqLike[G, SG], G](implicit scalar: FiniteGroup[G], cbf: CanBuildFrom[Nothing, G, SG]) extends FiniteGroup[SG] {
+class SeqEqFiniteGroup[SG <: SeqLike[G, SG], G: Eq: FiniteGroup](implicit cbf: CanBuildFrom[Nothing, G, SG]) extends Eq[SG] with FiniteGroup[SG] {
   def id: SG = cbf().result
   def eqv(x: SG, y: SG): Boolean = {
     val xs = x.size

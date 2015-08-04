@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.algebra.PartialOrder
+import spire.algebra.{Eq, PartialOrder}
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.group._
 import spire.syntax.partialOrder._
@@ -40,8 +40,9 @@ sealed abstract class Grp[G] { lhs =>
   def generators: Iterable[G]
 
   /** Finite group operations on type G. */
-  implicit def algebra: FiniteGroup[G] = algorithms.algebra
-  implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
+  implicit def finiteGroup: FiniteGroup[G] = algorithms.finiteGroup
+  implicit def equality: Eq[G] = algorithms.equality
+  implicit def classTag: ClassTag[G] = algorithms.classTag
 
   override def equals(any: Any) = any match {
     case that: Grp[G] => Grp.subgroup[G].eqv(this, that)
@@ -173,13 +174,13 @@ abstract class GrpLazyBase[G] extends Grp[G] {
 
 
 object Grp {
-  implicit def lattice[G: ClassTag: FiniteGroup: Representations: BasicAlgorithms]: Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G] {
+  implicit def lattice[G: Representations: BasicAlgorithms]: Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G] {
     def algorithms = implicitly[BasicAlgorithms[G]]
     def representations = implicitly[Representations[G]]
   }
-  implicit def defaultAlgorithms[G: ClassTag: FiniteGroup] = BasicAlgorithms.randomized(Random)
+  implicit def defaultAlgorithms[G: ClassTag: Eq: FiniteGroup] = BasicAlgorithms.randomized(Random)
 
-  def fromChain[G: ClassTag: FiniteGroup: Representations](
+  def fromChain[G: ClassTag: Eq: FiniteGroup: Representations](
     chain: Chain[G],
     representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]],
     givenGenerators: Opt[Iterable[G]] = Opt.empty[Iterable[G]]
@@ -193,36 +194,38 @@ object Grp {
     }
   }
 
-  def fromGenerators[G: ClassTag: FiniteGroup: Representations](
+  def fromGenerators[G: ClassTag: Eq: FiniteGroup: Representations](
     generators: Iterable[G],
     representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]]
   ): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId), givenRepresentation = representationOption)
 
-  def apply[G: ClassTag: FiniteGroup: Representations](generators: G*): Grp[G] =
+  def apply[G: ClassTag: Eq: FiniteGroup: Representations](generators: G*): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId))
 
-  def trivial[G: ClassTag: FiniteGroup: Representations]: Grp[G] = new GrpChain[G](Iterable.empty, Representations[G].lattice.zero, new Term[G])
+  def trivial[G: ClassTag: Eq: FiniteGroup: Representations]: Grp[G] = new GrpChain[G](Iterable.empty, Representations[G].lattice.zero, new Term[G])
 
-  def fromGeneratorsAndOrder[G: ClassTag: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
+  def fromGeneratorsAndOrder[G: ClassTag: Eq: FiniteGroup: Representations](generators: Iterable[G], order: BigInt,
     representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]]): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId), givenOrder = Opt(order), givenRepresentation = representationOption)
 
-  def fromSubgroup[S, G: ClassTag: FiniteGroup: Representations](subgroup: S,
-    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]])(implicit sg: Subgroup[S, G]): Grp[G] =
+  def fromSubgroup[S, G: ClassTag: Representations](subgroup: S,
+    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]])(implicit sg: Subgroup[S, G]): Grp[G] = {
+    import sg.{equality, finiteGroup}
     new GrpLazy[G](subgroup.generators,
       givenOrder = Opt(subgroup.order),
       givenRandomElement = Opt(subgroup.randomElement(_)),
       givenRepresentation = representationOption)
+  }
 
-  implicit def subgroup[G](implicit algebra: FiniteGroup[G]): Subgroup[Grp[G], G] = new GrpSubgroup[G]
+  implicit def subgroup[G: Eq: FiniteGroup]: Subgroup[Grp[G], G] = new GrpSubgroup[G]
   implicit def subgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
   implicit def lexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
 }
 
-class GrpSubgroup[G](implicit val algebra: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
+class GrpSubgroup[G](implicit val equality: Eq[G], val finiteGroup: FiniteGroup[G]) extends Subgroup[Grp[G], G] {
   def iterator(grp: Grp[G]) = {
-    import grp.gClassTag
+    import grp.classTag
     grp.chain.iterator
   }
   def generators(grp: Grp[G]) = grp.generators
@@ -236,8 +239,9 @@ trait GrpLattice[G] extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] 
   implicit def algorithms: BasicAlgorithms[G]
   implicit def representations: Representations[G]
 
-  implicit def algebra: FiniteGroup[G] = algorithms.algebra
-  implicit def gClassTag: ClassTag[G] = algorithms.gClassTag
+  implicit def finiteGroup: FiniteGroup[G] = algorithms.finiteGroup
+  implicit def classTag: ClassTag[G] = algorithms.classTag
+  implicit def equality: Eq[G] = algorithms.equality
   def zero = Grp.fromGenerators[G](Iterable.empty)
 
   def joinRepresentation(lhs: Grp[G], rhs: Grp[G]): Representation[G] = lhs.representationIfComputed match {

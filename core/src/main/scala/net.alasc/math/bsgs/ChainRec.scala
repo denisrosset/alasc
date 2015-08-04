@@ -5,7 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.annotation.tailrec
 import scala.util.Random
 
-import spire.algebra.Group
+import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
@@ -85,7 +85,7 @@ object ChainRec {
       Iterator(algebra.id)
     )
 
-  @tailrec def sifts[P: FiniteGroup](chain: Chain[P], remaining: P): Boolean = chain match {
+  @tailrec def sifts[P: Eq: FiniteGroup](chain: Chain[P], remaining: P): Boolean = chain match {
     case node: Node[P] =>
       implicit def action = node.action
       val b = node.beta <|+| remaining

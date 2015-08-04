@@ -4,7 +4,7 @@ package enum
 
 import scala.collection.mutable
 
-import spire.algebra.{Eq, Order}
+import spire.algebra.{Eq, Group, Order}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.util._
@@ -31,7 +31,7 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
   override lazy val symGrp = super.symGrp
   def findRepresentative(r: T): Opt[Representative[T, G]] =
     T.commonPartitions(t, r).flatMap { cp =>
-      implicit def G: FiniteGroup[G] = grp.algebra
+      import grp.finiteGroup
       val cpSeq: Seq[(Set[Int], Set[Int])] = cp.blocks
       val n = T.size(t)
       val bo = bsgs.algorithms.BaseOrder[G](chainInRepresentation.base)(representation.action)
@@ -74,6 +74,6 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
           Opt.empty[Representative[T, G]]
         case _: Term[G] => Opt(Representative(t, g.inverse))
       }
-      rec(0, FiniteGroup[G].id, chainInRepresentation, symGrp)
+      rec(0, Group[G].id, chainInRepresentation, symGrp)
     }
 }

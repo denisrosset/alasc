@@ -5,7 +5,7 @@ package algorithms
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.Order
+import spire.algebra.{Group, Order}
 import spire.math.Sorting
 import spire.syntax.group._
 import spire.syntax.action._
@@ -59,7 +59,7 @@ trait SubgroupSearchImpl[P] extends SchreierSims[P] with BaseChange[P] with Base
       case _: Term[P] =>
         if (predicate(currentG)) Iterator(currentG) else Iterator.empty
     }
-    rec(givenChain, algebra.id, givenTest)
+    rec(givenChain, Group[P].id, givenTest)
   }
 
   def subgroupSearch(givenChain: Chain[P], predicate: P => Boolean, test: SubgroupTest[P])(
@@ -104,7 +104,7 @@ trait SubgroupSearchImpl[P] extends SchreierSims[P] with BaseChange[P] with Base
         Tuple2Int(level - 1, level)
       case _ => sys.error("Invalid argument")
     }
-    val Tuple2Int(restartFrom, levelCompleted) = rec(0, length, givenChain, subgroupChain.start.next, algebra.id, test)
+    val Tuple2Int(restartFrom, levelCompleted) = rec(0, length, givenChain, subgroupChain.start.next, Group[P].id, test)
     assert(levelCompleted == 0)
     cutRedundantAfter(subgroupChain, subgroupChain.start)
     subgroupChain

@@ -3,6 +3,7 @@ package net.alasc.math
 import scala.annotation.tailrec
 import scala.collection.immutable
 
+import spire.algebra.Eq
 import spire.syntax.eq._
 import spire.syntax.signed._
 import spire.syntax.group._
@@ -58,6 +59,7 @@ object Perm extends PermCompanion {
 
   def supportMaxElement = PermArray.supportMaxElement
 
+  implicit val Eq: Eq[Perm] = new PermEq
   implicit val Algebra: ShiftablePermutation[Perm] = new PermPermutation
   implicit val Representations: PermutationRepresentations[Perm] = new PermutationRepresentations[Perm]
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
@@ -179,7 +181,7 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
     PermHash.hash(this: Perm)
 
   override def equals(any: Any): Boolean = any match {
-    case rhs: Perm => Perm.Algebra.eqv(lhs, rhs)
+    case rhs: Perm => Perm.Eq.eqv(lhs, rhs)
     case _ => false
   }
 }

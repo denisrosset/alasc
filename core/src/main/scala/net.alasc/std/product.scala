@@ -14,19 +14,21 @@ import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.util._
 
 // TODO: use code generator to write instances for bigger products
-private[alasc] trait FiniteGroupProduct2[A, B] extends Any with FiniteGroup[(A, B)] {
-  implicit def structure1: FiniteGroup[A]
-  implicit def structure2: FiniteGroup[B]
+private[alasc] trait FiniteGroupProduct2[A, B] extends Any with FiniteGroup[(A, B)] with Eq[(A, B)] {
+  implicit def finiteGroupA: FiniteGroup[A]
+  implicit def finiteGroupB: FiniteGroup[B]
+  implicit def eqA: Eq[A]
+  implicit def eqB: Eq[B]
 
-  def eqv(x0: (A, B), x1: (A, B)): Boolean =
-    x0._1 === x1._1 && x0._2 === x1._2
+  def eqv(x: (A, B), y: (A, B)): Boolean = (x._1 === y._1) && (x._2 === y._2)
 
-  def id: (A, B) = (structure1.id, structure2.id)
+  def id: (A, B) = (finiteGroupA.id, finiteGroupB.id)
 
   override def isId(x0: (A, B))(implicit ev: Eq[(A, B)]): Boolean =
     x0._1.isId && x0._2.isId
@@ -39,10 +41,12 @@ private[alasc] trait FiniteGroupProduct2[A, B] extends Any with FiniteGroup[(A, 
 }
 
 trait FiniteGroupProductInstances {
-  implicit def FiniteGroupProduct2[A, B](implicit _structure1: FiniteGroup[A], _structure2: FiniteGroup[B]): FiniteGroup[(A, B)] =
+  implicit def FiniteGroupProduct2[A, B](implicit _finiteGroupA: FiniteGroup[A], _eqA: Eq[A],  _finiteGroupB: FiniteGroup[B], _eqB: Eq[B]): FiniteGroup[(A, B)] =
     new FiniteGroupProduct2[A, B] {
-      def structure1 = _structure1
-      def structure2 = _structure2
+      def eqA = _eqA
+      def eqB = _eqB
+      def finiteGroupA = _finiteGroupA
+      def finiteGroupB = _finiteGroupB
     }
 }
 
@@ -54,7 +58,7 @@ final private[alasc] class RepresentationsProduct2[A, B](implicit val structure1
   val RClassTag = classTag[R]
 
   case class R(_1: structure1.R, _2: structure2.R) extends Representation[(A, B)] {
-    val representations = RepresentationsProduct2.this
+    val representations = Opt(RepresentationsProduct2.this)
     def size = _1.size + _2.size
     def represents(x0: (A, B)) = _1.represents(x0._1) && _2.represents(x0._2)
     val action = new FaithfulPermutationAction[(A, B)] {

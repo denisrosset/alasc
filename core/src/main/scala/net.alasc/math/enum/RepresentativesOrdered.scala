@@ -40,7 +40,7 @@ trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdere
 }
 
 final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val T: EnumerableOrdered[T, A], val TG: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
-  import grp.{algebra, gClassTag}
+  import grp.{classTag, equality, finiteGroup}
 
   override lazy val groups = super.groups
   override lazy val array = super.array

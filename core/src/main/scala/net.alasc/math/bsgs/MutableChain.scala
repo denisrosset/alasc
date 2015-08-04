@@ -5,6 +5,7 @@ import scala.annotation.tailrec
 
 import scala.reflect.ClassTag
 
+import spire.algebra.Eq
 import spire.syntax.action._
 import spire.syntax.monoid._
 import spire.syntax.cfor._
@@ -350,10 +351,10 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 
 object MutableChain {
   def empty[P: FiniteGroup](implicit action: FaithfulPermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
-  implicit def MutableChainCheck[P: ClassTag: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
+  implicit def MutableChainCheck[P: ClassTag: Eq: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
 }
 
-final class MutableChainCheck[P: ClassTag: FiniteGroup] extends Check[MutableChain[P]] {
+final class MutableChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[MutableChain[P]] {
   import Check._
 
   @tailrec def checkAllAction(checked: Checked, chain: Chain[P], action: FaithfulPermutationAction[P]): Checked = chain match {

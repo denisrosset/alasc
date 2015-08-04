@@ -6,6 +6,7 @@ import spire.algebra._
 import spire.algebra.lattice._
 import spire.math._
 import spire.laws._
+import spire.std.tuples._
 
 import scala.{ specialized => spec }
 

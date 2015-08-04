@@ -1,22 +1,29 @@
 package net.alasc.math
 
+import scala.util.Random
+
+import spire.algebra.{Eq, Group}
+import spire.syntax.group._
+import spire.syntax.eq._
+
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
-import spire.syntax.group._
-import scala.util.Random
 
 case class DirectSum[S](seq: Seq[S])
 
 object DirectSum {
-  implicit def DirectSumSubgroup[S, G](implicit sg: Subgroup[S, G], algebra: FiniteGroup[G]): Subgroup[DirectSum[S], G] =
+  implicit def DirectSumSubgroup[S, G](implicit sg: Subgroup[S, G]): Subgroup[DirectSum[S], G] =
     new DirectSumSubgroup[S, G]
 }
 
-class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G], val algebra: FiniteGroup[G]) extends Subgroup[DirectSum[S], G] {
+class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G]) extends Subgroup[DirectSum[S], G] {
+  implicit def equality: Eq[G] = sg.equality
+  implicit def finiteGroup: FiniteGroup[G] = sg.finiteGroup
+  import sg.{finiteGroup, eq}
   type DS = DirectSum[S]
   def iterator(ds: DS) = {
     def rec(i: Int): Iterator[G] =
-      if (i == ds.seq.size) Iterator(algebra.id) else for {
+      if (i == ds.seq.size) Iterator(Group[G].id) else for {
         el1 <- rec(i + 1)
         el2 <- ds.seq(i).iterator
       } yield el1 |+| el2
@@ -24,8 +31,8 @@ class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G], val algebra: Fini
   }
   def generators(ds: DS) = ds.seq.flatMap(_.generators)
   def order(ds: DS) = (BigInt(1) /: ds.seq) { case (o, s) => o * s.order }
-  def randomElement(ds: DS, gen: Random) = (algebra.id /: ds.seq) { case (g, s) => g |+| s.randomElement(gen) }
-  def contains(ds: DS, el: G) = iterator(ds).exists( g => algebra.eqv(el, g))
+  def randomElement(ds: DS, gen: Random) = (Group[G].id /: ds.seq) { case (g, s) => g |+| s.randomElement(gen) }
+  def contains(ds: DS, el: G) = iterator(ds).exists( g => (el === g))
 }
 
 object FixingSeq {

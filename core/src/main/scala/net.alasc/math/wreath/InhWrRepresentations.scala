@@ -24,11 +24,9 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
-abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
+abstract class InhWrRepresentations[A: Eq: FiniteGroup, H: Eq: Permutation] extends Representations[Wr[A, H]] {
   selfReps =>
   implicit val aReps: Representations[A]
-  implicit def aAlgebra: FiniteGroup[A]
-  implicit def hAlgebra: Permutation[H]
   type AR = aReps.R
   implicit def aRepsRClassTag: ClassTag[aReps.R] = aReps.RClassTag
   implicit object partialOrder extends PartialOrder[R] {
@@ -175,7 +173,7 @@ abstract class InhWrRepresentations[A, H] extends Representations[Wr[A, H]] {
       }
       def actl(w: Wr[A, H], k: Int): Int = actr(k, w.inverse)
     }
-    val representations = selfReps
+    val representations = Opt(selfReps)
     lazy val repForIndex: Array[aReps.R] = {
       var i = 0
       val n = partition.size

@@ -10,7 +10,7 @@ import scala.collection.immutable
 import scala.collection.mutable
 import scala.util.Random
 
-import spire.algebra.Group
+import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
@@ -185,9 +185,9 @@ sealed trait Chain[P] extends Elem[P] {
 
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
-  def basicSift(p: P)(implicit ev: FiniteGroup[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
+  def basicSift(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
 
-  def sifts(p: P)(implicit ev: FiniteGroup[P]): Boolean = ChainRec.sifts(chain, p)
+  def sifts(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): Boolean = ChainRec.sifts(chain, p)
 
   /** If the current element is a node, returns the next stabilizer group in chain and the current node
     * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with
@@ -200,8 +200,8 @@ sealed trait Chain[P] extends Elem[P] {
 }
 
 object Chain {
-  implicit def ChainSubgroup[P: ClassTag: FiniteGroup]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
-  implicit def ChainCheck[P: ClassTag: FiniteGroup]: Check[Chain[P]] = new ChainCheck[P]
+  implicit def ChainSubgroup[P: ClassTag: Eq: FiniteGroup]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
+  implicit def ChainCheck[P: ClassTag: Eq: FiniteGroup]: Check[Chain[P]] = new ChainCheck[P]
 }
 
 /** Node in a BSGS chain.
@@ -310,10 +310,10 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
   protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
 }
 
-final class ChainSubgroup[P](implicit val algebra: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
+final class ChainSubgroup[P](implicit val equality: Eq[P], val finiteGroup: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
   def iterator(chain: Chain[P]) = ChainRec.elementsIterator(chain)
   def order(chain: Chain[P]): BigInt = ChainRec.order(chain, BigInt(1))
   def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
-  def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), algebra.id)
+  def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), Group[P].id)
   def contains(chain: Chain[P], g: P) = chain.sifts(g)
 }

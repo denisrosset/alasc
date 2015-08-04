@@ -4,6 +4,7 @@ package math
 import scala.annotation.tailrec
 import scala.language.implicitConversions
 
+import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 
@@ -32,7 +33,7 @@ class GrpLexElements[G](val lhs: Grp[G]) {
           assert(curIdx == 0)
           curG
       }
-      rec(lexChain, idx, lhs.order, algebra.id)
+      rec(lexChain, idx, lhs.order, Group[G].id)
     }
     def iterator: Iterator[G] = {
       def rec(current: Chain[G], curG: G): Iterator[G] = current match {
@@ -45,7 +46,7 @@ class GrpLexElements[G](val lhs: Grp[G]) {
           } yield rest
         case _: Term[G] => Iterator(curG)
       }
-      rec(lexChain, algebra.id)
+      rec(lexChain, Group[G].id)
     }
   }
 }

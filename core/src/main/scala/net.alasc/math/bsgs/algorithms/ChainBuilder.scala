@@ -104,6 +104,6 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
       else
         completeChainActionChange(chain, action)
     case _: Term[P] =>
-      MutableChain.empty(algebra, action)
+      MutableChain.empty(finiteGroup, action)
   }
 }

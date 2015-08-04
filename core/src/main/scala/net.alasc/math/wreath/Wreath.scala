@@ -33,13 +33,12 @@ object Wr {
     val h = h0
   }
   implicit def wrImprimitiveRepresentations[A: FiniteGroup: Representations, H: Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
-  implicit def wrFiniteGroup[A: FiniteGroup, H: Permutation]: FiniteGroup[Wr[A, H]] = new WrFiniteGroup[A, H]
-  def grp[SA, SH, A: Representations, H](n: Int, sa: SA, sh: SH)(
-    implicit afg: FiniteGroup[A], hp: Permutation[H], sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
+  implicit def wrEqFiniteGroup[A: Eq: FiniteGroup, H: Eq: Permutation]: Eq[Wr[A, H]] with FiniteGroup[Wr[A, H]] = new WrEqFiniteGroup[A, H]
+  def grp[SA, SH, A: Eq: FiniteGroup: Representations, H: Eq: Permutation](n: Int, sa: SA, sh: SH)(implicit sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
     val aGenerators = for {
       k <- 0 until n
       a <- sa.generators
-    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else afg.id ), hp.id)
+    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else Group[A].id ), Group[H].id)
     val hGenerators = for {
       h <- sh.generators
     } yield Wr(Seq.empty[A], h)
@@ -48,18 +47,18 @@ object Wr {
   }
 }
 
-class WrFiniteGroup[A, H](implicit aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends FiniteGroup[Wr[A, H]] {
-  val aSeqFiniteGroup = new SeqFiniteGroup[Seq[A], A]
-  def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && aSeqFiniteGroup.eqv(x.aSeq, y.aSeq)
-  def id = Wr(Seq.empty[A], hAlgebra.id)
+class WrEqFiniteGroup[A: Eq: FiniteGroup, H: Eq: Permutation] extends Eq[Wr[A, H]] with FiniteGroup[Wr[A, H]] {
+  val aSeqEqFiniteGroup = new SeqEqFiniteGroup[Seq[A], A]
+  def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && aSeqEqFiniteGroup.eqv(x.aSeq, y.aSeq)
+  def id = Wr(Seq.empty[A], Group[H].id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
     val hInv = w.h.inverse
     val n = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
-    Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => aAlgebra.id).inverse), hInv)
+    Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => Group[A].id).inverse), hInv)
   }
   def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
     val newH = x.h |+| y.h
     val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElseFast(-1) + 1)
-    Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => aAlgebra.id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => aAlgebra.id) ), newH)
+    Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => Group[A].id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => Group[A].id) ), newH)
   }
 }

@@ -13,6 +13,7 @@ import spire.algebra.lattice._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.std.seq._
@@ -46,7 +47,7 @@ class WrImprimitiveRepresentations[A, H](implicit val aReps: Representations[A],
     val aSize = aRep.size
     val size = n * aSize
     val aDiv = Divisor(size - 1, aSize)
-    val representations = self
+    val representations = Opt(self)
     def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     val action = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =

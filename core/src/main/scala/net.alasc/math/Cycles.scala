@@ -23,7 +23,7 @@ import net.alasc.util._
   */
 class Cycles private[alasc](val seq: Seq[Cycle]) {
   override def equals(other: Any) = other match {
-    case that: Cycles => Cycles.Algebra.eqv(this, that)
+    case that: Cycles => Cycles.Equality.eqv(this, that)
     case _ => false
   }
   override def hashCode = seq.hashCode
@@ -35,8 +35,12 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
   def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
 }
 
-class CyclesPermutation extends Permutation[Cycles] {
+class CyclesEq extends Eq[Cycles] {
   implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
+  def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
+}
+
+class CyclesPermutation extends Permutation[Cycles] {
 
   def supportMaxElement = Int.MaxValue
 
@@ -64,14 +68,13 @@ class CyclesPermutation extends Permutation[Cycles] {
     new Cycles(cycles.filter(_.length > 1).sorted)
   }
 
-  def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 
   def id = new Cycles(Seq.empty[Cycle])
 
   def op(x: Cycles, y: Cycles) = 
     Cycles.Algebra.fromSupportAndImageFun(support(x) ++ support(y), (i: Int) => actr(actr(i, x), y))
 
-  def inverse(a: Cycles) = Cycles.Algebra.fromDisjointCycles(a.seq.map(_.inverse))
+  def inverse(a: Cycles) = fromDisjointCycles(a.seq.map(_.inverse))
 
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
   override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
@@ -91,7 +94,8 @@ class CyclesPermutation extends Permutation[Cycles] {
 }
 
 object Cycles {
-  implicit val Algebra = new CyclesPermutation
+  implicit val Algebra: Permutation[Cycles] = new CyclesPermutation
+  implicit val Equality: Eq[Cycles] = new CyclesEq
   def apply(seq: Int*): Cycles = seq.size match {
     case 0 | 1 => Algebra.id
     case _ => new Cycles(Seq(Cycle(seq: _*)))

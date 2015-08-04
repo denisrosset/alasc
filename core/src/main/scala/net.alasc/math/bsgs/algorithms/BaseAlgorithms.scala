@@ -93,7 +93,7 @@ trait BaseAlgorithms[P] extends MutableAlgorithms[P] with BaseSwap[P] {
     require(beta >= 0)
     require(action == mutableChain.start.action)
     val insertAfter = mutableChain.mutableStartOrNode(findElemBeforeStabilizer(mutableChain, afterThis, beta))
-    val newNode = nodeBuilder.standalone(beta)(mutableChain.start.action, algebra, gClassTag)
+    val newNode = nodeBuilder.standalone(beta)(mutableChain.start.action, finiteGroup, classTag)
     mutableChain.insertInChain(insertAfter, insertAfter.next, newNode)
   }
 

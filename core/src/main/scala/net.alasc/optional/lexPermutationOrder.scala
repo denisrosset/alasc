@@ -1,14 +1,14 @@
 package net.alasc.optional
 
-import spire.algebra.Order
+import spire.algebra.{Eq, Order}
 import spire.syntax.action._
 import net.alasc.algebra.{FiniteGroup, FaithfulPermutationAction}
 import net.alasc.syntax.permutationAction._
 
 object lexPermutationOrder {
   /** Lexicographic order on permutations. */
-  class LexPermutationOrder[P](implicit algebra: FiniteGroup[P], action: FaithfulPermutationAction[P]) extends Order[P] {
-    override def eqv(x: P, y: P) = algebra.eqv(x, y)
+  class LexPermutationOrder[P: FaithfulPermutationAction: FiniteGroup] extends Order[P] {
+    override def eqv(x: P, y: P) = Eq[P].eqv(x, y)
 
     def compare(x: P, y: P): Int = {
       val n = x.supportMax.getOrElseFast(-1).max(y.supportMax.getOrElseFast(-1)) + 1
