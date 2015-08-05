@@ -7,7 +7,6 @@ import spire.util._
 
 import algebra._
 import com.faacets.qalg.algebra._
-import com.faacets.qalg.syntax.indup.all._
 import com.faacets.qalg.syntax.all._
 
 package object qalg {
