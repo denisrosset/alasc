@@ -4,6 +4,7 @@ package math
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
+import spire.algebra.Eq
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.util.Opt
@@ -50,6 +51,13 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
       case _ if lhs.isTrivial => Opt.empty[(Grp[G], Transversal[G])]
       case _ => lhs.withComputedChain(rp).stabilizer(rp)
     }
+  }
+
+  def find[Q: Eq: Permutation](q: Q, rp: Representation[G]): Opt[G] = lhs.chain(rp).siftOther(q)
+  def find[Q: Eq: Permutation](q: Q)(implicit prp: PermutationRepresentations[G]): Opt[G] = {
+    val b = q.supportMax.getOrElse(-1)
+    val rp = if (b < representation.size) representation else prp.forSize(b + 1)
+    find(q, rp)
   }
 
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {

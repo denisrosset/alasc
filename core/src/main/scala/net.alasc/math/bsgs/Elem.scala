@@ -14,6 +14,7 @@ import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
+import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
@@ -186,6 +187,13 @@ sealed trait Chain[P] extends Elem[P] {
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
   def basicSift(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
+
+  def siftOther[Q: Eq: Permutation](q: Q)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): Opt[P] = chain match {
+    case node: Node[P] =>
+      implicit def action = node.action
+      ChainRec.siftOther(chain, finiteGroup.id, q)
+    case _: Term[P] => if (q.isId) Opt(finiteGroup.id) else Opt.empty
+  }
 
   def sifts(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): Boolean = ChainRec.sifts(chain, p)
 

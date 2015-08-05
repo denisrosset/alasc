@@ -6,9 +6,11 @@ import scala.annotation.tailrec
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
+import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
+import spire.util.Opt
 
 import net.alasc.algebra._
 
@@ -95,6 +97,21 @@ object ChainRec {
         sifts(node.next, remaining |+| node.uInv(b))
     case _: Term[P] => remaining.isId
   }
+
+  @tailrec def siftOther[P: Eq: FiniteGroup: FaithfulPermutationAction, Q: Eq: Permutation](chain: Chain[P], pInv: P, q: Q): Opt[P] =
+    chain match {
+      case node: Node[P] =>
+        val b = (node.beta <|+| q) <|+| pInv
+        if (!node.inOrbit(b))
+          Opt.empty
+        else
+          siftOther(node.next, pInv |+| node.uInv(b), q)
+      case _: Term[P] =>
+        val p = pInv.inverse
+        val pPerm = FaithfulPermutationAction[P].to[Perm](p)
+        val qPerm = FaithfulPermutationAction[Q].to[Perm](q)
+        if (pPerm === qPerm) Opt(p) else Opt.empty
+    }
 
   @tailrec def basicSift[P: FiniteGroup](chain: Chain[P], remaining: P,
     transversalIndices: debox.Buffer[Int] = debox.Buffer.empty[Int]): (Seq[Int], P) =
