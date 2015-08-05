@@ -36,4 +36,20 @@ class MathieuSuite extends FunSuite with NonImplicitAssertions with Matchers {
       case (gens, order) => alg.completeChainFromGeneratorsAndOrder(gens, order).toChain.order shouldBe order
     }
   }
+
+  test("Mathieu group 22 one-point stabilizers have order 20160") {
+    (1 to 22).foreach { i =>
+      Grp(MathieuGroups.M22._1: _*).stabilizer(i)._1.order shouldBe 20160
+    }
+  }
+
+  test("Mathieu group 11 one-point stabilizers have order 720") {
+    (1 to 11).foreach { i =>
+      Grp(MathieuGroups.M11._1: _*).stabilizer(i)._1.order shouldBe 720
+    }
+  }
+
+  test("Mathieu group 11 stabilizer of {2,9} has order 144") {
+    Grp(MathieuGroups.M11._1: _*).setwiseStabilizer(2, 9).order shouldBe 144
+  }
 }
