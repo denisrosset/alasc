@@ -5,17 +5,20 @@ object MyBuild extends Build {
 
   // Dependencies
 
-  lazy val debox = "org.spire-math" %% "debox" % "0.7.3"
-  lazy val spire = "org.spire-math" %% "spire" % "0.10.1"
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % "0.10.1"
+  val spireVersion = "0.10.1"
+
+  lazy val spire = "org.spire-math" %% "spire" % spireVersion
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % spireVersion
+
+  lazy val metalCore = "org.scala-metal" %% "core" % "0.0.2"
+  lazy val metalLibrary = "org.scala-metal" %% "library" % "0.0.2"
+
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.2"
-  lazy val ptrColl = "net.alasc" %% "ptrcoll" % "0.3.0-SNAPSHOT"
   lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-  lazy val qalgIndup = "com.faacets" %% "qalg-indup" % "0.10.1-SNAPSHOT"
-  lazy val qalgCore = "com.faacets" %% "qalg-core" % "0.10.1-SNAPSHOT"
+  lazy val qalg = "net.alasc" %% "qalg" % "0.10.1-SNAPSHOT"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -36,7 +39,8 @@ object MyBuild extends Build {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       machinist,
-      ptrColl
+      metalCore,
+      metalLibrary
     ),
 
     scalacOptions ++= Seq(
@@ -101,7 +105,8 @@ object MyBuild extends Build {
     name := "alasc",
     libraryDependencies ++= Seq(
       spire,
-      debox,
+      metalCore,
+      metalLibrary,
       scalaCheck % "test",
       scalaTest % "test"
     )
@@ -117,8 +122,7 @@ object MyBuild extends Build {
     name := "alasc-qalg-binding",
     libraryDependencies ++= Seq(
       discipline,
-      qalgCore,
-      qalgIndup
+      qalg
     )
   )
 
@@ -133,8 +137,7 @@ object MyBuild extends Build {
     name := "alasc-scalacheck-binding",
     libraryDependencies ++= Seq(
       discipline,
-      qalgCore,
-      qalgIndup,
+      qalg,
       scalaCheck,
       scalaTest,
       spireScalaCheckBindings
@@ -150,8 +153,7 @@ object MyBuild extends Build {
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
-      qalgCore,
-      qalgIndup,
+      qalg,
       scalaTest % "test",
       spireScalaCheckBindings
     )

@@ -12,14 +12,17 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 trait Subgroup[S, G] extends PartialOrder[S] { sg =>
+
   implicit def finiteGroup: FiniteGroup[G]
   implicit def equality: Eq[G]
+
   /** Tests if two subgroups are equivalent. */
   override def eqv(x: S, y: S): Boolean = (order(x) == order(y)) && lteqv(x, y)
   override def lteqv(x: S, y: S): Boolean = generators(x).forall(contains(y, _))
   override def gteqv(x: S, y: S): Boolean = generators(y).forall(contains(x, _))
   override def lt(x: S, y: S): Boolean = lteqv(x, y) && (order(x) < order(y))
   override def gt(x: S, y: S): Boolean = gteqv(x, y) && (order(x) > order(y))
+
   def hasSubgroup(x: S, y: S): Boolean = gteqv(x, y)
   def hasProperSubgroup(x: S, y: S): Boolean = gt(x, y)
   def isSubgroupOf(x: S, y: S): Boolean = lteqv(x, y)

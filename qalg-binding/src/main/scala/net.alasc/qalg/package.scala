@@ -6,9 +6,9 @@ import spire.algebra.partial._
 import spire.util._
 
 import algebra._
-import com.faacets.qalg.algebra._
-import com.faacets.qalg.syntax.all._
-
+//import com.faacets.qalg.algebra._
+//import com.faacets.qalg.syntax.all._
+/*
 package object qalg {
   final class VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuild[V, A]) extends PartialAction[V, P]{
     import net.alasc.syntax.permutationAction._
@@ -24,4 +24,4 @@ package object qalg {
   }
   implicit def VecPermutationAction[V, @sp(Double, Long) A, P: FiniteGroup: FaithfulPermutationAction](implicit V: VecBuild[V, A]): PartialAction[V, P] = new VecPermutationAction[V, A, P]
 }
-
+ */

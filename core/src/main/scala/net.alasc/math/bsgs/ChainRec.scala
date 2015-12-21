@@ -114,7 +114,7 @@ object ChainRec {
     }
 
   @tailrec def basicSift[P: FiniteGroup](chain: Chain[P], remaining: P,
-    transversalIndices: debox.Buffer[Int] = debox.Buffer.empty[Int]): (Seq[Int], P) =
+    transversalIndices: metal.Buffer[Int] = metal.Buffer.empty[Int]): (Seq[Int], P) =
     chain match {
       case node: Node[P] =>
         implicit def action = node.action

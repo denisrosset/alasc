@@ -4,7 +4,6 @@ import spire.algebra.{Eq, Action, Group, Semigroup}
 import spire.algebra.partial.Semigroupoid
 import net.alasc.util._
 
-
 /** Enrichs a partial algebraic structure of type `G` with a base `B` such that
   * every element `g: G` has a source and target in `B`.
   * 

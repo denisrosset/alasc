@@ -16,8 +16,8 @@ import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 import bsgs._
-import ptrcoll._
-import maps._
+import metal._
+import metal.syntax._
 
 trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdered[T, G]] with RepresentativesSearchable[T, G] {
   import collection.immutable.{BitSet, SortedMap}
@@ -117,7 +117,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
   object Block {
     def start = chainInRepresentation match {
-      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, debox.Buffer(FiniteGroup[G].id), debox.Buffer(symGrp))
+      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, metal.Buffer(FiniteGroup[G].id), metal.Buffer(symGrp))
       case term: Term[G] => TermBlock(0, term, ULong(0), 0, FiniteGroup[G].id)
     }
   }
@@ -130,7 +130,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     implicit val actionTG = TG.action
   }
 
-  case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: debox.Buffer[G], symGrps: debox.Buffer[Grp[G]]) extends Block {
+  case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: metal.Buffer[G], symGrps: metal.Buffer[Grp[G]]) extends Block {
     implicit def action = representation.action
 
     case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
@@ -145,7 +145,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     val nextBeta = chainNextBeta.min(beta + maxSkip)
 
     protected lazy val candidatesForImages: MMap[Long, NextCandidate] = {
-      val map = HashMMap.empty[Long, NextCandidate]
+      val map = MHashMap.empty[Long, NextCandidate]
       var c = 0
       val n = candidates.length
       while (c < n) {
@@ -169,14 +169,14 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     }
 
     protected lazy val sortedImages: Array[Long] = {
-      val res = new Array[Long](candidatesForImages.size)
-      @tailrec def rec(ptr: candidatesForImages.Ptr, i: Int): Unit = ptr match {
-        case Valid(vptr) =>
-          res(i) = candidatesForImages.ptrKey(vptr)
-          rec(candidatesForImages.ptrNext(vptr), i + 1)
+      val res = new Array[Long](candidatesForImages.longSize.toInt)
+      @tailrec def rec(ptr: candidatesForImages.MyPtr, i: Int): Unit = ptr match {
+        case IsVPtr(vp) =>
+          res(i) = vp.key
+          rec(vp.next, i + 1)
         case _ =>
       }
-      rec(candidatesForImages.ptrStart, 0)
+      rec(candidatesForImages.ptr, 0)
       object ULongOrder extends Order[Long] {
         import spire.syntax.order._
         def compare(x: Long, y: Long): Int = ULong(x) compare ULong(y)
@@ -187,7 +187,8 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
     lazy val size: BigInt = {
       val co = (chain: Chain[G]).order
-        (BigInt(0) /: symGrps.iterator) { case (sm, symGrp) => sm + co / symGrp.order }
+
+      (BigInt(0) /: symGrps) { case (sm, symGrp) => sm + co / symGrp.order }
     }
 
     def blockForSeq(seq: T): Opt[Block] = {
@@ -232,8 +233,8 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
       def next: Block = {
         val images = ULong.fromLong(sortedImages(i))
-        val newBlockCandidates = debox.Buffer.empty[G]
-        val newBlockSymGrps = debox.Buffer.empty[Grp[G]]
+        val newBlockCandidates = metal.Buffer.empty[G]
+        val newBlockSymGrps = metal.Buffer.empty[Grp[G]]
         var it = Opt(candidatesForImages(images.toLong))
         while (it.nonEmpty) {
           val NextCandidate(b, c, next) = it.get

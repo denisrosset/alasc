@@ -37,7 +37,7 @@ object Algorithms {
     // lexicographic representative at each step in the stabilizer chain.
     def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G], curSymGrp: Grp[G]): Unit = curChainGrp match {
       case node: Node[G] if level <= toLevel =>
-        val candidates = debox.Buffer.empty[Int]
+        val candidates = metal.Buffer.empty[Int]
         val beta = node.beta
         val nextBeta = node.next match {
           case nextNode: Node[G] => nextNode.beta
@@ -69,7 +69,7 @@ object Algorithms {
             candidates += b
           }
         }
-        cforRange(0 until candidates.length) { i => 
+        cforRange(0 until candidates.length.toInt) { i => 
           val b = candidates(i)
           val bg = b <|+| curG
           val (nextSymGrp, transversal) = curSymGrp.stabilizer(bg, representation)

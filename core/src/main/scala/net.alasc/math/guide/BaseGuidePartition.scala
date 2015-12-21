@@ -6,13 +6,15 @@ import net.alasc.util._
 import scala.annotation.tailrec
 
 case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
+
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
   def iterator = new Iter(MutableBitSet.empty,
-    debox.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
-    debox.Buffer.fromIterable(blocks.map(_.size)))
+    metal.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
+    metal.Buffer.fromIterable(blocks.map(_.size)))
 
-  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: debox.Buffer[MutableBitSet], val remainingBlockSizes: debox.Buffer[Int]) extends BaseGuideIterator {
+  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: metal.Buffer[MutableBitSet], val remainingBlockSizes: metal.Buffer[Int]) extends BaseGuideIterator {
+
     override def toString = s"Current: $currentBlock, Remaining: $remainingBlocks"
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty
 
@@ -57,7 +59,7 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
               }
             } else nonFixed
 
-          findPointAndBlockIndex(remainingBlocks.length - 1, remainingBlocks.length - 1, NoneTuple2NN) match {
+          findPointAndBlockIndex(remainingBlocks.length.toInt - 1, remainingBlocks.length.toInt - 1, NoneTuple2NN) match {
             case OptionTuple2NN(point, blockIndex) =>
               currentBlock ++= remainingBlocks(blockIndex)
               remainingBlocks.remove(blockIndex)
@@ -90,5 +92,7 @@ case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
             next(beta, easyPoints, isFixed)
         }
       }
+
   }
+
 }

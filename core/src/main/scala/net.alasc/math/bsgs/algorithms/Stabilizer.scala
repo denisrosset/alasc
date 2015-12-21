@@ -50,7 +50,7 @@ object Stabilizer {
       // The points considered are those contained in `set`.
       val pointSetsToTest: Array[BitSet] = {
         val remaining = MutableBitSet.empty ++= set
-        val groups = debox.Buffer.empty[BitSet]
+        val groups = metal.Buffer.empty[BitSet]
         @tailrec def rec(current: Chain[P]): Array[BitSet] = current match {
           case node: Node[P] if remaining.contains(node.beta) =>
             val fixed = mutable.BitSet(node.beta)
