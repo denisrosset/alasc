@@ -1,0 +1,235 @@
+object Domain extends UniquenessCache[Int, Domain] {
+
+  trait PartitionLattice extends Lattice[Domain#Partition] with BoundedJoinSemilattice[Domain#Partition] {
+    def zero = Domain(0).Partition.fromSortedBlocks(Seq.empty)
+    // union
+    def join(x: Domain#Partition, y: Domain#Partition): Domain#Partition =
+      if (x.size < y.size) join(y, x) else {
+        val forest = DisjointSetForest(x)
+        y.blocks.foreach { block =>
+          val it = block.iterator
+          val el1 = it.next
+          while (it.hasNext) {
+            val el2 = it.next
+            forest.union(el1, el2)
+          }
+        }
+        forest.partition(x.domain)
+      }
+
+    // refinement
+    def meet(x: Domain#Partition, y: Domain#Partition): Domain#Partition =
+      if (x.size > y.size) meet(y, x) else {
+        val refinement = PartitionRefinement(x)
+        y.blocks.foreach( block => refinement.refine(block.filter(_ < x.size)) )
+        refinement.partition(x.domain)
+      }
+  }
+
+  trait PartitionPartialOrder extends PartialOrder[Domain#Partition] {
+    override def eqv(x: Domain#Partition, y: Domain#Partition): Boolean =
+      (x.size == y.size) && (x.blocks.sameElements(y.blocks))
+
+    override def lteqv(x: Domain#Partition, y: Domain#Partition): Boolean =
+      if (x.size <= y.size) {
+        y.blocks.foreach { yBlock =>
+          val remaining = mutable.BitSet.empty ++= yBlock
+          while (!remaining.isEmpty) {
+            val m = remaining.min
+            if (m >= x.size) {
+              remaining.clear
+            } else {
+              val xBlock = x.blockFor(m)
+              if (!xBlock.forall(remaining.contains(_))) return false
+              remaining --= xBlock
+            }
+          }
+        }
+        true
+      } else false
+
+    def partialCompare(x: Domain#Partition, y: Domain#Partition): Double = {
+      val xLTEy = lteqv(x, y)
+      val yLTEx = lteqv(y, x)
+      if (xLTEy) {
+        if (yLTEx) 0.0 else -1.0
+      } else {
+        if (yLTEx) 1.0 else Double.NaN
+      }
+    }
+  }
+
+  implicit object PartitionAlgebra extends PartitionPartialOrder with PartitionLattice
+
+  val empty = Domain(0)
+
+  trait PartitionT {
+    def fromSeq(seq: Seq[Any]): Domain#Partition
+    def empty: Domain#Partition
+    def apply(sets: Set[Int]*): Domain#Partition
+  }
+
+  val Partition = new PartitionT {
+    def apply(sets: Set[Int]*): Domain#Partition = {
+      val domain = Domain((0 /: sets) { case (mx, set) => mx.max(set.max + 1) } )
+      domain.Partition(sets:_*)
+    }
+    def fromSeq(seq: Seq[Any]): Domain#Partition = Domain(seq.size).Partition.fromSeq(seq)
+    def empty = new Domain.empty.Partition(new Array[Int](0), new Array[Int](0), new Array[Int](0))
+  }
+
+  trait PartitionMapT {
+    def apply[V : ClassTag](blocks: (Set[Int], V)*): Domain#PartitionMap[V]
+    def empty[V : ClassTag]: Domain#PartitionMap[V]
+    def fill[V: ClassTag](partition: Domain#Partition)(elem: => V): Domain#PartitionMap[V]
+    def tabulate[V: ClassTag](partition: Domain#Partition)(f: Set[Int] => V): Domain#PartitionMap[V]
+  }
+
+  val PartitionMap = new PartitionMapT {
+    def apply[V : ClassTag](blocks: (Set[Int], V)*) = {
+      val domain = Domain((0 /: blocks) { case (acc, block) => acc.max(block._1.max + 1) })
+      domain.PartitionMap(blocks:_*)
+    }
+    def empty[V : ClassTag]: Domain#PartitionMap[V] = new Domain.empty.PartitionMap(Domain.Partition.empty, new Array[V](0))
+    def fill[V : ClassTag](partition: Domain#Partition)(elem: => V): Domain#PartitionMap[V] = {
+      val partition.domain.Typed(typedPartition) = partition
+      new partition.domain.PartitionMap(typedPartition, Array.fill(partition.nBlocks)(elem))
+    }
+    def tabulate[V : ClassTag](partition: Domain#Partition)(f: Set[Int] => V): Domain#PartitionMap[V] = {
+      val partition.domain.Typed(typedPartition) = partition
+      new partition.domain.PartitionMap(typedPartition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
+    }
+  }
+
+  trait PartitionMapPartialOrder[V] extends Any with PartialOrder[Domain#PartitionMap[V]] {
+    implicit def partialOrder: PartialOrder[V]
+    override def lteqv(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Boolean = // x <= y ?
+      if (x.partition <= y.partition) {
+        x.partition.blocks.forall { xBlock =>
+          val m = xBlock.min
+          x(m) <= y(m)
+        }
+      } else false
+    override def gteqv(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Boolean = lteqv(y, x)
+    def partialCompare(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Double =
+      if (lteqv(x, y)) {
+        if (gteqv(x, y)) 0.0 else -1.0
+      } else {
+        if (gteqv(x, y)) 1.0 else Double.NaN // not x <= y but x >= y
+      }
+  }
+
+  trait PartitionMapJoinSemilattice[V] extends Any with JoinSemilattice[Domain#PartitionMap[V]] {
+    implicit def classTag: ClassTag[V]
+    implicit def lattice: JoinSemilattice[V]
+    def join(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Domain#PartitionMap[V] =
+      if (y.partition.size > x.partition.size) join(y, x) else {
+        val newPartition = x.partition join y.partition
+        Domain.PartitionMap.tabulate[V](newPartition) { block =>
+          val xBlocks = x.partition.blocksFor(block)
+          val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
+            case (v, b) => v join x(b.min)
+          }
+
+          (afterX /: y.partition.blocksFor(block)) {
+            case (v, b) => v join y(b.min)
+          }
+        }
+      }
+  }
+
+  trait PartitionMapMeetSemilattice[V] extends Any with MeetSemilattice[Domain#PartitionMap[V]] {
+    implicit def classTag: ClassTag[V]
+    implicit def lattice: MeetSemilattice[V]
+
+    def meet(x: Domain#PartitionMap[V], y: Domain#PartitionMap[V]): Domain#PartitionMap[V] = {
+      val newPartition = x.partition meet y.partition
+      Domain.PartitionMap.tabulate[V](newPartition) { block =>
+        val xBlocks = x.partition.blocksFor(block)
+        val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
+          case (v, b) => v meet x(b.min)
+        }
+
+        (afterX /: y.partition.blocksFor(block)) {
+          case (v, b) => v meet y(b.min)
+        }
+      }
+    }
+  }
+
+  trait PartitionMapLattice[V] extends Any with Lattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] with PartitionMapMeetSemilattice[V] {
+    implicit def lattice: Lattice[V]
+  }
+
+  trait PartitionMapBoundedJoinSemilattice[V] extends Any with BoundedJoinSemilattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] {
+    def zero: Domain#PartitionMap[V] = Domain.PartitionMap.empty[V]
+  }
+
+  trait PartitionMapBoundedJoinSemilatticeNonEmpty[V] extends Any with BoundedJoinSemilattice[Domain#PartitionMap[V]]
+      with PartitionMapJoinSemilattice[V] {
+    implicit def lattice: BoundedJoinSemilattice[V]
+
+    def zero: Domain#PartitionMap[V] = Domain.PartitionMap(Set(0) -> lattice.zero)
+  }
+
+  trait PartitionMapBoundedBelowLattice[V] extends Any
+      with PartitionMapLattice[V]
+      with PartitionMapBoundedJoinSemilattice[V] {
+    implicit def lattice: Lattice[V]
+  }
+
+  trait PartitionMapBoundedBelowLatticeNonEmpty[V] extends Any
+      with PartitionMapLattice[V]
+      with PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+    implicit def lattice: Lattice[V] with BoundedJoinSemilattice[V]
+  }
+
+  implicit def PartitionMapPartialOrder[V: PartialOrder]: PartialOrder[Domain#PartitionMap[V]] =
+    new PartitionMapPartialOrder[V] {
+      def partialOrder = implicitly[PartialOrder[V]]
+    }
+
+  implicit def PartitionMapJoinSemilattice[V : ClassTag : JoinSemilattice]: JoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapJoinSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+
+  implicit def PartitionMapMeetSemilattice[V : ClassTag : MeetSemilattice]: MeetSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapMeetSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[MeetSemilattice[V]]
+    }
+
+  implicit def PartitionMapLattice[V : ClassTag: Lattice]: Lattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def PartitionMapBoundedJoinSemilattice[V : ClassTag : JoinSemilattice]: BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+
+  def PartitionMapBoundedJoinSemilatticeNonEmpty[V : ClassTag : BoundedJoinSemilattice]: BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedJoinSemilattice[V]]
+    }
+
+  def PartitionMapBoundedBelowLattice[V : ClassTag: Lattice]: Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def PartitionMapBoundedBelowLatticeNonEmpty[V : ClassTag](implicit ev: Lattice[V] with BoundedJoinSemilattice[V]): Lattice[Domain#PartitionMap[V]] with BoundedJoinSemilattice[Domain#PartitionMap[V]] =
+    new PartitionMapBoundedBelowLatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = ev
+    }
+}

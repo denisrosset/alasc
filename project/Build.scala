@@ -7,6 +7,7 @@ object MyBuild extends Build {
 
   val spireVersion = "0.10.1"
 
+  lazy val shapeless = "com.chuusai" %% "shapeless" % "2.2.5"
   lazy val spire = "org.spire-math" %% "spire" % spireVersion
   lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % spireVersion
 
@@ -104,6 +105,7 @@ object MyBuild extends Build {
   lazy val coreSettings = Seq(
     name := "alasc",
     libraryDependencies ++= Seq(
+      shapeless,
       spire,
       metalCore,
       metalLibrary,
