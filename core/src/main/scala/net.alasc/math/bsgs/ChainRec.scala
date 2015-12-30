@@ -81,13 +81,13 @@ object ChainRec {
     case _: Term[P] => baseToCheck.isEmpty
   }
 
-  def elementsIterator[P: FiniteGroup](chain: Chain[P])(implicit algebra: Group[P]): Iterator[P] =
+  def elementsIterator[P:Group](chain: Chain[P]): Iterator[P] =
     chain.mapOrElse(
       node => for (rest <- elementsIterator(node.next); b <- node.orbit.iterator) yield rest |+| node.u(b),
-      Iterator(algebra.id)
+      Iterator(Group[P].id)
     )
 
-  @tailrec def sifts[P: Eq: FiniteGroup](chain: Chain[P], remaining: P): Boolean = chain match {
+  @tailrec def sifts[P:Eq:Group](chain: Chain[P], remaining: P): Boolean = chain match {
     case node: Node[P] =>
       implicit def action = node.action
       val b = node.beta <|+| remaining
@@ -98,7 +98,7 @@ object ChainRec {
     case _: Term[P] => remaining.isId
   }
 
-  @tailrec def siftOther[P: Eq: FiniteGroup: FaithfulPermutationAction, Q: Eq: Permutation](chain: Chain[P], pInv: P, q: Q): Opt[P] =
+  @tailrec def siftOther[P:Eq:Group:FaithfulPermutationAction, Q:Eq:Permutation](chain: Chain[P], pInv: P, q: Q): Opt[P] =
     chain match {
       case node: Node[P] =>
         val b = (node.beta <|+| q) <|+| pInv
@@ -113,7 +113,7 @@ object ChainRec {
         if (pPerm === qPerm) Opt(p) else Opt.empty
     }
 
-  @tailrec def basicSift[P: FiniteGroup](chain: Chain[P], remaining: P,
+  @tailrec def basicSift[P:Group](chain: Chain[P], remaining: P,
     transversalIndices: metal.Buffer[Int] = metal.Buffer.empty[Int]): (Seq[Int], P) =
     chain match {
       case node: Node[P] =>

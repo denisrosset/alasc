@@ -13,8 +13,8 @@ import net.alasc.util._
 
 trait Subgroup[S, G] extends PartialOrder[S] { sg =>
 
-  implicit def finiteGroup: FiniteGroup[G]
-  implicit def equality: Eq[G]
+  implicit def group: Group[G]
+  implicit def equ: Eq[G]
 
   /** Tests if two subgroups are equivalent. */
   override def eqv(x: S, y: S): Boolean = (order(x) == order(y)) && lteqv(x, y)

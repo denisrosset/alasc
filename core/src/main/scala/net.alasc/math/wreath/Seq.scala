@@ -115,7 +115,8 @@ class SeqImprimitiveRepresentations[SG <: SeqLike[G, SG], G](implicit val scalar
   }
 }
  */
-class SeqEqFiniteGroup[SG <: SeqLike[G, SG], G: Eq: FiniteGroup](implicit cbf: CanBuildFrom[Nothing, G, SG]) extends Eq[SG] with FiniteGroup[SG] {
+class SeqEqGroup[SG <: SeqLike[G, SG], G:Eq:Group](implicit cbf: CanBuildFrom[Nothing, G, SG]) extends Eq[SG] with Group[SG] {
+
   def id: SG = cbf().result
   def eqv(x: SG, y: SG): Boolean = {
     val xs = x.size
@@ -164,10 +165,12 @@ class SeqEqFiniteGroup[SG <: SeqLike[G, SG], G: Eq: FiniteGroup](implicit cbf: C
     }
     b.result
   }
+
 }
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
+
   import net.alasc.syntax.permutationAction._
   import spire.syntax.group._
   import spire.syntax.action._
@@ -185,4 +188,5 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPerm
     }
 
   def partialActr(s: SA, p: P): Opt[SA] = partialActl(p.inverse, s)
+
 }

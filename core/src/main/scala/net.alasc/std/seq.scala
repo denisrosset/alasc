@@ -18,7 +18,7 @@ import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPermutationAction](
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
 
   override def actlIsDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
@@ -38,7 +38,7 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P: FiniteGroup: FaithfulPerm
 }
 
 trait SeqInstances0 {
-  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P: FiniteGroup: FaithfulPermutationAction](
+  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P:Group:FaithfulPermutationAction](
     implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): PartialAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
 }
 

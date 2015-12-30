@@ -32,9 +32,9 @@ object Wr {
     val aSeq = aSeq0
     val h = h0
   }
-  implicit def wrImprimitiveRepresentations[A: FiniteGroup: Representations, H: Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
-  implicit def wrEqFiniteGroup[A: Eq: FiniteGroup, H: Eq: Permutation]: Eq[Wr[A, H]] with FiniteGroup[Wr[A, H]] = new WrEqFiniteGroup[A, H]
-  def grp[SA, SH, A: Eq: FiniteGroup: Representations, H: Eq: Permutation](n: Int, sa: SA, sh: SH)(implicit sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
+  implicit def wrImprimitiveRepresentations[A:Group:Representations, H:Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
+  implicit def wrEqGroup[A:Eq:Group, H:Eq:Permutation]: Eq[Wr[A, H]] with Group[Wr[A, H]] = new WrEqGroup[A, H]
+  def grp[SA, SH, A:Eq:Group:Representations, H:Eq:Permutation](n: Int, sa: SA, sh: SH)(implicit sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
     val aGenerators = for {
       k <- 0 until n
       a <- sa.generators
@@ -47,8 +47,9 @@ object Wr {
   }
 }
 
-class WrEqFiniteGroup[A: Eq: FiniteGroup, H: Eq: Permutation] extends Eq[Wr[A, H]] with FiniteGroup[Wr[A, H]] {
-  val aSeqEqFiniteGroup = new SeqEqFiniteGroup[Seq[A], A]
+class WrEqGroup[A:Eq:Group, H:Eq:Permutation] extends Eq[Wr[A, H]] with Group[Wr[A, H]] {
+
+  val aSeqEqFiniteGroup = new SeqEqGroup[Seq[A], A]
   def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && aSeqEqFiniteGroup.eqv(x.aSeq, y.aSeq)
   def id = Wr(Seq.empty[A], Group[H].id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
@@ -61,4 +62,5 @@ class WrEqFiniteGroup[A: Eq: FiniteGroup, H: Eq: Permutation] extends Eq[Wr[A, H
     val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElseFast(-1) + 1)
     Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => Group[A].id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => Group[A].id) ), newH)
   }
+
 }

@@ -6,16 +6,19 @@ import scala.annotation.tailrec
 import scala.collection.immutable.BitSet
 import scala.collection.mutable
 
+import spire.algebra.Group
 import spire.syntax.action._
 import spire.util.Opt
 
-import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
+import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.math.guide.BaseGuideSet
 import net.alasc.util._
 
 object Stabilizer {
+
   def baseGuide(set: Set[Int]) = BaseGuideSet(set)
-  def pointwiseStabilizer[P](chainWithGuidedBase: Chain[P], set: Set[Int])(implicit algebra: FiniteGroup[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
+
+  def pointwiseStabilizer[P](chainWithGuidedBase: Chain[P], set: Set[Int])(implicit group: Group[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
     case node: Node[P] =>
       @tailrec def firstNotInSet(current: Chain[P]): Chain[P] = current match {
         case currentNode: Node[P] if set.contains(currentNode.beta) => firstNotInSet(currentNode.next)
@@ -26,6 +29,7 @@ object Stabilizer {
       res
     case term: Term[P] => term
   }
+
   class FixingTest[P](level: Int, set: Set[Int], pointSetsToTest: Array[BitSet]) extends SubgroupTest[P] {
     def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Opt[FixingTest[P]] =
       if (level < pointSetsToTest.length) {
@@ -42,7 +46,8 @@ object Stabilizer {
         Opt(this)
       }
   }
-  def setwiseStabilizer[P](chainWithGuidedBase: Chain[P], set: Set[Int])(implicit algebra: FiniteGroup[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
+
+  def setwiseStabilizer[P](chainWithGuidedBase: Chain[P], set: Set[Int])(implicit group: Group[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
     case node: Node[P] =>
       implicit def action = node.action
       // Finds for each base point the additional points that are stabilized (i.e. are
@@ -70,4 +75,5 @@ object Stabilizer {
       alg.subgroupSearch(chainWithGuidedBase, setwiseStabilized, new FixingTest(0, set, pointSetsToTest)).toChain
     case term: Term[P] => term
   }
+
 }

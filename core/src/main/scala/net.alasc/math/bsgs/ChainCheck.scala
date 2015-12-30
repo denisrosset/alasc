@@ -19,7 +19,7 @@ import net.alasc.algebra._
 import net.alasc.syntax.subgroup._
 import net.alasc.syntax.monoid._
 
-final class ChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[Chain[P]] {
+final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
   import Check._
 
   def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {
@@ -32,6 +32,7 @@ final class ChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[Chain[P]] {
       Check.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")
     case _ => Check.success
   }
+
   def checkOwnGenerators(chain: Chain[P]): Checked = {
     val baseSoFar = mutable.ArrayBuffer.empty[Int]
     @tailrec def rec(currentChecked: Checked, current: Chain[P], checkImmutable: Boolean): Checked = current match {
@@ -49,6 +50,7 @@ final class ChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[Chain[P]] {
     }
     rec(Check.success, chain, false)
   }
+
   def check(chain: Chain[P]): Checked =
     checkBaseAndStrongGeneratingSet(chain) ++ checkOwnGenerators(chain)
 }

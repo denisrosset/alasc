@@ -28,7 +28,7 @@ import net.alasc.util._
   * Has limitations: only works for small sizes where fast division using `Divisor` is possible, and
   * only handle domains with `n <= 63` elements.
   */
-class InhWrPrimitiveRepresentations[A: Eq: FiniteGroup, H: Eq: Permutation](implicit val aReps: Representations[A]) extends InhWrRepresentations[A, H] {
+class InhWrPrimitiveRepresentations[A:Eq:Group, H:Eq:Permutation](implicit val aReps: Representations[A]) extends InhWrRepresentations[A, H] {
   self =>
   object R extends RBuilder
   implicit val RClassTag: ClassTag[R] = classTag[R]

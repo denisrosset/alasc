@@ -16,7 +16,8 @@ import net.alasc.math.guide.BaseGuideSeq
 import net.alasc.syntax.all._
 
 class GrpSubgroups[G](val lhs: Grp[G]) {
-  import lhs.{algorithms, classTag, equality, finiteGroup, representation, representations}
+
+  import lhs.{algorithms, classTag, equ, group, representation, representations}
 
   def union(rhs: Grp[G]): Grp[G] = Grp.lattice[G].join(lhs, rhs)
   def intersect(rhs: Grp[G]): Grp[G] = Grp.lattice[G].meet(lhs, rhs)
@@ -53,15 +54,16 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     }
   }
 
-  def find[Q: Eq: Permutation](q: Q, rp: Representation[G]): Opt[G] = lhs.chain(rp).siftOther(q)
-  def find[Q: Eq: Permutation](q: Q)(implicit prp: PermutationRepresentations[G]): Opt[G] = {
+  def find[Q:Eq:Permutation](q: Q, rp: Representation[G]): Opt[G] = lhs.chain(rp).siftOther(q)
+
+  def find[Q:Eq:Permutation](q: Q)(implicit prp: PermutationRepresentations[G]): Opt[G] = {
     val b = q.supportMax.getOrElse(-1)
     val rp = if (b < representation.size) representation else prp.forSize(b + 1)
     find(q, rp)
   }
 
   def stabilizer(b: Int, rp: Representation[G]): (Grp[G], Transversal[G]) = {
-    implicit val finiteGroup = lhs.algorithms.finiteGroup
+    implicit val group = lhs.algorithms.group
     lhs match {
       case grp: GrpConjugated[G] =>
         grp.originalChain match {
@@ -149,4 +151,5 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     implicit def action = rp.action
     Grp.fromChain(algorithms.subgroupSearch(lhs.chain(rp), predicate, ThisTest).toChain, Opt(rp))
   }
+
 }

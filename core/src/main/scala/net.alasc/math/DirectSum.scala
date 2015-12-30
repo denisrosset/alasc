@@ -17,9 +17,10 @@ object DirectSum {
 }
 
 class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G]) extends Subgroup[DirectSum[S], G] {
-  implicit def equality: Eq[G] = sg.equality
-  implicit def finiteGroup: FiniteGroup[G] = sg.finiteGroup
-  import sg.{finiteGroup, eq}
+
+  implicit def equ: Eq[G] = sg.equ
+  implicit def group: Group[G] = sg.group
+
   type DS = DirectSum[S]
   def iterator(ds: DS) = {
     def rec(i: Int): Iterator[G] =
@@ -33,6 +34,7 @@ class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G]) extends Subgroup[
   def order(ds: DS) = (BigInt(1) /: ds.seq) { case (o, s) => o * s.order }
   def randomElement(ds: DS, gen: Random) = (Group[G].id /: ds.seq) { case (g, s) => g |+| s.randomElement(gen) }
   def contains(ds: DS, el: G) = iterator(ds).exists( g => (el === g))
+
 }
 
 object FixingSeq {

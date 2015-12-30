@@ -31,7 +31,7 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
   override lazy val symGrp = super.symGrp
   def findRepresentative(r: T): Opt[Representative[T, G]] =
     T.commonPartitions(t, r).flatMap { cp =>
-      import grp.finiteGroup
+      import grp.group
       val cpSeq: Seq[(Set[Int], Set[Int])] = cp.blocks
       val n = T.size(t)
       val bo = bsgs.algorithms.BaseOrder[G](chainInRepresentation.base)(representation.action)

@@ -7,6 +7,7 @@ import mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
 
+import spire.algebra.Group
 import spire.syntax.action._
 import spire.syntax.group._
 import spire.syntax.eq._
@@ -76,7 +77,7 @@ final class MutableNodeExplicit[P](
     transversal(b) = (u, uInv)
   }
 
-  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit group: Group[P], classTag: ClassTag[P]) = {
     if (nOwnGenerators == ownGeneratorsArray.length) {
       ownGeneratorsArray = arrayGrow(ownGeneratorsArray)
       ownGeneratorsArrayInv = arrayGrow(ownGeneratorsArrayInv)
@@ -86,7 +87,7 @@ final class MutableNodeExplicit[P](
     nOwnGenerators += 1
   }
 
-  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]) = {
+  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit group: Group[P], classTag: ClassTag[P]) = {
     val it = newGens.iterator
     val itInv = newGensInv.iterator
     while (it.hasNext) {
@@ -165,13 +166,13 @@ final class MutableNodeExplicit[P](
     ownGeneratorsInv.reduceToSize(ogpLength)
   }*/
 
-  protected[bsgs] def bulkAdd(beta: Buffer[Int], u: ArrayBuffer[P], uInv: ArrayBuffer[P])(implicit ev: FiniteGroup[P]) = {
+  protected[bsgs] def bulkAdd(beta: Buffer[Int], u: ArrayBuffer[P], uInv: ArrayBuffer[P])(implicit group: Group[P]) = {
     cforRange(0 until beta.length.toInt) { i =>
       addTransversalElement(beta(i), u(i), uInv(i))
     }
   }
 
-  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]) = {
+  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P]) = {
     var toCheck = MBitSet.empty[Int]
     val toAddBeta = Buffer.empty[Int]
     val toAddU = ArrayBuffer.empty[P]
@@ -228,7 +229,7 @@ final class MutableNodeExplicit[P](
     }
   }
 
-  protected[bsgs] def updateTransversal(newGen: Iterable[P], newGenInv: Iterable[P])(implicit ev: FiniteGroup[P]) = {
+  protected[bsgs] def updateTransversal(newGen: Iterable[P], newGenInv: Iterable[P])(implicit group: Group[P]) = {
     var toCheck = MBitSet.empty[Int]
     val toAddBeta = metal.Buffer.empty[Int]
     val toAddU = ArrayBuffer.empty[P]
@@ -291,7 +292,7 @@ final class MutableNodeExplicit[P](
     }
   }
 
-  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ctP: ClassTag[P]) = {
+  protected[bsgs] def conjugate(g: P, gInv: P)(implicit group: Group[P], classTag: ClassTag[P]) = {
     beta = beta <|+| g
     val st = transversal
     val newTransversal = MHashMap2.ofSize[Int, P, P](st.longSize.toInt)
@@ -316,7 +317,8 @@ final class MutableNodeExplicit[P](
 }
 
 class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
-  def standaloneClone(node: Node[P])(implicit algebra: FiniteGroup[P], classTag: ClassTag[P]) = node match {
+
+  def standaloneClone(node: Node[P])(implicit group: Group[P], classTag: ClassTag[P]) = node match {
     case mne: MutableNodeExplicit[P] =>
       new MutableNodeExplicit(mne.beta, mne.transversal.mutableCopy, mne.nOwnGenerators, mne.ownGeneratorsArray.clone, mne.ownGeneratorsArrayInv.clone)(mne.action)
     case _ => ??? /* TODO
@@ -325,9 +327,10 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
       new MutableNodeExplicit(node.beta, newTransversal, newOwnGeneratorsPairs)(node.action)
                    */
   }
-  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], algebra: FiniteGroup[P], classTag: ClassTag[P]) = {
+
+  def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], group: Group[P], classTag: ClassTag[P]) = {
     val transversal = MHashMap2.empty[Int, P, P]
-    val id = FiniteGroup[P].id
+    val id = Group[P].id
     transversal(beta) = (id, id)
     new MutableNodeExplicit(beta,
       transversal,
@@ -335,4 +338,5 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
       Array.empty[P],
       Array.empty[P])
   }
+
 }

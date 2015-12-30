@@ -2,11 +2,11 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import spire.algebra.Order
+import spire.algebra.{Group, Order}
 import spire.syntax.group._
 import spire.syntax.action._
 
-import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
+import net.alasc.algebra.FaithfulPermutationAction
 
 import metal.syntax._
 
@@ -37,7 +37,7 @@ object BaseMapOrder {
 object BaseOrder {
   def apply[P](base: Seq[Int])(implicit action: FaithfulPermutationAction[P]): BaseOrder[P] = BaseMapOrder[P](base)
 
-  def orderedIterator[P](mutableChain: MutableChain[P])(implicit algebra: FiniteGroup[P]): Iterator[P] = {
+  def orderedIterator[P](mutableChain: MutableChain[P])(implicit group: Group[P]): Iterator[P] = {
     implicit def action = mutableChain.start.action
     val bo = apply[P](mutableChain.start.next.base)
     def rec(chain: Chain[P], gPrev: P): Iterator[P] = chain match {
@@ -50,7 +50,7 @@ object BaseOrder {
         } yield g
       case _: Term[P] => Iterator(gPrev)
     }
-    rec(mutableChain.start.next, algebra.id)
+    rec(mutableChain.start.next, group.id)
   }
 }
 

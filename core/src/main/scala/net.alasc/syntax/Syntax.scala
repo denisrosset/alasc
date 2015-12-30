@@ -1,6 +1,7 @@
 package net.alasc.syntax
 
 import spire.algebra.Monoid
+import spire.syntax.GroupSyntax
 import net.alasc.algebra._
 import scala.language.implicitConversions
 
@@ -12,15 +13,11 @@ trait MonoidSyntax {
   implicit def monoidSyntax[A: Monoid](as: TraversableOnce[A]) = new MonoidOps(as)
 }
 
-trait FiniteGroupSyntax {
-  implicit def finiteGroupSyntax[A: FiniteGroup](a: A) = new FiniteGroupOps(a)
-}
-
-trait PermutationActionSyntax extends FiniteGroupSyntax {
+trait PermutationActionSyntax {
   implicit def permutationActionSyntax[A: PermutationAction](a: A) = new PermutationActionOps(a)
 }
 
-trait ShiftablePermutationSyntax extends FiniteGroupSyntax {
+trait ShiftablePermutationSyntax extends PermutationActionSyntax {
   implicit def shiftablePermutationSyntax[A: ShiftablePermutation](a: A) = new ShiftablePermutationOps(a)
 }
 
@@ -45,7 +42,6 @@ trait PartialMonoidWithBaseSyntax {
 trait AllSyntax
     extends CheckSyntax
     with MonoidSyntax
-    with FiniteGroupSyntax
     with PermutationActionSyntax
     with ShiftablePermutationSyntax
     with SubgroupSyntax

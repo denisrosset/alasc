@@ -18,8 +18,8 @@ import net.alasc.util._
   * 
   * The standard action for the Action[Int, P] is the right action.
   */
-trait Permutation[P] extends FiniteGroup[P] with FaithfulPermutationAction[P] {
-  self =>
+trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
+
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
   def fromImages(images: Seq[Int]): P
@@ -38,6 +38,7 @@ trait Permutation[P] extends FiniteGroup[P] with FaithfulPermutationAction[P] {
     import spire.std.int._
     sorting(Seq.tabulate(size)(k => gen.nextInt))
   }
+  
 }
 
 object Permutation {

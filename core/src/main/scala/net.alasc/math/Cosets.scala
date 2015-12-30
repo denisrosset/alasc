@@ -10,14 +10,14 @@ import net.alasc.syntax.subgroup._
 import bsgs._
 
 class RightCoset[G](val grpH: Grp[G], val g: G) {
-  import grpH.{finiteGroup, equality}
+  import grpH.{group, equ}
   def contains(el: G) = grpH.contains(el |+| g.inverse)
   def size: BigInt = grpH.order
   def leftCoset: LeftCoset[G] = new LeftCoset(g.inverse, grpH)
 }
 
 class LeftCoset[G](val g: G, val grpH: Grp[G]) {
-  import grpH.{finiteGroup, equality}
+  import grpH.{group, equ}
   override def toString = s"$g |+| ($grpH)"
   def contains(el: G) = grpH.contains(g.inverse |+| el)
   def size: BigInt = grpH.order
@@ -28,7 +28,7 @@ class LeftCoset[G](val g: G, val grpH: Grp[G]) {
 /** Left cosets of G by its subgroup H. */
 class LeftCosets[G](grpG: Grp[G], grpH: Grp[G]) {
   override def toString = s"($grpG) / ($grpH)"
-  import grpG.{representation, finiteGroup, algorithms}
+  import grpG.{representation, group, algorithms}
   def size: BigInt = grpG.order / grpH.order
   def iterator: Iterator[LeftCoset[G]] = {
     val bo = bsgs.algorithms.BaseOrder(grpG.chain.base)(representation.action)

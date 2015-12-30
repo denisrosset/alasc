@@ -5,6 +5,7 @@ import scala.util.Random
 
 import org.scalacheck.{Arbitrary, Gen}
 
+import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
@@ -17,12 +18,12 @@ import net.alasc.syntax.permutationAction._
 
 case class WrSize(a: Int, h: Int) {
   def aPerm[A:Permutation] = Perm(0, a - 1).to[A]
-  def primitiveRepresentation[A:FiniteGroup:Permutation:PermutationRepresentations, H:Permutation:PermutationRepresentations]: Representation[Wr[A, H]] = {
+  def primitiveRepresentation[A:Group:Permutation:PermutationRepresentations, H:Permutation:PermutationRepresentations]: Representation[Wr[A, H]] = {
     val wrpr = new WrPrimitiveRepresentations[A, H]
     val aR = wrpr.aReps.get(Seq(aPerm[A]))
     wrpr.R(h, aR)
   }
-  def imprimitiveRepresentation[A:FiniteGroup:Permutation:PermutationRepresentations, H:Permutation:PermutationRepresentations]: Representation[Wr[A, H]] = {
+  def imprimitiveRepresentation[A:Group:Permutation:PermutationRepresentations, H:Permutation:PermutationRepresentations]: Representation[Wr[A, H]] = {
     val wrir = new WrImprimitiveRepresentations[A, H]
     val aR = wrir.aReps.get(Seq(aPerm[A]))
     wrir.R(h, aR)

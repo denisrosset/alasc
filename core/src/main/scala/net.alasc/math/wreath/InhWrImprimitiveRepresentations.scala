@@ -23,7 +23,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
-class InhWrImprimitiveRepresentations[A: Eq: FiniteGroup, H: Eq: Permutation](implicit val aReps: Representations[A]) extends InhWrRepresentations[A, H] {
+class InhWrImprimitiveRepresentations[A:Eq:Group, H:Eq:Permutation](implicit val aReps: Representations[A]) extends InhWrRepresentations[A, H] {
   self =>
   object R extends RBuilder
   implicit val RClassTag: ClassTag[R] = classTag[R]

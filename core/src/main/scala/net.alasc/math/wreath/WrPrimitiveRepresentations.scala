@@ -21,7 +21,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
-class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], aAlgebra: FiniteGroup[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
+class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], aGroup: Group[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {
   self =>
   type AR = aReps.R
   val RClassTag = classTag[R]
@@ -61,7 +61,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
             val nextRem = aDiv.divide(rem)
             val alphai = rem - nextRem * aSize
             rem = nextRem
-            ind += factors(i <|+| w.h) * aRep.action.actr(alphai, w.aSeq.applyOrElse(i, (x: Int) => aAlgebra.id))
+            ind += factors(i <|+| w.h) * aRep.action.actr(alphai, w.aSeq.applyOrElse(i, (x: Int) => aGroup.id))
             i += 1
           }
           ind
@@ -75,7 +75,7 @@ class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], a
             val alphai = rem % aSize
             rem = rem / aSize
             val iPrime = w.h |+|> i
-            ind += factors(iPrime) * aRep.action.actl(w.aSeq.applyOrElse(iPrime, (x: Int) => aAlgebra.id), alphai)
+            ind += factors(iPrime) * aRep.action.actl(w.aSeq.applyOrElse(iPrime, (x: Int) => aGroup.id), alphai)
             i += 1
           }
           ind

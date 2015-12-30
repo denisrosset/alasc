@@ -186,30 +186,32 @@ sealed trait Chain[P] extends Elem[P] {
 
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
-  def basicSift(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
+  def basicSift(p: P)(implicit group: Group[P], equ: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
 
-  def siftOther[Q: Eq: Permutation](q: Q)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): Opt[P] = chain match {
+  def siftOther[Q:Eq:Permutation](q: Q)(implicit group: Group[P], `eq`: Eq[P]): Opt[P] = chain match {
     case node: Node[P] =>
       implicit def action = node.action
-      ChainRec.siftOther(chain, finiteGroup.id, q)
-    case _: Term[P] => if (q.isId) Opt(finiteGroup.id) else Opt.empty
+      ChainRec.siftOther(chain, group.id, q)
+    case _: Term[P] => if (q.isId) Opt(group.id) else Opt.empty
   }
 
-  def sifts(p: P)(implicit finiteGroup: FiniteGroup[P], equality: Eq[P]): Boolean = ChainRec.sifts(chain, p)
+  def sifts(p: P)(implicit group: Group[P], `eq`: Eq[P]): Boolean = ChainRec.sifts(chain, p)
 
   /** If the current element is a node, returns the next stabilizer group in chain and the current node
     * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with
     * base point `beta`.
     */
-  def detach(beta: => Int)(implicit ev: FiniteGroup[P]): (Chain[P], Transversal[P]) = chain match {
+  def detach(beta: => Int)(implicit group: Group[P]): (Chain[P], Transversal[P]) = chain match {
     case node: Node[P] => (node.next, node)
     case term: Term[P] => (term, Transversal.empty(beta))
   }
 }
 
 object Chain {
-  implicit def ChainSubgroup[P: ClassTag: Eq: FiniteGroup]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
-  implicit def ChainCheck[P: ClassTag: Eq: FiniteGroup]: Check[Chain[P]] = new ChainCheck[P]
+
+  implicit def ChainSubgroup[P:ClassTag:Eq:Group]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
+  implicit def ChainCheck[P:ClassTag:Eq:Group]: Check[Chain[P]] = new ChainCheck[P]
+
 }
 
 /** Node in a BSGS chain.
@@ -259,25 +261,32 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
 }
 
 object Node {
-  def trivial[P](beta: Int, next: Chain[P] = Term[P])(implicit action: FaithfulPermutationAction[P], ev: FiniteGroup[P], ct: ClassTag[P]): Node[P] =
-    new TrivialNode[P](beta, ev.id, next)
+
+  def trivial[P](beta: Int, next: Chain[P] = Term[P])(implicit action: FaithfulPermutationAction[P], group: Group[P], classTag: ClassTag[P]): Node[P] =
+    new TrivialNode[P](beta, group.id, next)
+
   /** Extractor for `Node` from `Elem`. */
   def unapply[P](elem: Elem[P]): Option[Node[P]] = elem match {
     case node: Node[P] => Some(node)
     case _ => None
   }
+
 }
 
 /** Represents the end of a BSGS chain, or, when viewed as a group, the trivial group (). */
 class Term[P] extends Chain[P] {
+
   def isTerminal = true
   def isImmutable = true
   def isMutable = false
+
 }
 
 object Term {
+
   val instance = new Term[Nothing]
   def apply[P] = instance.asInstanceOf[Term[P]]
+
 }
 
 trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
@@ -299,8 +308,8 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
 
   /** Adds `newGenerators` (given with their inverses) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */
-  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
-  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGens: Iterable[P], newGensInv: Iterable[P])(implicit group: Group[P], classTag: ClassTag[P]): Unit
+  protected[bsgs] def addToOwnGenerators(newGen: P, newGenInv: P)(implicit group: Group[P], classTag: ClassTag[P]): Unit
 
   /** Updates this node transversal by the addition of `newGens`,
     * provided with their inverses.
@@ -309,19 +318,21 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     *       have been added to this node or a children node `ownGenerators`
     *       by using addToOwnGenerators.
     */
-  protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit ev: FiniteGroup[P]): Unit
-  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit ev: FiniteGroup[P]): Unit
+  protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit group: Group[P]): Unit
+  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P]): Unit
 
   /** Conjugates the current node by the group element `g`, provided with its inverse
     * `gInv` to avoid multiple inverse element computations. 
     */
-  protected[bsgs] def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], ct: ClassTag[P]): Unit
+  protected[bsgs] def conjugate(g: P, gInv: P)(implicit group: Group[P], classTag: ClassTag[P]): Unit
 }
 
-final class ChainSubgroup[P](implicit val equality: Eq[P], val finiteGroup: FiniteGroup[P]) extends Subgroup[Chain[P], P] {
+final class ChainSubgroup[P](implicit val equ: Eq[P], val group: Group[P]) extends Subgroup[Chain[P], P] {
+
   def iterator(chain: Chain[P]) = ChainRec.elementsIterator(chain)
   def order(chain: Chain[P]): BigInt = ChainRec.order(chain, BigInt(1))
   def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
   def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), Group[P].id)
   def contains(chain: Chain[P], g: P) = chain.sifts(g)
+
 }

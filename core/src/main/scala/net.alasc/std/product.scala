@@ -19,37 +19,6 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.util._
 
-// TODO: use code generator to write instances for bigger products
-private[alasc] trait FiniteGroupProduct2[A, B] extends Any with FiniteGroup[(A, B)] with Eq[(A, B)] {
-  implicit def finiteGroupA: FiniteGroup[A]
-  implicit def finiteGroupB: FiniteGroup[B]
-  implicit def eqA: Eq[A]
-  implicit def eqB: Eq[B]
-
-  def eqv(x: (A, B), y: (A, B)): Boolean = (x._1 === y._1) && (x._2 === y._2)
-
-  def id: (A, B) = (finiteGroupA.id, finiteGroupB.id)
-
-  override def isId(x0: (A, B))(implicit ev: Eq[(A, B)]): Boolean =
-    x0._1.isId && x0._2.isId
-
-  def op(x0: (A, B), x1: (A, B)): (A, B) =
-    (x0._1 |+| x1._1, x0._2 |+| x1._2)
-
-  def inverse(x0: (A, B)): (A, B) =
-    (x0._1.inverse, x0._2.inverse)
-}
-
-trait FiniteGroupProductInstances {
-  implicit def FiniteGroupProduct2[A, B](implicit _finiteGroupA: FiniteGroup[A], _eqA: Eq[A],  _finiteGroupB: FiniteGroup[B], _eqB: Eq[B]): FiniteGroup[(A, B)] =
-    new FiniteGroupProduct2[A, B] {
-      def eqA = _eqA
-      def eqB = _eqB
-      def finiteGroupA = _finiteGroupA
-      def finiteGroupB = _finiteGroupB
-    }
-}
-
 final private[alasc] class RepresentationsProduct2[A, B](implicit val structure1: Representations[A], val structure2: Representations[B]) extends Representations[(A, B)] {
 
   def get(generators: Iterable[(A, B)]): R =
@@ -108,5 +77,4 @@ trait RepresentationsProductInstances {
 }
 
 trait ProductInstances extends
-    FiniteGroupProductInstances with
     RepresentationsProductInstances

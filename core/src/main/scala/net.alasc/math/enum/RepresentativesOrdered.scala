@@ -40,7 +40,7 @@ trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdere
 }
 
 final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val T: EnumerableOrdered[T, A], val TG: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
-  import grp.{classTag, equality, finiteGroup}
+  import grp.{classTag, `eq`, group}
 
   override lazy val groups = super.groups
   override lazy val array = super.array
@@ -117,8 +117,8 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
   object Block {
     def start = chainInRepresentation match {
-      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, metal.Buffer(FiniteGroup[G].id), metal.Buffer(symGrp))
-      case term: Term[G] => TermBlock(0, term, ULong(0), 0, FiniteGroup[G].id)
+      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, metal.Buffer(Group[G].id), metal.Buffer(symGrp))
+      case term: Term[G] => TermBlock(0, term, ULong(0), 0, Group[G].id)
     }
   }
 
@@ -186,7 +186,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     }
 
     lazy val size: BigInt = {
-      val co = (chain: Chain[G]).order
+      val co = ChainRec.order(chain: Chain[G], BigInt(1))
 
       (BigInt(0) /: symGrps) { case (sm, symGrp) => sm + co / symGrp.order }
     }

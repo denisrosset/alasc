@@ -4,7 +4,7 @@ package enum
 
 import scala.collection.mutable
 
-import spire.algebra.{Eq, Action, Order}
+import spire.algebra.{Action, Eq, Group, Order}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
@@ -27,11 +27,11 @@ object Algorithms {
     * @return the permutation `g` in `chainGrp` such that `i => seq(i <|+| g)` describes a lexicographic minimal
     *         sequence
     */
-  def findMinimalPermutation[G: FiniteGroup](seq: Array[Int], chainGrp: Chain[G], symGrp: Grp[G], representation: Representation[G]): G = {
+  def findMinimalPermutation[G:Group](seq: Array[Int], chainGrp: Chain[G], symGrp: Grp[G], representation: Representation[G]): G = {
     val n = seq.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0
-    var minimalG = FiniteGroup[G].id
+    var minimalG = Group[G].id
     implicit def action = representation.action
     // Implements breadth-first search in the cosets `symGrp \ grp`, filtering elements that do not lead to a minimal
     // lexicographic representative at each step in the stabilizer chain.
@@ -81,7 +81,7 @@ object Algorithms {
       case _ =>
     }
     cforRange(0 until chainGrp.length) { i =>
-      rec(0, i, FiniteGroup[G].id, chainGrp, symGrp)
+      rec(0, i, Group[G].id, chainGrp, symGrp)
     }
     minimalG
   }

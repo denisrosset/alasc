@@ -3,7 +3,6 @@ package net.alasc
 package object syntax {
   object check extends CheckSyntax
   object monoid extends MonoidSyntax
-  object finiteGroup extends FiniteGroupSyntax
   object permutationAction extends PermutationActionSyntax
   object shiftablePermutation extends ShiftablePermutationSyntax
   object subgroup extends SubgroupSyntax

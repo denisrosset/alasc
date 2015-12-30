@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 
 import scala.reflect.ClassTag
 
-import spire.algebra.Eq
+import spire.algebra.{Eq, Group}
 import spire.syntax.action._
 import spire.syntax.monoid._
 import spire.syntax.cfor._
@@ -145,7 +145,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
     */
   def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])(
-    implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], BigInt) = {
+    implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], BigInt) = {
     implicit def action = start.action
     require(prev.next eq node1)
     require(node1.prev eq prev)
@@ -205,7 +205,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the mutable node after `elem`.
     */  
-  def mutableNodeAfter(elem: MutableStartOrNode[P], beta: => Int)(implicit algebra: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): MutableNode[P] = elem.next match {
+  def mutableNodeAfter(elem: MutableStartOrNode[P], beta: => Int)(implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): MutableNode[P] = elem.next match {
     case IsMutableNode(mutableNode) => mutableNode
     case immutableNode: Node[P] => immutableToMutable(elem, immutableNode)
     case term: Term[P] =>
@@ -222,7 +222,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the mutable copy of `immutableNode`
     */
   def immutableToMutable(prev: MutableStartOrNode[P], immutableNode: Node[P])(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableNode[P] = {
+    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableNode[P] = {
     require(immutableNode.isImmutable)
     val mutableNode = builder.standaloneClone(immutableNode)
     replaceInChain(prev, immutableNode, immutableNode.next, mutableNode)
@@ -242,7 +242,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
   }
 
   def makeFullyMutable(after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): Unit =
+    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): Unit =
     findLast(after) match {
       case node: Node[P] => mutable(node)
       case _ =>
@@ -281,7 +281,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @return the mutable node corresponding `node`
     */
   def mutable(node: Node[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableNode[P] = {
+    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableNode[P] = {
     @tailrec def rec(prev: MutableStartOrNode[P]): MutableNode[P] = {
       val nextIsNode = prev.next eq node
       prev.next match {
@@ -303,7 +303,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
   }
 
   def mutableStartOrNode(startOrNode: StartOrNode[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], ev: FiniteGroup[P], classTag: ClassTag[P]): MutableStartOrNode[P] =
+    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableStartOrNode[P] =
     startOrNode match {
       case node: Node[P] => mutable(node, after)
       case start: Start[P] => start
@@ -311,7 +311,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 
   /** Removes the first node from the chain and returns it. If the chain is empty,
     * an empty node with given base point is created. */
-  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], algebra: FiniteGroup[P], action: FaithfulPermutationAction[P], classTag: ClassTag[P]): Node[P] = start.next match {
+  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], group: Group[P], action: FaithfulPermutationAction[P], classTag: ClassTag[P]): Node[P] = start.next match {
     case IsMutableNode(mn) =>
       start.next = mn.next
       IsMutableNode.unapply(mn.next).foreach { n => n.prev = start }
@@ -334,7 +334,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     start.next
   }
 
-  def conjugate(g: P, gInv: P)(implicit ev: FiniteGroup[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
+  def conjugate(g: P, gInv: P)(implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
     @tailrec def rec(prev: MutableStartOrNode[P]): Unit = prev.next match {
       case IsMutableNode(mn) =>
         mn.conjugate(g, gInv)
@@ -350,11 +350,14 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
 }
 
 object MutableChain {
-  def empty[P: FiniteGroup](implicit action: FaithfulPermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
-  implicit def MutableChainCheck[P: ClassTag: Eq: FiniteGroup]: Check[MutableChain[P]] = new MutableChainCheck[P]
+
+  def empty[P:Group](implicit action: FaithfulPermutationAction[P]): MutableChain[P] = new MutableChain(new Start(next = Term[P]))
+
+  implicit def MutableChainCheck[P:ClassTag:Eq:Group]: Check[MutableChain[P]] = new MutableChainCheck[P]
+
 }
 
-final class MutableChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[MutableChain[P]] {
+final class MutableChainCheck[P:ClassTag:Eq:Group] extends Check[MutableChain[P]] {
   import Check._
 
   @tailrec def checkAllAction(checked: Checked, chain: Chain[P], action: FaithfulPermutationAction[P]): Checked = chain match {
@@ -375,4 +378,5 @@ final class MutableChainCheck[P: ClassTag: Eq: FiniteGroup] extends Check[Mutabl
     (checkAllAction(Check.success, mutableChain.start.next, mutableChain.start.action) ++
       checkMutablePrev(Check.success, mutableChain.start) ++
       mutableChain.start.next.check)
+
 }

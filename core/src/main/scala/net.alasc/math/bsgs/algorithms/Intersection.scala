@@ -9,13 +9,13 @@ import spire.syntax.group._
 import spire.syntax.action._
 import spire.util.Opt
 
-import net.alasc.algebra.{FaithfulPermutationAction, FiniteGroup}
+import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.math.guide.BaseGuideSeq
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 object Intersection {
-  class IntersectionTest[P](level: Int, chain2: Chain[P], prev2Inv: P)(implicit algebra: FiniteGroup[P]) extends SubgroupTest[P] {
+  class IntersectionTest[P](level: Int, chain2: Chain[P], prev2Inv: P)(implicit group: Group[P]) extends SubgroupTest[P] {
     def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Opt[IntersectionTest[P]] = {
       val b2 = orbitImage <|+| prev2Inv
       chain2 match {
@@ -33,7 +33,7 @@ object Intersection {
     chain1 match {
       case node1: Node[P] => chain2WithGuidedBase match {
         case node2: Node[P] =>
-          import alg.{equality, classTag, finiteGroup}
+          import alg.{equ, classTag, group}
           implicit def action: FaithfulPermutationAction[P] = node1.action
           val base1 = node1.base
           val base2 = node2.base

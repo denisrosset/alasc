@@ -31,7 +31,7 @@ trait PermutationActionLaws[A] extends Laws {
   implicit def Arb: Arbitrary[A]
   implicit def DomArb: Arbitrary[Dom]
 
-  def permutationAction(implicit FG : FiniteGroup[A], A : PermutationAction[A]) = new PermutationActionProperties(
+  def permutationAction(implicit group: Group[A], A: PermutationAction[A]) = new PermutationActionProperties(
     name = "permutationAction",
     parent = None,
     bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
@@ -63,7 +63,7 @@ trait PermutationActionLaws[A] extends Laws {
     )
   )
 
-  def faithfulPermutationAction(implicit FG : FiniteGroup[A], A : FaithfulPermutationAction[A]) = new PermutationActionProperties(
+  def faithfulPermutationAction(implicit group: Group[A], A: FaithfulPermutationAction[A]) = new PermutationActionProperties(
       name = "faithfulPermutationAction",
       parent = Some(permutationAction),
       bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),

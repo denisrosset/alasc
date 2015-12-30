@@ -20,11 +20,6 @@ final class MonoidOps[A](lhs: TraversableOnce[A])(implicit ev: Monoid[A]) {
   def combine(): A = macro Ops.unop[A]
 }
 
-final class FiniteGroupOps[A](lhs: A)(implicit ev: FiniteGroup[A]) {
-  def order(): Int = macro Ops.unop[Int]
-  def conjBy(rhs: A): A = macro Ops.binop[A, A]
-}
-
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
   def inSupport(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
   def support(): Set[Int] = macro Ops.unop[Set[Int]]

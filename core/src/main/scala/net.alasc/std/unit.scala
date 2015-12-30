@@ -12,15 +12,19 @@ import util._
 
 // TODO: workaround until Spire 2.10.2 with unit std support
 trait UnitEq extends Eq[Unit] {
+
   def eqv(x:Unit, y:Unit): Boolean = true
   override def neqv(x:Unit, y:Unit): Boolean = false
+
 }
 
-trait UnitFiniteGroup extends FiniteGroup[Unit] {
+trait UnitGroup extends Group[Unit] {
+
   def inverse(g: Unit): Unit = ()
   def eqv(x: Unit, y: Unit): Boolean = true
   def op(x: Unit, y: Unit): Unit = ()
   def id: Unit = ()
+
 }
 
 trait UnitPermutation extends FaithfulPermutationAction[Unit] {
@@ -52,7 +56,7 @@ final class UnitRepresentations(implicit action: FaithfulPermutationAction[Unit]
   }
 }
 
-class UnitAlgebra extends UnitFiniteGroup with UnitPermutation
+class UnitAlgebra extends UnitGroup with UnitPermutation
 
 trait UnitInstances {
   implicit final val UnitEq = new UnitEq { }

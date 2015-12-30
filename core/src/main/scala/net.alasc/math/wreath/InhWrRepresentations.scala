@@ -24,7 +24,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
-abstract class InhWrRepresentations[A: Eq: FiniteGroup, H: Eq: Permutation] extends Representations[Wr[A, H]] {
+abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Representations[Wr[A, H]] {
   selfReps =>
   implicit val aReps: Representations[A]
   type AR = aReps.R
