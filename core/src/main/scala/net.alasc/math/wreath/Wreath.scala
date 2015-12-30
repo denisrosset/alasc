@@ -16,7 +16,6 @@ import spire.syntax.action._
 import net.alasc.algebra._
 import net.alasc.std._
 import net.alasc.syntax.permutationAction._
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 /** Describes the wreath product of two objects. */
@@ -34,15 +33,15 @@ object Wr {
   }
   implicit def wrImprimitiveRepresentations[A:Group:Representations, H:Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
   implicit def wrEqGroup[A:Eq:Group, H:Eq:Permutation]: Eq[Wr[A, H]] with Group[Wr[A, H]] = new WrEqGroup[A, H]
-  def grp[SA, SH, A:Eq:Group:Representations, H:Eq:Permutation](n: Int, sa: SA, sh: SH)(implicit sba: Subgroup[SA, A], sbh: Subgroup[SH, H]): Grp[Wr[A, H]] = {
+  def grp[A:Eq:Group:Representations, H:Eq:Permutation](n: Int, ga: Grp[A], gh: Grp[H]): Grp[Wr[A, H]] = {
     val aGenerators = for {
       k <- 0 until n
-      a <- sa.generators
+      a <- ga.generators
     } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else Group[A].id ), Group[H].id)
     val hGenerators = for {
-      h <- sh.generators
+      h <- gh.generators
     } yield Wr(Seq.empty[A], h)
-    val order = sa.order.pow(n) * sh.order
+    val order = ga.order.pow(n) * gh.order
     Grp.fromGeneratorsAndOrder(aGenerators ++ hGenerators, order)
   }
 }

@@ -18,7 +18,6 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 class WrPrimitiveRepresentations[A, H](implicit val aReps: Representations[A], aGroup: Group[A], hAlgebra: Permutation[H]) extends Representations[Wr[A, H]] {

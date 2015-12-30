@@ -2,7 +2,6 @@ package net.alasc.math
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import bsgs._
-import net.alasc.syntax.subgroup._
 
 object MathieuGroups {
   val M10 = Seq(Perm(1,2)(3,4), Perm(1,2,3,5)(4,6)) -> BigInt(360)

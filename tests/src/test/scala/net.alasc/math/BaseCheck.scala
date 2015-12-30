@@ -6,7 +6,6 @@ import org.scalatest.FunSuite
 import bsgs._
 import algorithms._
 import net.alasc.syntax.check._
-import net.alasc.syntax.subgroup._
 import net.alasc.syntax.shiftablePermutation._
 
 object BaseGenerators {

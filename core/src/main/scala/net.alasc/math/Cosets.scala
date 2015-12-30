@@ -5,7 +5,6 @@ import spire.syntax.group._
 import spire.syntax.action._
 
 import net.alasc.algebra._
-import net.alasc.syntax.subgroup._
 
 import bsgs._
 

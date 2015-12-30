@@ -17,8 +17,6 @@ import spire.syntax.cfor._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.syntax.subgroup._
-import net.alasc.syntax.monoid._
 
 /** Generic element to describe BSGS data. */
 sealed trait Elem[P]
@@ -180,6 +178,12 @@ sealed trait Chain[P] extends Elem[P] {
     def iterator = new StrongGeneratingSetIterator[P](chain, 0, true)
   }
 
+  def elementsIterator(implicit group: Group[P]): Iterator[P]
+
+  def order: BigInt = ChainRec.order(chain, BigInt(1))
+
+  def randomElement(rand: Random)(implicit group: Group[P]): P
+
   def length: Int = ChainRec.length(chain)
 
   def base: Seq[Int] = ChainRec.base(chain)
@@ -209,7 +213,6 @@ sealed trait Chain[P] extends Elem[P] {
 
 object Chain {
 
-  implicit def ChainSubgroup[P:ClassTag:Eq:Group]: Subgroup[Chain[P], P] = new ChainSubgroup[P]
   implicit def ChainCheck[P:ClassTag:Eq:Group]: Check[Chain[P]] = new ChainCheck[P]
 
 }
@@ -252,6 +255,13 @@ trait Node[P] extends Chain[P] with StartOrNode[P] with Transversal[P] {
     def length = nOwnGenerators
   }
 
+  def elementsIterator(implicit group: Group[P]): Iterator[P] = for {
+    rest <- next.elementsIterator
+    b <- orbit.iterator
+  } yield rest |+| u(b) // TODO optimize
+
+  def randomElement(rand: Random)(implicit group: Group[P]): P = ChainRec.random(node.next, rand, node.randomU(rand))
+
   def randomOrbit(rand: Random): Int
 
   def foreachU(f: P => Unit): Unit
@@ -279,6 +289,10 @@ class Term[P] extends Chain[P] {
   def isTerminal = true
   def isImmutable = true
   def isMutable = false
+
+  def elementsIterator(implicit group: Group[P]): Iterator[P] = Iterator(group.id)
+
+  def randomElement(rand: Random)(implicit group: Group[P]): P = group.id
 
 }
 
@@ -325,14 +339,4 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     * `gInv` to avoid multiple inverse element computations. 
     */
   protected[bsgs] def conjugate(g: P, gInv: P)(implicit group: Group[P], classTag: ClassTag[P]): Unit
-}
-
-final class ChainSubgroup[P](implicit val equ: Eq[P], val group: Group[P]) extends Subgroup[Chain[P], P] {
-
-  def iterator(chain: Chain[P]) = ChainRec.elementsIterator(chain)
-  def order(chain: Chain[P]): BigInt = ChainRec.order(chain, BigInt(1))
-  def generators(chain: Chain[P]): Iterable[P] = chain.strongGeneratingSet
-  def randomElement(chain: Chain[P], rand: Random) = chain.mapOrElse(node => ChainRec.random(node.next, rand, node.randomU(rand)), Group[P].id)
-  def contains(chain: Chain[P], g: P) = chain.sifts(g)
-
 }

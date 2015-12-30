@@ -79,5 +79,5 @@ class GrpLazy[G](
     case _ => chain.randomElement(random)
   }
 
-  def contains(g: G) = chain.contains(g)
+  def contains(g: G) = chain.sifts(g)
 }

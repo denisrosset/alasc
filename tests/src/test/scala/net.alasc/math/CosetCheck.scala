@@ -9,8 +9,6 @@ import prop._
 
 import spire.syntax.group._
 
-import net.alasc.syntax.subgroup._
-
 object M11 {
   val order = BigInt(7920)
   val repr11 = Map(

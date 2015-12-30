@@ -76,7 +76,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
               val uInv = node.uInv(a)
               val newG = u |+| g
               val newGInv = gInv |+| uInv
-              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, newG, newGInv), ConjugatedTransversal(node, newG, newGInv))
+              return (GrpConjugated(grp.algorithms, node.next.strongGeneratingSet, grp.representation, node.next, newG, newGInv), ConjugatedTransversal(node, newG, newGInv))
             } else if (node.isFixed(a))
               return (grp, Transversal.empty(b))
           case term: Term[G] => return (grp, Transversal.empty[G](b))
@@ -89,7 +89,7 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
             if (node.inOrbit(b)) {
               val u = node.u(b)
               val uInv = node.uInv(b)
-              return (GrpConjugated(grp.algorithms, node.next.generators, grp.representation, node.next, u, uInv), ConjugatedTransversal(node, u, uInv))
+              return (GrpConjugated(grp.algorithms, node.next.strongGeneratingSet, grp.representation, node.next, u, uInv), ConjugatedTransversal(node, u, uInv))
             } else if (node.isFixed(b))
               return (grp, Transversal.empty(b))
           case Opt(term: Term[G]) => return (grp, Transversal.empty[G](b))

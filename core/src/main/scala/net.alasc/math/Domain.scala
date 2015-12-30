@@ -85,7 +85,7 @@ final class Domain private (val size: Int) { domainSelf =>
         n
       }
       def contains(l: Int) = if (l < Domain.this.size) indexArray(l) == index else false
-      def symGroupOrder = factorial(size)
+      def symGroupOrder = Sym.order(size)
       def symGroupGenerators: Iterable[Perm] =
         if (size <= 1) Iterable.empty else {
           val builder = mutable.ArrayBuilder.make[Perm]

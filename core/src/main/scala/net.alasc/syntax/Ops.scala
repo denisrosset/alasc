@@ -16,10 +16,6 @@ final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
   def check(): Check.Checked = ev.check(lhs)
 }
 
-final class MonoidOps[A](lhs: TraversableOnce[A])(implicit ev: Monoid[A]) {
-  def combine(): A = macro Ops.unop[A]
-}
-
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
   def inSupport(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
   def support(): Set[Int] = macro Ops.unop[Set[Int]]
@@ -34,26 +30,6 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 final class ShiftablePermutationOps[A](lhs: A)(implicit ev: ShiftablePermutation[A]) {
   def +(rhs: Int): A = macro Ops.binop[Int, A]
   def -(rhs: Int): A = macro Ops.binop[Int, A]
-}
-
-final class SubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G]) {
-  def hasSubgroup(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
-  def hasProperSubgroup(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
-  def isSubgroupOf(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
-  def isProperSubgroupOf(rhs: Grp[G]): Boolean = macro Ops.binop[Grp[G], Boolean]
-
-  def iterator(): Iterator[G] = macro Ops.unop[Iterator[G]]
-  def generators(): Iterable[G] = macro Ops.unop[Iterable[G]]
-  def order(): BigInt = macro Ops.unop[BigInt]
-  def randomElement(rhs: Random): G = macro Ops.binop[Random, G]
-  def contains(rhs: G): Boolean = macro Ops.binop[G, Boolean]
-  def toGrp()(implicit gClassTag: ClassTag[G], representations: Representations[G]): Grp[G] = ev.toGrp(lhs)
-}
-
-final class PermutationSubgroupOps[S, G](lhs: S)(implicit ev: Subgroup[S, G], action: FaithfulPermutationAction[G]) {
-  def supportMin(): NNOption = ev.supportMin(lhs)
-  def supportMax(): NNOption = ev.supportMax(lhs)
-  def supportAny(): NNOption = ev.supportAny(lhs)
 }
 
 final class WithBaseSemigroupoidOps[G, B](lhs: G)(implicit ev: WithBase[G, B]) {

@@ -7,7 +7,6 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 import algorithms._

@@ -20,7 +20,6 @@ import spire.syntax.lattice._
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 /** Wreath product group inhomogenous permutation representation.

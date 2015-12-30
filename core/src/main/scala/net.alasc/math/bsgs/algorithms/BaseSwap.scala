@@ -7,8 +7,6 @@ import scala.collection.{immutable, mutable}
 import spire.syntax.group._
 import spire.syntax.action._
 
-import net.alasc.syntax.subgroup._
-
 trait BaseSwap[P] extends MutableAlgorithms[P] {
   /** Base swap.
     * 

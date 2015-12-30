@@ -12,7 +12,6 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.math.guide._
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 import bsgs._
@@ -40,7 +39,7 @@ trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdere
 }
 
 final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val T: EnumerableOrdered[T, A], val TG: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
-  import grp.{classTag, `eq`, group}
+  import grp.{classTag, equ, group}
 
   override lazy val groups = super.groups
   override lazy val array = super.array

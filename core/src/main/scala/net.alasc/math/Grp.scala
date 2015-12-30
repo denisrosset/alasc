@@ -33,19 +33,24 @@ sealed abstract class Grp[G] { lhs =>
   /** Set of algorithms used in the computations. */
   implicit def algorithms: BasicAlgorithms[G]
 
+  /** ClassTag for elements. */
+  implicit def classTag: ClassTag[G] = algorithms.classTag
+
   /** Representation provider for elements of G, used only if needed. */
   implicit def representations: Representations[G]
 
   /** Generators of the group. Must not contain the identity. */
   def generators: Iterable[G]
 
+  /** Iterator through the group elements. */
+  def iterator: Iterator[G]
+
   /** Finite group operations on type G. */
   implicit def group: Group[G] = algorithms.group
   implicit def equ: Eq[G] = algorithms.equ
-  implicit def classTag: ClassTag[G] = algorithms.classTag
 
   override def equals(any: Any) = any match {
-    case that: Grp[G] => Grp.subgroup[G].eqv(this, that)
+    case that: Grp[G] => Grp.partialOrder[G].eqv(this, that)
     case _ => false
   }
 
@@ -79,7 +84,7 @@ sealed abstract class Grp[G] { lhs =>
   }
 
   def reducedGenerators: Grp[G] = {
-    implicit def builder = algorithms.nodeBuilder
+    implicit def nodeBuilder: NodeBuilder[G] = algorithms.nodeBuilder
     val mutableChain = algorithms.mutableChain(chain)(representation.action)
     mutableChain.makeFullyMutable()
     algorithms.removeRedundantGenerators(mutableChain)
@@ -87,6 +92,7 @@ sealed abstract class Grp[G] { lhs =>
     val newGenerators = if (generators.size < newChain.strongGeneratingSet.size) generators else newChain.strongGeneratingSet
     new GrpChain[G](newGenerators, representation, newChain)
   }
+
 }
 
 class GrpChain[G](val generators: Iterable[G], val representation: Representation[G], val chain: Chain[G])(implicit val algorithms: BasicAlgorithms[G], val representations: Representations[G]) extends Grp[G] { lhs =>
@@ -100,8 +106,9 @@ class GrpChain[G](val generators: Iterable[G], val representation: Representatio
   def order = chain.order
   def orderIfComputed = Opt(order)
   def randomElement(random: Random) = chain.randomElement(random)
+  def iterator: Iterator[G] = chain.elementsIterator
   def representationIfComputed = Opt(representation)
-  def contains(g: G) = chain.contains(g)
+  def contains(g: G) = chain.sifts(g)
 }
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`) conjugated by g (with gInv == g.inverse).
@@ -146,8 +153,11 @@ case class GrpConjugated[G](algorithms: BasicAlgorithms[G], originalGenerators: 
     gInv |+| h |+| g
   }
   // `h in gInv G g` if and only if `g h gInv in G`.
-  def contains(h: G) = originalChain.contains(g |+| h |+| gInv)
-  def generators = originalChain.generators.map(h => gInv |+| h |+| g)
+  def contains(h: G) = originalChain.sifts(g |+| h |+| gInv)
+
+  def iterator: Iterator[G] = originalChain.elementsIterator.map(h => gInv |+| h |+| g)
+
+  def generators = originalChain.strongGeneratingSet.map(h => gInv |+| h |+| g)
   override def conjBy(h: G, hInv: G): Grp[G] =
     if (representation.represents(h))
       new GrpConjugated(algorithms, originalGenerators, representation, originalChain, g |+| h, hInv |+| gInv)
@@ -159,6 +169,8 @@ abstract class GrpLazyBase[G] extends Grp[G] {
   def isOrderComputed: Boolean
 
   protected def computeChain(givenRepresentation: Opt[Representation[G]] = Opt.empty[Representation[G]]): Chain[G]
+
+  def iterator: Iterator[G] = chain.elementsIterator
 
   def chain: Chain[G] = chain(representation)
 
@@ -180,19 +192,21 @@ object Grp {
     def representations = implicitly[Representations[G]]
   }
 
-  implicit def defaultAlgorithms[G:ClassTag:Eq:Group] = BasicAlgorithms.randomized(Random)
+  implicit def partialOrder[G]: PartialOrder[Grp[G]] = new GrpPartialOrder[G] { }
+
+  implicit def defaultAlgorithms[G](implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]) = BasicAlgorithms.randomized(Random)(classTag, equ, group)
 
   def fromChain[G:ClassTag:Eq:Group:Representations](
     chain: Chain[G],
     representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]],
     givenGenerators: Opt[Iterable[G]] = Opt.empty[Iterable[G]]
   ): Grp[G] = {
-    val representation = representationOption.getOrElse(Representations[G].get(chain.generators))
+    val representation = representationOption.getOrElse(Representations[G].get(chain.strongGeneratingSet))
     chain match {
       case node: Node[G] if representation.action != node.action =>
-        new GrpLazy(givenGenerators.getOrElse(chain.generators), Opt(chain.order), Opt(chain.randomElement(_)), representationOption)
+        new GrpLazy(givenGenerators.getOrElse(chain.strongGeneratingSet), Opt(chain.order), Opt(chain.randomElement(_)), representationOption)
       case _ =>
-        new GrpChain[G](givenGenerators.getOrElse(chain.generators), representation, chain)
+        new GrpChain[G](givenGenerators.getOrElse(chain.strongGeneratingSet), representation, chain)
     }
   }
 
@@ -211,42 +225,39 @@ object Grp {
     representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]]): Grp[G] =
     new GrpLazy[G](generators.filterNot(_.isId), givenOrder = Opt(order), givenRepresentation = representationOption)
 
-  def fromSubgroup[S, G:ClassTag:Representations](subgroup: S,
-    representationOption: Opt[Representation[G]] = Opt.empty[Representation[G]])(implicit sg: Subgroup[S, G]): Grp[G] = {
-    import sg.{equ, group}
-    new GrpLazy[G](subgroup.generators,
-      givenOrder = Opt(subgroup.order),
-      givenRandomElement = Opt(subgroup.randomElement(_)),
-      givenRepresentation = representationOption)
-  }
-
-  implicit def subgroup[G:Eq:Group]: Subgroup[Grp[G], G] = new GrpSubgroup[G]
   implicit def subgroups[G](grp: Grp[G]): GrpSubgroups[G] = new GrpSubgroups[G](grp)
   implicit def lexElements[G](grp: Grp[G]): GrpLexElements[G] = new GrpLexElements[G](grp)
 
 }
 
-class GrpSubgroup[G](implicit val equ: Eq[G], val group: Group[G]) extends Subgroup[Grp[G], G] {
+trait GrpPartialOrder[G] extends PartialOrder[Grp[G]] {
 
-  def iterator(grp: Grp[G]) = {
-    import grp.classTag
-    grp.chain.iterator
+  override def eqv(x: Grp[G], y: Grp[G]): Boolean = (x.order == y.order) && lteqv(x, y)
+  override def lteqv(x: Grp[G], y: Grp[G]): Boolean = x.generators.forall(y.contains)
+  override def gteqv(x: Grp[G], y: Grp[G]): Boolean = y.generators.forall(x.contains)
+  override def lt(x: Grp[G], y: Grp[G]): Boolean = (x.order < y.order) && lteqv(x, y)
+  override def gt(x: Grp[G], y: Grp[G]): Boolean = (x.order > y.order) && gteqv(x, y)
+
+  def partialCompare(x: Grp[G], y: Grp[G]): Double = {
+    val c = x.order.compare(y.order)
+    if (c < 0) {
+      if (lteqv(x, y)) -1.0 else Double.NaN
+    } else if (c > 0) {
+      if (gteqv(x, y)) 1.0 else Double.NaN
+    } else { // c == 0
+      if (lteqv(x, y)) 0.0 else Double.NaN
+    }
   }
-  def generators(grp: Grp[G]) = grp.generators
-  def order(grp: Grp[G]) = grp.order
-  def randomElement(grp: Grp[G], random: Random) = grp.randomElement(random)
-  override def contains(grp: Grp[G], g: G) = grp.contains(g)
-  override def toGrp(grp: Grp[G])(implicit classTag: ClassTag[G], representations: Representations[G]): Grp[G] = grp
 
 }
 
 trait GrpLattice[G] extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] {
 
   implicit def algorithms: BasicAlgorithms[G]
+  implicit def classTag: ClassTag[G] = algorithms.classTag
   implicit def representations: Representations[G]
 
   implicit def group: Group[G] = algorithms.group
-  implicit def classTag: ClassTag[G] = algorithms.classTag
   implicit def equ: Eq[G] = algorithms.equ
 
   def zero = Grp.fromGenerators[G](Iterable.empty)

@@ -16,8 +16,6 @@ import spire.syntax.action._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._
-import net.alasc.syntax.subgroup._
-import net.alasc.syntax.monoid._
 
 case class TrivialNode[P](beta: Int, id: P, next: Chain[P])(implicit val action: FaithfulPermutationAction[P], ct: ClassTag[P]) extends Node[P] {
   def isImmutable = true

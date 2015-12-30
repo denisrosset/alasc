@@ -88,22 +88,14 @@ trait ChainBuilder[P] extends BaseChange[P] with SchreierSims[P] {
     withBase(chain, BaseGuideSeq(base))
 
   def withAction(chain: Chain[P], action: FaithfulPermutationAction[P]): Chain[P] = chain match {
-    case node: Node[p] =>
-      if (action == node.action)
-        chain
-      else
-        completeChainFromSubgroup(chain)(action, Chain.ChainSubgroup).toChain
-    case term: Term[P] =>
-      term
+    case term: Term[P] => term
+    case node: Node[P] if action == node.action => node
+    case node: Node[P] => completeChainActionChange(node, action).toChain
   }
   
   def mutableChainCopyWithAction(chain: Chain[P], action: FaithfulPermutationAction[P]): MutableChain[P] = chain match {
-    case node: Node[P] =>
-      if (action == node.action)
-        mutableChain(node)(action)
-      else
-        completeChainActionChange(chain, action)
-    case _: Term[P] =>
-      MutableChain.empty(group, action)
+    case node: Node[P] if action == node.action => mutableChain(node)(action)
+    case node: Node[P] => completeChainActionChange(chain, action)
+    case _: Term[P] => MutableChain.empty(group, action)
   }
 }

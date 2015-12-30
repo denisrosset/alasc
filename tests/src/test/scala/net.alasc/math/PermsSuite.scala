@@ -2,7 +2,6 @@ package net.alasc.math
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import bsgs._
-import net.alasc.syntax.subgroup._
 import spire.syntax.order._
 
 class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {

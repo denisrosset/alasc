@@ -12,7 +12,6 @@ import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
-import net.alasc.syntax.subgroup._
 import net.alasc.syntax.check._
 import net.alasc.util._
 

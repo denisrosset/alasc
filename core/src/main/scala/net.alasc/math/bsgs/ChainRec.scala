@@ -81,12 +81,6 @@ object ChainRec {
     case _: Term[P] => baseToCheck.isEmpty
   }
 
-  def elementsIterator[P:Group](chain: Chain[P]): Iterator[P] =
-    chain.mapOrElse(
-      node => for (rest <- elementsIterator(node.next); b <- node.orbit.iterator) yield rest |+| node.u(b),
-      Iterator(Group[P].id)
-    )
-
   @tailrec def sifts[P:Eq:Group](chain: Chain[P], remaining: P): Boolean = chain match {
     case node: Node[P] =>
       implicit def action = node.action

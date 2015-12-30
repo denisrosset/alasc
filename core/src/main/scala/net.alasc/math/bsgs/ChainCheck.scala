@@ -16,8 +16,6 @@ import spire.syntax.action._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._
-import net.alasc.syntax.subgroup._
-import net.alasc.syntax.monoid._
 
 final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
   import Check._

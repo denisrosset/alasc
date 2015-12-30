@@ -2,8 +2,6 @@ package net.alasc.math
 package bsgs
 package algorithms
 
-import scala.reflect.ClassTag
-
 import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
@@ -11,7 +9,6 @@ import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.math.guide.BaseGuideSeq
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 object Intersection {
@@ -40,7 +37,7 @@ object Intersection {
           val l = base1.length.min(base2.length)
           assert(node1.base.take(l) == node2.base.take(l))
           assert(node1.action == node2.action)
-          alg.subgroupSearch(chain1, g => chain2WithGuidedBase.contains(g), new IntersectionTest(0, chain2WithGuidedBase, Group[P].id)).toChain
+          alg.subgroupSearch(chain1, g => chain2WithGuidedBase.sifts(g), new IntersectionTest(0, chain2WithGuidedBase, Group[P].id)).toChain
         case term2: Term[P] => term2
       }
       case term1: Term[P] => term1

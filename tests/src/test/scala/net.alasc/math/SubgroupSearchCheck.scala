@@ -8,7 +8,6 @@ import net.alasc.algebra._
 import bsgs._
 import algorithms._
 import net.alasc.syntax.check._
-import net.alasc.syntax.subgroup._
 import net.alasc.syntax.shiftablePermutation._
 
 object SubgroupSearchCheck extends Properties("SubgroupSearch") {
@@ -26,9 +25,9 @@ object SubgroupSearchCheck extends Properties("SubgroupSearch") {
   property("SubgroupSearch.fixing") = Prop.forAllNoShrink(genAlg, genSeq) { (alg, seq) =>
     implicit def nb = alg.nodeBuilder
     implicit def algorithms = alg
-    val chain1 = alg.completeChainFromSubgroup(FixingSeq[Perm](seq)).toChain
+    val chain1 = FixingSeq[Perm](seq).chain
     val sym = Sym[Perm](seq.length)
-    val symChain = alg.completeChainFromSubgroup(sym)
+    val symChain = alg.mutableChain(sym.chain)
     val partition = Domain.Partition.fromSeq(seq)
     alg.changeBaseSameAction(symChain, FixingPartition.baseGuide(partition))
     val chain2 = FixingPartition.fixingPartition(symChain.toChain, partition)

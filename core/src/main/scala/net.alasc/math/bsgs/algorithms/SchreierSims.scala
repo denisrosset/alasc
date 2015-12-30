@@ -9,12 +9,12 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
 
-import net.alasc.algebra.{FaithfulPermutationAction, Subgroup}
-import net.alasc.syntax.subgroup._
+import net.alasc.algebra.FaithfulPermutationAction
 
 trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[P] {
+
   def completeChainActionChange(oldChain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty): MutableChain[P] =
-    completeChainFromSubgroup(oldChain, givenBase)(newAction, Chain.ChainSubgroup)
+    completeChainFromGeneratorsRandomAndOrder(oldChain.strongGeneratingSet, oldChain.randomElement(_), oldChain.order)(newAction)
 
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
@@ -25,8 +25,6 @@ trait SchreierSims[P] extends MutableAlgorithms[P] with AddGeneratorsAlgorithms[
   def completeChainFromGeneratorsRandomAndOrder(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]): MutableChain[P]
 
-  def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]): MutableChain[P]
 }
 
 trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms[P] {
@@ -92,6 +90,7 @@ trait SchreierSimsCommon[P] extends SchreierSims[P] with AddGeneratorsAlgorithms
 }
 
 trait SchreierSimsDeterministic[P] extends SchreierSimsCommon[P] {
+
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
 
@@ -103,21 +102,18 @@ trait SchreierSimsDeterministic[P] extends SchreierSimsCommon[P] {
   }
 
   def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
-    completeChainFromGeneratorsAndOrder(chain.generators, chain.order, givenBase)(newAction)
+    completeChainFromGeneratorsAndOrder(chain.strongGeneratingSet, chain.order, givenBase)(newAction)
 
   def completeChainFromGeneratorsRandomAndOrder(generators: Iterable[P], randomElement: Function1[Random, P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) =
     completeChainFromGeneratorsAndOrder(generators, order, givenBase)
 
-  def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]) =
-    completeChainFromGeneratorsAndOrder(s.generators, s.order, givenBase)(action)
 }
 
 trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlgorithms {
+
   def completeChainFromGenerators(generators: Iterable[P], givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) = deterministicSchreierSims(generators, givenBase)
-
 
   def completeChainFromGeneratorsAndOrder(generators: Iterable[P], order: BigInt, givenBase: Seq[Int] = Seq.empty)(
     implicit action: FaithfulPermutationAction[P]) =
@@ -129,10 +125,6 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
 
   def completeChainFromAnotherChain(chain: Chain[P], newAction: FaithfulPermutationAction[P], givenBase: Seq[Int] = Seq.empty) =
     randomizedSchreierSims(chain.randomElement(_), chain.order, givenBase)(newAction)
-
-  def completeChainFromSubgroup[S](s: S, givenBase: Seq[Int] = Seq.empty)(
-    implicit action: FaithfulPermutationAction[P], subgroup: Subgroup[S, P]) =
-    randomizedSchreierSims(s.randomElement(_), s.order, givenBase)
 
   /* Randomized BSGS Schreier-Sims using the provided procedure to generate
    * random elements and the known order of the group to terminate the algorithm.
@@ -149,4 +141,5 @@ trait SchreierSimsRandomized[P] extends SchreierSimsCommon[P] with RandomizedAlg
     // TODO removeRedundantGenerators(mutableChain)
     mutableChain
   }
+
 }

@@ -13,6 +13,7 @@ import net.alasc.algebra._
 
 /** Describes a sequence `T` that can be permuted by a group element `G`. */
 trait Permutable[T, G] {
+
   /** Action of the group on the sequence. */ 
   implicit def action: RightPartialAction[T, G]
   /** Group representation for a sequence instance. */
@@ -22,6 +23,7 @@ trait Permutable[T, G] {
     import grp.group
     grp.fixingPartition(T.partition(t), representation(t))
   }
+
 }
 
 object Permutable {

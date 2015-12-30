@@ -20,7 +20,6 @@ import spire.syntax.lattice._
 import net.alasc.algebra._
 import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
-import net.alasc.syntax.subgroup._
 import net.alasc.util._
 
 class InhWrImprimitiveRepresentations[A:Eq:Group, H:Eq:Permutation](implicit val aReps: Representations[A]) extends InhWrRepresentations[A, H] {

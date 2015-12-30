@@ -1,19 +1,11 @@
-package net.alasc.math
-
-import scala.util.Random
-
-import spire.algebra.{Eq, Group}
-import spire.syntax.group._
-import spire.syntax.eq._
-
-import net.alasc.algebra._
-import net.alasc.syntax.subgroup._
-
+/*
 case class DirectSum[S](seq: Seq[S])
 
 object DirectSum {
+
   implicit def DirectSumSubgroup[S, G](implicit sg: Subgroup[S, G]): Subgroup[DirectSum[S], G] =
     new DirectSumSubgroup[S, G]
+
 }
 
 class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G]) extends Subgroup[DirectSum[S], G] {
@@ -36,20 +28,4 @@ class DirectSumSubgroup[S, G](implicit val sg: Subgroup[S, G]) extends Subgroup[
   def contains(ds: DS, el: G) = iterator(ds).exists( g => (el === g))
 
 }
-
-object FixingSeq {
-  def apply[P](seq: Seq[Any])(implicit algebra: Permutation[P]): DirectSum[Conjugate[P, Sym[P]]] = {
-    val degree = seq.size
-    val groups: Seq[Conjugate[P, Sym[P]]] = seq.zipWithIndex.groupBy(_._1).flatMap {
-      case (_, Seq(one)) => None
-      case (_, pairSeq) =>
-        val indices: Set[Int] = pairSeq.map(_._2).toSet
-        val remDomain: Set[Int] = (0 until degree).toSet -- indices
-        val images = indices.toSeq.sorted ++ remDomain.toSeq.sorted
-        val perm = algebra.fromImages(images)
-        val permInverse = perm.inverse
-        Some(Conjugate(Sym[P](indices.size), perm, permInverse))
-    }.toSeq
-    DirectSum(groups)
-  }
-}
+ */

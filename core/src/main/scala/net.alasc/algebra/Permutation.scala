@@ -22,6 +22,11 @@ trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
 
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
+  def swapping(i: Int, j: Int): P = {
+    def swapFun: (Int => Int) = (k => if (k == i) j else if (k == j) i else k)
+    fromSupportAndImageFun(Set(i, j), swapFun)
+  }
+
   def fromImages(images: Seq[Int]): P
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): P
   def sorting[T: Order](seq: Seq[T]): P = {
