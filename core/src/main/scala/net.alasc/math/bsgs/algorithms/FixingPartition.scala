@@ -14,7 +14,7 @@ import net.alasc.util._
 object FixingPartition {
 
   // TODO: change pointSetsToTest to bitsets
-  class FixingTest[P](level: Int, partition: Domain#Partition, pointSetsToTest: Array[Array[Int]])(implicit group: Group[P]) extends SubgroupTest[P] {
+  class FixingTest[P](level: Int, partition: Partition, pointSetsToTest: Array[Array[Int]])(implicit group: Group[P]) extends SubgroupTest[P] {
     def test(b: Int, orbitImage: Int, currentG: P, node: Node[P])(implicit action: FaithfulPermutationAction[P]): Opt[FixingTest[P]] = {
       val pointSet = pointSetsToTest(level)
       if (partition.representative(pointSet(0)) != partition.representative(orbitImage))
@@ -32,8 +32,10 @@ object FixingPartition {
       Opt(new FixingTest[P](level + 1, partition, pointSetsToTest))
     }
   }
-  def baseGuide[P](partition: Domain#Partition) = BaseGuidePartition(partition)
-  def fixingPartition[P](chainWithGuidedBase: Chain[P], partition: Domain#Partition)(implicit group: Group[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
+
+  def baseGuide[P](partition: Partition) = BaseGuidePartition(partition)
+
+  def fixingPartition[P](chainWithGuidedBase: Chain[P], partition: Partition)(implicit group: Group[P], alg: BasicAlgorithms[P]): Chain[P] = chainWithGuidedBase match {
     case node: Node[P] =>
       implicit def action = node.action
       val n = partition.size

@@ -31,7 +31,7 @@ class InhWrImprimitiveRepresentations[A:Eq:Group, H:Eq:Permutation](implicit val
       lattice.zero
     else
       generators.map(R(_)).reduce(_ join _)
-  case class R(partition: Domain#Partition, repForBlock: Array[aReps.R]) extends ShapedR {
+  case class R(partition: Partition, repForBlock: Array[aReps.R]) extends ShapedR {
     def repForBlockString = repForBlock.mkString("Array(", ",", ")")
     override def toString = s"R($partition, $repForBlockString)"
     val startIndex: Array[Int] = {

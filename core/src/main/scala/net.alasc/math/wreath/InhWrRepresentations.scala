@@ -62,7 +62,7 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
       }
   }
   implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
-    def zero = R(Domain(1).Partition.fromSortedBlocks(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
+    def zero = R(Partition.fromSortedBlocks(Domain(1))(Array(immutable.BitSet(0))), Array(aReps.lattice.zero))
     def join(x: R, y: R): R = {
       val newSize: Int = x.partition.size.max(y.partition.size)
       val xSized = x.forPartitionSize(newSize).get
@@ -102,8 +102,8 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
       val ySized = y.forPartitionSize(workSize).get
       val workDomain = Domain(workSize)
       val newDomain = Domain(newSize)
-      implicit def workPartitionLattice: BoundedLattice[workDomain.Partition] = workDomain.Partition.Algebra
-      implicit def newPartitionLattice: BoundedLattice[newDomain.Partition] = newDomain.Partition.Algebra
+      implicit def workPartitionLattice: BoundedLattice[Partition.In[workDomain.type]] = Partition.boundedLatticeIn[workDomain.type]
+      implicit def newPartitionLattice: BoundedLattice[Partition.In[newDomain.type]] = Partition.boundedLatticeIn[newDomain.type]
       implicit def aRepLattice: Lattice[aReps.R] = aReps.lattice
       val xPart = xSized.partition.inDomain(workDomain).get
       val yPart = ySized.partition.inDomain(workDomain).get
@@ -135,10 +135,10 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
     }
   }
   trait RBuilder {
-    def apply(partition: Domain#Partition, repForBlock: Array[aReps.R]): R
+    def apply(partition: Partition, repForBlock: Array[aReps.R]): R
     def apply(wr: Wr[A, H]): R = {
       val size = wr.aSeq.size.max(wr.h.supportMax.getOrElseFast(0) + 1)
-      val partition = Domain(size).Partition.fromPermutation(wr.h)
+      val partition: Partition = Partition.fromPermutation(Domain(size))(wr.h)
       val repForBlock = new Array[aReps.R](partition.nBlocks)
       var i = 0
       while (i < repForBlock.length) {
@@ -156,7 +156,7 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
   def R: RBuilder
   abstract class ShapedR extends Representation[Wr[A, H]] {
     selfR: R =>
-    def partition: Domain#Partition
+    def partition: Partition
     def repForBlock: Array[aReps.R]
     abstract class DefaultAction extends FaithfulPermutationAction[Wr[A, H]] {
       def supportMaxElement = size - 1
@@ -189,15 +189,15 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
         if (!partition.blocks.forall(_.forall( k => k > n || repForIndex(k).represents(w.aSeq(k)))))
           return false
         val domain = Domain(size)
-        val myPartition: domain.Partition = partition.inDomain(domain).get
-        val wPartition: domain.Partition = domain.Partition.fromPermutation(w.h)
+        val myPartition: Partition.In[domain.type] = partition.inDomain(domain).get
+        val wPartition: Partition.In[domain.type] = Partition.fromPermutation(domain)(w.h)
         wPartition <= myPartition
       }
     def forPartitionSize(newSize: Int): Opt[R] =
       if (newSize == partition.size)
         Opt(this)
       else if (newSize > partition.size) {
-        val newPartition = partition.inDomain(Domain(newSize)).getOrElse(sys.error("Partition enlargement always succeeds."))
+        val newPartition: Partition = partition.inDomain(Domain(newSize)).getOrElse(sys.error("Partition enlargement always succeeds."))
         val minR = aReps.lattice.zero
         val newRepForBlock = new Array[aReps.R](newPartition.nBlocks)
         Array.copy(repForBlock, 0, newRepForBlock, 0, partition.nBlocks)
@@ -208,7 +208,7 @@ abstract class InhWrRepresentations[A:Eq:Group, H:Eq:Permutation] extends Repres
         }
         Opt(R(newPartition, newRepForBlock))
       } else { // newSize < partition.size
-        val newPartition = partition.inDomain(Domain(newSize)) match {
+        val newPartition: Partition = partition.inDomain(Domain(newSize)) match {
           case Opt(np) => np
           case _ => return Opt.empty[R]
         }

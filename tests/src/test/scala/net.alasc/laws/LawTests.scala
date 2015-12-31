@@ -38,17 +38,23 @@ class LawTests extends FunSuite with NestedDiscipline {
     checkAll("(Perm, Perm)",      PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
   }
 
-  import Domains.{arbPartition, arbPartitionMap, arbDomain}
+  import Domains.arbDomain
+  import Partitions.{arbPartition, arbPartitionIn}
+  import PartitionMaps.{arbPartitionMap, arbPartitionMapIn}
 
-  nestedCheckAll[Domain]("Domain.Partition", Domain(1)) { implicit domain =>
-    LatticeLaws[domain.Partition].boundedLattice
+  nestedCheckAll[Domain]("Domain.Partition", Domain(1)) { d =>
+    val domain: Domain = d
+    LatticeLaws[Partition.In[domain.type]].boundedLattice
   }
+
   implicit object intMinMaxLattice extends MinMaxLattice[Int] with BoundedLattice[Int]  {
     def zero = Int.MinValue
     def one = Int.MaxValue
   }
-  nestedCheckAll[Domain]("Domain.PartitionMap[Int]", Domain(1)) { implicit domain =>
-    LatticeLaws[domain.PartitionMap[Int]].boundedLattice
+
+  nestedCheckAll[Domain]("Domain.PartitionMap[Int]", Domain(1)) { d =>
+    val domain: Domain = d
+    LatticeLaws[PartitionMap.In[domain.type, Int]].boundedLattice
   }
 
   // TODO use implicit trait priority
@@ -64,13 +70,15 @@ class LawTests extends FunSuite with NestedDiscipline {
   checkAll("Cycles",      AnyRefLaws[Perm]._eq)
 
   {
-    import Domains.Projections.{arbPartition, arbPartitionMap}
-    import Domains.Projections._
-    implicit def partitionMapLattice = Domain.PartitionMapBoundedBelowLattice[Int]
+    import Partitions.{arbPartition, partitionInstances, partitionCloner}
+    import PartitionMaps.{arbPartitionMap, partitionMapInstances, partitionMapCloner}
+    import Domains.arbDomain
 
-    checkAll("Domain#Partition", AnyRefLaws[Domain#Partition]._eq)
-    checkAll("Domain#PartitionMap[Int]", AnyRefLaws[Domain#PartitionMap[Int]]._eq)
-    checkAll("Domain#PartitionMap[Int]",  LatticePartialOrderLaws[Domain#PartitionMap[Int]].boundedBelowLatticePartialOrder)
+    implicit def partitionMapLattice = PartitionMap.boundedBelowLattice[Int]
+
+    checkAll("Partition", AnyRefLaws[Partition]._eq)
+    checkAll("PartitionMap[Int]", AnyRefLaws[PartitionMap[Int]]._eq)
+    checkAll("PartitionMap[Int]",  LatticePartialOrderLaws[PartitionMap[Int]].boundedBelowLatticePartialOrder)
   }
 
   nestedCheckAll[WrSize]("Wr[Perm,Perm] (imprimitive)", WrSize(1, 1)) { implicit wrSize =>

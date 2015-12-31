@@ -1,11 +1,11 @@
 package net.alasc.math.guide
 
-import net.alasc.math.Domain
+import net.alasc.math.{Domain, Partition}
 import net.alasc.util._
 
 import scala.annotation.tailrec
 
-case class BaseGuidePartition(partition: Domain#Partition) extends BaseGuide {
+case class BaseGuidePartition(partition: Partition) extends BaseGuide {
 
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)

@@ -18,7 +18,9 @@ import net.alasc.algebra.{PermutationAction}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-trait InDomain[D <: Domain with Singleton] {
+trait InDomain {
+
+  type D <: Domain with Singleton
 
   val domain: D
 
@@ -26,13 +28,13 @@ trait InDomain[D <: Domain with Singleton] {
 
 }
 
-class DomainTyped[D <: Domain with Singleton](val domain: D) extends AnyVal {
+object InDomain {
 
-  def unapply[F[E <: Domain with Singleton] <: InDomain[E]](f: F[_]): Opt[F[D]] =
-    if (f.domain == domain)
-      Opt(f.asInstanceOf[F[D]])
-    else
-      Opt.empty[F[D]]
+  trait Of[D0 <: Domain with Singleton] extends InDomain {
+
+    type D = D0
+
+  }
 
 }
 
@@ -40,15 +42,11 @@ class Domain private (val size: Int) {
 
   override def toString = s"Domain($size)"
 
-  def Partition: PartitionBuilder[this.type] = new PartitionBuilder[this.type](this)
-
-  def PartitionMap: PartitionMapBuilder[this.type] = new PartitionMapBuilder[this.type](this)
-
-  def Typed: DomainTyped[this.type] = new DomainTyped[this.type](this)
-
 }
 
 object Domain extends UniquenessCache[Int, Domain] {
+
+  val empty: Domain = Domain(0)
 
   protected def valueFromKey(size: Int): Domain = new Domain(size)
   protected def keyFromValue(domain: Domain): Option[Int] = Some(domain.size)

@@ -19,33 +19,21 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import partition._
 
-final class PartitionMapBuilder[D <: Domain with Singleton](val domain: D) extends AnyVal {
-
-  def apply[V:ClassTag](blocks: (Set[Int], V)*): PartitionMap[D, V] = {
-    val map = blocks.toMap
-    val partition = (domain: D).Partition(blocks.map(_._1):_*)
-    tabulate(partition)(map(_))
-  }
-
-    def fill[V:ClassTag](partition: Partition[D])(elem: => V): PartitionMap[D, V] =
-      new PartitionMap[D, V](domain, partition, Array.fill(partition.nBlocks)(elem))
-
-  def tabulate[V:ClassTag](partition: Partition[D])(f: Set[Int] => V): PartitionMap[D, V] =
-    new PartitionMap[D, V](domain, partition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
-
-}
-
 /** Describes a partition of the domain with a value `V` associated to each block. */
-final class PartitionMap[D <: Domain with Singleton, V:ClassTag](val domain: D, val partition: Partition[D], protected val values: Array[V]) extends InDomain[D] {
+trait PartitionMap[V] extends InDomain {
 
-  require(partition.domain eq domain)
+  implicit def classTag: ClassTag[V]
+
+  val partition: Partition.In[D]
+
+  protected val values: Array[V]
 
   /** Returns the size of the underlying domain. */
   def size = domain.size
 
   def blocks: Seq[(Set[Int], V)] = partition.blocks.map(block => (block -> PartitionMap.this(block)))
   override def equals(other: Any) = other match {
-    case that: PartitionMap[_, _] => (this.partition == that.partition) && (this.partition.blocks.forall(block => this(block) == that(block)))
+    case that: PartitionMap[_] => (this.partition == that.partition) && (this.partition.blocks.forall(block => this(block) == that(block)))
     case _ => false
   }
 
@@ -77,32 +65,197 @@ final class PartitionMap[D <: Domain with Singleton, V:ClassTag](val domain: D, 
   /** Tests if `block` is in the partition. */
   def isDefinedAt(block: Set[Int]): Boolean = block.nonEmpty && partition.blocks(partition.blockIndex(block.min)) == block
 
-  /** Returns a resized partition map, using `defaultValue` when expanding, and testing whether elements can be removed
-    * using `removedSatisfy`. Returns `RefNone` if the resizing is not possible. */
-  def forDomain(newDomain: Domain, defaultValue: => V, removedSatisfy: V => Boolean): Opt[PartitionMap[newDomain.type, V]] =
+  /** Returns a resized partition map, using `defaultValue` when expanding, and testing whether
+    * elements can be removed using `removedSatisfy`. 
+    * Returns `Opt.empty` if the resizing is not possible. */
+  def forDomain(newDomain: Domain, defaultValue: => V, removedSatisfy: V => Boolean): Opt[PartitionMap.In[newDomain.type, V]] =
     if (newDomain.size == size)
-      Opt(this.asInstanceOf[PartitionMap[newDomain.type, V]])
+      Opt(this.asInstanceOf[PartitionMap.In[newDomain.type, V]])
     else if (newDomain.size > size) {
       val newPartition = partition.inDomain(newDomain).get
       val newValues = values ++ Array.fill(newPartition.nBlocks - partition.nBlocks)(defaultValue)
-      Opt(new PartitionMap[newDomain.type, V](newDomain, newPartition, newValues))
+      Opt(PartitionMap.build[V](newDomain)(newPartition, newValues))
     } else // newSize < partition.size
       partition.inDomain(newDomain) match {
         case Opt(newPartition) =>
           if ((newDomain.size until size).forall( i => removedSatisfy(apply(i)) ))
-            Opt(new PartitionMap[newDomain.type, V](newDomain, newPartition, values.take(values.length - (size - newDomain.size))))
+            Opt(PartitionMap.build[V](newDomain)(newPartition, values.take(values.length - (size - newDomain.size))))
           else
-            Opt.empty[PartitionMap[newDomain.type, V]]
-        case _ => Opt.empty[PartitionMap[newDomain.type, V]]
+            Opt.empty[PartitionMap.In[newDomain.type, V]]
+        case _ => Opt.empty[PartitionMap.In[newDomain.type, V]]
       }
 
 }
 
-trait PartitionMapPartialOrder[D <: Domain with Singleton, V] extends PartialOrder[PartitionMap[D, V]] with InDomain[D] {
+abstract class PartitionMapLowerPriority {
 
-  implicit def partialOrder: PartialOrder[V]
+  implicit def partialOrder[V:PartialOrder]: PartialOrder[PartitionMap[V]] = new PartitionMapPartialOrder[V]
 
-  override def lteqv(x: PartitionMap[D, V], y: PartitionMap[D, V]): Boolean = // x <= y ?
+  implicit def joinSemilattice[V:ClassTag:JoinSemilattice]: JoinSemilattice[PartitionMap[V]] =
+    new PartitionMapJoinSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+
+  implicit def meetSemilattice[V:ClassTag:MeetSemilattice]: MeetSemilattice[PartitionMap[V]] =
+    new PartitionMapMeetSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[MeetSemilattice[V]]
+    }
+
+  implicit def lattice[V:ClassTag:Lattice]: Lattice[PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def boundedJoinSemilattice[V:ClassTag:JoinSemilattice]: BoundedJoinSemilattice[PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+
+  def boundedJoinSemilatticeNonEmpty[V:ClassTag:BoundedJoinSemilattice]: BoundedJoinSemilattice[PartitionMap[V]] =
+    new PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedJoinSemilattice[V]]
+    }
+
+  def boundedBelowLattice[V:ClassTag:Lattice]: Lattice[PartitionMap[V]] with BoundedJoinSemilattice[PartitionMap[V]] =
+    new PartitionMapBoundedBelowLattice[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+
+  def boundedBelowLatticeNonEmpty[V:ClassTag](implicit ev: Lattice[V] with BoundedJoinSemilattice[V]): Lattice[PartitionMap[V]] with BoundedJoinSemilattice[PartitionMap[V]] =
+    new PartitionMapBoundedBelowLatticeNonEmpty[V] {
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = ev
+    }
+
+}
+
+object PartitionMap extends PartitionMapLowerPriority {
+
+  type In[D0, V] = PartitionMap[V] { type D = D0 }
+
+  protected def build[V:ClassTag](domain0: Domain)(partition0: Partition.In[domain0.type], values0: Array[V]): PartitionMap.In[domain0.type, V] = new PartitionMap[V] {
+    type D = domain0.type
+    val domain: D = domain0
+    val classTag: ClassTag[V] = implicitly[ClassTag[V]]
+    val partition = partition0
+    val values = values0
+  }
+
+  def empty[V:ClassTag]: PartitionMap[V] = apply[V]()
+
+  def apply[V:ClassTag](blocks: (Set[Int], V)*): PartitionMap[V] = {
+    val domain = Domain((0 /: blocks) { case (acc, block) => acc.max(block._1.max + 1) })
+    apply[V](domain)(blocks: _*)
+  }
+
+  def apply[V:ClassTag](domain: Domain)(blocks: (Set[Int], V)*): PartitionMap.In[domain.type, V] = {
+    val map = blocks.toMap
+    val partition = Partition(domain)(blocks.map(_._1):_*)
+    tabulate(partition)(map(_))
+  }
+
+  def tabulate[V:ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap.In[partition.D, V] =
+    build(partition.domain: partition.D)(partition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
+
+  def fill[V:ClassTag](partition: Partition)(elem: => V): PartitionMap.In[partition.D, V] =
+    tabulate(partition)(block => elem)
+
+  implicit def partialOrderIn[D <: Domain with Singleton, V:PartialOrder](implicit witness: shapeless.Witness.Aux[D]): PartialOrder[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapPartialOrderIn[D, V](domain0)
+  }
+
+  // Induced lattices for partition maps, when the values are themselves member of a lattice.
+
+  implicit def joinSemilatticeIn[D <: Domain with Singleton, V:ClassTag:JoinSemilattice](implicit witness: shapeless.Witness.Aux[D]): JoinSemilattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapJoinSemilatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[JoinSemilattice[V]]
+    }
+  }
+
+  implicit def meetSemilatticeIn[D <: Domain with Singleton, V:ClassTag:MeetSemilattice](implicit witness: shapeless.Witness.Aux[D]): MeetSemilattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapMeetSemilatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[MeetSemilattice[V]]
+    }
+  }
+
+  implicit def latticeIn[D <: Domain with Singleton, V:ClassTag:Lattice](implicit witness: shapeless.Witness.Aux[D]): Lattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapLatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[Lattice[V]]
+    }
+  }
+
+  implicit def boundedJoinSemilatticeIn[D <: Domain with Singleton, V:ClassTag:BoundedJoinSemilattice](implicit witness: shapeless.Witness.Aux[D]): BoundedJoinSemilattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapBoundedJoinSemilatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedJoinSemilattice[V]]
+    }
+  }
+
+  implicit def boundedMeetSemilatticeIn[D <: Domain with Singleton, V:ClassTag:BoundedMeetSemilattice](implicit witness: shapeless.Witness.Aux[D]): BoundedMeetSemilattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapBoundedMeetSemilatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedMeetSemilattice[V]]
+    }
+  }
+
+  implicit def boundedLatticeIn[D <: Domain with Singleton, V:ClassTag:BoundedLattice](implicit witness: shapeless.Witness.Aux[D]): BoundedLattice[PartitionMap.In[D, V]] = {
+    val domain0: D = witness.value
+    new PartitionMapBoundedLatticeIn[D, V] {
+      val domain: D = domain0
+      def classTag = implicitly[ClassTag[V]]
+      def lattice = implicitly[BoundedLattice[V]]
+    }
+  }
+
+}
+
+final class PartitionMapPartialOrder[V](implicit val partialOrder: PartialOrder[V])
+    extends PartialOrder[PartitionMap[V]] {
+
+  override def lteqv(x: PartitionMap[V], y: PartitionMap[V]): Boolean = // x <= y ?
+    if ((x.partition: Partition) <= y.partition) {
+      x.partition.blocks.forall { xBlock =>
+        val m = xBlock.min
+        x(m) <= y(m)
+      }
+    } else false
+
+  override def gteqv(x: PartitionMap[V], y: PartitionMap[V]): Boolean = lteqv(y, x)
+
+  def partialCompare(x: PartitionMap[V], y: PartitionMap[V]): Double =
+    if (lteqv(x, y)) {
+      if (gteqv(x, y)) 0.0 else -1.0
+    } else {
+      if (gteqv(x, y)) 1.0 else Double.NaN // not x <= y but x >= y
+    }
+
+}
+
+final class PartitionMapPartialOrderIn[D <: Domain with Singleton, V](val domain: D)(implicit val partialOrder: PartialOrder[V])
+    extends PartialOrder[PartitionMap.In[D, V]]
+    with InDomain.Of[D] {
+
+  override def lteqv(x: PartitionMap.In[D, V], y: PartitionMap.In[D, V]): Boolean = // x <= y ?
     if (!(x.partition <= y.partition))
       false
     else {
@@ -112,9 +265,9 @@ trait PartitionMapPartialOrder[D <: Domain with Singleton, V] extends PartialOrd
       }
     }
 
-  override def gteqv(x: PartitionMap[D, V], y: PartitionMap[D, V]): Boolean = lteqv(y, x)
+  override def gteqv(x: PartitionMap.In[D, V], y: PartitionMap.In[D, V]): Boolean = lteqv(y, x)
 
-  def partialCompare(x: PartitionMap[D, V], y: PartitionMap[D, V]): Double =
+  def partialCompare(x: PartitionMap.In[D, V], y: PartitionMap.In[D, V]): Double =
     if (lteqv(x, y)) {
       if (gteqv(x, y))
         0.0
@@ -129,36 +282,39 @@ trait PartitionMapPartialOrder[D <: Domain with Singleton, V] extends PartialOrd
 
 }
 
-trait PartitionMapJoinSemilattice[D <: Domain with Singleton, V] extends JoinSemilattice[PartitionMap[D, V]] with InDomain[D] {
+trait PartitionMapJoinSemilattice[V]
+    extends JoinSemilattice[PartitionMap[V]] {
 
   implicit def classTag: ClassTag[V]
 
   implicit def lattice: JoinSemilattice[V]
 
-  def join(x: PartitionMap[D, V], y: PartitionMap[D, V]): PartitionMap[D, V] = {
-    val newPartition = x.partition join y.partition
-    (domain: D).PartitionMap.tabulate[V](newPartition) { block =>
-      val xBlocks = x.partition.blocksFor(block)
-      val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
-        case (v, b) => v join x(b.min)
-      }
+  def join(x: PartitionMap[V], y: PartitionMap[V]): PartitionMap[V] =
+    if (y.partition.size > x.partition.size) join(y, x) else {
+      val newPartition = (x.partition: Partition) join y.partition
+      PartitionMap.tabulate[V](newPartition) { block =>
+        val xBlocks = x.partition.blocksFor(block)
+        val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
+          case (v, b) => v join x(b.min)
+        }
 
-      (afterX /: y.partition.blocksFor(block)) {
-        case (v, b) => v join y(b.min)
+        (afterX /: y.partition.blocksFor(block)) {
+          case (v, b) => v join y(b.min)
+        }
       }
     }
-  }
+
 }
 
-trait PartitionMapMeetSemilattice[D <: Domain with Singleton, V] extends MeetSemilattice[PartitionMap[D, V]] with InDomain[D] {
+trait PartitionMapMeetSemilattice[V] extends MeetSemilattice[PartitionMap[V]] {
 
   implicit def classTag: ClassTag[V]
 
   implicit def lattice: MeetSemilattice[V]
 
-  def meet(x: PartitionMap[D, V], y: PartitionMap[D, V]): PartitionMap[D, V] = {
-    val newPartition = x.partition meet y.partition
-    (domain: D).PartitionMap.tabulate[V](newPartition) { block =>
+  def meet(x: PartitionMap[V], y: PartitionMap[V]): PartitionMap[V] = {
+    val newPartition = (x.partition: Partition) meet y.partition
+    PartitionMap.tabulate[V](newPartition) { block =>
       val xBlocks = x.partition.blocksFor(block)
       val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
         case (v, b) => v meet x(b.min)
@@ -171,80 +327,132 @@ trait PartitionMapMeetSemilattice[D <: Domain with Singleton, V] extends MeetSem
   }
 
 }
-trait PartitionMapLattice[D <: Domain with Singleton, V]
-    extends Lattice[PartitionMap[D, V]]
-    with PartitionMapJoinSemilattice[D, V]
-    with PartitionMapMeetSemilattice[D, V] {
+
+trait PartitionMapLattice[V]
+    extends Lattice[PartitionMap[V]]
+    with PartitionMapJoinSemilattice[V]
+    with PartitionMapMeetSemilattice[V] {
 
   implicit def lattice: Lattice[V]
 
 }
 
-trait PartitionMapBoundedJoinSemilattice[D <: Domain with Singleton, V]
-    extends BoundedJoinSemilattice[PartitionMap[D, V]]
-    with PartitionMapJoinSemilattice[D, V] {
+trait PartitionMapBoundedJoinSemilattice[V]
+    extends BoundedJoinSemilattice[PartitionMap[V]]
+    with PartitionMapJoinSemilattice[V] {
+
+  def zero: PartitionMap[V] = PartitionMap.empty[V]
+
+}
+
+trait PartitionMapBoundedJoinSemilatticeNonEmpty[V]
+    extends BoundedJoinSemilattice[PartitionMap[V]]
+    with PartitionMapJoinSemilattice[V] {
 
   implicit def lattice: BoundedJoinSemilattice[V]
 
-  def zero = (domain: D).PartitionMap.fill(implicitly[BoundedLattice[Partition[D]]].zero)(lattice.zero)
+  def zero: PartitionMap[V] = PartitionMap(Set(0) -> lattice.zero)
 
 }
 
-trait PartitionMapBoundedMeetSemilattice[D <: Domain with Singleton, V]
-    extends BoundedMeetSemilattice[PartitionMap[D, V]]
-    with PartitionMapMeetSemilattice[D, V] {
+trait PartitionMapBoundedBelowLattice[V]
+    extends PartitionMapLattice[V]
+    with PartitionMapBoundedJoinSemilattice[V] {
+
+  implicit def lattice: Lattice[V]
+
+}
+
+trait PartitionMapBoundedBelowLatticeNonEmpty[V]
+    extends PartitionMapLattice[V]
+    with PartitionMapBoundedJoinSemilatticeNonEmpty[V] {
+
+  implicit def lattice: Lattice[V] with BoundedJoinSemilattice[V]
+
+}
+
+trait PartitionMapJoinSemilatticeIn[D <: Domain with Singleton, V]
+    extends JoinSemilattice[PartitionMap.In[D, V]]
+    with InDomain.Of[D] {
+
+  implicit def classTag: ClassTag[V]
+
+  implicit def lattice: JoinSemilattice[V]
+
+  def join(x: PartitionMap.In[D, V], y: PartitionMap.In[D, V]): PartitionMap.In[D, V] = {
+    val newPartition = x.partition join y.partition
+    PartitionMap.tabulate[V](newPartition) { block =>
+      val xBlocks = x.partition.blocksFor(block)
+      val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
+        case (v, b) => v join x(b.min)
+      }
+
+      (afterX /: y.partition.blocksFor(block)) {
+        case (v, b) => v join y(b.min)
+      }
+    }
+  }
+
+}
+
+trait PartitionMapMeetSemilatticeIn[D <: Domain with Singleton, V]
+    extends MeetSemilattice[PartitionMap.In[D, V]]
+    with InDomain.Of[D] {
+
+  implicit def classTag: ClassTag[V]
+
+  implicit def lattice: MeetSemilattice[V]
+
+  def meet(x: PartitionMap.In[D, V], y: PartitionMap.In[D, V]): PartitionMap.In[D, V] = {
+    val newPartition = x.partition meet y.partition
+    PartitionMap.tabulate[V](newPartition) { block =>
+      val xBlocks = x.partition.blocksFor(block)
+      val afterX = (x(xBlocks.head.min) /: xBlocks.tail) {
+        case (v, b) => v meet x(b.min)
+      }
+
+      (afterX /: y.partition.blocksFor(block)) {
+        case (v, b) => v meet y(b.min)
+      }
+    }
+  }
+
+}
+
+trait PartitionMapLatticeIn[D <: Domain with Singleton, V]
+    extends Lattice[PartitionMap.In[D, V]]
+    with PartitionMapJoinSemilatticeIn[D, V]
+    with PartitionMapMeetSemilatticeIn[D, V] {
+
+  implicit def lattice: Lattice[V]
+
+}
+
+trait PartitionMapBoundedJoinSemilatticeIn[D <: Domain with Singleton, V]
+    extends BoundedJoinSemilattice[PartitionMap.In[D, V]]
+    with PartitionMapJoinSemilatticeIn[D, V] {
+
+  implicit def lattice: BoundedJoinSemilattice[V]
+
+  def zero = PartitionMap.fill(implicitly[BoundedLattice[Partition.In[D]]].zero)(lattice.zero)
+
+}
+
+trait PartitionMapBoundedMeetSemilatticeIn[D <: Domain with Singleton, V]
+    extends BoundedMeetSemilattice[PartitionMap.In[D, V]]
+    with PartitionMapMeetSemilatticeIn[D, V] {
 
   implicit def lattice: BoundedMeetSemilattice[V]
 
-  def one = (domain: D).PartitionMap.fill(implicitly[BoundedLattice[Partition[D]]].one)(lattice.one)
+  def one = PartitionMap.fill(implicitly[BoundedLattice[Partition.In[D]]].one)(lattice.one)
 
 }
 
-trait PartitionMapBoundedLattice[D <: Domain with Singleton, V]
-    extends BoundedLattice[PartitionMap[D, V]]
-    with PartitionMapBoundedJoinSemilattice[D, V]
-    with PartitionMapBoundedMeetSemilattice[D, V] {
+trait PartitionMapBoundedLatticeIn[D <: Domain with Singleton, V]
+    extends BoundedLattice[PartitionMap.In[D, V]]
+    with PartitionMapBoundedJoinSemilatticeIn[D, V]
+    with PartitionMapBoundedMeetSemilatticeIn[D, V] {
 
   implicit def lattice: BoundedLattice[V]
 
-}
-
-object PartitionMap {
-
-  implicit def partialOrder[D <: Domain with Singleton, V:PartialOrder](implicit witness: shapeless.Witness.Aux[D]): PartialOrder[PartitionMap[D, V]] = new PartitionMapPartialOrder[D, V] {
-
-    val domain = witness.value
-
-    def partialOrder = implicitly[PartialOrder[V]]
-
-  }
-
-  /*
-    /** Induced lattices for partition maps, when the values are themselves member of a lattice. */
-    implicit def PartitionMapJoinSemilattice[V: ClassTag: JoinSemilattice]: JoinSemilattice[PartitionMap[V]] = new PartitionMapJoinSemilattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[JoinSemilattice[V]]
-    }
-    implicit def PartitionMapMeetSemilattice[V: ClassTag: MeetSemilattice]: MeetSemilattice[PartitionMap[V]] = new PartitionMapMeetSemilattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[MeetSemilattice[V]]
-    }
-    implicit def PartitionMapLattice[V: ClassTag: Lattice]: Lattice[PartitionMap[V]] = new PartitionMapLattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[Lattice[V]]
-    }
-    implicit def PartitionMapBoundedJoinSemilattice[V: ClassTag: BoundedJoinSemilattice]: BoundedJoinSemilattice[PartitionMap[V]] = new PartitionMapBoundedJoinSemilattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[BoundedJoinSemilattice[V]]
-    }
-    implicit def PartitionMapBoundedMeetSemilattice[V: ClassTag: BoundedMeetSemilattice]: BoundedMeetSemilattice[PartitionMap[V]] = new PartitionMapBoundedMeetSemilattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[BoundedMeetSemilattice[V]]
-    }
-    implicit def PartitionMapBoundedLattice[V: ClassTag: BoundedLattice]: BoundedLattice[PartitionMap[V]] = new PartitionMapBoundedLattice[V] {
-      def classTag = implicitly[ClassTag[V]]
-      def lattice = implicitly[BoundedLattice[V]]
-    }
-  }
-*/
 }

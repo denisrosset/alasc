@@ -30,10 +30,10 @@ class GrpSubgroups[G](val lhs: Grp[G]) {
     require(lhs.generators.forall(rhs.contains(_)))
     new RightCosets(lhs, rhs)
   }
-  def fixingPartition(partition: Domain#Partition, rp: Representation[G]): Grp[G] =
+  def fixingPartition(partition: Partition, rp: Representation[G]): Grp[G] =
     Grp.fromChain(FixingPartition.fixingPartition(lhs.chain(rp, FixingPartition.baseGuide(partition)), partition), Opt(rp))
 
-  def fixingPartition(partition: Domain#Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
+  def fixingPartition(partition: Partition)(implicit prp: PermutationRepresentations[G]): Grp[G] =
     fixingPartition(partition, prp.forSize(partition.size))
 
   def stabilizer(rp: Representation[G]): Opt[(Grp[G], Transversal[G])] = {

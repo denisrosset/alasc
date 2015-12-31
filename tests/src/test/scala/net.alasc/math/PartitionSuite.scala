@@ -12,8 +12,8 @@ import bsgs._
 
 class PartitionSuite extends FunSuite with Matchers {
   test("Domain.Partition bug") {
-    val t1 = Domain(8).Partition.fromSortedBlocks(Seq(SortedSet(0,5,6,2,4),SortedSet(1,3,7)))
-    val t2 = Domain.Partition(Set(0,5,6,2,4),Set(1,3,7))
+    val t1: Partition = Partition.fromSortedBlocks(Domain(8))(Seq(SortedSet(0,5,6,2,4),SortedSet(1,3,7)))
+    val t2 = Partition(Set(0,5,6,2,4),Set(1,3,7))
     t1.toString
     t2.toString
   }
