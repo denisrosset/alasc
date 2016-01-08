@@ -8,7 +8,6 @@ import scala.util.Random
 import spire.algebra._
 import spire.syntax.action._
 
-import net.alasc.math.Cycle
 import net.alasc.util._
 
 /** Type class for Permutation-like objects.
@@ -28,7 +27,9 @@ trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
   }
 
   def fromImages(images: Seq[Int]): P
+
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): P
+
   def sorting[T: Order](seq: Seq[T]): P = {
     import spire.compat._
     fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))
@@ -47,19 +48,7 @@ trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
 }
 
 object Permutation {
-  def apply[P: Permutation] = implicitly[Permutation[P]]
-}
 
-trait ShiftablePermutation[P] extends Permutation[P] {
-  /** Adds `n` to the domain elements acted on by `p`.
-    *
-    * Returns `p1` such that `k <|+| p1 = k` for `k < n`, and otherwise `k <|+| p1 = ((k - n) <|+| p) + n`.
-    */
-  def plus(p: P, n: Int): P
-  /** Subtracts `n` to the domain elements acted on by `p`, assuming that
-    * k <|+| p == k for k < n.
-    * 
-    * Returns `p1` such that `k <|+| p1 = ((k + n) <|+| p) - n`.
-    */
-  def minus(p: P, n: Int): P
+  def apply[P: Permutation] = implicitly[Permutation[P]]
+
 }

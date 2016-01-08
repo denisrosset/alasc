@@ -1,5 +1,4 @@
-package net.alasc
-package std
+package net.alasc.std
 
 import scala.reflect.classTag
 
@@ -7,8 +6,10 @@ import spire.algebra.lattice._
 import spire.algebra._
 import spire.util.Opt
 
-import algebra._
-import util._
+import net.alasc.algebra._
+import net.alasc.finite._
+import net.alasc.prep._
+import net.alasc.util._
 
 // TODO: workaround until Spire 2.10.2 with unit std support
 trait UnitEq extends Eq[Unit] {
@@ -36,24 +37,31 @@ trait UnitPermutation extends FaithfulPermutationAction[Unit] {
   def supportMaxElement: Int = -1
 }
 
-final class UnitRepresentations(implicit action: FaithfulPermutationAction[Unit])  extends Representations[Unit] { self =>
-  def get(generators: Iterable[Unit]) = Representation
-  type R = Representation[Unit]
-  val RClassTag = classTag[R]
-  object Representation extends R {
-    def action = self.action
+final class UnitPRepBuilder(implicit val action: FaithfulPermutationAction[Unit]) extends PRepBuilder[Unit] {
+
+  type R = UnitPRep.type
+
+  def classTagR = classTag[UnitPRep.type]
+
+  def build(generators: Iterable[Unit]) = UnitPRep
+
+  object UnitPRep extends BuiltRep[Unit] with FaithfulPRep[Unit] {
+    type B = UnitPRepBuilder.this.type
+    val builder: B = UnitPRepBuilder.this
+    def permutationAction = builder.action
     def represents(g: Unit): Boolean = true
-    val representations = Opt(self)
     def size = 1
   }
+
   object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
-    def zero = Representation
-    def join(lhs: R, rhs: R): R = Representation
-    def meet(lhs: R, rhs: R): R = Representation
+    def zero = UnitPRep
+    def join(lhs: R, rhs: R): R = UnitPRep
+    def meet(lhs: R, rhs: R): R = UnitPRep
   }
   object partialOrder extends PartialOrder[R] {
     def partialCompare(lhs: R, rhs: R): Double = 0.0
   }
+
 }
 
 class UnitAlgebra extends UnitGroup with UnitPermutation
@@ -61,5 +69,5 @@ class UnitAlgebra extends UnitGroup with UnitPermutation
 trait UnitInstances {
   implicit final val UnitEq = new UnitEq { }
   implicit final val UnitAlgebra = new UnitAlgebra
-  implicit final val UnitRepresentations = new UnitRepresentations
+  implicit final val UnitPRepBuilder = new UnitPRepBuilder
 }

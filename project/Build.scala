@@ -46,10 +46,10 @@ object MyBuild extends Build {
 
     scalacOptions ++= Seq(
       //"-no-specialization", // use this to build non-specialized jars
-      "-Yinline-warnings",
+//      "-Yinline-warnings",
+//      "-optimize",
       "-deprecation",
       "-unchecked",
-      "-optimize",
       "-language:experimental.macros",
       "-language:higherKinds",
       "-language:implicitConversions",
