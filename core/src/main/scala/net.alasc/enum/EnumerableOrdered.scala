@@ -1,6 +1,4 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import scala.annotation.tailrec
 
@@ -12,6 +10,7 @@ import spire.syntax.partialAction._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._
+import net.alasc.domains.Partition
 
 /** Describes a sequence whose elements can be ordered. */
 trait EnumerableOrdered[T, A] extends EnumerableSequence[T, A] {

@@ -1,10 +1,10 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import spire.NoImplicit
 import spire.algebra.Order
 import spire.util.Opt
+
+import net.alasc.domains._
 
 /** Describes a type of sequences where the elements of the two sequences can be tested for
   * equality.

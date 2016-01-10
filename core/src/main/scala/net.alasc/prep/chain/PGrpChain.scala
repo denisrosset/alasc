@@ -99,15 +99,15 @@ abstract class PGrpChain[G] extends PGrp[G] { lhs =>
         rhsPRep, rhs.generators)
       val newLhsGrp = builder.fromGrpIn(newRep)(lhs)
       val newRhsChain = builder.fromGrpIn(newRep)(rhs).chain
-      newLhsGrp.subgroupFor(Intersection(newRep.permutationAction, newRhsChain))
+      newLhsGrp.subgroupFor(Intersection(newRep.permutationAction, newRhsChain)).copyWithParentOrNull(this)
     }
 
-  def leftCosetsBy(rhs: Grp.WithParent[this.type, G]): LeftCosets[G] =
+  def leftCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): LeftCosets[G] =
     new LeftCosets[G] {
 
       type GG = PGrpChain.this.type
       val grp: GG = PGrpChain.this
-      val subgrp: Grp.WithParent[GG, G] = rhs
+      val subgrp: Grp.SubgroupOf[GG, G] = rhs
 
       def iterator: Iterator[LeftCoset[G]] = {
         val bo = BaseOrder(pRep.permutationAction, grp.chain.base)
@@ -129,11 +129,11 @@ abstract class PGrpChain[G] extends PGrp[G] { lhs =>
 
     }
 
-  def rightCosetsBy(rhs: Grp.WithParent[this.type, G]): RightCosets[G] =
+  def rightCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): RightCosets[G] =
     new RightCosets[G] {
       type GG = PGrpChain.this.type
       val grp: GG = PGrpChain.this
-      val subgrp: Grp.WithParent[GG, G] = rhs
+      val subgrp: Grp.SubgroupOf[GG, G] = rhs
       def iterator = grp.leftCosetsBy(subgrp).iterator.map(_.inverse)
     }
 
@@ -167,7 +167,7 @@ abstract class PGrpChain[G] extends PGrp[G] { lhs =>
       generators
     else
       newChain.strongGeneratingSet
-    new PGrpExplicit[R, G](pRep, newChain, Opt(newGenerators)) // TODO: more generic
+    new PGrpExplicit[Null, R, G](pRep, newChain, Opt(newGenerators)) // TODO: more generic
   }
 
 }
@@ -181,7 +181,7 @@ object PGrpChain {
     mutableChain.insertGenerators(generatorsToAdd)
     mutableChain.completeStrongGenerators()
     val newChain: Chain[G] = mutableChain.toChain()
-    new PGrpExplicit[pRep.type, G](pRep, newChain)
+    new PGrpExplicit[Null, pRep.type, G](pRep, newChain)
   }
 
 }

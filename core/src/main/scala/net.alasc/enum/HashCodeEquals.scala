@@ -1,6 +1,4 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import spire.math.Rational
 

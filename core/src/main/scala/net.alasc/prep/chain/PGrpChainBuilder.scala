@@ -82,48 +82,54 @@ class PGrpChainBuilder[G](implicit
   // implementations
 
   def trivialIn(pRep: FaithfulPRep[G]): PGrpChain.In[pRep.type, G] =
-    new PGrpExplicit[pRep.type, G](pRep, Term[G])
+    new PGrpExplicit[Null, pRep.type, G](pRep, Term[G])
 
-  def fromGeneratorsIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+  def fromGeneratorsIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])
     (generators: Iterable[G]): PGrpChain.In[pRep.type, G] = {
     val chain = BuildChain.fromGenerators(generators, pRep.permutationAction, baseGuideOpt)
-    new PGrpExplicit[pRep.type, G](pRep, chain, Opt(generators))
+    new PGrpExplicit[Null, pRep.type, G](pRep, chain, Opt(generators))
   }
 
-  def fromGeneratorsAndOrderIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+  def fromGeneratorsAndOrderIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])
     (generators: Iterable[G], order: BigInt): PGrpChain.In[pRep.type, G] = {
     val chain = BuildChain.fromGeneratorsAndOrder(
       generators, order, pRep.permutationAction, baseGuideOpt)
-    new PGrpExplicit[pRep.type, G](pRep, chain, Opt(generators))
+    new PGrpExplicit[Null, pRep.type, G](pRep, chain, Opt(generators))
   }
 
-  def fromGeneratorsRandomElementsAndOrderIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+  def fromGeneratorsRandomElementsAndOrderIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])
     (generators: Iterable[G], randomElement: Random => G, order: BigInt): PGrpChain.In[pRep.type, G] = {
     val chain = BuildChain.fromGeneratorsRandomElementsAndOrder(
       generators, randomElement, order, pRep.permutationAction, baseGuideOpt)
-    new PGrpExplicit[pRep.type, G](pRep, chain, Opt(generators))
+    new PGrpExplicit[Null, pRep.type, G](pRep, chain, Opt(generators))
   }
 
-  def fromChainIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])(chain: Chain[G]): PGrpChain.In[pRep.type, G] = {
+  def fromChainIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])(chain: Chain[G]): PGrpChain.In[pRep.type, G] = {
     val newChain = BuildChain.fromChain(chain, pRep.permutationAction, baseGuideOpt)
-    new PGrpExplicit[pRep.type, G](pRep, newChain)
+    new PGrpExplicit[Null, pRep.type, G](pRep, newChain)
+  }
+
+  def fromChainSubgroupOfIn(parent: Grp[G])(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])(chain: Chain[G]): PGrpChain.In[pRep.type, G] = {
+    val newChain = BuildChain.fromChain(chain, pRep.permutationAction, baseGuideOpt)
+    new PGrpExplicit[parent.type, pRep.type, G](pRep, newChain, Opt.empty[Iterable[G]], parent)
   }
 
   def fromGrpIn(pRep: FaithfulPRep[G], baseGuideOpt: Opt[BaseGuide])
     (grp: Grp[G]): PGrpChain.In[pRep.type, G] = grp match {
-    case pg: PGrpConjugated[_, G] if pg.pRep.permutationAction == pRep.permutationAction =>
+    case pg: PGrpConjugated[_, _, G] if pg.pRep.permutationAction == pRep.permutationAction =>
       val mut = imply(pRep.permutationAction) { pg.originalChain.mutableChain }
       mut.conjugate(pg.g, pg.gInv)
       baseGuideOpt match {
         case Opt(baseGuide) => baseChange.changeBase(mut, baseGuide)
         case _ =>
       }
-      fromChainIn(pRep)(mut.toChain())
+      fromChainSubgroupOfIn(grp)(pRep, Opt.empty[BaseGuide])(mut.toChain())
     case pg: PGrpChain[G] if (pg.pRep eq pRep) && baseGuideOpt.isEmpty =>
       pg.asInstanceOf[PGrpChain.In[pRep.type, G]]
     case pg: PGrpChain[G] if pg.chainOpt.nonEmpty =>
-      fromChainIn(pRep, baseGuideOpt)(pg.chain)
+      fromChainSubgroupOfIn(grp)(pRep, baseGuideOpt)(pg.chain)
     case _ =>
+      // TODO: optimize this allocation
       fromGeneratorsRandomElementsAndOrderIn(pRep)(grp.generators, grp.randomElement, grp.order)
   }
 

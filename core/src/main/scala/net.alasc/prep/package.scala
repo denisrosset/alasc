@@ -10,8 +10,16 @@ import net.alasc.finite.Grp
 import net.alasc.perms.PermutationRepBuilder
 import net.alasc.prep.{FaithfulPRep, PGrp, PGrpBuilder}
 import net.alasc.prep.bsgs.BaseGuide
+import net.alasc.prep.chain.PGrpChainBuilder
 
 final class RichGrp[G](val lhs: Grp[G]) {
+
+  def in(pRep: FaithfulPRep[G])(implicit builder: PGrpBuilder[G]): PGrp.In[pRep.type, G] =
+    builder.fromGrpIn(pRep)(lhs)
+
+}
+
+final class RichGrpWithParent[G](val lhs: Grp[G]) {
 
   def in(pRep: FaithfulPRep[G])(implicit builder: PGrpBuilder[G]): PGrp.In[pRep.type, G] =
     builder.fromGrpIn(pRep)(lhs)
@@ -29,7 +37,7 @@ package object prep {
 
     import bsgs._
 
-    implicit def pGrpBuilder[G:ClassTag:Eq:Group:PRepBuilder]: PGrpBuilder[G] = {
+    implicit def pGrpChainBuilder[G:ClassTag:Eq:Group:PRepBuilder]: PGrpChainBuilder[G] = {
       implicit def schreierSims: SchreierSims = SchreierSims.deterministic
       implicit def baseSwap: BaseSwap = BaseSwap.deterministic
       implicit def baseChange: BaseChange = BaseChange.swap

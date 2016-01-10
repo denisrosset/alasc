@@ -8,7 +8,7 @@ trait Cosets[G] {
 
   val grp: GG
 
-  val subgrp: Grp.WithParent[GG, G]
+  val subgrp: Grp.SubgroupOf[GG, G]
 
 }
 

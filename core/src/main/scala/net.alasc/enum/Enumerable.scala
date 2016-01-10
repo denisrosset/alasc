@@ -1,9 +1,9 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import spire.NoImplicit
 import spire.algebra.Order
+
+import net.alasc.domains.Partition
 
 /** Describes a sequence, whose elements can implicitly be compared for equality by computing
   * the partition of the domain corresponding to the sequence, where elements have the same

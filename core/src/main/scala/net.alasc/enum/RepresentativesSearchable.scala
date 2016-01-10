@@ -1,6 +1,4 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import scala.collection.mutable
 
@@ -10,31 +8,43 @@ import spire.syntax.action._
 import spire.util._
 
 import net.alasc.algebra._
+import net.alasc.domains._
+import net.alasc.finite._
+import net.alasc.prep._
+import net.alasc.prep.bsgs._
+import net.alasc.prep.chain._
 import net.alasc.util._
 
-import bsgs._
-import bsgs.algorithms._
-import guide._
+abstract class RepresentativesSearchable[T, G] extends Representatives[T, G] {
 
-trait RepresentativesSearchable[T, G] extends Representatives[T, G] {
-  implicit def T: EnumerableSearchable[T]
-  implicit def algorithms: BasicAlgorithms[G] = grp.algorithms
-  def chainInRepresentation = grp.chain(representation, BaseGuideLex(T.size(t)))
-  def chainInRepresentationBasePointGroups = algorithms.basePointGroups(chainInRepresentation, representation.size)
+  implicit def builder: PGrpChainBuilder[G]
+
+  implicit def enumerable: EnumerableSearchable[T]
+
+  def chainInRepresentation = builder.fromGrpIn(pRep, Opt(BaseGuideLex(enumerable.size(t))))(grp).chain
+
+  def chainInRepresentationBasePointGroups = SubgroupSearch.basePointGroups(chainInRepresentation, pRep.size)
+
   def findRepresentative(some: T): Opt[Representative[T, G]]
+
 }
 
-final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(implicit val T: EnumerableSearchable[T], val TG: Permutable[T, G]) extends RepresentativesSearchable[T, G] {
+final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(implicit val builder: PGrpChainBuilder[G], val enumerable: EnumerableSearchable[T], val permutable: Permutable[T, G]) extends RepresentativesSearchable[T, G] {
+
   override lazy val chainInRepresentation = super.chainInRepresentation
+
   override lazy val chainInRepresentationBasePointGroups = super.chainInRepresentationBasePointGroups
+
   override lazy val partition = super.partition
+
   override lazy val symGrp = super.symGrp
+
   def findRepresentative(r: T): Opt[Representative[T, G]] =
-    T.commonPartitions(t, r).flatMap { cp =>
+    enumerable.commonPartitions(t, r).flatMap { cp =>
       import grp.group
       val cpSeq: Seq[(Set[Int], Set[Int])] = cp.blocks
-      val n = T.size(t)
-      val bo = bsgs.algorithms.BaseOrder[G](chainInRepresentation.base)(representation.action)
+      val n = enumerable.size(t)
+      val bo = BaseOrder[G](pRep.permutationAction, chainInRepresentation.base)
       val tIntArray = new Array[Int](n)
       val rIntArray = new Array[Int](n)
       cp.blocks.zipWithIndex.foreach {
@@ -44,7 +54,7 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
       }
       def rec(level: Int, g: G, chainGrp: Chain[G], chainSym: Grp[G]): Opt[Representative[T, G]] = chainGrp match {
         case node: Node[G] =>
-          implicit def action = representation.action
+          implicit def action = pRep.permutationAction
           val orbitIt = node.orbit.iterator
           val beta = node.beta
           while (orbitIt.hasNext) {
@@ -62,7 +72,7 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
                 j += 1
               }
               if (!disagree) {
-                val (nextSym, transversal) = chainSym.stabilizer(bg, representation)
+                val (nextSym, transversal) = chainSym.in(pRep).stabilizerTransversal(bg)
                 if (transversal.orbit.min(Order.ordering(bo)) == bg) {
                   val res = rec(level + 1, nextG, node.next, nextSym)
                   if (res.nonEmpty)
@@ -76,4 +86,5 @@ final class RepresentativesSearchableImpl[T, G](val t: T, val grp: Grp[G])(impli
       }
       rec(0, Group[G].id, chainInRepresentation, symGrp)
     }
+
 }

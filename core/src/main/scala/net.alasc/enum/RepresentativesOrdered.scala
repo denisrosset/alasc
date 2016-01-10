@@ -1,8 +1,7 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math.ULong
@@ -11,19 +10,27 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.math.guide._
+import net.alasc.domains._
+import net.alasc.finite._
+import net.alasc.prep._
+import net.alasc.prep.bsgs._
+import net.alasc.prep.chain._
 import net.alasc.util._
 
 import bsgs._
 import metal._
 import metal.syntax._
 
-trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdered[T, G]] with RepresentativesSearchable[T, G] {
+abstract class RepresentativesOrdered[T, G, A] extends RepresentativesSearchable[T, G] with BigIndexedSeq[RepresentativeOrdered[T, G]] {
+
   import collection.immutable.{BitSet, SortedMap}
-  implicit def T: EnumerableOrdered[T, A]
-  def groups: SortedMap[A, Set[Int]] = T.groups(t)
+
+  implicit def enumerable: EnumerableOrdered[T, A]
+
+  def groups: SortedMap[A, Set[Int]] = enumerable.groups(t)
+
   def array: Array[Int] = {
-    val res = new Array[Int](T.size(t))
+    val res = new Array[Int](enumerable.size(t))
     @tailrec def rec(it: Iterator[Set[Int]], k: Int): Unit =
       if (it.hasNext) {
         val s = it.next
@@ -33,35 +40,41 @@ trait RepresentativesOrdered[T, G, A] extends BigIndexedSeq[RepresentativeOrdere
     rec(groups.valuesIterator, 0)
     res
   }
+
   def arrayMaxInt: Int = array.max
+
   def orderedIterator: Iterator[RepresentativeOrdered[T, G]]
+
   override def iterator: Iterator[RepresentativeOrdered[T, G]] = orderedIterator
+
 }
 
-final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val T: EnumerableOrdered[T, A], val TG: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
-  import grp.{classTag, equ, group}
+final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val builder: PGrpChainBuilder[G], val classTag: ClassTag[G],  val enumerable: EnumerableOrdered[T, A], val permutable: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
+
+  import grp.{equ, group}
 
   override lazy val groups = super.groups
   override lazy val array = super.array
   override lazy val arrayMaxInt = super.arrayMaxInt
 
   def seqInt(seq: T, k: Int): NNOption = {
-    val el = T.element(seq, k)
+    val el = enumerable.element(seq, k)
     if (groups.isDefinedAt(el))
       NNSome(array(groups(el).head))
     else
       NNNone
   }
+
   override lazy val chainInRepresentation = super.chainInRepresentation
 
   override def head: RepresentativeOrdered[T, G] = {
-    val minG = Algorithms.findMinimalPermutation(array, chainInRepresentation, symGrp, representation)
+    val minG = Algorithms.findMinimalPermutation(pRep)(array, chainInRepresentation, symGrp)
     RepresentativeOrdered(t, minG.inverse, 0)
   }
 
   override def last: RepresentativeOrdered[T, G] = {
     val revArray = array.map(arrayMaxInt - _)
-    val maxG = Algorithms.findMinimalPermutation(revArray, chainInRepresentation, symGrp, representation)
+    val maxG = Algorithms.findMinimalPermutation(pRep)(revArray, chainInRepresentation, symGrp)
     RepresentativeOrdered(t, maxG.inverse, length - 1)
 
   }
@@ -126,11 +139,11 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     val element = permutation.inverse
     val rank = index
     val original = t
-    implicit val actionTG = TG.action
+    implicit val action = permutable.action
   }
 
   case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: metal.Buffer[G], symGrps: metal.Buffer[Grp[G]]) extends Block {
-    implicit def action = representation.action
+    implicit def action = pRep.permutationAction
 
     case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
 
@@ -240,7 +253,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
           val u = chain.u(b)
           val g = candidates(c)
           val bg = b <|+| g
-          val (nextSym, transversal) = symGrps(c).stabilizer(bg, representation)
+          val (nextSym, transversal) = symGrps(c).in(pRep).stabilizerTransversal(bg)
           if (transversal.orbit.min == bg) {
             newBlockCandidates += u |+| g
             newBlockSymGrps += nextSym

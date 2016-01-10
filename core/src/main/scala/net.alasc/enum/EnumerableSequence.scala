@@ -1,6 +1,4 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import scala.annotation.tailrec
 
@@ -11,6 +9,7 @@ import spire.syntax.cfor._
 import spire.util._
 
 import net.alasc.algebra._
+import net.alasc.domains._
 
 /** An explicit implementation of `EnumerableSearchable`, where the type of the underlying
   * element `A` is known, and a sequence can be viewed as a map from an element instance to

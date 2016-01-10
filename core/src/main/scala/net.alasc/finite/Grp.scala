@@ -1,5 +1,6 @@
 package net.alasc.finite
 
+import scala.annotation.tailrec
 import scala.util.Random
 
 import spire.algebra.{Eq, Group, PartialOrder}
@@ -23,6 +24,29 @@ abstract class Grp[G] {
   }
 
   type Parent <: Grp[G] with Singleton
+
+  val parentOrNull: Parent
+
+  def parent: Parent =
+    if (parentOrNull eq null) sys.error("Grp has no registered parent") else parentOrNull
+
+  protected[alasc] def copyWithParentOrNull(newParentOrNull: Grp[G]): Grp.SubgroupOf[newParentOrNull.type, G]
+
+  def asSubgroupOf(newParent: Grp[G]): Opt[Grp.SubgroupOf[newParent.type, G]] = {
+    @tailrec def findParent(current: Grp[G]): Opt[Grp.SubgroupOf[newParent.type, G]] =
+      if (current.parentOrNull eq newParent)
+        Opt(copyWithParentOrNull(newParent))
+      else if (current.parentOrNull eq null) {
+        if (newParent.hasSubgroup(this))
+          Opt(copyWithParentOrNull(newParent))
+        else
+          Opt.empty[Grp.SubgroupOf[newParent.type, G]]
+      } else findParent(current.parentOrNull)
+    if (newParent eq this)
+      Opt(copyWithParentOrNull(newParent))
+    else
+      findParent(this)
+  }
 
   implicit def builder: GrpBuilder[G]
 
@@ -74,10 +98,10 @@ abstract class Grp[G] {
   def intersect(rhs: Grp[G]): Grp[G]
 
   /** Left cosets. */
-  def leftCosetsBy(rhs: Grp.WithParent[this.type, G]): LeftCosets[G]
+  def leftCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): LeftCosets[G]
 
   /** Right cosets. */
-  def rightCosetsBy(rhs: Grp.WithParent[this.type, G]): RightCosets[G]
+  def rightCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): RightCosets[G]
 
   /** Simplifies the description current group.*/
   def simplified: Grp[G]
@@ -90,14 +114,7 @@ object Grp {
 
   implicit def lattice[G](implicit builder: GrpBuilder[G]): Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G]
 
-  type WithParent[P <: Grp[G] with Singleton, G] = Grp[G] { type Parent = P }
-
-  implicit def WithParent[P <: Grp[G] with Singleton, G](subgrp: Grp[G])(implicit witness: shapeless.Witness.Aux[P]): Grp.WithParent[P, G] = {
-    val parentGrp: Grp[G] = witness.value
-    if (!subgrp.generators.forall(parentGrp.contains(_)))
-      throw new IllegalArgumentException(s"Group $subgrp is not a subgrp of $parentGrp")
-    subgrp.asInstanceOf[Grp.WithParent[P, G]]
-  }
+  type SubgroupOf[P <: Grp[G] with Singleton, G] = Grp[G] { type Parent = P }
 
   def apply[G](generators: G*)(implicit builder: GrpBuilder[G]): Grp[G] = {
     import builder.{equ, group}

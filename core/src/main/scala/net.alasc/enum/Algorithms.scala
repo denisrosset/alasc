@@ -1,6 +1,4 @@
-package net.alasc
-package math
-package enum
+package net.alasc.enum
 
 import scala.collection.mutable
 
@@ -10,29 +8,32 @@ import spire.syntax.action._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._
+import net.alasc.finite._
+import net.alasc.prep._
+import net.alasc.prep.bsgs._
 import net.alasc.util._
 
-import bsgs._
-
 object Algorithms {
+
   /** Returns the minimal lexicographic representative of a sequence under permutation.
     * 
-    * @param seq            Array representation of the sequence
-    * @param chainGrp       Group of permutations, described as a BSGS chain with the action corresponding to
-    *                       seq, with the base ordered lexicographically (i.e. `node.beta < node.next.beta`)
-    * @param symGrp         Subgroup of the group described by `chainGrp` leaving `sym` invariant, i.e.
-    *                       for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
-    * @param representation Representation of `G` corresponding to `seq`
+    * @param pRep      Representation of `G` corresponding to `seq`
+    * @param seq      Array representation of the sequence
+    * @param chainGrp Group of permutations, described as a BSGS chain 
+    *                 with the action corresponding to seq, with the base 
+    *                 ordered lexicographically (i.e. `node.beta < node.next.beta`)
+    * @param symGrp   Subgroup of the group described by `chainGrp` leaving `sym` invariant, i.e.
+    *                 for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     * 
     * @return the permutation `g` in `chainGrp` such that `i => seq(i <|+| g)` describes a lexicographic minimal
     *         sequence
     */
-  def findMinimalPermutation[G:Group](seq: Array[Int], chainGrp: Chain[G], symGrp: Grp[G], representation: Representation[G]): G = {
+  def findMinimalPermutation[G:Group:PGrpBuilder](pRep: FaithfulPRep[G])(seq: Array[Int], chainGrp: Chain[G], symGrp: Grp[G]): G = {
     val n = seq.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0
     var minimalG = Group[G].id
-    implicit def action = representation.action
+    implicit def action = pRep.permutationAction
     // Implements breadth-first search in the cosets `symGrp \ grp`, filtering elements that do not lead to a minimal
     // lexicographic representative at each step in the stabilizer chain.
     def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G], curSymGrp: Grp[G]): Unit = curChainGrp match {
@@ -69,10 +70,12 @@ object Algorithms {
             candidates += b
           }
         }
+        val curSymGrpInPRep = curSymGrp.in(pRep)
+        // TODO: replace base change by orbit test on `b`
         cforRange(0 until candidates.length.toInt) { i => 
           val b = candidates(i)
           val bg = b <|+| curG
-          val (nextSymGrp, transversal) = curSymGrp.stabilizer(bg, representation)
+          val (nextSymGrp, transversal) = curSymGrpInPRep.stabilizerTransversal(bg)
           if (transversal.orbitMin == bg) {
             val nextG = node.u(b) |+| curG
             rec(level + 1, toLevel, nextG, node.next, nextSymGrp)
@@ -85,4 +88,5 @@ object Algorithms {
     }
     minimalG
   }
+
 }

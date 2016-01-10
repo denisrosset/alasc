@@ -14,9 +14,25 @@ import net.alasc.finite._
 
 import bsgs._
 
-final class PGrpExplicit[R0 <: FaithfulPRep[G] with Singleton, G](val pRep: R0, val chain: Chain[G], generatorsOpt: Opt[Iterable[G]] = Opt.empty[Iterable[G]])(implicit val builder: PGrpChainBuilder[G]) extends PGrpChain[G] { lhs =>
+final class PGrpExplicit[
+    Parent0 <: Grp[G] with Singleton,
+    R0 <: FaithfulPRep[G] with Singleton,
+    G
+  ](
+    val pRep: R0,
+    val chain: Chain[G],
+    generatorsOpt: Opt[Iterable[G]] = Opt.empty[Iterable[G]],
+    val parentOrNull: Parent0 = null
+  )(implicit
+    val builder: PGrpChainBuilder[G]
+  ) extends PGrpChain[G] { lhs =>
+
+  type Parent = Parent0
 
   type R = R0
+
+  protected[alasc] def copyWithParentOrNull(newParentOrNull: Grp[G]): Grp.SubgroupOf[newParentOrNull.type, G] =
+    new PGrpExplicit[newParentOrNull.type, R0, G](pRep, chain, generatorsOpt, newParentOrNull)
 
   def chainOpt = Opt(chain)
 
@@ -36,26 +52,26 @@ final class PGrpExplicit[R0 <: FaithfulPRep[G] with Singleton, G](val pRep: R0, 
   def subgroupFor(definition: SubgroupDefinition[G]): Grp[G] = {
     val guidedChain = BuildChain.fromChain(chain, pRep.permutationAction, definition.baseGuideOpt)
     val result = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new PGrpExplicit[R, G](pRep, result)
+    new PGrpExplicit[this.type, R, G](pRep, result, Opt.empty[Iterable[G]], this)
   }
 
   def pointwiseStabilizer(set: Set[Int]): Grp[G] = {
     val guidedChain = BuildChain.fromChain(chain, pRep.permutationAction,
       Opt(PointwiseStabilizer.baseGuide(set)))
-    new PGrpExplicit[R, G](pRep, PointwiseStabilizer.recurse(guidedChain, set))
+    new PGrpExplicit[this.type, R, G](pRep, PointwiseStabilizer.recurse(guidedChain, set), Opt.empty[Iterable[G]], this)
   }
 
   def stabilizerTransversal: Opt[(Grp[G], bsgs.Transversal[G])] = chain match {
-    case node: Node[G] => Opt((builder.fromChainIn(pRep)(node.next), node))
+    case node: Node[G] => Opt((builder.fromChainSubgroupOfIn(this)(pRep, Opt.empty[BaseGuide])(node.next), node))
     case _ => Opt.empty[(Grp[G], bsgs.Transversal[G])]
   }
 
-  def stabilizerTransversal(b: Int): (PGrp.In[R0, G], bsgs.Transversal[G]) = chain match {
+  def stabilizerTransversal(b: Int): (PGrp.In[R, G], bsgs.Transversal[G]) = chain match {
     case term: Term[G] => (this, bsgs.Transversal.empty[G](b))
     case node: Node[G] if node.inOrbit(b) =>
       val u = node.u(b)
       val uInv = node.uInv(b)
-      val nextGrp = new PGrpConjugated(pRep, node.next, u, uInv)
+      val nextGrp = new PGrpConjugated[this.type, R, G](pRep, node.next, u, uInv, Opt.empty[Iterable[G]], this)
       val trv = imply(pRep.permutationAction) { ConjugatedTransversal(node, u, uInv) }
       (nextGrp, trv)
     case node: Node[G] if node.isFixed(b) =>
@@ -63,7 +79,7 @@ final class PGrpExplicit[R0 <: FaithfulPRep[G] with Singleton, G](val pRep: R0, 
     case _ =>
       val newChain = BuildChain.fromChain(chain, pRep.permutationAction, Opt(BaseGuideSeq(Seq(b))))
       val (nextChain, trv) = newChain.detach(b)
-      val nextGrp = new PGrpExplicit(pRep, nextChain)
+      val nextGrp = new PGrpExplicit[this.type, R, G](pRep, nextChain, Opt.empty[Iterable[G]], this)
       (nextGrp, trv)
   }
 
@@ -73,7 +89,7 @@ final class PGrpExplicit[R0 <: FaithfulPRep[G] with Singleton, G](val pRep: R0, 
         case Opt(e) => e
         case _ => h.inverse
       }
-      new PGrpConjugated[R, G](pRep, chain, h, hInv)
+      new PGrpConjugated[Null, R, G](pRep, chain, h, hInv)
     } else super.conjugatedBy(h, hInvOpt)
 
 }
