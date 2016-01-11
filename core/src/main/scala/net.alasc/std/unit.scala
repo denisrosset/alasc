@@ -37,37 +37,10 @@ trait UnitPermutation extends FaithfulPermutationAction[Unit] {
   def supportMaxElement: Int = -1
 }
 
-final class UnitPRepBuilder(implicit val action: FaithfulPermutationAction[Unit]) extends PRepBuilder[Unit] {
-
-  type R = UnitPRep.type
-
-  def classTagR = classTag[UnitPRep.type]
-
-  def build(generators: Iterable[Unit]) = UnitPRep
-
-  object UnitPRep extends BuiltRep[Unit] with FaithfulPRep[Unit] {
-    type B = UnitPRepBuilder.this.type
-    val builder: B = UnitPRepBuilder.this
-    def permutationAction = builder.action
-    def represents(g: Unit): Boolean = true
-    def size = 1
-  }
-
-  object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
-    def zero = UnitPRep
-    def join(lhs: R, rhs: R): R = UnitPRep
-    def meet(lhs: R, rhs: R): R = UnitPRep
-  }
-  object partialOrder extends PartialOrder[R] {
-    def partialCompare(lhs: R, rhs: R): Double = 0.0
-  }
-
-}
-
 class UnitAlgebra extends UnitGroup with UnitPermutation
 
 trait UnitInstances {
   implicit final val UnitEq = new UnitEq { }
   implicit final val UnitAlgebra = new UnitAlgebra
-  implicit final val UnitPRepBuilder = new UnitPRepBuilder
+  implicit final val UnitPRepBuilder = new UniquePRepBuilder(1)(UnitAlgebra)
 }
