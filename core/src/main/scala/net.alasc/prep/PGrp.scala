@@ -10,6 +10,7 @@ import spire.util.Opt
 import net.alasc.algebra.{BigIndexedSeq, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.finite._
+import net.alasc.prep.chain.PGrpChainBuilder
 
 import bsgs._
 
@@ -65,5 +66,43 @@ abstract class PGrp[G] extends Grp[G] { lhs =>
 object PGrp {
 
   type In[R0 <: FaithfulPRep[G] with Singleton, G] = PGrp[G] { type R = R0 }
+
+  class Algorithms(
+    val randomOpt: Opt[Random] = Opt(Random),
+    val baseChangeRecomputes: Boolean = false,
+    val baseChangeConjugates: Boolean = true) {
+
+    import bsgs._
+
+    implicit val schreierSims: SchreierSims = randomOpt match {
+      case Opt(random) => SchreierSims.randomized(random)
+      case _ => SchreierSims.deterministic
+    }
+
+    implicit val baseSwap: BaseSwap = randomOpt match {
+      case Opt(random) => BaseSwap.randomized(random)
+      case _ => BaseSwap.deterministic
+    }
+
+    implicit val baseChange: BaseChange =
+      if (baseChangeRecomputes)
+        BaseChange.fromScratch
+      else if (baseChangeConjugates)
+        BaseChange.swapConjugation
+      else
+        BaseChange.swap
+
+    implicit def pGrpChainBuilder[G:ClassTag:Eq:Group:PRepBuilder]: PGrpChainBuilder[G] =
+      new chain.PGrpChainBuilder[G]
+
+  }
+
+  object deterministicNoSwap extends Algorithms(Opt.empty[Random], true, false)
+
+  object deterministicNoConjugate extends Algorithms(Opt.empty[Random], false, false)
+
+  object deterministic extends Algorithms(Opt.empty[Random], false, true)
+
+  object default extends Algorithms(Opt(Random), false, true)
 
 }

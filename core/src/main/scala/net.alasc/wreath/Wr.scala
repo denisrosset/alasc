@@ -1,5 +1,4 @@
-package net.alasc.math
-package wreath
+package net.alasc.wreath
 
 import scala.language.higherKinds
 
@@ -12,28 +11,39 @@ import spire.algebra._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
+import spire.util.Opt
 
 import net.alasc.algebra._
+import net.alasc.finite._
+import net.alasc.prep._
 import net.alasc.std._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 /** Describes the wreath product of two objects. */
 trait Wr[A, H] {
+
   override def toString = s"Wr($aSeq, $h)"
+
   def aSeq: Seq[A]
+
   def h: H
+
 }
 
 /** Default wreath product object and type classes for wreath products. */
 object Wr {
-  def apply[A, H](aSeq0: Seq[A], h0: H) = new Wr[A, H] {
+
+  def apply[A, H](aSeq0: Seq[A], h0: H): Wr[A, H] = new Wr[A, H] {
     val aSeq = aSeq0
     val h = h0
   }
-  implicit def wrImprimitiveRepresentations[A:Group:Representations, H:Permutation]: Representations[Wr[A, H]] = new WrImprimitiveRepresentations[A, H]
+
+  implicit def wrImprimitivePRepBuilder[A:Group:PRepBuilder, H:Permutation]: PRepBuilder[Wr[A, H]] = new WrImprimitivePRepBuilder[A, H]
+
   implicit def wrEqGroup[A:Eq:Group, H:Eq:Permutation]: Eq[Wr[A, H]] with Group[Wr[A, H]] = new WrEqGroup[A, H]
-  def grp[A:Eq:Group:Representations, H:Eq:Permutation](n: Int, ga: Grp[A], gh: Grp[H]): Grp[Wr[A, H]] = {
+
+  def grpDef[A:Eq:Group:PRepBuilder, H:Eq:Permutation](n: Int, ga: Grp[A], gh: Grp[H]): GrpDef[Wr[A, H]] = {
     val aGenerators = for {
       k <- 0 until n
       a <- ga.generators
@@ -42,8 +52,9 @@ object Wr {
       h <- gh.generators
     } yield Wr(Seq.empty[A], h)
     val order = ga.order.pow(n) * gh.order
-    Grp.fromGeneratorsAndOrder(aGenerators ++ hGenerators, order)
+    GrpDef(aGenerators ++ hGenerators, Opt(order))
   }
+
 }
 
 class WrEqGroup[A:Eq:Group, H:Eq:Permutation] extends Eq[Wr[A, H]] with Group[Wr[A, H]] {

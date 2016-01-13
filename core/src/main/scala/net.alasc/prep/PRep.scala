@@ -31,6 +31,11 @@ abstract class PRepBuilder[G] extends RepBuilder[G] {
 
 }
 
+object PRepBuilder {
+
+  def apply[G](implicit ev: PRepBuilder[G]): PRepBuilder[G] = ev
+}
+
 final class UniquePRepBuilder[G](val size: Int)(implicit val action: FaithfulPermutationAction[G]) extends PRepBuilder[G] {
 
   type R = UniquePRep.type

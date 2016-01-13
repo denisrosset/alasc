@@ -1,6 +1,7 @@
 package net.alasc
 
 import scala.reflect.ClassTag
+import scala.util.Random
 
 import spire.algebra.{Eq, Group}
 import spire.util.Opt
@@ -32,23 +33,5 @@ package object prep {
 
   implicit def permutationGrp[G:ClassTag:Eq:Group:Permutation:PermutationRepBuilder:PGrpBuilder](lhs: Grp[G]): PGrp[G] =
     implicitly[PGrpBuilder[G]].fromGrp(lhs)
-
-  object Deterministic {
-
-    import bsgs._
-
-    implicit def pGrpChainBuilder[G:ClassTag:Eq:Group:PRepBuilder]: PGrpChainBuilder[G] = {
-      implicit def schreierSims: SchreierSims = SchreierSims.deterministic
-      implicit def baseSwap: BaseSwap = BaseSwap.deterministic
-      implicit def baseChange: BaseChange = BaseChange.swap
-      new chain.PGrpChainBuilder[G]
-    }
-
-  }
-
-  object Randomized {
-
-
-  }
 
 }

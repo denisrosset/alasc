@@ -1,17 +1,21 @@
-package net.alasc.math
-package wreath
+package net.alasc.wreath
 
 case class Divisor(d: Int, max: Int, offset: Int, f: Long, shift: Int) {
+
   def divide(x: Int) =
     if (x > max)
       x / d
     else
       (((x.toLong + offset) * f) >>> shift).toInt
+
 }
 
 object Divisor {
+
   def numberOfSignificantBits(i: Int) = 32 - java.lang.Integer.numberOfLeadingZeros(i)
+
   def numberOfSignificantBits(i: Long) = 64 - java.lang.Long.numberOfLeadingZeros(i)
+
   def apply(maxFast: Int, d: Int): Divisor = {
     val w = numberOfSignificantBits(maxFast)
     val b = numberOfSignificantBits(d) - 1
@@ -31,4 +35,5 @@ object Divisor {
       Divisor(d, max, 0, rn, r)
     }
   }
+
 }
