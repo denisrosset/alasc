@@ -40,8 +40,8 @@ trait BaseGuide {
   }
 
 
-  /** Returns a full base without online optimizations. Used when no real base change is possible, only recomputation
-    * from scratch. */
+  /** Returns a full base without online optimizations. Used when no real base change 
+    * is possible, only recomputation from scratch. */
   def fullBase: Seq[Int]
 
 }

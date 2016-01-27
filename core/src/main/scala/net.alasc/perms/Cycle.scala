@@ -38,18 +38,6 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 
   override def hashCode: Int = seq.hashCode
 
-  def +(n: Int): Cycle =
-    if (n < 0) (this - (-n)) else {
-      assert(seq.max <= Int.MaxValue - n)
-      new Cycle(seq.map(_ + n))
-    }
-
-  def -(n: Int): Cycle =
-    if (n < 0) (this + (-n)) else {
-      assert(seq.min >= n)
-      new Cycle(seq.map(_ - n))
-    }
-
   def support: BitSet = BitSet(seq: _*)
 
   def inverse = Cycle(seq.reverse: _*)

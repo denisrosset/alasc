@@ -1,4 +1,4 @@
-package net.alasc.math
+package net.alasc.perms
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary._
@@ -14,7 +14,7 @@ import spire.std.seq._
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
-import perm._
+import internal._
 
 class Perm32Check extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions {
   val genPerm32: Gen[Perm32] = for {

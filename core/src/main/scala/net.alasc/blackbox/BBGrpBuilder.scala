@@ -13,7 +13,9 @@ class BBGrpBuilder[G](implicit
     val equ: Eq[G]
   ) extends GrpBuilder[G] {
 
-  def trivial: Grp[G] = new BBGrp(Iterable.empty[G], Set(group.id))(this)
+  type GG = Grp[G]
+
+  def trivial: GG = new BBGrp(Iterable.empty[G], Set(group.id))(this)
 
   def fromGenerators(generators: Iterable[G]): Grp[G] = {
     @tailrec def rec(elements: Set[G]): Set[G] = {
@@ -25,10 +27,13 @@ class BBGrpBuilder[G](implicit
     new BBGrp(generators, rec(generators.toSet), null)(this)
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): Grp[G] =
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG =
     fromGenerators(generators)
 
-  def fromGeneratorsRandomElementsAndOrder(generators: Iterable[G], randomElement: Random => G, order: BigInt): Grp[G] =
+  def fromGeneratorsRandomElementsAndOrder(generators: Iterable[G], randomElement: Random => G, order: BigInt): GG =
     fromGenerators(generators)
+
+  def fromGrp(grp: Grp[G]): GG =
+    new BBGrp(grp.generators, grp.iterator.toSet, null)(this)
 
 }

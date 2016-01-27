@@ -82,9 +82,6 @@ class CyclesPermutation extends Permutation[Cycles] {
 
   override def signum(g: Cycles) = (1 /: g.seq) { case (sIt, cycle) => sIt * cycle.signum }
 
-  def plus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ + n))
-  def minus(c: Cycles, n: Int) = new Cycles(c.seq.map(_ - n))
-
   override def supportAny(c: Cycles) =
     if (c.seq.isEmpty) NNNone else NNSome(c.seq.head.seq.head)
 

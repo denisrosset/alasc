@@ -13,7 +13,8 @@ import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-
+// note: some tail recursive methods were moved to the RichMutableChain companion
+// object, due to an elusive bug in the Scala compiler
 final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
 
   def mutableChain: MutableChain[G] = new MutableChain[G](start)
@@ -159,29 +160,9 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * 
     * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
     */
-  @tailrec def siftAndUpdateBaseFrom(elem: StartOrNode[G], g: G)
+  def siftAndUpdateBaseFrom(elem: StartOrNode[G], g: G)
     (implicit classTag: ClassTag[G], equ: Eq[G],
-      group: Group[G]): Opt[(MutableNode[G], G)] = {
-    implicit def action = start.action
-    elem.next match {
-      case _: Term[G] =>
-        g.supportAny match {
-          case NNOption(k) =>
-            val newNode = NodeBuilder[G].standalone(k)
-            mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
-            Opt(newNode -> g)
-          case _ => Opt.empty[(MutableNode[G], G)]
-        }
-      case node: Node[G] =>
-        val b = node.beta <|+| g
-        if (!node.inOrbit(b))
-          Opt(mutableChain.mutable(node) -> g)
-        else {
-          val h = g |+| node.uInv(b)
-          mutableChain.siftAndUpdateBaseFrom(node, h)
-        }
-    }
-  }
+      group: Group[G]): Opt[(MutableNode[G], G)] = RichMutableChain.siftAndUpdateBaseFrom(mutableChain, elem, g)
 
   /** Adds the given generators to the BSGS chain, adding base elements
     * if necessary, and updates the transversals.
@@ -245,6 +226,53 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * the node and the strong generator to insert there.
     */
   def findNewStrongGeneratorAt(node: Node[G])
+    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G], G)] =
+    RichMutableChain.findNewStrongGeneratorAt(mutableChain, node)
+
+  /** Completes the set of strong generators starting at `node`, assuming 
+    * that `node.tail` is already completed.
+    * 
+    * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
+    */
+  final def completeStrongGeneratorsAt(mutableNode: MutableNode[G])
+    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit =
+    RichMutableChain.completeStrongGeneratorsAt(mutableChain, mutableNode)
+
+  /** Deterministic Schreier-Sims algorithm. */
+  def completeStrongGenerators()(implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = mutableChain.findLast() match {
+    case _: Start[G] => // chain is empty, no generators to find
+    case node: Node[G] => mutableChain.completeStrongGeneratorsAt(mutableChain.mutable(node))
+  }
+
+}
+
+object RichMutableChain {
+
+  @tailrec def siftAndUpdateBaseFrom[G](mutableChain: MutableChain[G], elem: StartOrNode[G], g: G)
+    (implicit classTag: ClassTag[G], equ: Eq[G],
+      group: Group[G]): Opt[(MutableNode[G], G)] = {
+    implicit def action = mutableChain.start.action
+    elem.next match {
+      case _: Term[G] =>
+        g.supportAny match {
+          case NNOption(k) =>
+            val newNode = NodeBuilder[G].standalone(k)
+            mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
+            Opt(newNode -> g)
+          case _ => Opt.empty[(MutableNode[G], G)]
+        }
+      case node: Node[G] =>
+        val b = node.beta <|+| g
+        if (!node.inOrbit(b))
+          Opt(mutableChain.mutable(node) -> g)
+        else {
+          val h = g |+| node.uInv(b)
+          siftAndUpdateBaseFrom(mutableChain, node, h)
+        }
+    }
+  }
+
+  def findNewStrongGeneratorAt[G](mutableChain: MutableChain[G], node: Node[G])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G], G)] = {
     node.foreachOrbit { b =>
       implicit def action: FaithfulPermutationAction[G] = node.action
@@ -256,7 +284,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
         val ubx = ub |+| x
         if (ubx =!= node.u(i)) {
           val schreierGen = ubx |+| node.uInv(i)
-          val res = mutableChain.siftAndUpdateBaseFrom(node, schreierGen)
+          val res: Opt[(MutableNode[G], G)] = mutableChain.siftAndUpdateBaseFrom(node, schreierGen)
           if (!res.isEmpty) return res
         }
       }
@@ -264,33 +292,28 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     Opt.empty[(MutableNode[G], G)]
   }
 
-  /** Completes the set of strong generators starting at `node`, assuming 
+    /** Completes the set of strong generators starting at `node`, assuming 
     * that `node.tail` is already completed.
     * 
     * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
     */
-  @tailrec final def completeStrongGeneratorsAt(mutableNode: MutableNode[G])
+  @tailrec final def completeStrongGeneratorsAt[G](mutableChain: MutableChain[G],
+    mutableNode: MutableNode[G])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit =
     mutableChain.findNewStrongGeneratorAt(mutableNode) match {
       case Opt((where, newGenerator)) =>
         // there is a new strong generator at the node `where`, add it there and restart the search there
         implicit def action = mutableChain.start.action
         mutableChain.addStrongGeneratorHere(where, newGenerator, newGenerator.inverse)
-        mutableChain.completeStrongGeneratorsAt(where)
+        completeStrongGeneratorsAt(mutableChain, where)
       case _ => mutableNode.prev match {
         case IsMutableNode(mutablePrev) =>
           // current node does not have new strong generators, but node has parent that has to be completed
-          mutableChain.completeStrongGeneratorsAt(mutablePrev)
+          completeStrongGeneratorsAt(mutableChain, mutablePrev)
         case node: Node[G] => sys.error("mutableNode.prev cannot be immutable")
         case start: Start[G] =>
           // current node does not have new strong generators, and current node starts the chain, we are finished
       }
     }
-
-  /** Deterministic Schreier-Sims algorithm. */
-  def completeStrongGenerators()(implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = mutableChain.findLast() match {
-    case _: Start[G] => // chain is empty, no generators to find
-    case node: Node[G] => mutableChain.completeStrongGeneratorsAt(mutableChain.mutable(node))
-  }
 
 }

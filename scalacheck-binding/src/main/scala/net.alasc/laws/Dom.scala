@@ -2,11 +2,14 @@ package net.alasc.laws
 
 import spire.algebra.{Action, Eq}
 
-case class Dom(value: Int) {
-  require(value >= 0)
-}
+class Dom(val value: Int) extends AnyVal
 
 object Dom {
+  def unapply(dom: Dom): Option[Int] = Some(dom.value)
+  def apply(value: Int): Dom = {
+    require(value >= 0)
+    new Dom(value)
+  }
   implicit def domToInt(d: Dom): Int = d.value
   implicit def intToDom(k: Int): Dom = apply(k)
   implicit object Eq extends Eq[Dom] {

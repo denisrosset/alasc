@@ -6,6 +6,7 @@ import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.syntax.permutationAction._
 
 object lexPermutationOrder {
+  
   /** Lexicographic order on permutations. */
   class LexPermutationOrder[P: FaithfulPermutationAction: Group] extends Order[P] {
     override def eqv(x: P, y: P) = Eq[P].eqv(x, y)
@@ -24,4 +25,5 @@ object lexPermutationOrder {
   }
 
   implicit def LexPermutationOrder[P: Group: FaithfulPermutationAction]: Order[P] = new LexPermutationOrder[P]
+
 }

@@ -21,7 +21,7 @@ import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-class WrPrimitivePRepBuilder[A:Group, H:Permutation](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
+final class WrPrimitivePRepBuilder[A:Group, H:Permutation](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
 
   def build(generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }

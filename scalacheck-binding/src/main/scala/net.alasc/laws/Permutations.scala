@@ -11,7 +11,7 @@ import spire.syntax.cfor._
 import spire.std.int._
 
 import net.alasc.algebra._
-import net.alasc.math._
+import net.alasc.perms._
 import net.alasc.syntax.permutationAction._
 
 /** Generators and arbitraries for permutations.
@@ -35,13 +35,12 @@ object Permutations {
     array
   }
 
-  def sized[P : Permutation]: Gen[P] = Gen.parameterized { parameters =>
+  def sized[P:Permutation]: Gen[P] = Gen.parameterized { parameters =>
     val images = randomImages(parameters.size, parameters.rng)
     Permutation[P].fromImages(images)
   }
 
-
-  def forSize[P : Permutation](domainSize: Int) = Gen.parameterized { parameters =>
+  def forSize[P:Permutation](domainSize: Int) = Gen.parameterized { parameters =>
     val images = randomImages(domainSize, parameters.rng)
     Permutation[P].fromImages(images)
   }

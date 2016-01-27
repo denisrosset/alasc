@@ -10,7 +10,7 @@ import spire.syntax.cfor._
 import spire.std.int._
 
 import net.alasc.algebra._
-import net.alasc.math._
+import net.alasc.domains._
 import net.alasc.syntax.permutationAction._
 
 abstract class PartitionsLowerPriority {
@@ -22,7 +22,7 @@ abstract class PartitionsLowerPriority {
 object Partitions extends PartitionsLowerPriority {
 
   def forDomain(domain: Domain): Gen[Partition.In[domain.type]] =
-    Gen.containerOfN[Seq, Int](domain.size, Gen.oneOf(0,1,2,3))
+    Gen.containerOfN[Seq, Int](domain.size, Gen.choose(0, 3))
       .map( seq => Partition.fromSeq(domain)(seq) )
 
   def sized: Gen[Partition] = Domains.sized.flatMap[Partition](forDomain(_))

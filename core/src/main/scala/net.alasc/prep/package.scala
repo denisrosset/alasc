@@ -31,7 +31,7 @@ package object prep {
 
   implicit def richGrp[G](lhs: Grp[G]): RichGrp[G] = new RichGrp[G](lhs)
 
-  implicit def permutationGrp[G:ClassTag:Eq:Group:Permutation:PermutationRepBuilder:PGrpBuilder](lhs: Grp[G]): PGrp[G] =
+  implicit def permutationGrp[G:Eq:PermutationRepBuilder:PGrpBuilder](lhs: Grp[G]): PGrp[G] =
     implicitly[PGrpBuilder[G]].fromGrp(lhs)
 
 }

@@ -10,7 +10,7 @@ import spire.syntax.cfor._
 import spire.std.int._
 
 import net.alasc.algebra._
-import net.alasc.math._
+import net.alasc.domains._
 import net.alasc.syntax.permutationAction._
 
 abstract class PartitionMapsLowerPriority {

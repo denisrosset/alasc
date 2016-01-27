@@ -17,26 +17,16 @@ import spire.std.int.IntAlgebra
 import org.scalatest.FunSuite
 
 import net.alasc.algebra._
-import net.alasc.math._
-import net.alasc.math.wreath._
+import net.alasc.domains._
+import net.alasc.finite._
+import net.alasc.perms._
+import net.alasc.prep._
 import net.alasc.std.product._
 
 class LawTests extends FunSuite with NestedDiscipline {
+
   implicit def intArbitrary: Arbitrary[Int] =
     Arbitrary(Gen.choose(Int.MinValue, Int.MaxValue))
-
-  {
-    import Permutations.arbDom
-    implicit def permTupleArbitrary: Arbitrary[(Perm, Perm)] =
-      Arbitrary( for {
-        g1 <- Permutations.forSize[Perm](16)
-        g2 <- Permutations.forSize[Perm](5)
-      } yield (g1, g2) )
-
-    implicit def permPermAction: FaithfulPermutationAction[(Perm, Perm)] = implicitly[Representations[(Perm, Perm)]].get(Seq((Perm(0, 15), Perm(0, 4)))).action
-
-    checkAll("(Perm, Perm)",      PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
-  }
 
   import Domains.arbDomain
   import Partitions.{arbPartition, arbPartitionIn}
@@ -58,16 +48,16 @@ class LawTests extends FunSuite with NestedDiscipline {
   }
 
   // TODO use implicit trait priority
-  implicit def basicAlgorithms: net.alasc.math.bsgs.algorithms.BasicAlgorithms[Perm] = Grp.defaultAlgorithms[Perm]
+  import net.alasc.prep.PGrp.deterministic._
   import Permutations.{arbPermutation, arbDom, permutationInstances, permutationCloner}
-  import Grps.arbGrp
-  import Wrs.arbWr
+  import Grps.{arbGrp, arbPGrp}
 
+  checkAll("Grp[Perm]", PGrpLaws[Perm].grp)
   checkAll("Grp[Perm]", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
   checkAll("Perm",      PermutationActionLaws[Perm].permutation)
   checkAll("Cycles",    PermutationActionLaws[Cycles].permutation)
   checkAll("Perm",      AnyRefLaws[Perm]._eq)
-  checkAll("Cycles",      AnyRefLaws[Perm]._eq)
+  checkAll("Cycles",    AnyRefLaws[Perm]._eq)
 
   {
     import Partitions.{arbPartition, partitionInstances, partitionCloner}
@@ -81,51 +71,22 @@ class LawTests extends FunSuite with NestedDiscipline {
     checkAll("PartitionMap[Int]",  LatticePartialOrderLaws[PartitionMap[Int]].boundedBelowLatticePartialOrder)
   }
 
-  nestedCheckAll[WrSize]("Wr[Perm,Perm] (imprimitive)", WrSize(1, 1)) { implicit wrSize =>
-    implicit def action = wrSize.imprimitiveRepresentation[Perm, Perm].action
-    PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
-  }
-
   {
+    import Wrs.arbWr
+    import net.alasc.wreath._
+    nestedCheckAll[WrSize]("Wr[Perm,Perm] (imprimitive)", WrSize(1, 1)) { implicit wrSize =>
+      implicit def action = wrSize.imprimitiveRepresentation[Perm, Perm].permutationAction
+      PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
+    }
+  }
+  {
+    import Wrs.arbWr
+    import net.alasc.wreath._
     implicit def arbWrSize = WrSize.arbWrSizeForPrimitive
     nestedCheckAll[WrSize]("Wr[Perm,Perm] (primitive)", WrSize(2, 2)) { implicit wrSize =>
-      implicit def action = wrSize.primitiveRepresentation[Perm, Perm].action
+      implicit def action = wrSize.primitiveRepresentation[Perm, Perm].permutationAction
       PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
     }
   }
 
-/*
-  /*
-  {
-    implicit def action = {
-      val wrir = new InhWrImprimitiveRepresentations[Perm, Perm]
-      implicit def ct = wrir.aReps.rClassTag
-      val permR = wrir.aReps.get(Iterable(Perm(0, wrPermSize - 1)))
-      val domain = Domain(wrSize)
-      val partition = domain.Partition((0 until wrSize).map(Set(_)):_*)
-      wrir.R(partition, Array.fill(wrSize)(permR)).action
-    }
-    checkAll("Wr[Perm, Perm] (inh imprimitive)",      PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction)
-  }
-  {
-    implicit def action = {
-      val wrir = new InhWrPrimitiveRepresentations[Perm, Perm]
-      implicit def ct = wrir.aReps.rClassTag
-      val permR = wrir.aReps.get(Iterable(Perm(0, wrPermSize - 1)))
-      val domain = Domain(wrSize)
-      val partition = domain.Partition((0 until wrSize).map(Set(_)):_*)
-      wrir.R(partition, Array.fill(wrSize)(permR)).action
-    }
-    checkAll("Wr[Perm, Perm] (inh primitive)",        PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction)
-  }
-  {
-    val wrir: InhWrImprimitiveRepresentations[Perm, Perm] = new InhWrImprimitiveRepresentations[Perm, Perm]
-    implicit def partialOrder: PartialOrder[wrir.R] = wrir.partialOrder
-    implicit def lattice: Lattice[wrir.R] with BoundedJoinSemilattice[wrir.R] = wrir.lattice
-    implicit def latticeElement = Arbitrary { genWrPermPerm.map(w => wrir.get(Iterable(w))) }
-    checkAll("InhWrImprimitiveRepresentations[Perm, Perm].lattice",
-      LatticePartialOrderLaws[wrir.R].boundedBelowLatticePartialOrder)
-  }
-   */
- */
 }

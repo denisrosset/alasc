@@ -14,10 +14,10 @@ import spire.syntax.partialOrder._
 import spire.syntax.lattice._
 import spire.util.Opt
 
-import net.alasc.algebra.{PermutationAction}
-import net.alasc.syntax.permutationAction._
-// import net.alasc.math.{Grp, Sym} TODO
+import net.alasc.algebra.{Permutation, PermutationAction}
+import net.alasc.named.Symmetric
 import net.alasc.perms.Perm
+import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 import algos._
@@ -61,10 +61,6 @@ trait Partition extends InDomain {
   /** Returns the sequence of blocks, the block size increasing. */
   def sizeIncreasing: Seq[Set[Int]] = blocks.sortBy(b => (b.size, b.min))
 
-//  def fixingGroupOrder: BigInt = blocks.map(_.symGroupOrder).reduce(_*_) TODO
-  def fixingGroupGenerators: Iterable[Perm] = blocks.flatMap(_.symGroupGenerators)
-//  def fixingGroup: Grp[Perm] = Grp.fromGeneratorsAndOrder(fixingGroupGenerators, fixingGroupOrder)
-
   /** Describes the set of points contained in a block. */
   class Block(index: Int) extends Set[Int] { self =>
     def +(i: Int) = iterator.toSet + i
@@ -92,19 +88,6 @@ trait Partition extends InDomain {
       n
     }
     def contains(l: Int) = if (l < domain.size) indexArray(l) == index else false
-//    def symGroupOrder = Sym.order(size) TODO
-    def symGroupGenerators: Iterable[Perm] =
-      if (size <= 1) Iterable.empty else {
-        val builder = mutable.ArrayBuilder.make[Perm]
-        builder.sizeHint(size - 1)
-        var k = start
-        while (hasNext(k)) {
-          val k1 = next(k)
-          builder += Perm(k, k1)
-          k = k1
-        }
-        builder.result
-      }
   }
 
   /** Returns the block in which `k` is contained. Must have `0 <= k < size`. */

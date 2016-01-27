@@ -21,16 +21,20 @@ trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
 
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
-  def swapping(i: Int, j: Int): P = {
-    def swapFun: (Int => Int) = (k => if (k == i) j else if (k == j) i else k)
-    fromSupportAndImageFun(Set(i, j), swapFun)
-  }
+  def transposition(i: Int, j: Int): P =
+    fromMap(Map(i -> j, j -> i))
 
   def fromImages(images: Seq[Int]): P
 
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): P
 
-  def sorting[T: Order](seq: Seq[T]): P = {
+  def fromImageFun(n: Int, image: Int => Int): P =
+    fromSupportAndImageFun(Set(0 until n:_*), image)
+
+  def fromMap(map: Map[Int, Int]): P =
+    fromSupportAndImageFun(map.keySet, k => map.getOrElse(k, k))
+
+  def sorting[T:Order](seq: Seq[T]): P = {
     import spire.compat._
     fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))
   }

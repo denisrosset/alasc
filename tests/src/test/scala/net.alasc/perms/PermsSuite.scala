@@ -1,13 +1,16 @@
-package net.alasc.math
+package net.alasc.perms
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
-import bsgs._
 import spire.syntax.order._
 
+import net.alasc.named.Symmetric
+import net.alasc.prep.PGrp.deterministic._
+
 class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {
+
   test("Perms(n).iterator, Perms(n).apply(...) and Sym(n).elements.toSet return the same elements for n = 2,3,4,5,6") {
     for (n <- 2 to 6) {
-      val sym = Sym[Perm](n)
+      val sym = Symmetric[Perm](n)
       val perms = Perms(n)
       val seqFromPermsIterator = perms.iterator.toSeq
       import net.alasc.optional.lexPermutationOrder._
@@ -22,4 +25,5 @@ class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {
       assert(seqFromPermsApply.toSet == setFromSym)
     }
   }
+
 }

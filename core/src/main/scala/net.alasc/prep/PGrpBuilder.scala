@@ -15,32 +15,28 @@ import bsgs._
 
 abstract class PGrpBuilder[G] extends GrpBuilder[G] {
 
+  type GG <: PGrp[G]
+
   val defaultRepBuilder: PRepBuilder[G]
 
-  def trivialIn(pRep: FaithfulPRep[G]): PGrp.In[pRep.type, G]
+  def trivialIn(pRep0: FaithfulPRep[G]): GG { type R = pRep0.type }
 
-  def fromGeneratorsIn(pRep: FaithfulPRep[G])
-    (generators: Iterable[G]): PGrp.In[pRep.type, G]
+  def fromGeneratorsIn(pRep0: FaithfulPRep[G])
+    (generators: Iterable[G]): GG { type R = pRep0.type }
 
-  def fromGeneratorsAndOrderIn(pRep: FaithfulPRep[G])
-    (generators: Iterable[G], order: BigInt): PGrp.In[pRep.type, G]
+  def fromGeneratorsAndOrderIn(pRep0: FaithfulPRep[G])
+    (generators: Iterable[G], order: BigInt): GG { type R = pRep0.type }
 
-  def fromGeneratorsRandomElementsAndOrderIn(pRep: FaithfulPRep[G])
-    (generators: Iterable[G], randomElement: Random => G, order: BigInt): PGrp.In[pRep.type, G]
+  def fromGeneratorsRandomElementsAndOrderIn(pRep0: FaithfulPRep[G])
+    (generators: Iterable[G], randomElement: Random => G, order: BigInt): GG { type R = pRep0.type }
 
-  def fromGrpIn(pRep: FaithfulPRep[G])
-    (grp: Grp[G]): PGrp.In[pRep.type, G]
+  def fromGrpIn(pRep0: FaithfulPRep[G])
+    (grp: Grp[G]): GG { type R = pRep0.type }
 
-  // more precise return types
+}
 
-  def trivial: PGrp[G]
+object PGrpBuilder {
 
-  def fromGenerators(generators: Iterable[G]): PGrp[G]
-
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): PGrp[G]
-
-  def fromGeneratorsRandomElementsAndOrder(generators: Iterable[G], randomElement: Random => G, order: BigInt): PGrp[G]
-
-  def fromGrp(grp: Grp[G]): PGrp[G]
+  def apply[G](implicit ev: PGrpBuilder[G]): PGrpBuilder[G] = ev
 
 }

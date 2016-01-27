@@ -24,6 +24,8 @@ class PGrpChainBuilder[G](implicit
     val schreierSims: SchreierSims
 ) extends PGrpBuilder[G] {
 
+  type GG = PGrpChain[G]
+
   implicit def builder: PGrpChainBuilder[G] = this
 
   // bridge methods adding an empty baseguide
