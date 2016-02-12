@@ -5,21 +5,21 @@ object MyBuild extends Build {
 
   // Dependencies
 
-  val spireVersion = "0.10.1"
+  val spireVersion = "0.11.0"
 
   lazy val shapeless = "com.chuusai" %% "shapeless" % "2.2.5"
   lazy val spire = "org.spire-math" %% "spire" % spireVersion
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-scalacheck-binding" % spireVersion
+  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-laws" % spireVersion
 
-  lazy val metalCore = "org.scala-metal" %% "core" % "0.0.2"
-  lazy val metalLibrary = "org.scala-metal" %% "library" % "0.0.2"
+  lazy val metalCore = "org.scala-metal" %% "metal-core" % "0.1.1"
+  lazy val metalLibrary = "org.scala-metal" %% "metal-library" % "0.1.1"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.2"
-  lazy val machinist = "org.typelevel" %% "machinist" % "0.3.0"
-  lazy val discipline = "org.typelevel" %% "discipline" % "0.2.1"
+  lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.0.0-M7"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.12.4"
+  lazy val machinist = "org.typelevel" %% "machinist" % "0.4.1"
+  lazy val discipline = "org.typelevel" %% "discipline" % "0.4"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-  lazy val qalg = "net.alasc" %% "qalg" % "0.10.1-SNAPSHOT"
+//  lazy val qalg = "net.alasc" %% "qalg" % "0.10.1-SNAPSHOT"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -58,7 +58,8 @@ object MyBuild extends Build {
 
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
-    resolvers += "bintray/non" at "http://dl.bintray.com/non/maven",
+    resolvers += "bintray/non" at "https://dl.bintray.com/non/maven",
+    resolvers += "bintray/denisrosset" at "https://dl.bintray.com/denisrosset/metal",
 
     // re-enable to check imports, or once scala's REPL manages to not
     // be useless under -Ywarn-unused-import.
@@ -123,8 +124,8 @@ object MyBuild extends Build {
   lazy val qalgSettings = Seq(
     name := "alasc-qalg-binding",
     libraryDependencies ++= Seq(
-      discipline,
-      qalg
+      discipline
+//      qalg
     )
   )
 
@@ -139,7 +140,7 @@ object MyBuild extends Build {
     name := "alasc-scalacheck-binding",
     libraryDependencies ++= Seq(
       discipline,
-      qalg,
+//      qalg,
       scalaCheck,
       scalaTest,
       spireScalaCheckBindings
@@ -155,7 +156,7 @@ object MyBuild extends Build {
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
-      qalg,
+//      qalg,
       scalaTest % "test",
       spireScalaCheckBindings
     )

@@ -34,7 +34,7 @@ final class MutableNodeExplicit[P](
   def inOrbit(b: Int) = transversal.contains(b)
   def foreachOrbit(f: Int => Unit): Unit = {
     val st = transversal
-    @inline @tailrec def rec(ptr: st.MyPtr): Unit = ptr match {
+    @inline @tailrec def rec(ptr: Ptr[st.type]): Unit = ptr match {
       case IsVPtr(vp) =>
         f(vp.key)
         rec(vp.next)
@@ -45,7 +45,7 @@ final class MutableNodeExplicit[P](
   def orbitIterator = new Iterator[Int] {
     assert(transversal.nonEmpty)
     val tr: FHashMap2[Int, P, P] = transversal
-    var ptr: tr.MyPtr = tr.ptr
+    var ptr: Ptr[tr.type] = tr.ptr
     def hasNext = ptr.nonNull
     def next: Int = ptr match {
       case IsVPtr(vp) =>
@@ -58,7 +58,7 @@ final class MutableNodeExplicit[P](
 
   def foreachU(f: P => Unit) = {
     val st = transversal
-    @inline @tailrec def rec(ptr: st.MyPtr): Unit = ptr match {
+    @inline @tailrec def rec(ptr: Ptr[st.type]): Unit = ptr match {
       case IsVPtr(vp) =>
         f(vp.value1)
         rec(vp.next)
@@ -193,7 +193,7 @@ final class MutableNodeExplicit[P](
     while (!toCheck.isEmpty) {
       val newAdded = MBitSet.empty[Int]
       val iter = toCheck
-      @tailrec def rec1(ptr: iter.MyPtr): Unit = ptr match {
+      @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
           val b = vp.key
           @tailrec def rec(current: Chain[P]): Unit = current match {
@@ -256,7 +256,7 @@ final class MutableNodeExplicit[P](
     while (!toCheck.isEmpty) {
       val newAdded = MBitSet.empty[Int]
       val iter = toCheck
-      @inline @tailrec def rec1(ptr: iter.MyPtr): Unit = ptr match {
+      @inline @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
           val b = vp.key
           @inline @tailrec def rec(current: Chain[P]): Unit = current match {
@@ -294,7 +294,7 @@ final class MutableNodeExplicit[P](
     beta = beta <|+| g
     val st = transversal
     val newTransversal = MHashMap2.ofSize[Int, P, P](st.longSize.toInt)
-    @tailrec @inline def rec(ptr: st.MyPtr): Unit = ptr match {
+    @tailrec @inline def rec(ptr: Ptr[st.type]): Unit = ptr match {
       case IsVPtr(vp) =>
         val k = vp.key
         val u = vp.value1

@@ -182,7 +182,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
     protected lazy val sortedImages: Array[Long] = {
       val res = new Array[Long](candidatesForImages.longSize.toInt)
-      @tailrec def rec(ptr: candidatesForImages.MyPtr, i: Int): Unit = ptr match {
+      @tailrec def rec(ptr: Ptr[candidatesForImages.type], i: Int): Unit = ptr match {
         case IsVPtr(vp) =>
           res(i) = vp.key
           rec(vp.next, i + 1)
@@ -200,7 +200,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     lazy val size: BigInt = {
       val co = ChainRec.order(chain: Chain[G], BigInt(1))
 
-      (BigInt(0) /: symGrps) { case (sm, symGrp) => sm + co / symGrp.order }
+      symGrps.foldLeft(BigInt(0)) { case (sm, symGrp) => sm + co / symGrp.order }
     }
 
     def blockForSeq(seq: T): Opt[Block] = {
