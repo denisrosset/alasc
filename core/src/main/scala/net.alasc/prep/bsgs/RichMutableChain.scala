@@ -196,7 +196,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
   /** Add a new strong generator `gen` at the node `mutableNode`, and updates the transversal
     * of `mutableNode` and any previous node in the chain.
     */
-  def addStrongGeneratorHere[G](mutableNode: MutableNode[G], gen: G, genInv: G)
+  def addStrongGeneratorHere(mutableNode: MutableNode[G], gen: G, genInv: G)
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
     implicit def action = mutableChain.start.action
     mutableNode.addToOwnGenerators(gen, genInv)

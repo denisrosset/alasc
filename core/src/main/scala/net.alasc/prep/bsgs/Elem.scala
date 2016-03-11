@@ -313,12 +313,12 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
   protected[bsgs] def prev_= (value: MutableStartOrNode[P]): Unit
 
   /** Makes the current node immutable. */
-  protected[bsgs] def makeImmutable: Unit = {
+  protected[bsgs] def makeImmutable(): Unit = {
     next.mapOrElse(node => assert(node.isImmutable), ())
     prev = null
   }
 
-  protected[bsgs] def removeRedundantGenerators: Unit
+  protected[bsgs] def removeRedundantGenerators(): Unit
 
   /** Adds `newGenerators` (given with their inverses) to this node `ownGenerators`,
     * without changing other nodes or updating any transversals. */

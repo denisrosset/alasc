@@ -47,6 +47,6 @@ object Check {
     def withPath(pathElement: String): Checked = checked.map {
       case (path, message) => (pathElement :: path, message)
     }
-    def assert: Unit = ??? // TODO
+    def assert(): Unit = ??? // TODO
   }
 }

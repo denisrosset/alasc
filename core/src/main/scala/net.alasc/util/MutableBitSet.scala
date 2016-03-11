@@ -5,7 +5,7 @@ import scala.collection.mutable
 class MutableBitSet(elems0: Array[Long]) extends mutable.BitSet {
   def this(initSize: Int) = this(new Array[Long]((initSize + 63) >> 6 max 1))
   def this() = this(0)
-  def foreachFast(f: Int => Unit) {
+  def foreachFast(f: Int => Unit) = {
     var i = 0
     while (i < nwords) {
       var w = word(i)
