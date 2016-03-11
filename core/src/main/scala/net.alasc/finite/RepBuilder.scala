@@ -20,7 +20,7 @@ object BuiltRep {
 
 }
 
-/** Describes a family of permutation representations of a group G. 
+/** Describes a family of representations of a group G. 
   * Depending on the particular subgroup H of G, the representation 
   * can differ: thus, one obtains a representation valid for a set of generators
   * by calling `build` on those generators.
