@@ -9,7 +9,7 @@ object MyBuild extends Build {
 
   lazy val shapeless = "com.chuusai" %% "shapeless" % "2.2.5"
   lazy val spire = "org.spire-math" %% "spire" % spireVersion
-  lazy val spireScalaCheckBindings = "org.spire-math" %% "spire-laws" % spireVersion
+  lazy val spireLaws = "org.spire-math" %% "spire-laws" % spireVersion
 
   lazy val metalCore = "org.scala-metal" %% "metal-core" % "0.1.1"
   lazy val metalLibrary = "org.scala-metal" %% "metal-library" % "0.1.1"
@@ -91,7 +91,7 @@ object MyBuild extends Build {
   // Main
 
   lazy val alasc = Project("alasc", file(".")).
-    aggregate(core, scalacheckBinding, tests, qalgBinding, benchmark).
+    aggregate(core, laws, tests /*, qalgBinding*/).
     settings(alascSettings: _*)
 
   lazy val alascSettings = Seq(
@@ -115,7 +115,7 @@ object MyBuild extends Build {
     )
   )
 
-    // QAlg binding
+  /*  // QAlg binding
 
   lazy val qalgBinding = Project("qalg-binding", file("qalg-binding")).
     settings(qalgSettings: _*).
@@ -128,22 +128,22 @@ object MyBuild extends Build {
 //      qalg
     )
   )
+*/
 
+  // Law checks
 
-  // Scalacheck binding
+  lazy val laws = Project("laws-binding", file("laws")).
+    settings(lawsSettings: _*).
+    dependsOn(core/*, qalgBinding*/)
 
-  lazy val scalacheckBinding = Project("scalacheck-binding", file("scalacheck-binding")).
-    settings(scalacheckSettings: _*).
-    dependsOn(core, qalgBinding)
-
-  lazy val scalacheckSettings = Seq(
-    name := "alasc-scalacheck-binding",
+  lazy val lawsSettings = Seq(
+    name := "alasc-laws",
     libraryDependencies ++= Seq(
       discipline,
 //      qalg,
       scalaCheck,
       scalaTest,
-      spireScalaCheckBindings
+      spireLaws
     )
   )
 
@@ -151,38 +151,15 @@ object MyBuild extends Build {
 
   lazy val tests = Project("tests", file("tests")).
     settings(testsSettings: _*).
-    dependsOn(core, qalgBinding, scalacheckBinding)
+    dependsOn(core, /*qalgBinding,*/ laws)
 
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
 //      qalg,
       scalaTest % "test",
-      spireScalaCheckBindings
+      spireLaws
     )
-  ) ++ noPublish
-
-
-  // Benchmark
-
-  lazy val benchmark: Project = Project("benchmark", file("benchmark")).
-    settings(benchmarkSettings: _*).
-    dependsOn(core)
-
-  lazy val benchmarkSettings = Seq(
-    name := "alasc-benchmark",
-
-    // raise memory limits here if necessary
-    // TODO: this doesn't seem to be working with caliper at the moment :(
-  
-    javaOptions in run += "-Xmx4G",
-
-    libraryDependencies ++= Seq(
-      scalaMeter
-    ),
-
-    // enable forking in run
-    fork in run := true
   ) ++ noPublish
 
 }
