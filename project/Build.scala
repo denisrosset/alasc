@@ -19,7 +19,7 @@ object MyBuild extends Build {
   lazy val machinist = "org.typelevel" %% "machinist" % "0.4.1"
   lazy val discipline = "org.typelevel" %% "discipline" % "0.4"
   lazy val scalaMeter = "com.storm-enroute" %% "scalameter" % "0.6"
-//  lazy val qalg = "net.alasc" %% "qalg" % "0.10.1-SNAPSHOT"
+  lazy val scalinLib = "net.alasc" %% "scalin-core" % "0.11.0.1"
 
   lazy val noPublish = Seq(
     publish := (),
@@ -59,7 +59,8 @@ object MyBuild extends Build {
     resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += "bintray/non" at "https://dl.bintray.com/non/maven",
-    resolvers += "bintray/denisrosset" at "https://dl.bintray.com/denisrosset/metal",
+    resolvers += "bintray/denisrosset/metal" at "https://dl.bintray.com/denisrosset/metal",
+    resolvers += "bintray/denisrosset/scalin" at "https://dl.bintray.com/denisrosset/scalin",
 
     // re-enable to check imports, or once scala's REPL manages to not
     // be useless under -Ywarn-unused-import.
@@ -91,16 +92,16 @@ object MyBuild extends Build {
   // Main
 
   lazy val alasc = Project("alasc", file(".")).
-    aggregate(core, laws, tests /*, qalgBinding*/).
+    aggregate(core, laws, tests, scalin).
     settings(alascSettings: _*)
 
   lazy val alascSettings = Seq(
-    name := "alasc-aggregate"
+    name := "alasc"
   ) ++ noPublish
 
   // Core
 
-  lazy val core = Project("core", file("core")).
+  lazy val core = Project("alasc-core", file("core")).
     settings(coreSettings: _*)
 
   lazy val coreSettings = Seq(
@@ -115,32 +116,31 @@ object MyBuild extends Build {
     )
   )
 
-  /*  // QAlg binding
+  // Scalin binding
 
-  lazy val qalgBinding = Project("qalg-binding", file("qalg-binding")).
-    settings(qalgSettings: _*).
-    dependsOn(core)
+  lazy val scalin = Project("alasc-scalin", file("scalin"))
+    .settings(scalinSettings: _*)
+    .dependsOn(core)
 
-  lazy val qalgSettings = Seq(
-    name := "alasc-qalg-binding",
+  lazy val scalinSettings = Seq(
+    name := "alasc-scalin",
     libraryDependencies ++= Seq(
-      discipline
-//      qalg
+      discipline,
+      scalinLib
     )
   )
-*/
 
   // Law checks
 
-  lazy val laws = Project("laws-binding", file("laws")).
+  lazy val laws = Project("alasc-laws", file("laws")).
     settings(lawsSettings: _*).
-    dependsOn(core/*, qalgBinding*/)
+    dependsOn(core, scalin)
 
   lazy val lawsSettings = Seq(
     name := "alasc-laws",
     libraryDependencies ++= Seq(
       discipline,
-//      qalg,
+      scalinLib,
       scalaCheck,
       scalaTest,
       spireLaws
@@ -149,14 +149,14 @@ object MyBuild extends Build {
 
   // Tests
 
-  lazy val tests = Project("tests", file("tests")).
+  lazy val tests = Project("alasc-tests", file("tests")).
     settings(testsSettings: _*).
-    dependsOn(core, /*qalgBinding,*/ laws)
+    dependsOn(core, scalin, laws)
 
   lazy val testsSettings = Seq(
     name := "alasc-tests",
     libraryDependencies ++= Seq(
-//      qalg,
+      scalinLib,
       scalaTest % "test",
       spireLaws
     )
