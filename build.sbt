@@ -4,7 +4,7 @@ val disciplineVersion = "0.4"
 val metalVersion = "0.11.0.1"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
-val scalinVersion = "0.11.0.3"
+val scalinVersion = "0.11.0.4"
 val shapelessVersion = "2.2.5"
 val spireVersion = "0.11.0"
 
