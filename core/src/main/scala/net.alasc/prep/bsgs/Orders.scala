@@ -6,7 +6,6 @@ import spire.syntax.action._
 
 import net.alasc.algebra.FaithfulPermutationAction
 
-import metal.{FHashMap, MHashMap}
 import metal.syntax._
 
 trait BaseOrder[G] extends Order[Int] {
@@ -17,7 +16,7 @@ trait BaseOrder[G] extends Order[Int] {
 
 }
 
-class BaseMapOrder[G](val action: FaithfulPermutationAction[G], val base: Seq[Int], val reorderedMap: FHashMap[Int, Int]) extends BaseOrder[G] {
+class BaseMapOrder[G](val action: FaithfulPermutationAction[G], val base: Seq[Int], val reorderedMap: metal.generic.HashMap[Int, Int]) extends BaseOrder[G] {
 
   def compare(a: Int, b: Int): Int =
     (reorderedMap.getOrElse(a, a).toLong - reorderedMap.getOrElse(b, b).toLong).signum.toInt
@@ -27,7 +26,7 @@ class BaseMapOrder[G](val action: FaithfulPermutationAction[G], val base: Seq[In
 object BaseMapOrder {
 
   def apply[G](action: FaithfulPermutationAction[G], base: Seq[Int]) = {
-    val reorderedMap = MHashMap.empty[Int, Int]
+    val reorderedMap = metal.mutable.HashMap.empty[Int, Int]
     val iter = base.iterator
     var v = Int.MinValue + 1
     while (iter.hasNext) {

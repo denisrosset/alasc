@@ -109,7 +109,7 @@ object ChainRec {
     }
 
   @tailrec def basicSift[P:Group](chain: Chain[P], remaining: P,
-    transversalIndices: metal.Buffer[Int] = metal.Buffer.empty[Int]): (Seq[Int], P) =
+    transversalIndices: metal.mutable.Buffer[Int] = metal.mutable.Buffer.empty[Int]): (Seq[Int], P) =
     chain match {
       case node: Node[P] =>
         implicit def action = node.action

@@ -150,11 +150,11 @@ object SubgroupSearch {
     */
   def basePointGroups[G](chain: Chain[G], domainSize: Int): Array[Array[Int]] = {
     val remaining = MutableBitSet((0 until domainSize): _*)
-    val groups = metal.Buffer.empty[Array[Int]]
+    val groups = metal.mutable.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[G]): Array[Array[Int]] = current match {
       case node: Node[G] =>
         import node.action
-        val fixed = metal.Buffer[Int](node.beta)
+        val fixed = metal.mutable.Buffer[Int](node.beta)
         remaining -= node.beta
         remaining.foreachFast { k =>
           if (node.next.strongGeneratingSet.forall( g => (k <|+| g) == k))

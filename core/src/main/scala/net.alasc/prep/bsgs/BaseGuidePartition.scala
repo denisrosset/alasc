@@ -10,10 +10,10 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
   def iterator = new Iter(MutableBitSet.empty,
-    metal.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
-    metal.Buffer.fromIterable(blocks.map(_.size)))
+    metal.mutable.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
+    metal.mutable.Buffer.fromIterable(blocks.map(_.size)))
 
-  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: metal.Buffer[MutableBitSet], val remainingBlockSizes: metal.Buffer[Int]) extends BaseGuideIterator {
+  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: metal.mutable.Buffer[MutableBitSet], val remainingBlockSizes: metal.mutable.Buffer[Int]) extends BaseGuideIterator {
 
     override def toString = s"Current: $currentBlock, Remaining: $remainingBlocks"
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty

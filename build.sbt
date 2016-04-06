@@ -1,7 +1,7 @@
 // inspired by Spire build.sbt file
 
 val disciplineVersion = "0.4"
-val metalVersion = "0.11.0.1"
+val metalVersion = "0.11.0.4"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
 val scalinVersion = "0.11.0.4"
@@ -60,7 +60,7 @@ lazy val commonSettings = Seq(
   resolvers ++= Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven",
     "bintray/denisrosset/net.alasc" at "https://dl.bintray.com/denisrosset/net.alasc",
-    "bintray/denisrosset/metal" at "https://dl.bintray.com/denisrosset/metal",
+    "bintray/denisrosset/maven" at "https://dl.bintray.com/denisrosset/maven",
     "bintray/denisrosset/scalin" at "https://dl.bintray.com/denisrosset/scalin",
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases")

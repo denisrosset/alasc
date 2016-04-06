@@ -43,7 +43,7 @@ case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], 
     // The points considered are those contained in `set`.
     val pointSetsToTest: Array[BitSet] = {
       val remaining = MutableBitSet.empty ++= set
-      val groups = metal.Buffer.empty[BitSet]
+      val groups = metal.mutable.Buffer.empty[BitSet]
       @tailrec def rec(current: Chain[G]): Array[BitSet] = current match {
         case node: Node[G] if remaining.contains(node.beta) =>
           val fixed = mutable.BitSet(node.beta)

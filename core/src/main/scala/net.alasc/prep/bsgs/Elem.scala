@@ -332,8 +332,8 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     *       have been added to this node or a children node `ownGenerators`
     *       by using addToOwnGenerators.
     */
-  protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit group: Group[P]): Unit
-  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P]): Unit
+  protected[bsgs] def updateTransversal(newGens: Iterable[P], newGensInv: Iterable[P])(implicit group: Group[P], classTag: ClassTag[P]): Unit
+  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P], classTag: ClassTag[P]): Unit
 
   /** Conjugates the current node by the group element `g`, provided with its inverse
     * `gInv` to avoid multiple inverse element computations. 

@@ -129,7 +129,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
   object Block {
     def start = chainInRepresentation match {
-      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, metal.Buffer(Group[G].id), metal.Buffer(symGrp))
+      case node: Node[G] => NodeBlock(0, node, ULong(0), 0, metal.mutable.Buffer(Group[G].id), metal.mutable.Buffer(symGrp))
       case term: Term[G] => TermBlock(0, term, ULong(0), 0, Group[G].id)
     }
   }
@@ -142,7 +142,7 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     implicit val action = permutable.action
   }
 
-  case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: metal.Buffer[G], symGrps: metal.Buffer[Grp[G]]) extends Block {
+  case class NodeBlock(level: Int, chain: Node[G], images: ULong, index: BigInt, candidates: metal.mutable.Buffer[G], symGrps: metal.mutable.Buffer[Grp[G]]) extends Block {
     implicit def action = pRep.permutationAction
 
     case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
@@ -156,8 +156,8 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
     assert(beta < chainNextBeta)
     val nextBeta = chainNextBeta.min(beta + maxSkip)
 
-    protected lazy val candidatesForImages: MMap[Long, NextCandidate] = {
-      val map = MHashMap.empty[Long, NextCandidate]
+    protected lazy val candidatesForImages: metal.mutable.Map[Long, NextCandidate] = {
+      val map = metal.mutable.HashMap.empty[Long, NextCandidate]
       var c = 0
       val n = candidates.length
       while (c < n) {
@@ -245,8 +245,8 @@ final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(impli
 
       def next: Block = {
         val images = ULong.fromLong(sortedImages(i))
-        val newBlockCandidates = metal.Buffer.empty[G]
-        val newBlockSymGrps = metal.Buffer.empty[Grp[G]]
+        val newBlockCandidates = metal.mutable.Buffer.empty[G]
+        val newBlockSymGrps = metal.mutable.Buffer.empty[Grp[G]]
         var it = Opt(candidatesForImages(images.toLong))
         while (it.nonEmpty) {
           val NextCandidate(b, c, next) = it.get

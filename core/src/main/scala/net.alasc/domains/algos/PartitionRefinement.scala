@@ -11,7 +11,7 @@ import spire.algebra.{PartialOrder, Order}
 
 import net.alasc.util._
 
-class PartitionRefinement(val blocks: metal.Buffer[mutable.BitSet], val size: Int) {
+class PartitionRefinement(val blocks: metal.mutable.Buffer[mutable.BitSet], val size: Int) {
 
   def refine(x: Set[Int]): Unit = {
     val xBitSet = immutable.BitSet.empty ++ x
@@ -25,7 +25,7 @@ class PartitionRefinement(val blocks: metal.Buffer[mutable.BitSet], val size: In
       }
       i += 1
     }
-    blocks.sort()(Order.from[mutable.BitSet]( (x, y) => (x.min - y.min).signum ), implicitly)
+    blocks.sort()(Order.from[mutable.BitSet]( (x, y) => (x.min - y.min).signum ) )
   }
 
   def partition(domain: Domain): Partition.In[domain.type] = Partition.fromSortedBlocks(domain)(blocks.toArray)
@@ -34,10 +34,10 @@ class PartitionRefinement(val blocks: metal.Buffer[mutable.BitSet], val size: In
 
 object PartitionRefinement {
 
-  def apply(size: Int) = new PartitionRefinement(metal.Buffer(mutable.BitSet.empty ++= (0 until size)), size)
+  def apply(size: Int) = new PartitionRefinement(metal.mutable.Buffer(mutable.BitSet.empty ++= (0 until size)), size)
 
   def apply(partition: Partition) = {
-    val blocks = metal.Buffer.empty[mutable.BitSet]
+    val blocks = metal.mutable.Buffer.empty[mutable.BitSet]
     partition.blocks.foreach { block => blocks += (mutable.BitSet.empty ++= block) }
     new PartitionRefinement(blocks, partition.size)
   }

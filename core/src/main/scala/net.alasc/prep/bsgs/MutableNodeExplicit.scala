@@ -2,8 +2,6 @@ package net.alasc.prep
 package bsgs
 
 import scala.annotation.tailrec
-import scala.collection.mutable
-import mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.util.Random
 
@@ -20,7 +18,7 @@ import metal.syntax._
 
 final class MutableNodeExplicit[P](
   var beta: Int,
-  var transversal: MHashMap2[Int, P, P],
+  var transversal: metal.mutable.HashMap2[Int, P, P],
   var nOwnGenerators: Int,
   var ownGeneratorsArray: Array[P],
   var ownGeneratorsArrayInv: Array[P],
@@ -44,7 +42,7 @@ final class MutableNodeExplicit[P](
   }
   def orbitIterator = new Iterator[Int] {
     assert(transversal.nonEmpty)
-    val tr: FHashMap2[Int, P, P] = transversal
+    val tr: metal.generic.HashMap2[Int, P, P] = transversal
     var ptr: Ptr[tr.type] = tr.ptr
     def hasNext = ptr.nonNull
     def next: Int = ptr match {
@@ -164,17 +162,17 @@ final class MutableNodeExplicit[P](
     ownGeneratorsInv.reduceToSize(ogpLength)
   }*/
 
-  protected[bsgs] def bulkAdd(beta: Buffer[Int], u: ArrayBuffer[P], uInv: ArrayBuffer[P])(implicit group: Group[P]) = {
+  protected[bsgs] def bulkAdd(beta: metal.generic.Buffer[Int], u: metal.mutable.Buffer[P], uInv: metal.mutable.Buffer[P])(implicit group: Group[P]) = {
     cforRange(0 until beta.length.toInt) { i =>
       addTransversalElement(beta(i), u(i), uInv(i))
     }
   }
 
-  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P]) = {
-    var toCheck = MBitSet.empty[Int]
-    val toAddBeta = Buffer.empty[Int]
-    val toAddU = ArrayBuffer.empty[P]
-    val toAddUInv = ArrayBuffer.empty[P]
+  protected[bsgs] def updateTransversal(newGen: P, newGenInv: P)(implicit group: Group[P], classTag: ClassTag[P]) = {
+    var toCheck = metal.mutable.BitSet.empty
+    val toAddBeta = metal.mutable.Buffer.empty[Int]
+    val toAddU = metal.mutable.Buffer.empty[P]
+    val toAddUInv = metal.mutable.Buffer.empty[P]
     foreachOrbit { b =>
       val newB = b <|+| newGen
       if (!inOrbit(newB)) {
@@ -191,7 +189,7 @@ final class MutableNodeExplicit[P](
     toAddU.clear()
     toAddUInv.clear()
     while (!toCheck.isEmpty) {
-      val newAdded = MBitSet.empty[Int]
+      val newAdded = metal.mutable.BitSet.empty
       val iter = toCheck
       @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
@@ -227,11 +225,11 @@ final class MutableNodeExplicit[P](
     }
   }
 
-  protected[bsgs] def updateTransversal(newGen: Iterable[P], newGenInv: Iterable[P])(implicit group: Group[P]) = {
-    var toCheck = MBitSet.empty[Int]
-    val toAddBeta = metal.Buffer.empty[Int]
-    val toAddU = ArrayBuffer.empty[P]
-    val toAddUInv = ArrayBuffer.empty[P]
+  protected[bsgs] def updateTransversal(newGen: Iterable[P], newGenInv: Iterable[P])(implicit group: Group[P], classTag: ClassTag[P]) = {
+    var toCheck = metal.mutable.BitSet.empty
+    val toAddBeta = metal.mutable.Buffer.empty[Int]
+    val toAddU = metal.mutable.Buffer.empty[P]
+    val toAddUInv = metal.mutable.Buffer.empty[P]
     foreachOrbit { b =>
       val gIt = newGen.iterator
       val gInvIt = newGenInv.iterator
@@ -254,7 +252,7 @@ final class MutableNodeExplicit[P](
     toAddU.clear
     toAddUInv.clear
     while (!toCheck.isEmpty) {
-      val newAdded = MBitSet.empty[Int]
+      val newAdded = metal.mutable.BitSet.empty
       val iter = toCheck
       @inline @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
@@ -293,7 +291,7 @@ final class MutableNodeExplicit[P](
   protected[bsgs] def conjugate(g: P, gInv: P)(implicit group: Group[P], classTag: ClassTag[P]) = {
     beta = beta <|+| g
     val st = transversal
-    val newTransversal = MHashMap2.ofSize[Int, P, P](st.longSize.toInt)
+    val newTransversal = metal.mutable.HashMap2.reservedSize[Int, P, P](st.longSize.toInt)
     @tailrec @inline def rec(ptr: Ptr[st.type]): Unit = ptr match {
       case IsVPtr(vp) =>
         val k = vp.key
@@ -327,7 +325,7 @@ class MutableNodeExplicitBuilder[P] extends NodeBuilder[P] {
   }
 
   def standalone(beta: Int)(implicit action: FaithfulPermutationAction[P], group: Group[P], classTag: ClassTag[P]) = {
-    val transversal = MHashMap2.empty[Int, P, P]
+    val transversal = metal.mutable.HashMap2.empty[Int, P, P]
     val id = Group[P].id
     transversal(beta) = (id, id)
     new MutableNodeExplicit(beta,
