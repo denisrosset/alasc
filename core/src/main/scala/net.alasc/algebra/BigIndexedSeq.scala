@@ -14,10 +14,12 @@ trait BigIndexedSeq[A] extends PartialFunction[BigInt, A] with Iterable[A] { sel
   def apply(idx: BigInt): A
   def isDefinedAt(idx: BigInt): Boolean = (idx >= 0 && idx < length)
   def indexOf(a: A): Opt[BigInt] = {
-    val it: Iterator[(A, BigInt)] = iterator.zipWithBigIndex
+    var idx = BigInt(0)
+    val it = iterator
     while(it.hasNext) {
-      val (v, idx) = it.next
+      val v = it.next
       if (v == a) return Opt(idx)
+      idx += 1
     }
     Opt.empty[BigInt]
   }

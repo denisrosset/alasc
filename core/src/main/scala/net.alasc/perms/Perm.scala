@@ -292,7 +292,7 @@ abstract class PermBase extends AbstractPerm {
 final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long = 0L) extends AbstractPerm { lhs =>
   override def hashCode: Int = Perm32Encoding.hash(long2, long1, long0)
 
-  def checkNotPerm16 =
+  def checkNotPerm16() =
     assert(!Perm32Encoding.isValidPerm16(long2, long1, long0))
 
   def isId = long2 == 0L && long1 == 0L && long0 == 0L

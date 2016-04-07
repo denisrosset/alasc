@@ -40,7 +40,7 @@ trait Transversal[P] {
     m
   }
   def orbitSet: Set[Int] = {
-    val bitset = MutableBitSet.empty
+    val bitset = scala.collection.mutable.BitSet.empty
     foreachOrbit { bitset += _ }
     bitset.toImmutable
   }

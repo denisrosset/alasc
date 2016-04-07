@@ -12,6 +12,9 @@ import spire.util.Opt
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
+import metal._
+import metal.syntax._
+
 trait SubgroupDefinition[G] {
 
   implicit def action: FaithfulPermutationAction[G]
@@ -149,19 +152,19 @@ object SubgroupSearch {
     * The considered domain is `0 ... domainSize - 1`.
     */
   def basePointGroups[G](chain: Chain[G], domainSize: Int): Array[Array[Int]] = {
-    val remaining = MutableBitSet((0 until domainSize): _*)
+    val remaining = metal.mutable.BitSet((0 until domainSize): _*)
     val groups = metal.mutable.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[G]): Array[Array[Int]] = current match {
       case node: Node[G] =>
         import node.action
         val fixed = metal.mutable.Buffer[Int](node.beta)
         remaining -= node.beta
-        remaining.foreachFast { k =>
+        remaining.foreach { k =>
           if (node.next.strongGeneratingSet.forall( g => (k <|+| g) == k))
             fixed += k
         }
         val array = fixed.toArray
-        remaining --= array
+        fixed.foreach { k => remaining -= k }
         groups += array
         rec(node.next)
       case _: Term[G] => groups.toArray

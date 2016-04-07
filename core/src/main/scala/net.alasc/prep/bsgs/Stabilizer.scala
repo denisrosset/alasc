@@ -1,8 +1,6 @@
 package net.alasc.prep.bsgs
 
 import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
-import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
@@ -12,6 +10,9 @@ import spire.util.Opt
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
+import metal._
+import metal.syntax._
+
 case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], val set: Set[Int]) extends SubgroupDefinition[G] {
 
   def inSubgroup(g: G): Boolean =
@@ -19,14 +20,14 @@ case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], 
 
   def baseGuideOpt = Opt(BaseGuideSet(set))
 
-  class Test(level: Int, pointSetsToTest: Array[BitSet]) extends SubgroupTest[G] {
+  class Test(level: Int, pointSetsToTest: Array[metal.generic.BitSet]) extends SubgroupTest[G] {
 
     def test(b: Int, orbitImage: Int, currentG: G, node: Node[G]): Opt[Test] =
       if (level < pointSetsToTest.length) {
         if (!set.contains(orbitImage))
           return Opt.empty[Test]
         val pointSet = pointSetsToTest(level)
-        if (pointSet.size > 1) {
+        if (pointSet.longSize > 1) {
           val nodeU: G = node.u(b)
           if (pointSet.exists( k => k != node.beta &&
             !set.contains(action.actr(action.actr(k, nodeU), currentG)) ))
@@ -41,18 +42,18 @@ case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], 
     // Finds for each base point the additional points that are stabilized (i.e. are
     // not moved by the next subgroup in the stabilizer chain.
     // The points considered are those contained in `set`.
-    val pointSetsToTest: Array[BitSet] = {
-      val remaining = MutableBitSet.empty ++= set
-      val groups = metal.mutable.Buffer.empty[BitSet]
-      @tailrec def rec(current: Chain[G]): Array[BitSet] = current match {
+    val pointSetsToTest: Array[metal.generic.BitSet] = {
+      val remaining = metal.mutable.BitSet.fromIterable(set)
+      val groups = metal.mutable.Buffer.empty[metal.generic.BitSet]
+      @tailrec def rec(current: Chain[G]): Array[metal.generic.BitSet] = current match {
         case node: Node[G] if remaining.contains(node.beta) =>
-          val fixed = mutable.BitSet(node.beta)
+          val fixed = metal.mutable.BitSet(node.beta)
           remaining -= node.beta
-          remaining.foreachFast { k =>
+          remaining.foreach { k =>
             if (node.next.isFixed(k)) fixed += k
           }
-          remaining --= fixed
-          groups += fixed.toImmutable
+          fixed.foreach { k => remaining -= k }
+          groups += fixed
           rec(node.next)
         case _ => groups.toArray
       }

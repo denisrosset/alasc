@@ -1,19 +1,22 @@
 package net.alasc.prep.bsgs
 
+import scala.annotation.tailrec
+
 import net.alasc.domains.{Domain, Partition}
 import net.alasc.util._
 
-import scala.annotation.tailrec
+import metal._
+import metal.syntax._
 
 case class BaseGuidePartition(partition: Partition) extends BaseGuide {
 
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
-  def iterator = new Iter(MutableBitSet.empty,
-    metal.mutable.Buffer.fromIterable(blocks.map(block => MutableBitSet.empty ++= block)),
+  def iterator = new Iter(metal.mutable.BitSet.empty,
+    metal.mutable.Buffer.fromIterable(blocks.map(block => metal.mutable.BitSet.fromIterable(block))),
     metal.mutable.Buffer.fromIterable(blocks.map(_.size)))
 
-  final class Iter(val currentBlock: MutableBitSet, val remainingBlocks: metal.mutable.Buffer[MutableBitSet], val remainingBlockSizes: metal.mutable.Buffer[Int]) extends BaseGuideIterator {
+  final class Iter(val currentBlock: metal.mutable.BitSet, val remainingBlocks: metal.mutable.Buffer[metal.mutable.BitSet], val remainingBlockSizes: metal.mutable.Buffer[Int]) extends BaseGuideIterator {
 
     override def toString = s"Current: $currentBlock, Remaining: $remainingBlocks"
     def hasNext = currentBlock.nonEmpty || remainingBlocks.nonEmpty
@@ -29,8 +32,8 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
               var newNonFixed = nonFixed
               var easyNonFixed = NoneTuple2NN
               val block = remainingBlocks(index)
-              val toRemove = MutableBitSet.empty
-              block.foreachFast { k =>
+              val toRemove = metal.mutable.BitSet.empty
+              block.foreach { k =>
                 if (isFixed(k))
                   toRemove += k
                 else if (easyPoints.contains(k))
@@ -38,7 +41,7 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
                 else if (newNonFixed.isEmpty)
                   newNonFixed = SomeTuple2NN(k, index)
               }
-              block --= toRemove
+              toRemove.foreach { k => block -= k } // TODO bitset diff
               if (block.isEmpty) {
                 remainingBlocks.remove(index)
                 remainingBlockSizes.remove(index)
@@ -61,7 +64,7 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
 
           findPointAndBlockIndex(remainingBlocks.length.toInt - 1, remainingBlocks.length.toInt - 1, NoneTuple2NN) match {
             case OptionTuple2NN(point, blockIndex) =>
-              currentBlock ++= remainingBlocks(blockIndex)
+              remainingBlocks(blockIndex).foreach { k => currentBlock += k }
               remainingBlocks.remove(blockIndex)
               remainingBlockSizes.remove(blockIndex)
               currentBlock -= point
@@ -71,19 +74,19 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
         }
       } else {
         var nonFixed = NNNone
-        val toRemove = MutableBitSet.empty
+        val toRemove = metal.mutable.BitSet.empty
         currentBlock.foreach { k =>
           if (isFixed(k))
             toRemove += k
           else if (easyPoints.contains(k)) {
-            currentBlock --= toRemove
+            toRemove.foreach { j => currentBlock -= j } // TODO bitset diff
             currentBlock -= k
             return k
           }
           else if (nonFixed.isEmpty)
             nonFixed = NNSome(k)
         }
-        currentBlock --= toRemove
+        toRemove.foreach { j => currentBlock -= j } // TODO bitset diff
         nonFixed match {
           case NNOption(k) =>
             currentBlock -= k
