@@ -3,7 +3,7 @@ package net.alasc.domains
 import scala.collection.immutable.BitSet
 import spire.algebra._
 import spire.syntax.action._
-import scala.collection.mutable.{Set => MutableSet, BitSet => MutableBitSet}
+import scala.collection.mutable
 
 // TODO: optimize
 // TODO: move these instances to optional
@@ -51,10 +51,10 @@ class SetElementOrbit[P, G](implicit scalarAction: Action[P, G]) extends Action[
 
 class BitSetElementOrbit[G](implicit intAction: Action[Int, G]) extends Action[BitSet, G] {
   def actl(g: G, set: BitSet) = {
-    var res = MutableBitSet.empty ++ set
+    var res = mutable.BitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
-      var newAdded = MutableBitSet.empty
+      var newAdded = mutable.BitSet.empty
       for (k <- toCheck) {
         val image = g |+|> k
         if (!res.contains(image)) {
@@ -67,10 +67,10 @@ class BitSetElementOrbit[G](implicit intAction: Action[Int, G]) extends Action[B
     res.toImmutable
   }
   def actr(set: BitSet, g: G) = {
-    var res = MutableBitSet.empty ++ set
+    var res = mutable.BitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
-      var newAdded = MutableBitSet.empty
+      var newAdded = mutable.BitSet.empty
       for (k <- toCheck) {
         val image = k <|+| g
         if (!res.contains(image)) {
@@ -121,10 +121,10 @@ class SetIterableOrbit[P, G](implicit scalarAction: Action[P, G]) extends Action
 
 class BitSetIterableOrbit[P, G](implicit intAction: Action[Int, G]) extends Action[BitSet, Iterable[G]] {
   def actl(gs: Iterable[G], set: BitSet) = {
-    var res = MutableBitSet.empty ++ set
+    var res = mutable.BitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
-      var newAdded = MutableBitSet.empty
+      var newAdded = mutable.BitSet.empty
       for (k <- toCheck; g <- gs) {
         val image = g |+|> k
         if (!res.contains(image)) {
@@ -137,10 +137,10 @@ class BitSetIterableOrbit[P, G](implicit intAction: Action[Int, G]) extends Acti
     res.toImmutable
   }
   def actr(set: BitSet, gs: Iterable[G]) = {
-    var res = MutableBitSet.empty ++ set
+    var res = mutable.BitSet.empty ++ set
     var toCheck: scala.collection.BitSet = set
     while (!toCheck.isEmpty) {
-      var newAdded = MutableBitSet.empty
+      var newAdded = mutable.BitSet.empty
       for (k <- toCheck; g <- gs) {
         val image = k <|+| g
         if (!res.contains(image)) {
