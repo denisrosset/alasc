@@ -56,7 +56,7 @@ sealed trait Perm extends Any {
 
 object Perm extends PermCompanion {
 
-  val id = Perm16Encoding.id
+  val id: Perm = Perm16Encoding.id
 
   def supportMaxElement = PermArray.supportMaxElement
 
