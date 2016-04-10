@@ -1,7 +1,7 @@
 // inspired by Spire build.sbt file
 
 val disciplineVersion = "0.4"
-val metalVersion = "0.11.0.5-SNAPSHOT"
+val metalVersion = "0.11.0.5"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
 val scalinVersion = "0.11.0.4"
@@ -59,9 +59,7 @@ lazy val commonSettings = Seq(
   )),
   resolvers ++= Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven",
-    "bintray/denisrosset/net.alasc" at "https://dl.bintray.com/denisrosset/net.alasc",
     "bintray/denisrosset/maven" at "https://dl.bintray.com/denisrosset/maven",
-    "bintray/denisrosset/scalin" at "https://dl.bintray.com/denisrosset/scalin",
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases")
   ),
@@ -78,7 +76,7 @@ lazy val commonSettings = Seq(
 lazy val publishSettings = Seq(
   homepage := Some(url("https://github.com/denisrosset/alasc")),
   licenses += ("GPL-3.0", url("http://opensource.org/licenses/GPL-3.0")),
-  bintrayRepository := "net.alasc",
+  bintrayRepository := "maven",
   publishArtifact in Test := false
 )
 
