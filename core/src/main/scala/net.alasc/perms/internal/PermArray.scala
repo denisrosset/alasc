@@ -1,7 +1,7 @@
 package net.alasc.perms
 package internal
 
-import scala.collection.mutable
+import metal.syntax._
 
 import net.alasc.util._
 
@@ -54,14 +54,14 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 
   def support = {
-    val bitset = mutable.BitSet.empty
+    val bitset = metal.mutable.BitSet.empty
     var k = supportMax.getOrElseFast(-1)
     while (k >= 0) {
       if (image(k) != k)
         bitset += k
       k -= 1
     }
-    bitset.toImmutable
+    bitset.toScala
   }
 
   def isValidPerm32 = supportMax.getOrElseFast(-1) <= Perm32Encoding.supportMaxElement

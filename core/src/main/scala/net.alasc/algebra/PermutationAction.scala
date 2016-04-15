@@ -1,9 +1,10 @@
 package net.alasc.algebra
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 
 import spire.algebra._
+
+import metal.syntax._
 
 import net.alasc.util._
 
@@ -30,14 +31,14 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   def supportMaxElement: Int
 
   def orbit(g: G, i: Int): Set[Int] = {
-    val mut = mutable.BitSet(i)
+    val mut = metal.mutable.BitSet(i)
     @tailrec def rec(k: Int): Unit =
       if (k != i) {
         mut += k
         rec(actr(k, g))
       }
     rec(actr(i, g))
-    mut.toImmutable
+    mut.toScala
   }
 
   // TODO: remove, as `to` is sufficient
@@ -49,22 +50,6 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   def to[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(support(g), k => actr(k, g))
-
-}
-
-class MappedPermutationAction[G, H](action: PermutationAction[H])(f: G => H) extends PermutationAction[G] {
-
-  def actr(p: Int, g: G): Int = action.actr(p, f(g))
-
-  def actl(g: G, p: Int): Int = action.actl(f(g), p)
-
-  def support(g: G): Set[Int] = action.support(f(g))
-
-  def supportMax(g: G): NNOption = action.supportMax(f(g))
-
-  def supportMin(g: G): NNOption = action.supportMin(f(g))
-
-  def supportMaxElement: Int = action.supportMaxElement
 
 }
 
@@ -81,4 +66,3 @@ object FaithfulPermutationAction {
   def apply[P](implicit P: FaithfulPermutationAction[P]): FaithfulPermutationAction[P] = P
 
 }
-

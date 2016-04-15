@@ -1,11 +1,12 @@
 package net.alasc.wreath
 
-import scala.collection.mutable
 import scala.reflect.classTag
 
 import spire.algebra.{Group, PartialOrder}
 import spire.algebra.lattice._
 import spire.syntax.action._
+
+import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.finite._
@@ -61,14 +62,14 @@ final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A
         }
       def supportMaxElement = size
       def support(w: Wr[A, H]) = {
-        val bitset = mutable.BitSet.empty
+        val bitset = metal.mutable.BitSet.empty
         var i = 0
         while (i < size) {
           if (actr(i, w) != i)
             bitset += i
           i += 1
         }
-        bitset.toImmutable
+        bitset.toScala
       }
       def supportMin(w: Wr[A, H]): NNOption = {
         var i = 0

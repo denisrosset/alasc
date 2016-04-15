@@ -1,11 +1,13 @@
 package net.alasc.wreath
 
-import scala.collection.mutable
 import scala.reflect.classTag
 
 import spire.algebra._
 import spire.algebra.lattice._
 import spire.syntax.action._
+import spire.syntax.cfor._
+
+import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.finite._
@@ -51,20 +53,23 @@ class WrImprimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A: PR
         }
       def supportMaxElement = size - 1
       def support(w: Wr[A, H]) = {
-        val bitset = mutable.BitSet.empty
+        val bitset = metal.mutable.BitSet.empty
         val m = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
         var block = 0
         var offset = 0
         val s = aRep.size
         while (block < m) {
-          if ((block <|+| w.h) != block)
-            bitset ++= offset until (offset + s)
+          if ((block <|+| w.h) != block) {
+            cforRange(offset until (offset + s)) { k =>
+              bitset += k
+            }
+          }
           else if (block < w.aSeq.size)
             aRep.permutationAction.support(w.aSeq(block)).foreach { sub => bitset += (offset + sub) }
           block += 1
           offset += s
         }
-        bitset.toImmutable
+        bitset.toScala
       }
       def supportMin(w: Wr[A, H]): NNOption = {
         var block = 0

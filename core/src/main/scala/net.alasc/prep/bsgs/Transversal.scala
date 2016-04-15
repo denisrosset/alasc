@@ -7,6 +7,8 @@ import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 
+import metal.syntax._
+
 import net.alasc.algebra._
 
 /** Contains information about a transversal in a BSGS chain. */  
@@ -38,9 +40,9 @@ trait Transversal[P] {
     m
   }
   def orbitSet: Set[Int] = {
-    val bitset = scala.collection.mutable.BitSet.empty
+    val bitset = metal.mutable.BitSet.empty
     foreachOrbit { bitset += _ }
-    bitset.toImmutable
+    bitset.toScala
   }
   def foreachU(f: P => Unit): Unit
   def u(b: Int): P
