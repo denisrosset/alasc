@@ -1,23 +1,12 @@
 package net.alasc.domains
 
-import scala.annotation.tailrec
-
-import scala.collection.{BitSet, SortedSet}
-import scala.collection.mutable
-import scala.collection.immutable
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, PartialOrder}
+import spire.algebra.PartialOrder
 import spire.algebra.lattice._
-import spire.syntax.eq._
 import spire.syntax.partialOrder._
 import spire.syntax.lattice._
 import spire.util.Opt
-
-import net.alasc.algebra.{PermutationAction}
-import net.alasc.syntax.permutationAction._
-import net.alasc.util._
-import algos._
 
 /** Describes a partition of the domain with a value `V` associated to each block. */
 trait PartitionMap[V] extends InDomain {

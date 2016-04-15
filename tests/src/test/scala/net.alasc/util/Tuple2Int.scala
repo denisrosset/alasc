@@ -1,6 +1,5 @@
 package net.alasc.util
 
-import org.scalacheck._
 import org.scalacheck.Arbitrary._
 import org.scalatest._
 import prop._

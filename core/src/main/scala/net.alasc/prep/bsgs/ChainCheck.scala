@@ -1,19 +1,13 @@
 package net.alasc.prep
 package bsgs
 
-import scala.language.implicitConversions
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import scala.collection
-import scala.collection.immutable
 import scala.collection.mutable
-import scala.util.Random
 
 import spire.algebra.{Eq, Group}
-import spire.syntax.group._
 import spire.syntax.action._
-import spire.syntax.cfor._
 
 import net.alasc.algebra._
 

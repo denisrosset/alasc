@@ -1,13 +1,13 @@
 package net.alasc.perms
 package internal
 
-import scala.util.hashing.MurmurHash3.{orderedHash, unorderedHash}
+import scala.util.hashing.MurmurHash3.unorderedHash
 
 import spire.syntax.action._
 import spire.syntax.cfor._
 
 import net.alasc.syntax.permutationAction._
-import net.alasc.algebra.Permutation
+import net.alasc.algebra.PermutationBuilder
 
 /** Permutation hash strategy with optimization for tiny (support in 0..15), small (support in 0..31) permutations.
   * 
@@ -28,7 +28,7 @@ object PermHash {
 
   @inline final def pairHash(preimage: Int, image: Int) = preimage ^ rotateRight(image, 16)
 
-  def hash16[P: Permutation](p: P): Int = {
+  def hash16[P: PermutationBuilder](p: P): Int = {
     var encoding0to7 = 0
     var encoding8to15 = 0
     cforRange(0 until 7) { i =>
@@ -40,7 +40,7 @@ object PermHash {
     encoding0to7 ^ encoding8to15
   }
 
-  def hash32[P: Permutation](p: P): Int = {
+  def hash32[P: PermutationBuilder](p: P): Int = {
     @inline def encode(start: Int, length: Int = 6) = {
       var res = 0
       cforRange(start until start + length) { i =>
@@ -59,7 +59,7 @@ object PermHash {
     finalizeHash(h, 6)
   }
 
-  def hash[P: Permutation](p: P): Int = {
+  def hash[P: PermutationBuilder](p: P): Int = {
     val sm = p.supportMax.getOrElseFast(-1)
     if (sm <= 15)
       hash16(p)

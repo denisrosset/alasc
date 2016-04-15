@@ -1,17 +1,11 @@
 package net.alasc
 
-import scala.reflect.ClassTag
-import scala.util.Random
 
-import spire.algebra.{Eq, Group}
-import spire.util.Opt
+import spire.algebra.Eq
 
-import net.alasc.algebra.Permutation
 import net.alasc.finite.Grp
 import net.alasc.perms.PermutationRepBuilder
 import net.alasc.prep.{FaithfulPRep, PGrp, PGrpBuilder}
-import net.alasc.prep.bsgs.BaseGuide
-import net.alasc.prep.chain.PGrpChainBuilder
 
 final class RichGrp[G](val lhs: Grp[G]) {
 

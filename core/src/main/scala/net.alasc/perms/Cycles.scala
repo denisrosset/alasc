@@ -3,12 +3,10 @@ package net.alasc.perms
 import scala.language.implicitConversions
 
 import scala.collection.immutable.BitSet
-import scala.runtime.RichInt
 
 import spire.algebra._
 import spire.syntax.eq._
 import spire.syntax.action._
-import spire.syntax.signed._
 
 import net.alasc.algebra._
 import net.alasc.domains.DomainAlphabet
@@ -41,7 +39,7 @@ class CyclesEq extends Eq[Cycles] {
   def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 }
 
-class CyclesPermutation extends Permutation[Cycles] {
+class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
 
   def supportMaxElement = Int.MaxValue
 
@@ -80,8 +78,6 @@ class CyclesPermutation extends Permutation[Cycles] {
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
   override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
 
-  override def signum(g: Cycles) = (1 /: g.seq) { case (sIt, cycle) => sIt * cycle.signum }
-
   override def supportAny(c: Cycles) =
     if (c.seq.isEmpty) NNNone else NNSome(c.seq.head.seq.head)
 
@@ -92,7 +88,7 @@ class CyclesPermutation extends Permutation[Cycles] {
 }
 
 object Cycles {
-  implicit val Algebra: Permutation[Cycles] = new CyclesPermutation
+  implicit val Algebra: PermutationBuilder[Cycles] = new CyclesPermutationBuilder
   implicit val Equality: Eq[Cycles] = new CyclesEq
   def apply(seq: Int*): Cycles = seq.size match {
     case 0 | 1 => Algebra.id

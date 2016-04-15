@@ -1,25 +1,13 @@
 package net.alasc.std
 
-import scala.language.higherKinds
-
-import scala.annotation.tailrec
-
-import scala.collection.generic.CanBuildFrom
-import scala.collection.SeqLike
-import scala.collection.mutable
 import scala.reflect.classTag
 
 import spire.algebra._
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
-import spire.syntax.eq._
-import spire.syntax.group._
-import spire.syntax.action._
-import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.util._
 
 final class PRepBuilderProduct2[A, B](val structure1: PRepBuilder[A], val structure2: PRepBuilder[B]) extends PRepBuilder[(A, B)] {
 

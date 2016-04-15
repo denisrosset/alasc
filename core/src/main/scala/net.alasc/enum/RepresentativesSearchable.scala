@@ -1,19 +1,14 @@
 package net.alasc.enum
 
-import scala.collection.mutable
-
-import spire.algebra.{Eq, Group, Order}
+import spire.algebra.{Group, Order}
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.util._
 
-import net.alasc.algebra._
-import net.alasc.domains._
 import net.alasc.finite._
 import net.alasc.prep._
 import net.alasc.prep.bsgs._
 import net.alasc.prep.chain._
-import net.alasc.util._
 
 abstract class RepresentativesSearchable[T, G] extends Representatives[T, G] {
 

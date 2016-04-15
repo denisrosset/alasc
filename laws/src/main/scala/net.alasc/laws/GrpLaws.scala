@@ -1,16 +1,12 @@
 package net.alasc.laws
 
 import spire.algebra._
-import spire.algebra.lattice._
 
 import org.typelevel.discipline.Laws
 
 import org.scalacheck.{Arbitrary, Prop}
 import org.scalacheck.Prop._
 
-import spire.laws._
-import spire.std.boolean._
-import spire.std.int._
 import spire.syntax.all._
 import spire.util.Opt
 
@@ -19,7 +15,6 @@ import net.alasc.finite._
 import net.alasc.perms.Perm
 import net.alasc.prep._
 import net.alasc.syntax.all._
-import net.alasc.util._
 
 object GrpLaws {
 

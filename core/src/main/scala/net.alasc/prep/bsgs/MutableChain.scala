@@ -2,18 +2,14 @@ package net.alasc.prep
 package bsgs
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
 import spire.syntax.action._
-import spire.syntax.monoid._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.check._
-import net.alasc.util._
 
 /** Mutable builder for a BSGS chain.
   * 

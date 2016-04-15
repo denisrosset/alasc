@@ -1,17 +1,12 @@
 package net.alasc.enum
 
-import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra._
 import spire.algebra.partial.RightPartialAction
-import spire.syntax.group._
 
-import net.alasc.algebra._
 import net.alasc.domains._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.prep.bsgs._
 import net.alasc.prep.chain._
 
 abstract class Representatives[T, G] extends Iterable[Representative[T, G]] {

@@ -1,17 +1,13 @@
 package net.alasc.enum
 
-import scala.collection.mutable
-
-import spire.algebra.{Action, Eq, Group, Order}
+import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 import spire.syntax.cfor._
 
-import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.prep._
 import net.alasc.prep.bsgs._
-import net.alasc.util._
 
 object Algorithms {
 

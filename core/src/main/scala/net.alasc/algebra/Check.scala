@@ -1,7 +1,5 @@
 package net.alasc.algebra
 
-import spire.syntax.semigroup._
-
 class CheckException(errors: Check.Checked) extends RuntimeException(errors.toString) {
 
   require(errors.nonEmpty)

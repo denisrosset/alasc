@@ -1,7 +1,5 @@
 package net.alasc.syntax
 
-import spire.algebra.Monoid
-import spire.syntax.GroupSyntax
 import net.alasc.algebra._
 import scala.language.implicitConversions
 

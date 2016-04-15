@@ -1,24 +1,17 @@
-package net.alasc.math
+package net.alasc
 package enum
 
 import org.scalacheck._
-import org.scalacheck.Arbitrary._
-import org.scalatest._
-import prop._
 import spire.algebra.Order
-import spire.syntax.eq._
 import spire.syntax.order._
 import spire.syntax.partialAction._
 import spire.std.int._
 
-import net.alasc.algebra._
-import net.alasc.enum._
 import net.alasc.finite._
 import net.alasc.perms._
 import net.alasc.prep._
 import net.alasc.prep.chain._
 import net.alasc.std.seq._
-import net.alasc.syntax.all._
 import net.alasc.laws._
 
 abstract class RepresentativesCheck(algoName: String)(implicit builder: PGrpChainBuilder[Perm]) extends Properties("RepresentativesCheck/" + algoName) {

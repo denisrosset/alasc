@@ -4,13 +4,10 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
-import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
-import net.alasc.util._
 
-import metal._
 import metal.syntax._
 
 case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], val set: Set[Int]) extends SubgroupDefinition[G] {

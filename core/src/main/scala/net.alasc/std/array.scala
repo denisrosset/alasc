@@ -2,14 +2,12 @@ package net.alasc.std
 
 import scala.reflect.ClassTag
 
-import spire.algebra._
 import spire.algebra.partial._
 import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.util._
 import net.alasc.syntax.permutationAction._
 
 class ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction] extends PartialAction[Array[A], P] {

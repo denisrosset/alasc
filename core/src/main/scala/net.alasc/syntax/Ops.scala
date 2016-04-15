@@ -2,11 +2,8 @@ package net.alasc
 package syntax
 
 import scala.language.experimental.macros
-import scala.reflect.ClassTag
-import scala.util.Random
 
 import spire.macros.Ops
-import spire.algebra.Monoid
 
 import net.alasc.algebra._
 import net.alasc.util._
@@ -31,6 +28,6 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 
-  def to[Q](implicit evQ: Permutation[Q]): Q = ev.to[Q](lhs)
+  def to[Q](implicit evQ: PermutationBuilder[Q]): Q = ev.to[Q](lhs)
 
 }

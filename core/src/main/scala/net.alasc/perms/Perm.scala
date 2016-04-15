@@ -1,13 +1,9 @@
 package net.alasc.perms
 
-import scala.annotation.tailrec
 import scala.collection.immutable
 
 import spire.algebra.Eq
-import spire.syntax.eq._
-import spire.syntax.signed._
 import spire.syntax.group._
-import spire.syntax.action._
 
 import net.alasc.algebra._
 import net.alasc.domains.DomainAlphabet
@@ -62,7 +58,7 @@ object Perm extends PermCompanion {
 
   implicit val equ: Eq[Perm] = new PermEq
 
-  implicit val permutation: Permutation[Perm] = new PermPermutation
+  implicit val permutation: PermutationBuilder[Perm] = new PermPermutationBuilder
 
   implicit val permutationRepBuilder: PermutationRepBuilder[Perm] = new PermutationRepBuilder[Perm]()(permutation)
 

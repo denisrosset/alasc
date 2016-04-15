@@ -8,7 +8,6 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
-import net.alasc.util._
 
 /** Defines the subgroup which intersect `chain2`, given in action `action`. */
 case class Intersection[G:ClassTag:Eq:Group](val action: FaithfulPermutationAction[G], val chain2: Chain[G])(implicit baseChange: BaseChange, schreierSims: SchreierSims) extends SubgroupDefinition[G] {

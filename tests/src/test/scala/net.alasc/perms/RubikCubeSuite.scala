@@ -2,18 +2,14 @@ package net.alasc.perms
 
 import org.scalatest.{FunSuite, Matchers}
 
-import spire.syntax.partialAction._
-
 import net.alasc.domains._
 import net.alasc.prep._
 import net.alasc.named.RubikCube
-import net.alasc.syntax.all._
-import net.alasc.std.seq._
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
 class RubikCubeSuite extends FunSuite with Matchers {
 
-  import RubikCube.{generators, order, colors}
+  import RubikCube.{order, colors}
 
   def testGroupOrder()(implicit builder: PGrpBuilder[Perm]): Unit = {
     val grp = RubikCube[Perm]

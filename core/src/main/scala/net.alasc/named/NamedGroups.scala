@@ -7,7 +7,7 @@ import net.alasc.syntax.all._
 
 object NamedGroups {
 
-  def generate[G:Permutation:PGrpBuilder](generators: Iterable[Perm], order: BigInt): PGrp[G] = {
+  def generate[G:PermutationBuilder:PGrpBuilder](generators: Iterable[Perm], order: BigInt): PGrp[G] = {
     val generatorsG = generators.map(_.to[G])
     PGrpBuilder[G].fromGeneratorsAndOrder(generatorsG, order)
   }

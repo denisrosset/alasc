@@ -2,10 +2,9 @@ package net.alasc.prep.bsgs
 
 import scala.annotation.tailrec
 
-import net.alasc.domains.{Domain, Partition}
+import net.alasc.domains.Partition
 import net.alasc.util._
 
-import metal._
 import metal.syntax._
 
 case class BaseGuidePartition(partition: Partition) extends BaseGuide {

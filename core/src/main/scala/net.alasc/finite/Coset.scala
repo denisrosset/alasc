@@ -19,7 +19,7 @@ trait Coset[G] {
 
 class RightCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
 
-  import subgrp.{group, equ}
+  import subgrp.group
 
   override def toString = s"($subgrp) |+| $g"
 
@@ -35,7 +35,7 @@ class RightCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
 
 class LeftCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
 
-  import subgrp.{group, equ}
+  import subgrp.group
 
   override def toString = s"$g |+| ($subgrp)"
 

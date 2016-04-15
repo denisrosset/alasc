@@ -1,14 +1,8 @@
 package net.alasc.wreath
 
 import org.scalacheck._
-import org.scalacheck.Arbitrary._
 import org.scalatest._
 import prop._
-import spire.syntax.group._
-import spire.syntax.action._
-import spire.syntax.eq._
-import net.alasc.algebra._
-import net.alasc.syntax.permutationAction._
 
 case class NonNeg(value: Int) extends AnyVal
 

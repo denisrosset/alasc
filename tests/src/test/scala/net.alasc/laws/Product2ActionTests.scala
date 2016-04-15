@@ -1,24 +1,13 @@
 package net.alasc.laws
 
-import scala.reflect.ClassTag
-
-import spire.algebra._
-import spire.algebra.lattice._
-import spire.math._
 import spire.laws.{Perm => _, _}
 import spire.std.tuples._
 
-import scala.{ specialized => spec }
-
-import org.typelevel.discipline.scalatest.Discipline
-import org.scalacheck.{Gen, Arbitrary}
-import spire.std.int.IntAlgebra
+import org.scalacheck.Arbitrary
 
 import org.scalatest.FunSuite
 
 import net.alasc.algebra._
-import net.alasc.domains._
-import net.alasc.finite._
 import net.alasc.perms._
 import net.alasc.prep._
 import net.alasc.std.product._

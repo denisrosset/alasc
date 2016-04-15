@@ -2,7 +2,7 @@ package net.alasc.finite
 
 import scala.reflect.ClassTag
 
-import spire.algebra.{Group, PartialOrder}
+import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.util.Opt
 

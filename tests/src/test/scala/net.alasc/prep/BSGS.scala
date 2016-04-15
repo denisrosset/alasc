@@ -1,9 +1,6 @@
 package net.alasc.prep
 
-import scala.util.Random
-
 import org.scalacheck._
-import org.scalatest.FunSuite
 
 import spire.algebra.{Group, Order}
 import spire.std.int._
@@ -13,11 +10,9 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.domains._
-import net.alasc.finite._
 import net.alasc.laws.{Partitions, Permutations}
 import net.alasc.named._
 import net.alasc.perms._
-import net.alasc.prep._
 import net.alasc.prep.bsgs.{Chain, Node, Term}
 import net.alasc.prep.chain._
 import net.alasc.std.seq._
@@ -89,8 +84,8 @@ abstract class BSGSCheck(algoName: String)(implicit val builder: PGrpChainBuilde
   property("Base change guided by partition has base points corresponding to blocks of increasing size") = Prop.forAllNoShrink(genChain) { chain =>
     val n = chainSupportMax(chain) + 1
     Prop.forAll(Partitions.forDomain(Domain(n))) { partition =>
-      val definition = bsgs.FixingPartition(Permutation[Perm], partition)
-      val newChain = bsgs.BuildChain.fromChain(chain, Permutation[Perm], definition.baseGuideOpt)
+      val definition = bsgs.FixingPartition(PermutationBuilder[Perm], partition)
+      val newChain = bsgs.BuildChain.fromChain(chain, PermutationBuilder[Perm], definition.baseGuideOpt)
       val baseBlockSize = newChain.base.map(partition.blockFor(_).size)
       isNonDecreasing(baseBlockSize)
     }

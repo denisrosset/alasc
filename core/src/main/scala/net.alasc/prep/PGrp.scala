@@ -3,16 +3,13 @@ package net.alasc.prep
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.algebra.{Eq, Group, Order}
-import spire.syntax.group._
+import spire.algebra.{Eq, Group}
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, Permutation}
+import net.alasc.algebra.{BigIndexedSeq, PermutationBuilder}
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.prep.chain.PGrpChainBuilder
-
-import bsgs._
 
 abstract class PGrp[G] extends Grp[G] { lhs =>
 
@@ -49,7 +46,7 @@ abstract class PGrp[G] extends Grp[G] { lhs =>
   def setwiseStabilizer(points: Int*): Grp[G] =
     setwiseStabilizer(Set(points: _*))
 
-  def find[Q:Eq:Permutation](q: Q): Opt[G]
+  def find[Q:Eq:PermutationBuilder](q: Q): Opt[G]
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.

@@ -1,16 +1,6 @@
 package net.alasc.domains
 package algos
 
-import scala.annotation.tailrec
-
-import scala.collection.BitSet
-import scala.collection.mutable
-import scala.collection.immutable
-
-import spire.algebra.PartialOrder
-
-import net.alasc.util._
-
 /** Implementation of a disjoint-set data structure, using forests.
   * 
   * See http://en.wikipedia.org/wiki/Disjoint-set_data_structure

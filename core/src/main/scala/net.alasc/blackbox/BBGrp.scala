@@ -3,7 +3,6 @@ package net.alasc.blackbox
 import scala.annotation.tailrec
 import scala.util.Random
 
-import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 
 import net.alasc.finite._

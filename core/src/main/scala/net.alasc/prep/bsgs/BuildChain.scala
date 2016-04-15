@@ -1,14 +1,9 @@
 package net.alasc.prep.bsgs
 
-import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
-import spire.syntax.action._
-import spire.syntax.eq._
-import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction

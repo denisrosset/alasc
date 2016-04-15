@@ -3,11 +3,6 @@ package internal
 
 import scala.collection.immutable
 
-import spire.syntax.action._
-import spire.syntax.signed._
-
-import net.alasc.algebra.Permutation
-import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 /** Permutation with domain in [0, 15] encoded in a Long used as a bit string.

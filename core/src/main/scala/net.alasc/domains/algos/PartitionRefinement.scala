@@ -1,15 +1,10 @@
 package net.alasc.domains
 package algos
 
-import scala.annotation.tailrec
-
-import scala.collection.BitSet
 import scala.collection.mutable
 import scala.collection.immutable
 
-import spire.algebra.{PartialOrder, Order}
-
-import net.alasc.util._
+import spire.algebra.Order
 
 class PartitionRefinement(val blocks: metal.mutable.Buffer[mutable.BitSet], val size: Int) {
 

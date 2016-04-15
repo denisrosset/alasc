@@ -1,6 +1,6 @@
 package net.alasc.perms
 
-import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
+import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers}
 
 import net.alasc.named.Mathieu
 import net.alasc.prep._

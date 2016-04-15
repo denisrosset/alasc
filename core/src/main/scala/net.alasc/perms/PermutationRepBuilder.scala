@@ -9,7 +9,6 @@ import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.syntax.permutationAction._
 
 final class PermutationBuiltRep[B0 <: PermutationRepBuilder[G] with Singleton, G](val size: Int)(implicit val builder: B0) extends BuiltRep[G] with FaithfulPRep[G] {
 
@@ -21,7 +20,7 @@ final class PermutationBuiltRep[B0 <: PermutationRepBuilder[G] with Singleton, G
 
 }
 
-final class PermutationRepBuilder[G](implicit val permutation: Permutation[G]) extends PRepBuilder[G] { self =>
+final class PermutationRepBuilder[G](implicit val permutation: PermutationBuilder[G]) extends PRepBuilder[G] { self =>
 
   type R = PermutationBuiltRep[this.type, G]
 

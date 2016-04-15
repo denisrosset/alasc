@@ -4,12 +4,10 @@ package chain
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.algebra.{Eq, Group, Order}
-import spire.syntax.group._
+import spire.algebra.{Eq, Group}
+
 import spire.util.Opt
 
-import net.alasc.algebra.Permutation
-import net.alasc.domains.Partition
 import net.alasc.finite._
 
 import bsgs._

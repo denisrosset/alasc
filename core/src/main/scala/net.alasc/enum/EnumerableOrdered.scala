@@ -2,14 +2,8 @@ package net.alasc.enum
 
 import scala.annotation.tailrec
 
-import scala.collection.BitSet
-
 import spire.algebra.Order
-import spire.algebra.partial.RightPartialAction
-import spire.syntax.partialAction._
-import spire.syntax.cfor._
 
-import net.alasc.algebra._
 import net.alasc.domains.Partition
 
 /** Describes a sequence whose elements can be ordered. */

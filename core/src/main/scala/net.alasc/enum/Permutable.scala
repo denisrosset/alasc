@@ -7,7 +7,6 @@ import scala.reflect.ClassTag
 import spire.algebra.Group
 import spire.algebra.partial.RightPartialAction
 
-import net.alasc.algebra._
 import net.alasc.finite.Grp
 import net.alasc.perms.PermutationRepBuilder
 import net.alasc.prep._

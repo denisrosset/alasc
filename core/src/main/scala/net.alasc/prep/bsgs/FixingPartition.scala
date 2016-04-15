@@ -1,15 +1,11 @@
 package net.alasc.prep.bsgs
 
-import scala.reflect.ClassTag
-
-import spire.algebra.{Eq, Group}
+import spire.algebra.Group
 import spire.syntax.group._
-import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.domains.Partition
-import net.alasc.util._
 
 case class FixingPartition[G:Group](val action: FaithfulPermutationAction[G], val partition: Partition) extends SubgroupDefinition[G] {
 

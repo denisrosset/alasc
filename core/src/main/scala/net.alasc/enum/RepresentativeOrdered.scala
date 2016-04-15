@@ -1,7 +1,6 @@
 package net.alasc.enum
 
 import spire.algebra.partial.RightPartialAction
-import spire.syntax.partialAction._
 
 /** Ordered representative of a permuted sequence. */
 trait RepresentativeOrdered[T, G] extends Representative[T, G] {

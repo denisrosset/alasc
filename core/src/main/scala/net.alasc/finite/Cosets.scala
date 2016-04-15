@@ -1,7 +1,5 @@
 package net.alasc.finite
 
-import spire.syntax.group._
-
 trait Cosets[G] {
 
   type GG <: Grp[G] with Singleton

@@ -1,18 +1,10 @@
 package net.alasc.laws
 
-import scala.reflect.ClassTag
-import scala.util.Random
-
 import org.scalacheck.{Arbitrary, Gen}
 
 import spire.algebra.Group
-import spire.syntax.group._
-import spire.syntax.action._
-import spire.syntax.cfor._
-import spire.std.int._
 
 import net.alasc.algebra._
-import net.alasc.finite._
 import net.alasc.perms._
 import net.alasc.prep._
 import net.alasc.wreath._
@@ -20,15 +12,15 @@ import net.alasc.syntax.permutationAction._
 
 case class WrSize(a: Int, h: Int) {
 
-  def aPerm[A:Permutation] = Perm(0, a - 1).to[A]
+  def aPerm[A:PermutationBuilder] = Perm(0, a - 1).to[A]
 
-  def primitiveRepresentation[A:Group:Permutation:PermutationRepBuilder, H:Permutation:PermutationRepBuilder]: FaithfulPRep[Wr[A, H]] = {
+  def primitiveRepresentation[A:Group:PermutationBuilder:PermutationRepBuilder, H:PermutationBuilder:PermutationRepBuilder]: FaithfulPRep[Wr[A, H]] = {
     val wrpr = new WrPrimitivePRepBuilder[A, H]
     val aR = wrpr.A.build(Seq(aPerm[A]))
     wrpr.R(h, aR)
   }
 
-  def imprimitiveRepresentation[A:Group:Permutation:PermutationRepBuilder, H:Permutation:PermutationRepBuilder]: FaithfulPRep[Wr[A, H]] = {
+  def imprimitiveRepresentation[A:Group:PermutationBuilder:PermutationRepBuilder, H:PermutationBuilder:PermutationRepBuilder]: FaithfulPRep[Wr[A, H]] = {
     val wrir = new WrImprimitivePRepBuilder[A, H]
     val aR = wrir.A.build(Seq(aPerm[A]))
     wrir.R(h, aR)
@@ -54,10 +46,10 @@ object WrSize {
 
 object Wrs {
 
-  implicit def arbWr[A:Permutation, H:Permutation](implicit wrSize: WrSize): Arbitrary[Wr[A, H]] =
+  implicit def arbWr[A:PermutationBuilder, H:PermutationBuilder](implicit wrSize: WrSize): Arbitrary[Wr[A, H]] =
     Arbitrary(forSize(wrSize.a, wrSize.h))
 
-  def forSize[A:Permutation, H:Permutation](aSize: Int, hSize: Int) = for {
+  def forSize[A:PermutationBuilder, H:PermutationBuilder](aSize: Int, hSize: Int) = for {
     aSeq <- Gen.containerOfN[Seq, A](hSize, Permutations.forSize[A](aSize))
     h <- Permutations.forSize[H](hSize)
   } yield Wr(aSeq, h)

@@ -1,19 +1,16 @@
 package net.alasc.perms
 
 import org.scalacheck._
-import org.scalacheck.Arbitrary._
 import org.scalatest._
 import prop._
 
-import spire.algebra.Eq
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.syntax.eq._
 import spire.std.int._
 import spire.std.seq._
 
-import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
+
 import internal._
 
 class Perm32Check extends PropSpec with Matchers with EqMatchers with GeneratorDrivenPropertyChecks with NonImplicitAssertions {

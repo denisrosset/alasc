@@ -1,17 +1,9 @@
 package net.alasc.perms
 package internal
 
-import scala.annotation.tailrec
-import scala.collection.immutable
-
 import spire.algebra.Eq
-import spire.syntax.eq._
-import spire.syntax.signed._
-import spire.syntax.group._
-import spire.syntax.action._
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 final class PermEq extends Eq[Perm] {
@@ -35,7 +27,7 @@ final class PermEq extends Eq[Perm] {
 
 }
 
-final class PermPermutation extends Permutation[Perm] {
+final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   def op(x: Perm, y: Perm): Perm = x match {
     case lhs16: Perm16 => y match {
@@ -64,8 +56,6 @@ final class PermPermutation extends Permutation[Perm] {
   def actr(preimage: Int, p: Perm): Int = p.image(preimage)
 
   override def actl(p: Perm, i: Int): Int = p.invImage(i)
-
-  override def signum(p: Perm): Int = p.to[Cycles].signum
 
   def inverse(p: Perm): Perm = p.inverse
 

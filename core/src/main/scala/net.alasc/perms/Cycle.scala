@@ -1,13 +1,10 @@
 package net.alasc.perms
 
-import scala.language.implicitConversions
 
 import scala.collection.immutable.BitSet
 
 import spire.algebra._
 import spire.syntax.order._
-import spire.syntax.action._
-import spire.syntax.signed._
 
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
@@ -32,7 +29,7 @@ class Cycle private[alasc](val seq: Seq[Int]) {
     seq.map(symbols(_)).mkString("(", ",", ")")
 
   override def equals(any: Any) = any match {
-    case that: Cycle => Cycle.Order.eqv(this, that)
+    case that: Cycle => Cycle.order.eqv(this, that)
     case _ => false
   }
 
@@ -41,12 +38,6 @@ class Cycle private[alasc](val seq: Seq[Int]) {
   def support: BitSet = BitSet(seq: _*)
 
   def inverse = Cycle(seq.reverse: _*)
-}
-
-
-class CycleSigned extends Signed[Cycle] {
-  override def signum(c: Cycle) = if (c.length % 2 == 0) 1 else -1
-  def abs(c: Cycle) = sys.error("Abs is not supported")
 }
 
 class CyclePermutationAction extends FaithfulPermutationAction[Cycle] {
@@ -67,7 +58,7 @@ class CyclePermutationAction extends FaithfulPermutationAction[Cycle] {
 }
 
 /** Canonical order for cycles.
-  * 
+  *
   * Cycles are first sorted by length, and then by first elements.
   */
 class CycleOrder extends Order[Cycle] {
@@ -81,9 +72,8 @@ class CycleOrder extends Order[Cycle] {
 }
 
 object Cycle {
-  implicit final val PermutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
-  implicit final val Signed: Signed[Cycle] = new CycleSigned
-  implicit final val Order: Order[Cycle] = new CycleOrder
+  implicit final val permutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
+  implicit final val order: Order[Cycle] = new CycleOrder
 
   def id = new Cycle(Seq.empty[Int])
   def apply(seq: Int*): Cycle = seq match {

@@ -1,27 +1,19 @@
 package net.alasc.wreath
 
-import scala.language.higherKinds
-
-import scala.collection.generic.CanBuildFrom
-import scala.collection.SeqLike
 import scala.collection.mutable
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.classTag
 
-import spire.algebra._
+import spire.algebra.{Group, PartialOrder}
 import spire.algebra.lattice._
-import spire.syntax.eq._
-import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.std.seq._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-final class WrPrimitivePRepBuilder[A:Group, H:Permutation](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
+final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
 
   def build(generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }

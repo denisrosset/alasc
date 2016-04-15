@@ -3,8 +3,6 @@ package algebra
 
 import spire.util.Opt
 
-import net.alasc.util._
-
 /** An indexed sequence that allows for greater lengths than Int.MaxValue; only a few
   * methods of IndexedSeq are defined as of now.
   */ 

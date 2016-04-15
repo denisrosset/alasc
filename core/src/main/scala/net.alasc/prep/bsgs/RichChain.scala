@@ -4,13 +4,8 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
-import spire.syntax.group._
-import spire.syntax.action._
-import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
-import net.alasc.syntax.permutationAction._
-import net.alasc.util._
 
 final class RichChain[G](val chain: Chain[G]) extends AnyVal {
 

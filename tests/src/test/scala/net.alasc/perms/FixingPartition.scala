@@ -1,19 +1,13 @@
 package net.alasc.perms
 
-import scala.util.Random
-
 import org.scalacheck._
-import org.scalatest.FunSuite
 
 import spire.syntax.partialAction._
 
-import net.alasc.algebra._
 import net.alasc.domains._
 import net.alasc.named.Symmetric
 import net.alasc.prep._
 import net.alasc.std.seq._
-import net.alasc.syntax.all._
-import net.alasc.laws._
 
 object FixingPartitionCheck extends Properties("FixingPartition") {
 

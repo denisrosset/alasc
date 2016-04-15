@@ -8,7 +8,6 @@ import scala.util.Random
 import spire.algebra.Group
 import spire.syntax.action._
 import spire.syntax.group._
-import spire.syntax.eq._
 import spire.syntax.cfor._
 
 import net.alasc.algebra._

@@ -2,13 +2,9 @@ package net.alasc.perms
 
 import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 
-import spire.syntax.action._
-import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.util._
 
 class HoltSuite extends FunSuite with NonImplicitAssertions with Matchers with EqMatchers {
 /*

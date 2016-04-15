@@ -3,14 +3,13 @@ package chain
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
-import scala.util.Random
 
 import spire.algebra.{Eq, Group, Order}
 import spire.syntax.action._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, Permutation}
+import net.alasc.algebra.{BigIndexedSeq, PermutationBuilder}
 import net.alasc.domains.Partition
 import net.alasc.finite._
 
@@ -143,7 +142,7 @@ abstract class PGrpChain[G] extends PGrp[G] { lhs =>
   def setwiseStabilizer(set: Set[Int]): Grp[G] =
     subgroupFor(SetwiseStabilizer(pRep.permutationAction, set))
 
-  def find[Q:Eq:Permutation](q: Q): Opt[G] = chain.siftOther(q)
+  def find[Q:Eq:PermutationBuilder](q: Q): Opt[G] = chain.siftOther(q)
 
   /** Returns the subgroup for which `predicate` is satisfied; 
     * the test `backtrackTest` is used to prune the search tree.

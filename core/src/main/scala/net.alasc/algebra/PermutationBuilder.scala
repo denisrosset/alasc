@@ -1,14 +1,9 @@
 package net.alasc.algebra
 
-import scala.{ specialized => spec }
-import scala.annotation.tailrec
-
-import scala.util.Random
 
 import spire.algebra._
-import spire.syntax.action._
 
-import net.alasc.util._
+trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P]
 
 /** Type class for Permutation-like objects.
   * 
@@ -17,7 +12,7 @@ import net.alasc.util._
   * 
   * The standard action for the Action[Int, P] is the right action.
   */
-trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
+trait PermutationBuilder[P] extends Permutation[P] {
 
   def actl(p: P, k: Int) = actr(k, inverse(p))
 
@@ -48,11 +43,11 @@ trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P] {
     import spire.std.int._
     sorting(Seq.tabulate(size)(k => gen.nextInt))
   }
-  
+
 }
 
-object Permutation {
+object PermutationBuilder {
 
-  def apply[P: Permutation] = implicitly[Permutation[P]]
+  def apply[P: PermutationBuilder] = implicitly[PermutationBuilder[P]]
 
 }

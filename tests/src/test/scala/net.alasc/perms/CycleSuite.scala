@@ -5,9 +5,6 @@ import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.syntax.signed._
-
-import net.alasc.syntax.permutationAction._
 
 class CycleSuite extends FunSuite with NonImplicitAssertions with Matchers with EqMatchers {
 
@@ -33,10 +30,6 @@ class CycleSuite extends FunSuite with NonImplicitAssertions with Matchers with 
 
   test ("Inverse of (1, 5, 3, 6)(2, 8, 7) is (6, 3, 5, 1) (7, 8, 2) = (1, 6, 3, 5)(2, 7, 8) -- Holt 2.1.5") {
     (Cycles(1,5,3,6)(2,8,7).inverse === Cycles(1,6,3,5)(2,7,8)) shouldBe true
-  }
-
-  test ("Sign of (1,3,5)(2,4) is -1 -- Wikipedia/parity of a permutation") {
-    Cycles(1,3,5)(2,4).signum shouldBe -1
   }
 
 }

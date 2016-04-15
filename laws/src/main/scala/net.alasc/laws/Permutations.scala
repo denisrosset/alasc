@@ -1,14 +1,8 @@
 package net.alasc.laws
 
-import scala.reflect.ClassTag
-import scala.util.Random
-
 import org.scalacheck.{Arbitrary, Gen}
 
-import spire.syntax.group._
-import spire.syntax.action._
 import spire.syntax.cfor._
-import spire.std.int._
 
 import net.alasc.algebra._
 import net.alasc.perms._
@@ -35,24 +29,24 @@ object Permutations {
     array
   }
 
-  def sized[P:Permutation]: Gen[P] = Gen.parameterized { parameters =>
+  def sized[P:PermutationBuilder]: Gen[P] = Gen.parameterized { parameters =>
     val images = randomImages(parameters.size, parameters.rng)
-    Permutation[P].fromImages(images)
+    PermutationBuilder[P].fromImages(images)
   }
 
-  def forSize[P:Permutation](domainSize: Int) = Gen.parameterized { parameters =>
+  def forSize[P:PermutationBuilder](domainSize: Int) = Gen.parameterized { parameters =>
     val images = randomImages(domainSize, parameters.rng)
-    Permutation[P].fromImages(images)
+    PermutationBuilder[P].fromImages(images)
   }
 
   def domSized: Gen[Dom] = Gen.posNum[Int].map(Dom(_))
 
   def domForSize(size: Int): Gen[Dom] = Gen.choose(0, size - 1).map(Dom(_))
 
-  implicit def arbPermutation[P : Permutation]: Arbitrary[P] = Arbitrary(sized[P])
+  implicit def arbPermutation[P : PermutationBuilder]: Arbitrary[P] = Arbitrary(sized[P])
   implicit def arbDom: Arbitrary[Dom] = Arbitrary(domSized)
-  implicit def permutationInstances[P](implicit P: Permutation[P]): Instances[P] =
+  implicit def permutationInstances[P](implicit P: PermutationBuilder[P]): Instances[P] =
     Instances[P](Seq(Perm(0,1).to[P], P.id))
-  implicit def permutationCloner[P](implicit P: Permutation[P]): Cloner[P] =
+  implicit def permutationCloner[P](implicit P: PermutationBuilder[P]): Cloner[P] =
     Cloner( (p: P) => P.fromImages(p.images(p.supportMax.fold(0)(_ + 1))) )
 }

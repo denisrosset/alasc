@@ -1,7 +1,6 @@
 package net.alasc.laws
 
 import spire.algebra._
-import spire.algebra.lattice._
 
 import org.typelevel.discipline.Laws
 
@@ -72,14 +71,10 @@ trait PermutationActionLaws[A] extends Laws {
       )
     )
 
-  def permutation(implicit A : Permutation[A]) = new PermutationActionProperties(
+  def permutation(implicit A : PermutationBuilder[A]) = new PermutationActionProperties(
     name = "permutation",
     parent = Some(faithfulPermutationAction),
     bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
-
-    "sign" -> forAll((x: A, y: A) =>
-      (x.signum * y.signum) === (x |+| y).signum
-    ),
 
     "images/fromImages" -> forAll((x: A) =>
       A.fromImages(x.images(x.supportMax.getOrElseFast(-1) + 1)) === x

@@ -1,20 +1,9 @@
 package net.alasc.laws
 
-import scala.reflect.ClassTag
-import scala.util.Random
-
 import org.scalacheck.{Arbitrary, Gen}
 
-import spire.algebra.{Eq, Group}
-import spire.syntax.group._
-import spire.syntax.action._
-import spire.syntax.cfor._
-import spire.std.int._
-
-import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.syntax.permutationAction._
 
 object Grps {
 

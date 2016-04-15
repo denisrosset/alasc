@@ -4,7 +4,6 @@ import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.syntax.action._
-import spire.syntax.signed._
 import net.alasc.syntax.permutationAction._
 
 class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with EqMatchers {
@@ -33,8 +32,4 @@ class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with E
     Perm(1,5,3,6)(2,8,7).inverse shouldEqv Perm(1,6,3,5)(2,7,8)
   }
 
-  test ("Sign of (1,3,5)(2,4) is -1 -- Wikipedia/parity of a permutation") {
-    Perm(1,3,5)(2,4).signum shouldBe -1
-  }
-  
 }

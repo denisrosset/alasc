@@ -1,18 +1,13 @@
 package net.alasc.prep
 package bsgs
 
-import scala.language.implicitConversions
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import scala.collection
-import scala.collection.immutable
-import scala.collection.mutable
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
 import spire.syntax.group._
-import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.util.Opt
 
@@ -192,7 +187,7 @@ sealed trait Chain[P] extends Elem[P] {
 
   def basicSift(p: P)(implicit group: Group[P], equ: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)
 
-  def siftOther[Q:Eq:Permutation](q: Q)(implicit group: Group[P], `eq`: Eq[P]): Opt[P] = chain match {
+  def siftOther[Q:Eq:PermutationBuilder](q: Q)(implicit group: Group[P], `eq`: Eq[P]): Opt[P] = chain match {
     case node: Node[P] =>
       implicit def action = node.action
       ChainRec.siftOther(chain, group.id, q)

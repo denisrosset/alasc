@@ -3,10 +3,6 @@ package internal
 
 import scala.collection.immutable
 
-import spire.syntax.signed._
-import spire.syntax.action._
-
-import net.alasc.algebra._
 import net.alasc.util._
 
 /** 5 bits per permutation image shift * 32 images = 160 bits.

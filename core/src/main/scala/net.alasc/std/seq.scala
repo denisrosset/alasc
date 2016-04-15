@@ -2,8 +2,6 @@ package net.alasc.std
 
 import scala.language.higherKinds
 
-import scala.annotation.tailrec
-
 import scala.collection.generic.CanBuildFrom
 import scala.collection.SeqLike
 
@@ -16,7 +14,6 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
-import net.alasc.util._
 
 class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {

@@ -1,7 +1,7 @@
 package net.alasc.laws
 
 import org.typelevel.discipline.scalatest.Discipline
-import org.scalacheck.{Gen, Arbitrary, Prop}
+import org.scalacheck.{Arbitrary, Prop}
 import org.scalatest.FunSuiteLike
 import org.typelevel.discipline.Laws
 

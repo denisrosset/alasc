@@ -1,24 +1,15 @@
 package net.alasc.wreath
 
-import scala.language.higherKinds
-
-import scala.annotation.tailrec
-
 import scala.collection.generic.CanBuildFrom
 import scala.collection.SeqLike
-import scala.collection.mutable
-import scala.reflect.classTag
 
 import spire.algebra._
 import spire.algebra.partial._
-import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.eq._
 import spire.syntax.group._
-import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.util._
 
 /*
 // TODO: rewrite Seq support using iterators instead of linear access

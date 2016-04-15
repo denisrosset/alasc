@@ -2,14 +2,12 @@ package net.alasc.prep
 package bsgs
 
 import scala.util.Random
-import scala.collection.immutable.BitSet
 
 import spire.algebra.Group
 import spire.syntax.group._
 import spire.syntax.action._
 
 import net.alasc.algebra._
-import net.alasc.util._
 
 /** Contains information about a transversal in a BSGS chain. */  
 trait Transversal[P] {

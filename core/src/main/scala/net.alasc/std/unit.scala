@@ -1,13 +1,8 @@
 package net.alasc.std
 
-import scala.reflect.classTag
-
-import spire.algebra.lattice._
 import spire.algebra._
-import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.finite._
 import net.alasc.prep._
 import net.alasc.util._
 

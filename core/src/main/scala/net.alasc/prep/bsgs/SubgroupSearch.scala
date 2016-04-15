@@ -12,7 +12,6 @@ import spire.util.Opt
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
-import metal._
 import metal.syntax._
 
 trait SubgroupDefinition[G] {

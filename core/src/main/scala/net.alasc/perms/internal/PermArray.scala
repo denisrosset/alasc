@@ -3,9 +3,6 @@ package internal
 
 import scala.collection.mutable
 
-import spire.syntax.signed._
-
-import net.alasc.algebra._
 import net.alasc.util._
 
 /** Permutation represented by an array of images, the array length being minimal with

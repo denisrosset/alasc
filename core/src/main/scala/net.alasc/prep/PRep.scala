@@ -1,14 +1,12 @@
 package net.alasc.prep
 
-import scala.reflect.{classTag, ClassTag}
+import scala.reflect.classTag
 
-import spire.algebra.{Group, PartialOrder}
+import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 
 import net.alasc.algebra._
 import net.alasc.finite.{BuiltRep, Rep, RepBuilder}
-import net.alasc.perms.Perm
-import net.alasc.syntax.permutationAction._
 
 trait PRep[G] extends Rep[G] {
 

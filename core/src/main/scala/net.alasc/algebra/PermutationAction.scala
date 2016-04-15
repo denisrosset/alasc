@@ -1,17 +1,13 @@
 package net.alasc.algebra
 
-import scala.{ specialized => spec }
 import scala.annotation.tailrec
 import scala.collection.mutable
 
 import spire.algebra._
-import spire.syntax.action._
 
 import net.alasc.util._
 
-trait PermutationAction[G] extends Action[Int, G] with Signed[G] { self =>
-
-  def abs(g: G) = sys.error("Abs is not supported")
+trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Tests if the point `i` is in the support of `g`. */
   def inSupport(g: G, i: Int): Boolean = actr(i, g) != i
@@ -51,23 +47,8 @@ trait PermutationAction[G] extends Action[Int, G] with Signed[G] { self =>
     def apply(idx: Int) = actr(idx, g)
   }
 
-  def signum(g: G) = {
-    // optimized for dense permutation on non-huge domains
-    val toCheck = mutable.BitSet.empty ++= support(g)
-    var parity = 1
-    while (!toCheck.isEmpty) {
-      val start = toCheck.head
-      val o = orbit(g, start)
-      if (o.size % 2 == 0) parity *= -1
-      toCheck --= o
-    }
-    parity
-  }
-
-  def to[P](g: G)(implicit evP: Permutation[P]): P =
+  def to[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(support(g), k => actr(k, g))
-
-  def on[H](f: H => G): PermutationAction[H] = new MappedPermutationAction(self)(f)
 
 }
 

@@ -10,10 +10,8 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.domains._
 import net.alasc.finite._
 import net.alasc.prep._
-import net.alasc.prep.bsgs._
 import net.alasc.prep.chain._
 import net.alasc.util._
 
@@ -23,7 +21,7 @@ import metal.syntax._
 
 abstract class RepresentativesOrdered[T, G, A] extends RepresentativesSearchable[T, G] with BigIndexedSeq[RepresentativeOrdered[T, G]] {
 
-  import collection.immutable.{BitSet, SortedMap}
+  import collection.immutable.SortedMap
 
   implicit def enumerable: EnumerableOrdered[T, A]
 
@@ -51,7 +49,7 @@ abstract class RepresentativesOrdered[T, G, A] extends RepresentativesSearchable
 
 final class RepresentativesOrderedImpl[T, G, A](val t: T, val grp: Grp[G])(implicit val builder: PGrpChainBuilder[G], val classTag: ClassTag[G],  val enumerable: EnumerableOrdered[T, A], val permutable: Permutable[T, G]) extends RepresentativesOrdered[T, G, A] {
 
-  import grp.{equ, group}
+  import grp.group
 
   override lazy val groups = super.groups
   override lazy val array = super.array

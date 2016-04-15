@@ -1,17 +1,8 @@
 package net.alasc.prep
 
-import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.algebra.{Eq, Group}
-import spire.util.Opt
-
-import net.alasc.algebra.Permutation
-import net.alasc.domains.Partition
 import net.alasc.finite._
-import net.alasc.prep.chain.PGrpChainBuilder
-
-import bsgs._
 
 abstract class PGrpBuilder[G] extends GrpBuilder[G] {
 

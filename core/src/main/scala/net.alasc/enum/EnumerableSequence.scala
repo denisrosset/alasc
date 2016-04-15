@@ -1,14 +1,7 @@
 package net.alasc.enum
 
-import scala.annotation.tailrec
-
-import spire.algebra.Order
-import spire.algebra.partial.RightPartialAction
-import spire.syntax.partialAction._
-import spire.syntax.cfor._
 import spire.util._
 
-import net.alasc.algebra._
 import net.alasc.domains._
 
 /** An explicit implementation of `EnumerableSearchable`, where the type of the underlying
