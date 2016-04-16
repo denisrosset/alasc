@@ -48,5 +48,5 @@ object Permutations {
   implicit def permutationInstances[P](implicit P: PermutationBuilder[P]): Instances[P] =
     Instances[P](Seq(Perm(0,1).toPermutation[P], P.id))
   implicit def permutationCloner[P](implicit P: PermutationBuilder[P]): Cloner[P] =
-    Cloner( (p: P) => P.fromImages(p.images(p.supportMax.fold(0)(_ + 1))) )
+    Cloner( (p: P) => P.fromImages(p.images(p.largestMovedPoint.fold(0)(_ + 1))) )
 }

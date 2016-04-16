@@ -36,29 +36,29 @@ trait PermutationActionLaws[A] extends Laws {
     bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
 
     "supportMin" → forAll((x: A) =>
-      x.supportMin match {
-        case NNOption(sm) => x.support.min === sm && ((sm <|+| x) != sm)
-        case _ => x.support.isEmpty
+      x.smallestMovedPoint match {
+        case NNOption(sm) => x.movedPoints.min === sm && ((sm <|+| x) != sm)
+        case _ => x.movedPoints.isEmpty
       }
     ),
 
     "supportMax" → forAll((x: A) =>
-      x.supportMax match {
-        case NNOption(sm) => x.support.max === sm && ((sm <|+| x) != sm)
-        case _ => x.support.isEmpty
+      x.largestMovedPoint match {
+        case NNOption(sm) => x.movedPoints.max === sm && ((sm <|+| x) != sm)
+        case _ => x.movedPoints.isEmpty
       }
     ),
 
     "supportAny" → forAll((x: A) =>
-      x.supportAny match {
-        case NNOption(sa) => x.inSupport(sa) && ((sa <|+| x) != sa)
-        case _ => x.support.isEmpty
+      x.findMovedPoint match {
+        case NNOption(sa) => x.movesPoint(sa) && ((sa <|+| x) != sa)
+        case _ => x.movedPoints.isEmpty
       }
     ),
 
     "support" → forAll((x: A) =>
-      (0 to (x.supportMax.getOrElse(-1) + 10))
-        .filter(i => (i <|+| x) != i).toSet == x.support
+      (0 to (x.largestMovedPoint.getOrElse(-1) + 10))
+        .filter(i => (i <|+| x) != i).toSet == x.movedPoints
     )
   )
 
@@ -67,7 +67,7 @@ trait PermutationActionLaws[A] extends Laws {
       parent = Some(permutationAction),
       bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
       "support.isEmpty" → forAll((x: A) =>
-        x.support.isEmpty === x.isId
+        x.movedPoints.isEmpty === x.isId
       )
     )
 
@@ -77,7 +77,7 @@ trait PermutationActionLaws[A] extends Laws {
     bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, Dom].groupAction),
 
     "images/fromImages" -> forAll((x: A) =>
-      A.fromImages(x.images(x.supportMax.getOrElseFast(-1) + 1)) === x
+      A.fromImages(x.images(x.largestMovedPoint.getOrElseFast(-1) + 1)) === x
     )
   )
 

@@ -13,13 +13,13 @@ import net.alasc.util._
 final class PermArray(val images: Array[Int]) extends PermBase {
   require(images(images.length - 1) != images.length - 1)
   def isId = {
-    assert(images.length > Perm16Encoding.supportMaxElement + 1)
+    assert(images.length > Perm16Encoding.movedPointsUpperBound + 1)
     false
   }
 
   def inverse: PermArray = {
     val array = new Array[Int](images.length)
-    var k = supportMax.get
+    var k = largestMovedPoint.get
     while (k >= 0) {
       array(images(k)) = k
       k -= 1
@@ -28,10 +28,10 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 
   def image(preimage: Int) =
-    if (preimage > supportMax.get) preimage else images(preimage)
+    if (preimage > largestMovedPoint.get) preimage else images(preimage)
 
   def invImage(i: Int): Int =
-    if (i > supportMax.get) i else {
+    if (i > largestMovedPoint.get) i else {
       var k = images.length - 1
       while (k >= 0) {
         if (images(k) == i)
@@ -41,21 +41,21 @@ final class PermArray(val images: Array[Int]) extends PermBase {
       sys.error("Invalid permutation")
     }
 
-  @inline def supportMax = NNSome(images.length - 1)
+  @inline def largestMovedPoint = NNSome(images.length - 1)
 
-  def supportMin: NNOption = {
+  def smallestMovedPoint: NNOption = {
     var k = 0
-    if (supportMax.isEmpty) return NNNone
-    val sm = supportMax.get
+    if (largestMovedPoint.isEmpty) return NNNone
+    val sm = largestMovedPoint.get
     while (k <= sm && images(k) == k)
       k += 1
     assert(k != images.length)
     NNSome(k)
   }
 
-  def support = {
+  def movedPoints = {
     val bitset = metal.mutable.BitSet.empty
-    var k = supportMax.getOrElseFast(-1)
+    var k = largestMovedPoint.getOrElseFast(-1)
     while (k >= 0) {
       if (image(k) != k)
         bitset += k
@@ -64,7 +64,18 @@ final class PermArray(val images: Array[Int]) extends PermBase {
     bitset.toScala
   }
 
-  def isValidPerm32 = supportMax.getOrElseFast(-1) <= Perm32Encoding.supportMaxElement
+  def nMovedPoints = {
+    var n = 0
+    var k = largestMovedPoint.getOrElseFast(-1)
+    while (k >= 0) {
+      if (image(k) != k)
+        n += 1
+      k -= 1
+    }
+    n
+  }
+
+  def isValidPerm32 = largestMovedPoint.getOrElseFast(-1) <= Perm32Encoding.supportMaxElement
 
   def toPerm32 = {
     assert(isValidPerm32)
@@ -84,7 +95,7 @@ final class PermArray(val images: Array[Int]) extends PermBase {
 }
 
 object PermArray extends PermCompanion {
-  @inline def supportMaxElement = Int.MaxValue - 1
+  @inline def movedPointsUpperBound = Int.MaxValue - 1
 
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): PermArray =
     new PermArray(images.view.take(supportMax + 1).toArray)

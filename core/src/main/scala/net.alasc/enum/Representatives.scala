@@ -29,7 +29,7 @@ abstract class Representatives[T, G] extends Iterable[Representative[T, G]] {
 
   def pRep: FaithfulPRep[G] = permutable.pRep(t)
 
-  def symGrp: Grp.SubgroupOf[grp.type, G] = permutable.symmetryGroup(t, grp).asSubgroupOf(grp).get
+  def symGrp: Grp[G] = permutable.symmetryGroup(t, grp)
 
   def length: BigInt = grp.order / symGrp.order
 

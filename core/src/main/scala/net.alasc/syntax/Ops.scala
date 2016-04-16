@@ -16,15 +16,23 @@ final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
 
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
-  def inSupport(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
+  def movesPoint(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
 
-  def support(): Set[Int] = macro Ops.unop[Set[Int]]
+  def movedPoints(): Set[Int] = macro Ops.unop[Set[Int]]
 
-  def supportMax(): NNOption = macro Ops.unop[NNOption]
-  def supportMin(): NNOption = macro Ops.unop[NNOption]
-  def supportAny(): NNOption = macro Ops.unop[NNOption]
+  def nMovedPoints(): Int = macro Ops.unop[Int]
+
+  def largestMovedPoint(): NNOption = macro Ops.unop[NNOption]
+
+  def smallestMovedPoint(): NNOption = macro Ops.unop[NNOption]
+
+  def findMovedPoint(): NNOption = macro Ops.unop[NNOption]
 
   def orbit(rhs: Int): Set[Int] = macro Ops.binop[Int, Set[Int]]
+
+  def signPerm(): Int = macro Ops.unop[Int]
+
+  def cycleStructure(): Map[Int, Int] = macro Ops.unop[Map[Int, Int]]
 
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 

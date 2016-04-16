@@ -27,7 +27,7 @@ object Perm32Encoding {
 
   import java.lang.Long.{numberOfLeadingZeros, numberOfTrailingZeros}
 
-  def supportMin(long2: Long, long1: Long, long0: Long) =
+  def smallestMovedPoint(long2: Long, long1: Long, long0: Long) =
     if (long0 != 0)
       numberOfTrailingZeros(long0) / maskWidth
     else if (long1 != 0)
@@ -37,7 +37,7 @@ object Perm32Encoding {
     else
       -1
 
-  def supportMax(long2: Long, long1: Long, long0: Long) =
+  def largestMovedPoint(long2: Long, long1: Long, long0: Long) =
     if (long2 != 0)
       31 - (numberOfLeadingZeros(long2) - 24) / maskWidth
     else if (long1 != 0)
@@ -59,7 +59,7 @@ object Perm32Encoding {
     finalizeHash(h, 6)
   }
 
-  def inSupport(long2: Long, long1: Long, long0: Long, preimage: Int): Boolean =
+  def movesPoint(long2: Long, long1: Long, long0: Long, preimage: Int): Boolean =
     if (preimage < long1Start)
       ((long0 >>> (preimage * maskWidth)) & mask) != 0
     else if (preimage < long2Start)
@@ -69,12 +69,21 @@ object Perm32Encoding {
     else
       false
 
-  def support(long2: Long, long1: Long, long0: Long): Set[Int] = {
+  def nMovedPoints(long2: Long, long1: Long, long0: Long): Int = {
+    import java.lang.Long.bitCount
+    val s2 = long2 | (long2 >>> 1) | (long2 >>> 2) | (long2 >>> 3) | (long2 >>> 4)
+    val s1 = long1 | (long1 >>> 1) | (long1 >>> 2) | (long1 >>> 3) | (long1 >>> 4)
+    val s0 = long0 | (long0 >>> 1) | (long0 >>> 2) | (long0 >>> 3) | (long0 >>> 4)
+    val mask = 0x42108421
+    bitCount(s0 & mask) + bitCount(s1 & mask) + bitCount(s2 & mask)
+  }
+
+  def movedPoints(long2: Long, long1: Long, long0: Long): Set[Int] = {
     var bitset = 0L
     if (long2 != 0) {
       var k = 31
       while (k >= 24) {
-        if (inSupport(long2, long1, long0, k))
+        if (movesPoint(long2, long1, long0, k))
           bitset |= 1L << k
         k -= 1
       }
@@ -82,7 +91,7 @@ object Perm32Encoding {
     if (long1 != 0) {
       var k = 23
       while (k >= 12) {
-        if (inSupport(long2, long1, long0, k))
+        if (movesPoint(long2, long1, long0, k))
           bitset |= 1L << k
         k -= 1
       }
@@ -90,7 +99,7 @@ object Perm32Encoding {
     if (long0 != 0) {
       var k = 11
       while (k >= 0) {
-        if (inSupport(long2, long1, long0, k))
+        if (movesPoint(long2, long1, long0, k))
           bitset |= 1L << k
         k -= 1
       }
@@ -116,8 +125,8 @@ object Perm32Encoding {
   }
 
   def toPerm16(long2: Long, long1: Long, long0: Long): Perm16 = {
-    var k = supportMax(long2, long1, long0)
-    if (k > Perm16Encoding.supportMaxElement) sys.error("Cannot fit in Perm16.")
+    var k = largestMovedPoint(long2, long1, long0)
+    if (k > Perm16Encoding.movedPointsUpperBound) sys.error("Cannot fit in Perm16.")
     var encoding = 0L
     var l1 = long1
     while (k >= 12) {
@@ -139,9 +148,9 @@ object Perm32Encoding {
   def invImage(long2: Long, long1: Long, long0: Long, i: Int): Int = {
     if ((long2 == 0 && long1 == 0 && long0 == 0) || i > supportMaxElement)
       return i
-    var k = supportMax(long2, long1, long0)
+    var k = largestMovedPoint(long2, long1, long0)
     if (i > k) return i
-    val low = supportMin(long2, long1, long0)
+    val low = smallestMovedPoint(long2, long1, long0)
     if (i < low) return i
     while (k >= low) {
       if (decode(long2, long1, long0, k) == i)
@@ -153,8 +162,8 @@ object Perm32Encoding {
 
   def inverse(p: Perm32): Perm32 = {
     if (p.long2 == 0 && p.long1 == 0 && p.long0 == 0) return p
-    val low = supportMin(p.long2, p.long1, p.long0)
-    var k = supportMax(p.long2, p.long1, p.long0)
+    val low = smallestMovedPoint(p.long2, p.long1, p.long0)
+    var k = largestMovedPoint(p.long2, p.long1, p.long0)
     val res = new Perm32
     while (k >= low) {
       encode(res, decode(p.long2, p.long1, p.long0, k), k)
@@ -168,7 +177,7 @@ object Perm32Encoding {
 
   def fromImages(images: Seq[Int], supportMax: Int = 31): Perm32 = {
     assert(supportMax <= supportMaxElement)
-    assert(supportMax > Perm16Encoding.supportMaxElement)
+    assert(supportMax > Perm16Encoding.movedPointsUpperBound)
     var k = supportMax
     val res = new Perm32
     while (k >= 0) {
@@ -189,15 +198,15 @@ object Perm32Encoding {
   }
 
   def op3232(lhs: Perm32, rhs: Perm32): Perm = {
-    val low = Perm32Encoding.supportMin(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
-    var k = Perm32Encoding.supportMax(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
+    val low = Perm32Encoding.smallestMovedPoint(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
+    var k = Perm32Encoding.largestMovedPoint(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
     var i = 0
-    assert(k > Perm16Encoding.supportMaxElement)
+    assert(k > Perm16Encoding.movedPointsUpperBound)
     @inline def img(preimage: Int) = decode(rhs.long2, rhs.long1, rhs.long0, decode(lhs.long2, lhs.long1, lhs.long0, preimage))
     while (k >= low) {
       i = img(k)
       if (k != i) {
-        if (k <= Perm16Encoding.supportMaxElement) {
+        if (k <= Perm16Encoding.movedPointsUpperBound) {
           var encoding = Perm16Encoding.encode(k, i)
           k -= 1
           while (k >= low) {
@@ -230,18 +239,18 @@ object Perm32Encoding {
 
   def op1632(lhs: Perm16, rhs: Perm32): Perm = {
     if (lhs.isId) return rhs
-    val low = reduceMin(Perm16Encoding.supportMin(lhs.encoding), Perm32Encoding.supportMin(rhs.long2, rhs.long1, rhs.long0))
-    var k = reduceMax(Perm16Encoding.supportMax(lhs.encoding), Perm32Encoding.supportMax(rhs.long2, rhs.long1, rhs.long0))
+    val low = reduceMin(Perm16Encoding.smallestMovedPoint(lhs.encoding), Perm32Encoding.smallestMovedPoint(rhs.long2, rhs.long1, rhs.long0))
+    var k = reduceMax(Perm16Encoding.largestMovedPoint(lhs.encoding), Perm32Encoding.largestMovedPoint(rhs.long2, rhs.long1, rhs.long0))
     var i = 0
-    assert(k > Perm16Encoding.supportMaxElement)
+    assert(k > Perm16Encoding.movedPointsUpperBound)
     @inline def img(preimage: Int) = {
-      val inter = if (preimage > Perm16Encoding.supportMaxElement) preimage else Perm16Encoding.decode(lhs.encoding, preimage)
+      val inter = if (preimage > Perm16Encoding.movedPointsUpperBound) preimage else Perm16Encoding.decode(lhs.encoding, preimage)
       decode(rhs.long2, rhs.long1, rhs.long0, inter)
     }
     while (k >= low) {
       i = img(k)
       if (k != i) {
-        if (k <= Perm16Encoding.supportMaxElement) {
+        if (k <= Perm16Encoding.movedPointsUpperBound) {
           var encoding = Perm16Encoding.encode(k, i)
           k -= 1
           while (k >= low) {
@@ -267,18 +276,18 @@ object Perm32Encoding {
 
   def op3216(lhs: Perm32, rhs: Perm16): Perm = {
     if (rhs.isId) lhs
-    val low = reduceMin(Perm32Encoding.supportMin(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.supportMin(rhs.encoding))
-    var k = reduceMax(Perm32Encoding.supportMax(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.supportMax(rhs.encoding))
+    val low = reduceMin(Perm32Encoding.smallestMovedPoint(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.smallestMovedPoint(rhs.encoding))
+    var k = reduceMax(Perm32Encoding.largestMovedPoint(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.largestMovedPoint(rhs.encoding))
     var i = 0
-    assert(k > Perm16Encoding.supportMaxElement)
+    assert(k > Perm16Encoding.movedPointsUpperBound)
     @inline def img(preimage: Int) = {
       val inter = decode(lhs.long2, lhs.long1, lhs.long0, preimage)
-      if (inter > Perm16Encoding.supportMaxElement) inter else Perm16Encoding.decode(rhs.encoding, inter)
+      if (inter > Perm16Encoding.movedPointsUpperBound) inter else Perm16Encoding.decode(rhs.encoding, inter)
     }
     while (k >= low) {
       i = img(k)
       if (k != i) {
-        if (k <= Perm16Encoding.supportMaxElement) {
+        if (k <= Perm16Encoding.movedPointsUpperBound) {
           var encoding = Perm16Encoding.encode(k, i)
           k -= 1
           while (k >= low) {
@@ -301,4 +310,5 @@ object Perm32Encoding {
     }
     Perm16Encoding.id
   }
+
 }

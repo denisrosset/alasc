@@ -56,7 +56,8 @@ abstract class PGrp[G] extends Grp[G] { lhs =>
     * @param predicate Tests if an element is member of the subgroup
     * @return the subgroup satisfying `predicate`
     */
-  def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): Grp[G]
+  def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): Grp[G] =
+    builder.subgroupFor(this, backtrackTest, predicate)
 
 }
 

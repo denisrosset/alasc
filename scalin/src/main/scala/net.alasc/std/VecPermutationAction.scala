@@ -16,12 +16,12 @@ final class VecPermutation[A, V <: Vec[A], G:PermutationAction:Group](implicit V
   import spire.syntax.action._
   import spire.syntax.group._
 
-  override def actlIsDefined(g: G, v: V) = g.supportMax.getOrElseFast(-1) < v.length
+  override def actlIsDefined(g: G, v: V) = g.largestMovedPoint.getOrElseFast(-1) < v.length
 
-  override def actrIsDefined(v: V, g: G) = g.supportMax.getOrElseFast(-1) < v.length
+  override def actrIsDefined(v: V, g: G) = g.largestMovedPoint.getOrElseFast(-1) < v.length
 
   def partialActl(g: G, v: V): Opt[V] =
-    if (g.supportMax.getOrElseFast(-1) >= v.length) Opt.empty[V] else
+    if (g.largestMovedPoint.getOrElseFast(-1) >= v.length) Opt.empty[V] else
       Opt(V.tabulate(v.length)( k => v(k <|+| g) ))
 
   def partialActr(v: V, g: G): Opt[V] = partialActl(g.inverse, v)

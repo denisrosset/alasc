@@ -60,12 +60,12 @@ object PermHash {
   }
 
   def hash[P: PermutationBuilder](p: P): Int = {
-    val sm = p.supportMax.getOrElseFast(-1)
+    val sm = p.largestMovedPoint.getOrElseFast(-1)
     if (sm <= 15)
       hash16(p)
     else if (sm <= 31)
       hash32(p)
     else
-      unorderedHash(p.support.toSeq.map(k => pairHash(k, k <|+| p)), seed)
+      unorderedHash(p.movedPoints.toSeq.map(k => pairHash(k, k <|+| p)), seed)
   }
 }

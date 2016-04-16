@@ -1,26 +1,13 @@
-package net.alasc.finite
+package net.alasc.prep
 
-import scala.reflect.ClassTag
-
+import net.alasc.finite.Rep
 import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.util.Opt
 
-trait BuiltRep[G] extends Rep[G] {
+import scala.reflect.ClassTag
 
-  type B <: RepBuilder[G] with Singleton
-
-  implicit val builder: B
-
-}
-
-object BuiltRep {
-
-  type In[B0 <: RepBuilder[G] with Singleton, G] = BuiltRep[G] { type B = B0 }
-
-}
-
-/** Describes a family of representations of a group G. 
+/** Describes a family of representations of a group G.
   * Depending on the particular subgroup H of G, the representation 
   * can differ: thus, one obtains a representation valid for a set of generators
   * by calling `build` on those generators.

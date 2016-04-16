@@ -12,11 +12,11 @@ import net.alasc.syntax.permutationAction._
 
 class ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction] extends PartialAction[Array[A], P] {
 
-  override def actlIsDefined(p: P, s: Array[A]) = p.supportMax.getOrElseFast(-1) < s.length
-  override def actrIsDefined(s: Array[A], p: P) = p.supportMax.getOrElseFast(-1) < s.length
+  override def actlIsDefined(p: P, s: Array[A]) = p.largestMovedPoint.getOrElseFast(-1) < s.length
+  override def actrIsDefined(s: Array[A], p: P) = p.largestMovedPoint.getOrElseFast(-1) < s.length
 
   def partialActl(p: P, s: Array[A]): Opt[Array[A]] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) Opt.empty[Array[A]] else {
+    if (p.largestMovedPoint.getOrElseFast(-1) >= s.length) Opt.empty[Array[A]] else {
       val b = new Array[A](s.length)
       cforRange(0 until s.length) { i =>
         b(i) = s(i <|+| p)
@@ -25,7 +25,7 @@ class ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction] extends 
     }
 
   def partialActr(s: Array[A], p: P): Opt[Array[A]] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) Opt.empty[Array[A]] else {
+    if (p.largestMovedPoint.getOrElseFast(-1) >= s.length) Opt.empty[Array[A]] else {
       val b = new Array[A](s.length)
       cforRange(0 until s.length) { i =>
         b(i <|+| p) = s(i)

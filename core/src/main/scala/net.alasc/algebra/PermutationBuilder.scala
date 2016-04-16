@@ -3,14 +3,14 @@ package net.alasc.algebra
 
 import spire.algebra._
 
-trait Permutation[P] extends Group[P] with FaithfulPermutationAction[P]
-
 /** Type class for Permutation-like objects.
-  * 
-  * Combines Eq, Group, Signed and Action[Int, _], along with
-  * additional methods.
-  * 
-  * The standard action for the Action[Int, P] is the right action.
+  *
+  * Combines [[Eq]], [[Group]] and [[FaithfulPermutationAction]] in a single typeclass.
+  */
+trait Permutation[P] extends Eq[P] with Group[P] with FaithfulPermutationAction[P]
+
+/** Type class for Permutation-like objects, where instances can be constructed
+  * from arbitrary images.
   */
 trait PermutationBuilder[P] extends Permutation[P] {
 

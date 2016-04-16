@@ -187,10 +187,10 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     def rec(mutableNode: MutableNode[G], remaining: Iterable[G]): Unit = {
       val (generatorsThere, forNext) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
       if (!forNext.isEmpty)
-        rec(mutableChain.mutableNodeAfter(mutableNode, forNext.head.supportAny.getOrElse(badGen)), forNext)
+        rec(mutableChain.mutableNodeAfter(mutableNode, forNext.head.findMovedPoint.getOrElse(badGen)), forNext)
       generatorsThere.foreach( g => mutableChain.addStrongGeneratorHere(mutableNode, g, g.inverse) )
     }
-    rec(mutableChain.mutableNodeAfter(mutableChain.start, generators.head.supportAny.getOrElse(badGen)), generators)
+    rec(mutableChain.mutableNodeAfter(mutableChain.start, generators.head.findMovedPoint.getOrElse(badGen)), generators)
   }
 
   /** Add a new strong generator `gen` at the node `mutableNode`, and updates the transversal
@@ -254,7 +254,7 @@ object RichMutableChain {
     implicit def action = mutableChain.start.action
     elem.next match {
       case _: Term[G] =>
-        g.supportAny match {
+        g.findMovedPoint match {
           case NNOption(k) =>
             val newNode = NodeBuilder[G].standalone(k)
             mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)

@@ -2,7 +2,6 @@ package net.alasc.perms
 
 import scala.collection.immutable
 
-import spire.algebra.Eq
 import spire.syntax.group._
 
 import net.alasc.algebra._
@@ -38,9 +37,10 @@ sealed trait Perm extends Any {
   def isId: Boolean
   def inverse: Perm
 
-  def supportMax: NNOption
-  def supportMin: NNOption
-  def support: Set[Int]
+  def largestMovedPoint: NNOption
+  def smallestMovedPoint: NNOption
+  def movedPoints: Set[Int]
+  def nMovedPoints: Int
 
   def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).toPermutation[Perm]
   def apply(cycle: String): Perm = apply(cycle.map(DomainAlphabet.map(_)): _*)
@@ -54,13 +54,11 @@ object Perm extends PermCompanion {
 
   val id: Perm = Perm16Encoding.id
 
-  def supportMaxElement = PermArray.supportMaxElement
+  def movedPointsUpperBound = PermArray.movedPointsUpperBound
 
-  implicit val equ: Eq[Perm] = new PermEq
+  implicit val permutationBuilder: PermutationBuilder[Perm] = new PermPermutationBuilder
 
-  implicit val permutation: PermutationBuilder[Perm] = new PermPermutationBuilder
-
-  implicit val permutationRepBuilder: PermutationRepBuilder[Perm] = new PermutationRepBuilder[Perm]()(permutation)
+  implicit val permutationRepBuilder: PermutationRepBuilder[Perm] = new PermutationRepBuilder[Perm]()(permutationBuilder)
 
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
@@ -79,9 +77,9 @@ object Perm extends PermCompanion {
 trait PermCompanion {
 
     /** Maximal support element for this permutation type. */
-  def supportMaxElement: Int
+  def movedPointsUpperBound: Int
 
-  /** Constructs a permutation from a sequence of images, along with 
+  /** Constructs a permutation from a sequence of images, along with
     * the computed maximal support element.of the sequence, i.e. for
     * k = supportMax + 1 ... images.length - 1, images(k) == k.
     *
@@ -97,19 +95,18 @@ trait PermCompanion {
       k -= 1
     if (k == -1)
       Perm.id
-    else if (k <= Perm16Encoding.supportMaxElement)
+    else if (k <= Perm16Encoding.movedPointsUpperBound)
       new Perm16(Perm16Encoding.imagesEncoding(images, k))
     else
       fromImagesAndHighSupportMax(images, k)
   }
 
   /** Constructs a permutation from its support and an image function, with
-    * supportMax = support.max (given as not to compute it twice). 
-    * 
+    * supportMax = support.max (given as not to compute it twice).
+    *
     * @param support    Support of the permutation
     * @param image      Image function
     * @param supportMax `= support.max`, must be > `Perm16Encoding.supportMaxElement`
-    * 
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
   def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm
@@ -118,7 +115,6 @@ trait PermCompanion {
     *
     * @param support    Support of the permutation
     * @param image      Image function
-    * 
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
   def fromSupportAndImageFun(support: Set[Int], imageFun: Int => Int): Perm =
@@ -126,7 +122,7 @@ trait PermCompanion {
       Perm.id
     else {
       val supportMax = support.max
-      if (supportMax <= Perm16Encoding.supportMaxElement)
+      if (supportMax <= Perm16Encoding.movedPointsUpperBound)
         new Perm16(Perm16Encoding.supportAndImageFunEncoding(support, imageFun))
       else
         fromHighSupportAndImageFun(support, imageFun, supportMax)
@@ -152,9 +148,10 @@ final case class Perm16(val encoding: Long) extends AnyVal with Perm { lhs16 =>
   def invImage(i: Int) = Perm16Encoding.invImage(encoding, i)
   def image(i: Int) = Perm16Encoding.image(encoding, i)
   def isId = encoding == 0L
-  def support = Perm16Encoding.support(encoding)
-  def supportMin = NNOption(Perm16Encoding.supportMin(encoding))
-  def supportMax = NNOption(Perm16Encoding.supportMax(encoding))
+  def movedPoints = Perm16Encoding.movedPoints(encoding)
+  def nMovedPoints = Perm16Encoding.nMovedPoints(encoding)
+  def smallestMovedPoint = NNOption(Perm16Encoding.smallestMovedPoint(encoding))
+  def largestMovedPoint = NNOption(Perm16Encoding.largestMovedPoint(encoding))
   def inverse = new Perm16(Perm16Encoding.inverse(encoding))
   def isValidPerm32 = false
   def toPerm32 = sys.error("A Perm16 is never a valid Perm32, because all permutation with support <= 15 are Perm16.")
@@ -162,7 +159,7 @@ final case class Perm16(val encoding: Long) extends AnyVal with Perm { lhs16 =>
 
 object Perm16 extends PermCompanion {
   def fromEncoding(encoding: Long): Perm16 = new Perm16(encoding)
-  def supportMaxElement = 15
+  def movedPointsUpperBound = 15
   def tooBig(supportMax: Int) = sys.error(s"Permutation too big (supportMax = $supportMax) to be encoded in Perm16.")
   def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): Perm =
     tooBig(supportMax)
@@ -177,14 +174,14 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
 
   /** Hash code for permutations: Perm16, Perm32, PermArray subclasses should provide the same
     * hashcode for equivalent permutations.
-    * 
+    *
     * The hashing strategy is described in `perm.PermHash`.
     */
   override def hashCode: Int =
     PermHash.hash(this: Perm)
 
   override def equals(any: Any): Boolean = any match {
-    case rhs: Perm => Perm.equ.eqv(lhs, rhs)
+    case rhs: Perm => Perm.permutationBuilder.eqv(lhs, rhs)
     case _ => false
   }
 
@@ -192,14 +189,15 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
 
 /** Base class for user-defined permutation types for large permutation. A default type
   * is provided in alasc as `PermArray`.
-  * 
+  *
   * The user can override the `genOpLarge`, `genRevOpLarge` methods in priority. The methods
   * `genOp`, `genRevOp` can be override if the user-defined permutations have special structure
   * that enable fast computation of the support of the result.
-  * 
+  *
   * Have a look at the decision logic in `PermPermutation.op`.
   */
 abstract class PermBase extends AbstractPerm {
+
   def inverse: PermBase
 
   def genOpLargeDefault(lhs: Perm, rhs: Perm, givenSupportMax: Int): Perm =
@@ -221,13 +219,13 @@ abstract class PermBase extends AbstractPerm {
     * and delegates to `genOpLarge` or `genRevOpLarge` otherwise.
     */
   def genOpDefaultImpl(lhs: Perm, rhs: Perm, isRev: Boolean): Perm = {
-    var k = lhs.supportMax.reduceMax(rhs.supportMax).getOrElseFast(-1)
-    val low = lhs.supportMin.reduceMin(rhs.supportMin).getOrElseFast(0)
+    var k = lhs.largestMovedPoint.reduceMax(rhs.largestMovedPoint).getOrElseFast(-1)
+    val low = lhs.smallestMovedPoint.reduceMin(rhs.smallestMovedPoint).getOrElseFast(0)
     @inline def img(preimage: Int) = rhs.image(lhs.image(preimage))
     while (k >= low) {
       val i = img(k)
       if (k != i) {
-        if (k <= Perm16Encoding.supportMaxElement) {
+        if (k <= Perm16Encoding.movedPointsUpperBound) {
           var encoding = Perm16Encoding.encode(k, i)
           k -= 1
           while (k >= low) {
@@ -256,12 +254,12 @@ abstract class PermBase extends AbstractPerm {
     Perm16Encoding.id
   }
 
-  /** Computes the product `this |+| rhs`, where `this` is an user-defined permutation type, and 
+  /** Computes the product `this |+| rhs`, where `this` is an user-defined permutation type, and
     * `rhs` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
     */
   def genOp(rhs: Perm): Perm = genOpDefaultImpl(this, rhs, false)
 
-  /** Computes the product `lhs |+| this`, where `this` is an user-defined permutation type, and 
+  /** Computes the product `lhs |+| this`, where `this` is an user-defined permutation type, and
     * `lhs` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
     */
   def genRevOp(lhs: Perm): Perm = genOpDefaultImpl(lhs, this, true)
@@ -271,8 +269,8 @@ abstract class PermBase extends AbstractPerm {
     * in `PermPermutation.eqv` logic. */
   def genEqv(rhs: AbstractPerm): Boolean = {
     val lhs = this
-    val lhsSM = lhs.supportMax
-    val rhsSM = rhs.supportMax
+    val lhsSM = lhs.largestMovedPoint
+    val rhsSM = rhs.largestMovedPoint
     if (lhsSM != rhsSM) false else {
       var k = lhsSM.getOrElseFast(-1)
       while (k >= 0) {
@@ -283,31 +281,41 @@ abstract class PermBase extends AbstractPerm {
       true
     }
   }
+
 }
 
 final class Perm32(var long2: Long = 0L, var long1: Long = 0L, var long0: Long = 0L) extends AbstractPerm { lhs =>
+
   override def hashCode: Int = Perm32Encoding.hash(long2, long1, long0)
 
   def checkNotPerm16() =
     assert(!Perm32Encoding.isValidPerm16(long2, long1, long0))
 
   def isId = long2 == 0L && long1 == 0L && long0 == 0L
+
   def image(preimage: Int) = Perm32Encoding.image(long2, long1, long0, preimage)
   def invImage(i: Int) = Perm32Encoding.invImage(long2, long1, long0, i)
+
   def inverse: Perm32 = Perm32Encoding.inverse(this)
-  def supportMax = NNOption(Perm32Encoding.supportMax(long2, long1, long0))
-  def supportMin = NNOption(Perm32Encoding.supportMin(long2, long1, long0))
-  def support = Perm32Encoding.support(long2, long1, long0)
+
+  def nMovedPoints = Perm32Encoding.nMovedPoints(long2, long1, long0)
+  def movedPoints = Perm32Encoding.movedPoints(long2, long1, long0)
+  def largestMovedPoint = NNOption(Perm32Encoding.largestMovedPoint(long2, long1, long0))
+  def smallestMovedPoint = NNOption(Perm32Encoding.smallestMovedPoint(long2, long1, long0))
+
   def isValidPerm32 = true
   def toPerm32 = this
+
 }
 
 object Perm32 extends PermCompanion {
-  def supportMaxElement = Perm32Encoding.supportMaxElement
+
+  def movedPointsUpperBound = Perm32Encoding.supportMaxElement
 
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm32 =
     Perm32Encoding.fromImages(images, supportMax)
 
   def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm32 =
     Perm32Encoding.fromSupportAndImageFun(support, imageFun)
+
 }

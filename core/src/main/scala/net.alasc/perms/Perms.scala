@@ -18,7 +18,7 @@ final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
     * Inspired by sympy.combinatorics.permutations.
     */
   override def indexOf(perm: Perm): Opt[BigInt] =
-    if (perm.supportMax.getOrElseFast(-1) >= n) Opt.empty[BigInt] else {
+    if (perm.largestMovedPoint.getOrElseFast(-1) >= n) Opt.empty[BigInt] else {
       var rank = BigInt(0)
       val rho: Array[Int] = perm.images(n).toArray
       var k = n - 1

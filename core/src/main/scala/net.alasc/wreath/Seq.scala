@@ -165,11 +165,11 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationA
   import spire.syntax.group._
   import spire.syntax.action._
 
-  override def actlIsDefined(p: P, s: SA) = p.supportMax.getOrElseFast(-1) < s.length
-  override def actrIsDefined(s: SA, p: P) = p.supportMax.getOrElseFast(-1) < s.length
+  override def actlIsDefined(p: P, s: SA) = p.largestMovedPoint.getOrElseFast(-1) < s.length
+  override def actrIsDefined(s: SA, p: P) = p.largestMovedPoint.getOrElseFast(-1) < s.length
 
   def partialActl(p: P, s: SA): Opt[SA] =
-    if (p.supportMax.getOrElseFast(-1) >= s.length) Opt.empty[SA] else {
+    if (p.largestMovedPoint.getOrElseFast(-1) >= s.length) Opt.empty[SA] else {
       val b = cbf()
       b.sizeHint(s)
       for (i <- 0 until s.length)

@@ -2,11 +2,9 @@ package net.alasc.finite
 
 trait Cosets[G] {
 
-  type GG <: Grp[G] with Singleton
+  val grp: Grp[G]
 
-  val grp: GG
-
-  val subgrp: Grp.SubgroupOf[GG, G]
+  val subgrp: Grp[G]
 
 }
 
@@ -19,7 +17,6 @@ trait LeftCosets[G] extends Cosets[G] {
   def size: BigInt = grp.order / subgrp.order
 
 }
-
 
 trait RightCosets[G] extends Cosets[G] {
 

@@ -16,22 +16,29 @@ object Perm16Encoding {
   import java.lang.Long.{numberOfLeadingZeros, numberOfTrailingZeros}
 
   @inline def permMask(preimage: Int): Long = (0xF.toLong << (preimage * 4))
+
   @inline def encode(preimage: Int, image: Int): Long =
     ((image - preimage) & 0xF).toLong << (preimage * 4)
+
   @inline def decode(encoding: Long, preimage: Int): Int =
     ((preimage + (encoding >>> (preimage*4))) & 0x0F).toInt
-  def supportMin(encoding: Long): Int =
+
+  def smallestMovedPoint(encoding: Long): Int =
     if (encoding == 0) -1 else numberOfTrailingZeros(encoding)/4
-  def supportMax(encoding: Long): Int =
+
+  def largestMovedPoint(encoding: Long): Int =
     if (encoding == 0) -1 else 15 - numberOfLeadingZeros(encoding)/4
 
-  @inline def supportMaxElement = 15
+  @inline def movedPointsUpperBound = 15
+
   @inline def idEncoding: Long = 0L
+
   @inline def id: Perm16 = new Perm16(idEncoding)
+
   def invImage(encoding: Long, i: Int): Int = {
-    val low = supportMin(encoding)
+    val low = smallestMovedPoint(encoding)
     if (i < low) return i
-    var k = supportMax(encoding)
+    var k = largestMovedPoint(encoding)
     if (k == -1) k = 0
     if (i > k) return i
     while (k >= low) {
@@ -43,13 +50,13 @@ object Perm16Encoding {
   }
 
   @inline def image(encoding: Long, preimage: Int): Int =
-    if (preimage > supportMaxElement) preimage else decode(encoding, preimage)
+    if (preimage > movedPointsUpperBound) preimage else decode(encoding, preimage)
 
-  def support(encoding: Long): Set[Int] = {
+  def movedPoints(encoding: Long): Set[Int] = {
     var bitset = 0L
     var remaining = encoding
     while (remaining != 0) {
-      val preimage = Perm16Encoding.supportMin(remaining)
+      val preimage = Perm16Encoding.smallestMovedPoint(remaining)
       val image = Perm16Encoding.decode(remaining, preimage)
       bitset |= 1 << preimage
       bitset |= 1 << image
@@ -58,10 +65,13 @@ object Perm16Encoding {
     immutable.BitSet.fromBitMask(Array(bitset))
   }
 
+  def nMovedPoints(encoding: Long): Int =
+    java.lang.Long.bitCount((encoding | (encoding >>> 1) | (encoding >>> 2) | (encoding >>> 3)) & 0x11111111)
+
   def inverse(encoding: Long): Long = {
     if (encoding >= 0 && encoding <= 0xFF) return encoding
-    val low = supportMin(encoding)
-    var k = supportMax(encoding)
+    val low = smallestMovedPoint(encoding)
+    var k = largestMovedPoint(encoding)
     var res = 0L
     while (k >= low) {
       res |= encode(decode(encoding, k), k)
@@ -87,8 +97,8 @@ object Perm16Encoding {
     // both are either identity or (0,1)
     if (lhs >= 0L && lhs <= 0xFFL && rhs >= 0L && rhs <= 0xFFL) return lhs ^ rhs
 
-    val low = supportMin(lhs | rhs)
-    var k = supportMax(lhs | rhs)
+    val low = smallestMovedPoint(lhs | rhs)
+    var k = largestMovedPoint(lhs | rhs)
     var res = 0L
     while (k >= low) {
       res |= encode(k, decode(rhs, decode(lhs, k)))
@@ -100,7 +110,7 @@ object Perm16Encoding {
   def imagesEncoding(images: Seq[Int], supportMax: Int = 15): Long = {
     var encoding = 0L
     var k = supportMax
-    assert(k <= supportMaxElement)
+    assert(k <= movedPointsUpperBound)
     while (k >= 0) {
       val i = images(k)
       encoding |= encode(k, i)
@@ -113,9 +123,10 @@ object Perm16Encoding {
     var encoding = 0L
     support.foreach { k =>
       val i = image(k)
-      assert(k <= supportMaxElement && i <= supportMaxElement)
+      assert(k <= movedPointsUpperBound && i <= movedPointsUpperBound)
       encoding |= encode(k, i)
     }
     encoding
   }
+
 }

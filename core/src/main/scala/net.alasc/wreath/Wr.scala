@@ -55,12 +55,12 @@ class WrEqGroup[A:Eq:Group, H:Eq:PermutationBuilder] extends Eq[Wr[A, H]] with G
   def id = Wr(Seq.empty[A], Group[H].id)
   def inverse(w: Wr[A, H]): Wr[A, H] = {
     val hInv = w.h.inverse
-    val n = w.aSeq.size.max(w.h.supportMax.getOrElseFast(-1) + 1)
+    val n = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
     Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => Group[A].id).inverse), hInv)
   }
   def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
     val newH = x.h |+| y.h
-    val n = x.aSeq.size.max(y.aSeq.size).max(x.h.supportMax.getOrElseFast(-1) + 1)
+    val n = x.aSeq.size.max(y.aSeq.size).max(x.h.largestMovedPoint.getOrElseFast(-1) + 1)
     Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => Group[A].id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => Group[A].id) ), newH)
   }
 

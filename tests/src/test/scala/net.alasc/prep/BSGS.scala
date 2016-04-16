@@ -22,7 +22,7 @@ object Helpers {
 
   def generatorsSupportMax[G:PermutationAction](generators: Iterable[G]): Int =
     generators.foldLeft(-1) {
-      case (mx, g) => spire.math.max(mx, g.supportMax.getOrElse(-1))
+      case (mx, g) => spire.math.max(mx, g.largestMovedPoint.getOrElse(-1))
     }
 
   def groupSupportMax[G](grp: PGrp[G]): Int =

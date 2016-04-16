@@ -1,12 +1,10 @@
 package net.alasc.perms
 package internal
 
-import spire.algebra.Eq
-
 import net.alasc.algebra._
 import net.alasc.util._
 
-final class PermEq extends Eq[Perm] {
+final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   def eqv(x: Perm, y: Perm): Boolean = x match {
     case lhs16: Perm16 => y match {
@@ -15,7 +13,7 @@ final class PermEq extends Eq[Perm] {
     }
     case lhs32: Perm32 => y match {
       case _: Perm16 => false
-      case rhs32: Perm32 => 
+      case rhs32: Perm32 =>
         lhs32.long2 == rhs32.long2 && lhs32.long1 == rhs32.long1 && lhs32.long0 == rhs32.long0
       case rhs: PermBase => rhs.genEqv(lhs32)
     }
@@ -24,10 +22,6 @@ final class PermEq extends Eq[Perm] {
       case rhs: AbstractPerm => lhs.genEqv(rhs)
     }
   }
-
-}
-
-final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   def op(x: Perm, y: Perm): Perm = x match {
     case lhs16: Perm16 => y match {
@@ -47,11 +41,13 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
     }
   }
 
-  def support(p: Perm): Set[Int] = p.support
+  def movedPoints(p: Perm): Set[Int] = p.movedPoints
 
-  def supportMin(p: Perm): NNOption = p.supportMin
+  def nMovedPoints(p: Perm): Int = p.nMovedPoints
 
-  def supportMax(p: Perm): NNOption = p.supportMax
+  def smallestMovedPoint(p: Perm): NNOption = p.smallestMovedPoint
+
+  def largestMovedPoint(p: Perm): NNOption = p.largestMovedPoint
 
   def actr(preimage: Int, p: Perm): Int = p.image(preimage)
 
@@ -61,7 +57,7 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   val id = Perm16Encoding.id
 
-  def supportMaxElement = PermArray.supportMaxElement
+  def movedPointsUpperBound = PermArray.movedPointsUpperBound
 
   def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
 

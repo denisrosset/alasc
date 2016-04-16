@@ -21,27 +21,34 @@ import net.alasc.util._
   *   by first elements.
   */
 class Cycles private[alasc](val seq: Seq[Cycle]) {
+
   override def equals(other: Any) = other match {
-    case that: Cycles => Cycles.Equality.eqv(this, that)
+    case that: Cycles => Cycles.permutationBuilder.eqv(this, that)
     case _ => false
   }
+
   override def hashCode = seq.hashCode
+
   override def toString: String = "Cycles" + string
+
   def string: String = seq.map(_.string).mkString
+
   def stringUsing(symbols: Int => String): String =
     seq.map(_.stringUsing(symbols(_))).mkString
-  def apply(cycle: Int*) = Cycles.Algebra.op(this, Cycles(cycle: _*))
-  def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
-}
 
-class CyclesEq extends Eq[Cycles] {
-  implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
-  def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
+  def apply(cycle: Int*) = Cycles.permutationBuilder.op(this, Cycles(cycle: _*))
+
+  def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
+
 }
 
 class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
 
-  def supportMaxElement = Int.MaxValue
+  implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
+
+  def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
+
+  def movedPointsUpperBound = Int.MaxValue
 
   def fromImages(images: Seq[Int]): Cycles = {
     val support = BitSet(0 until images.size:_*).filter(k => images(k) != k)
@@ -67,34 +74,37 @@ class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
     new Cycles(cycles.filter(_.length > 1).sorted)
   }
 
-
   def id = new Cycles(Seq.empty[Cycle])
 
   def op(x: Cycles, y: Cycles) = 
-    Cycles.Algebra.fromSupportAndImageFun(support(x) ++ support(y), (i: Int) => actr(actr(i, x), y))
+    Cycles.permutationBuilder.fromSupportAndImageFun(movedPoints(x) ++ movedPoints(y), (i: Int) => actr(actr(i, x), y))
 
   def inverse(a: Cycles) = fromDisjointCycles(a.seq.map(_.inverse))
 
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
   override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
 
-  override def supportAny(c: Cycles) =
+  override def findMovedPoint(c: Cycles) =
     if (c.seq.isEmpty) NNNone else NNSome(c.seq.head.seq.head)
 
-  def supportMin(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
-  def supportMax(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))
-  def support(c: Cycles): BitSet =
+  def smallestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
+  def largestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))
+  def movedPoints(c: Cycles): BitSet =
     (BitSet.empty /: c.seq) { case (set, cycle) => set union cycle.support }
+  def nMovedPoints(c: Cycles): Int = c.seq.foldLeft(0) { case (acc, c) => acc + Cycle.permutationAction.nMovedPoints(c) }
 }
 
 object Cycles {
-  implicit val Algebra: PermutationBuilder[Cycles] = new CyclesPermutationBuilder
-  implicit val Equality: Eq[Cycles] = new CyclesEq
+
+  implicit val permutationBuilder: PermutationBuilder[Cycles] = new CyclesPermutationBuilder
+
   def apply(seq: Int*): Cycles = seq.size match {
-    case 0 | 1 => Algebra.id
+    case 0 | 1 => permutationBuilder.id
     case _ => new Cycles(Seq(Cycle(seq: _*)))
   }
+
   def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
 
   implicit def cycleToCycles(c: Cycle): Cycles = new Cycles(Seq(c))
+
 }

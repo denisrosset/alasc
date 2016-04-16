@@ -1,15 +1,13 @@
 package net.alasc.finite
 
-import scala.annotation.tailrec
 import scala.util.Random
 
 import spire.algebra.{Eq, Group, PartialOrder}
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 import spire.syntax.group._
-import spire.util.Opt
 
 /** Finite group base class. */
-abstract class Grp[G] {
+abstract class Grp[G] { lhs =>
 
   override def toString = generators.mkString("Grp(", ", ", ")") +  s" of order $order"
 
@@ -21,31 +19,6 @@ abstract class Grp[G] {
       group.id == that.group.id &&
       that.generators.forall(contains(_))
     case _ => false
-  }
-
-  type Parent <: Grp[G] with Singleton
-
-  val parentOrNull: Parent
-
-  def parent: Parent =
-    if (parentOrNull eq null) sys.error("Grp has no registered parent") else parentOrNull
-
-  protected[alasc] def copyWithParentOrNull(newParentOrNull: Grp[G]): Grp.SubgroupOf[newParentOrNull.type, G]
-
-  def asSubgroupOf(newParent: Grp[G]): Opt[Grp.SubgroupOf[newParent.type, G]] = {
-    @tailrec def findParent(current: Grp[G]): Opt[Grp.SubgroupOf[newParent.type, G]] =
-      if (current.parentOrNull eq newParent)
-        Opt(copyWithParentOrNull(newParent))
-      else if (current.parentOrNull eq null) {
-        if (newParent.hasSubgroup(this))
-          Opt(copyWithParentOrNull(newParent))
-        else
-          Opt.empty[Grp.SubgroupOf[newParent.type, G]]
-      } else findParent(current.parentOrNull)
-    if (newParent eq this)
-      Opt(copyWithParentOrNull(newParent))
-    else
-      findParent(this)
   }
 
   implicit def builder: GrpBuilder[G]
@@ -72,39 +45,31 @@ abstract class Grp[G] {
   def isTrivial: Boolean = generators.isEmpty
 
   /** Returns the group H = hInv G h, where G is this group. */
-  def conjugatedBy(h: G, hInvOpt: Opt[G] = Opt.empty): Grp[G] = {
-    val hInv = hInvOpt match {
-      case Opt(e) => e
-      case _ => h.inverse
-    }
-    def conjugatedRandomElement(random: Random): G = hInv |+| randomElement(random) |+| h
-    builder.fromGeneratorsRandomElementsAndOrder(generators.map(g => hInv |+| g |+| h),
-      conjugatedRandomElement(_), order)
-  }
+  def conjugatedBy(h: G): Grp[G] = builder.conjugatedBy(lhs, h)
 
   /** Generates a random element. */
   def randomElement(random: Random): G
 
   /** Tests whether `rhs` is a subgroup of this group. */
-  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(contains(_))
+  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(contains)
 
   /** Tests whether this group is a subgroup of `rhs`. */
-  def isSubgroupOf(rhs: Grp[G]): Boolean = generators.forall(rhs.contains(_))
+  def isSubgroupOf(rhs: Grp[G]): Boolean = generators.forall(rhs.contains)
 
   /** Union (closure) of groups. */
-  def union(rhs: Grp[G]): Grp[G]
+  def union(rhs: Grp[G]): Grp[G] = builder.union(lhs, rhs)
 
   /** Intersection of groups. */
-  def intersect(rhs: Grp[G]): Grp[G]
+  def intersect(rhs: Grp[G]): Grp[G] = builder.intersect(lhs, rhs)
 
   /** Left cosets. */
-  def leftCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): LeftCosets[G]
+  def leftCosetsBy(subgrp: Grp[G]): LeftCosets[G] = builder.leftCosetsBy(lhs, subgrp)
 
   /** Right cosets. */
-  def rightCosetsBy(rhs: Grp.SubgroupOf[this.type, G]): RightCosets[G]
+  def rightCosetsBy(subgrp: Grp[G]): RightCosets[G] = builder.rightCosetsBy(lhs, subgrp)
 
   /** Simplifies the description current group.*/
-  def simplified: Grp[G]
+  def smallGeneratingSet: Iterable[G] = builder.smallGeneratingSet(lhs)
 
 }
 
@@ -113,8 +78,6 @@ object Grp {
   implicit def partialOrder[G]: PartialOrder[Grp[G]] = new GrpPartialOrder[G]
 
   implicit def lattice[G](implicit builder: GrpBuilder[G]): Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G]
-
-  type SubgroupOf[P <: Grp[G] with Singleton, G] = Grp[G] { type Parent = P }
 
   def apply[G](generators: G*)(implicit builder: GrpBuilder[G]): Grp[G] = {
     import builder.{equ, group}
@@ -128,9 +91,6 @@ object Grp {
 
   def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGeneratorsAndOrder(generators, order)
-
-  def fromGeneratorsRandomElementsAndOrder[G](generators: Iterable[G], randomElement: Random => G, order: BigInt)(implicit builder: GrpBuilder[G]): Grp[G] =
-    builder.fromGeneratorsRandomElementsAndOrder(generators, randomElement, order)
 
 }
 

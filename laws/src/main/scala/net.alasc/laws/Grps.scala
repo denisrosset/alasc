@@ -9,8 +9,8 @@ object Grps {
 
   def genRandomElement[G](grp: Grp[G]): Gen[G] = Gen.parameterized { params => grp.randomElement(params.rng) }
 
-  def genSubgrp[G:GrpBuilder](grp: Grp[G]): Gen[Grp.SubgroupOf[grp.type, G]] =
-    fromElements(genRandomElement(grp)).map(_.asSubgroupOf(grp).get)
+  def genSubgrp[G:GrpBuilder](grp: Grp[G]): Gen[Grp[G]] =
+    fromElements(genRandomElement(grp))
 
   def fromElements[G:GrpBuilder](elements: Gen[G]): Gen[Grp[G]] =
     for {
@@ -32,7 +32,7 @@ object Grps {
       arb.arbitrary.map(grp => builder.fromGrp(grp))
     }
 
-  implicit def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp.SubgroupOf[GG, G]] =
+  implicit def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =
     Arbitrary(genSubgrp(witness.value: GG))
 
   implicit def instances[G:Instances:GrpBuilder]: Instances[Grp[G]] =

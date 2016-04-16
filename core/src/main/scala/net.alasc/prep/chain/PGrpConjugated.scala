@@ -18,7 +18,6 @@ import bsgs._
   * @note The `representation` must be able to represent `g`.
   */
 class PGrpConjugated[
-    Parent0 <: Grp[G] with Singleton,
     R0 <: FaithfulPRep[G] with Singleton,
     G
   ](
@@ -26,18 +25,12 @@ class PGrpConjugated[
     val originalChain: Chain[G],
     val g: G,
     val gInv: G,
-    originalGeneratorsOpt: Opt[Iterable[G]] = Opt.empty[Iterable[G]],
-    val parentOrNull: Parent0 = null
+    originalGeneratorsOpt: Opt[Iterable[G]] = Opt.empty[Iterable[G]]
   )(
     implicit val builder: PGrpChainBuilder[G]
   ) extends PGrpChain[G] { lhs =>
 
-  type Parent = Parent0
-
   type R = R0
-
-  protected[alasc] def copyWithParentOrNull(newParentOrNull: Grp[G]): Grp.SubgroupOf[newParentOrNull.type, G] =
-    new PGrpConjugated[newParentOrNull.type, R0, G](pRep, originalChain, g, gInv, originalGeneratorsOpt, newParentOrNull)
 
   def originalGenerators = originalGeneratorsOpt match {
     case Opt(g) => g
@@ -74,22 +67,19 @@ class PGrpConjugated[
     gInv |+| h |+| g
   }
 
-  override def conjugatedBy(h: G, hInvOpt: Opt[G] = Opt.empty[G]): Grp[G] =
+  override def conjugatedBy(h: G): Grp[G] =
     if (pRep.represents(h)) {
-      val hInv = hInvOpt match {
-        case Opt(e) => e
-        case _ => h.inverse
-      }
-      new PGrpConjugated[Null, R, G](pRep, originalChain, g |+| h, hInv |+| gInv)
+      val hInv = h.inverse
+      new PGrpConjugated[R, G](pRep, originalChain, g |+| h, hInv |+| gInv)
     } else
-      super.conjugatedBy(h, hInvOpt)
+      super.conjugatedBy(h)
 
   def pointwiseStabilizer(set: Set[Int]): Grp[G] = {
     val mut = imply(pRep.permutationAction) { originalChain.mutableChain }
     mut.conjugate(g, gInv)
     baseChange.changeBase(mut, PointwiseStabilizer.baseGuide(set))
     val guidedChain = mut.toChain()
-    new PGrpExplicit[this.type, R, G](pRep, PointwiseStabilizer.recurse(guidedChain, set), Opt.empty[Iterable[G]], this)
+    new PGrpExplicit[R, G](pRep, PointwiseStabilizer.recurse(guidedChain, set), Opt.empty[Iterable[G]])
   }
 
   def stabilizerTransversal(b: Int): (Grp[G], bsgs.Transversal[G]) = originalChain match {
@@ -101,7 +91,7 @@ class PGrpConjugated[
           val uInv = node.uInv(a)
           val newG = u |+| g
           val newGInv = gInv |+| uInv
-          val nextGrp = new PGrpConjugated[this.type, R, G](pRep, node.next, newG, newGInv, Opt.empty[Iterable[G]], this)
+          val nextGrp = new PGrpConjugated[R, G](pRep, node.next, newG, newGInv, Opt.empty[Iterable[G]])
           val trv = ConjugatedTransversal(node, newG, newGInv)
           (nextGrp, trv)
         } else if (node.isFixed(a))
@@ -109,7 +99,7 @@ class PGrpConjugated[
         else {
           val newChain = BuildChain.fromChain(originalChain, pRep.permutationAction, Opt(BaseGuideSeq(Seq(a))))
           val (nextOriginalChain, originalTransversal) = newChain.detach(a)
-          val nextGrp = new PGrpConjugated[this.type, R, G](pRep, nextOriginalChain, g, gInv, Opt.empty[Iterable[G]], this)
+          val nextGrp = new PGrpConjugated[R, G](pRep, nextOriginalChain, g, gInv, Opt.empty[Iterable[G]])
           val trv = ConjugatedTransversal(originalTransversal, g, gInv)
           (nextGrp, trv)
         }
@@ -122,18 +112,6 @@ class PGrpConjugated[
       Opt((builder.fromChainSubgroupOfIn(this)(pRep, Opt.empty[BaseGuide])(node.next), ConjugatedTransversal(node, g, gInv)))
     }
     case _ => Opt.empty[(Grp[G], bsgs.Transversal[G])]
-  }
-
-  def subgroupFor(definition: SubgroupDefinition[G]): Grp[G] = {
-    val mut = imply(pRep.permutationAction) { originalChain.mutableChain }
-    mut.conjugate(g, gInv)
-    definition.baseGuideOpt match {
-      case Opt(baseGuide) => baseChange.changeBase(mut, baseGuide)
-      case _ =>
-    }
-    val guidedChain = mut.toChain()
-    val result = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new PGrpExplicit[this.type, R, G](pRep, result, Opt.empty[Iterable[G]], this)
   }
 
 }

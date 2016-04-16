@@ -9,7 +9,6 @@ import spire.syntax.action._
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.finite._
 import net.alasc.prep._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
@@ -17,7 +16,7 @@ import net.alasc.util._
 final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
 
   def build(generators: Iterable[Wr[A, H]]) = {
-    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.supportMax.getOrElseFast(-1) + 1) }
+    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
     val aRep = A.build(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
@@ -30,7 +29,7 @@ final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A
     val factors: Array[Int] = Array.fill(n)(aSize).scanLeft(1)(_*_)
     val size = factors.last
     val aDiv = Divisor(size - 1, aSize)
-    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.supportMax.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
+    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     val permutationAction = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
@@ -60,8 +59,9 @@ final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A
           }
           ind
         }
-      def supportMaxElement = size
-      def support(w: Wr[A, H]) = {
+      def movedPointsUpperBound = size
+      def nMovedPoints(w: Wr[A, H]) = movedPoints(w).size
+      def movedPoints(w: Wr[A, H]) = {
         val bitset = metal.mutable.BitSet.empty
         var i = 0
         while (i < size) {
@@ -71,7 +71,7 @@ final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A
         }
         bitset.toScala
       }
-      def supportMin(w: Wr[A, H]): NNOption = {
+      def smallestMovedPoint(w: Wr[A, H]): NNOption = {
         var i = 0
         while (i < size) {
           if (actr(i, w) != i)
@@ -80,7 +80,7 @@ final class WrPrimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A
         }
         NNNone
       }
-      def supportMax(w: Wr[A, H]): NNOption =  {
+      def largestMovedPoint(w: Wr[A, H]): NNOption =  {
         var i = size - 1
         while (i >= 0) {
           if (actr(i, w) != i)

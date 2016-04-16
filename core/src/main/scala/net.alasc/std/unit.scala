@@ -26,10 +26,11 @@ trait UnitGroup extends Group[Unit] {
 trait UnitPermutation extends FaithfulPermutationAction[Unit] {
   def actl(g: Unit, p: Int): Int = p
   override def actr(p: Int, g: Unit): Int = p
-  def support(g: Unit): Set[Int] = Set.empty[Int]
-  def supportMax(g: Unit) = NNNone
-  def supportMin(g: Unit) = NNNone
-  def supportMaxElement: Int = -1
+  def movedPoints(g: Unit): Set[Int] = Set.empty[Int]
+  def largestMovedPoint(g: Unit) = NNNone
+  def smallestMovedPoint(g: Unit) = NNNone
+  def movedPointsUpperBound: Int = -1
+  def nMovedPoints(g: Unit) = 0
 }
 
 class UnitAlgebra extends UnitGroup with UnitPermutation

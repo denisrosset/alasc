@@ -6,7 +6,7 @@ import spire.algebra.PartialOrder
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 
 import net.alasc.algebra._
-import net.alasc.finite.{BuiltRep, Rep, RepBuilder}
+import net.alasc.finite.Rep
 
 trait PRep[G] extends Rep[G] {
 

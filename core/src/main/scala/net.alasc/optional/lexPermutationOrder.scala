@@ -12,7 +12,7 @@ object lexPermutationOrder {
     override def eqv(x: P, y: P) = Eq[P].eqv(x, y)
 
     def compare(x: P, y: P): Int = {
-      val n = x.supportMax.getOrElseFast(-1).max(y.supportMax.getOrElseFast(-1)) + 1
+      val n = x.largestMovedPoint.getOrElseFast(-1).max(y.largestMovedPoint.getOrElseFast(-1)) + 1
       var i = 0
       while (i < n) {
         val c = ((i <|+| x) - (i <|+| y)).signum

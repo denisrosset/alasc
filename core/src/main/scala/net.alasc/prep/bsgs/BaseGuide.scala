@@ -29,7 +29,7 @@ trait BaseGuide {
     val it = iterator
     @tailrec def rec(remaining: Iterable[G]): Unit =
       if (remaining.nonEmpty && it.hasNext) {
-        val sup = remaining.map(action.support(_)).reduce(_ ++ _)
+        val sup = remaining.map(action.movedPoints(_)).reduce(_ ++ _)
         if (sup.nonEmpty) {
           val beta = it.next(sup.min, sup, (k: Int) => remaining.forall(g => (action.actr(k, g)) == k))
           base += beta

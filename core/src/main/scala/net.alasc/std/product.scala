@@ -6,7 +6,6 @@ import spire.algebra._
 import spire.algebra.lattice.{Lattice, BoundedJoinSemilattice}
 
 import net.alasc.algebra._
-import net.alasc.finite._
 import net.alasc.prep._
 
 final class PRepBuilderProduct2[A, B](val structure1: PRepBuilder[A], val structure2: PRepBuilder[B]) extends PRepBuilder[(A, B)] {
@@ -33,13 +32,14 @@ final class PRepBuilderProduct2[A, B](val structure1: PRepBuilder[A], val struct
         if (p < _1.size) action1.actl(x0._1, p)
         else if (p < _1.size + _2.size) action2.actl(x0._2, p - _1.size) + _1.size
         else p
-      def support(x0: Prod) =
-        action1.support(x0._1) ++ action2.support(x0._2).map(_ + _1.size)
-      def supportMin(x0: Prod) =
-        action1.supportMin(x0._1).orElseInt(action2.supportMin(x0._2).mapInt(_ + _1.size))
-      def supportMax(x0: Prod) =
-        action2.supportMax(x0._2).mapInt(_ + _1.size).orElseInt(action1.supportMax(x0._1))
-      def supportMaxElement = _1.size + _2.size
+      def movedPoints(x0: Prod) =
+        action1.movedPoints(x0._1) ++ action2.movedPoints(x0._2).map(_ + _1.size)
+      def smallestMovedPoint(x0: Prod) =
+        action1.smallestMovedPoint(x0._1).orElseInt(action2.smallestMovedPoint(x0._2).mapInt(_ + _1.size))
+      def largestMovedPoint(x0: Prod) =
+        action2.largestMovedPoint(x0._2).mapInt(_ + _1.size).orElseInt(action1.largestMovedPoint(x0._1))
+      def movedPointsUpperBound = _1.size + _2.size
+      def nMovedPoints(x0: Prod): Int = action1.nMovedPoints(x0._1) + action2.nMovedPoints(x0._2)
     }
   }
 

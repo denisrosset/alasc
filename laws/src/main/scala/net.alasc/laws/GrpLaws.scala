@@ -70,7 +70,7 @@ trait GrpLaws[G, GG <: Grp[G]] extends Laws {
 
       "conjugatedBy" -> forAll { (grp: GG, h: G) =>
         val hInv = h.inverse
-        val conjGrp = grp.conjugatedBy(h, Opt(hInv))
+        val conjGrp = grp.conjugatedBy(h)
         forAll(Grps.genRandomElement(grp)) { g =>
           conjGrp.contains(hInv |+| g |+| h)
         } && grp.order == conjGrp.order
@@ -79,7 +79,7 @@ trait GrpLaws[G, GG <: Grp[G]] extends Laws {
       "conjugatedBy composition" -> forAll { (grp: GG, h1: G, h2: G) =>
         val hInv1 = h1.inverse
         val hInv2 = h2.inverse
-        grp.conjugatedBy(h1, Opt(hInv1)).conjugatedBy(h2, Opt(hInv2)) == grp.conjugatedBy(h1 |+| h2, Opt(hInv2 |+| hInv1))
+        grp.conjugatedBy(h1).conjugatedBy(h2) == grp.conjugatedBy(h1 |+| h2)
       },
 
       "randomElement" -> forAll { (grp: GG) =>
