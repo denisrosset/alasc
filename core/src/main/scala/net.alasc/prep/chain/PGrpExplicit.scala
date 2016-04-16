@@ -66,9 +66,4 @@ final class PGrpExplicit[
       (nextGrp, trv)
   }
 
-  override def conjugatedBy(h: G): Grp[G] =
-    if (pRep.represents(h)) {
-      new PGrpConjugated[R, G](pRep, chain, h, h.inverse)
-    } else super.conjugatedBy(h)
-
 }

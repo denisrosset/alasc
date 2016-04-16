@@ -39,7 +39,7 @@ abstract class Grp[G] { lhs =>
   def generators: Iterable[G]
 
   /** Group order. */
-  def order: BigInt
+  def order: BigInt // TODO: replace by SafeLong
 
   /** Returns whether this is the trivial group with a single identity element. */
   def isTrivial: Boolean = generators.isEmpty
