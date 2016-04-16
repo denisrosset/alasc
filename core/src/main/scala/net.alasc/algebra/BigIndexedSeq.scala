@@ -9,6 +9,10 @@ import spire.util.Opt
 trait BigIndexedSeq[A] extends PartialFunction[BigInt, A] with Iterable[A] { self =>
   override def toString = s"BigIndexedSeq($head, ... total of $length elements)"
   def length: BigInt
+  override def size: Int = {
+    val l = length
+    if (l.isValidInt) l.toInt else sys.error(s"$l is too big to be a valid Int")
+  }
   def apply(idx: BigInt): A
   def isDefinedAt(idx: BigInt): Boolean = (idx >= 0 && idx < length)
   def indexOf(a: A): Opt[BigInt] = {
