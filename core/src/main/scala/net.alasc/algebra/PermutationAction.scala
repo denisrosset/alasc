@@ -49,9 +49,9 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     var sign = 1
     while (rest.nonEmpty) {
       val h = rest.min
-      var iter = actr(h, g)
+      var iter = h
       var n = 0
-      while (iter != h) {
+      while (n == 0 || iter != h) {
         rest -= iter
         n += 1
         iter = actr(iter, g)
@@ -68,9 +68,9 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     val cs = metal.mutable.HashMap.empty[Int, Int]
     while (rest.nonEmpty) {
       val h = rest.min
-      var iter = actr(h, g)
+      var iter = h
       var n = 0
-      while (iter != h) {
+      while (n == 0 || iter != h) {
         rest -= iter
         n += 1
         iter = actr(iter, g)

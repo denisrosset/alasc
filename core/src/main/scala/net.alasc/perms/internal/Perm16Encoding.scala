@@ -65,8 +65,19 @@ object Perm16Encoding {
     immutable.BitSet.fromBitMask(Array(bitset))
   }
 
-  def nMovedPoints(encoding: Long): Int =
-    java.lang.Long.bitCount((encoding | (encoding >>> 1) | (encoding >>> 2) | (encoding >>> 3)) & 0x11111111)
+  def nMovedPoints(encoding: Long): Int = {
+    val mask = 0x1111111111111111L
+    val antimask = ~mask
+    var rest = encoding
+    var bits = encoding
+    rest = (rest & antimask) >>> 1
+    bits |= rest
+    rest = (rest & antimask) >>> 1
+    bits |= rest
+    rest = (rest & antimask) >>> 1
+    bits |= rest
+    java.lang.Long.bitCount(bits & mask)
+  }
 
   def inverse(encoding: Long): Long = {
     if (encoding >= 0 && encoding <= 0xFF) return encoding

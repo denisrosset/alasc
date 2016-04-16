@@ -70,12 +70,22 @@ object Perm32Encoding {
       false
 
   def nMovedPoints(long2: Long, long1: Long, long0: Long): Int = {
-    import java.lang.Long.bitCount
-    val s2 = long2 | (long2 >>> 1) | (long2 >>> 2) | (long2 >>> 3) | (long2 >>> 4)
-    val s1 = long1 | (long1 >>> 1) | (long1 >>> 2) | (long1 >>> 3) | (long1 >>> 4)
-    val s0 = long0 | (long0 >>> 1) | (long0 >>> 2) | (long0 >>> 3) | (long0 >>> 4)
-    val mask = 0x42108421
-    bitCount(s0 & mask) + bitCount(s1 & mask) + bitCount(s2 & mask)
+    def nonZero(l: Long): Int = {
+      val mask = 0x1084210842108421L
+      val antimask = ~mask
+      var rest = l
+      var bits = l
+      rest = (rest & antimask) >>> 1
+      bits |= rest
+      rest = (rest & antimask) >>> 1
+      bits |= rest
+      rest = (rest & antimask) >>> 1
+      bits |= rest
+      rest = (rest & antimask) >>> 1
+      bits |= rest
+      java.lang.Long.bitCount(bits & mask)
+    }
+    nonZero(long2) + nonZero(long1) + nonZero(long0)
   }
 
   def movedPoints(long2: Long, long1: Long, long0: Long): Set[Int] = {
