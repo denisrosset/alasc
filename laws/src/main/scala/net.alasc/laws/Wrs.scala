@@ -12,7 +12,7 @@ import net.alasc.syntax.permutationAction._
 
 case class WrSize(a: Int, h: Int) {
 
-  def aPerm[A:PermutationBuilder] = Perm(0, a - 1).to[A]
+  def aPerm[A:PermutationBuilder] = Perm(0, a - 1).toPermutation[A]
 
   def primitiveRepresentation[A:Group:PermutationBuilder:PermutationRepBuilder, H:PermutationBuilder:PermutationRepBuilder]: FaithfulPRep[Wr[A, H]] = {
     val wrpr = new WrPrimitivePRepBuilder[A, H]

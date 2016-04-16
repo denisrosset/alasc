@@ -28,7 +28,7 @@ import internal._
 sealed trait Perm extends Any {
 
   override def toString =
-    if (isId) "Perm.id" else "Perm" + this.to[Cycles].string
+    if (isId) "Perm.id" else "Perm" + this.toPermutation[Cycles].string
 
   protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
@@ -42,7 +42,7 @@ sealed trait Perm extends Any {
   def supportMin: NNOption
   def support: Set[Int]
 
-  def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).to[Perm]
+  def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).toPermutation[Perm]
   def apply(cycle: String): Perm = apply(cycle.map(DomainAlphabet.map(_)): _*)
 
   def isValidPerm32: Boolean

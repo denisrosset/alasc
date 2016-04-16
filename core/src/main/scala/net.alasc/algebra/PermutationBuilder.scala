@@ -34,11 +34,6 @@ trait PermutationBuilder[P] extends Permutation[P] {
     fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))
   }
 
-  def from[Q](q: Q)(implicit evQ: FaithfulPermutationAction[Q]): P =
-    fromSupportAndImageFun(evQ.support(q), k => evQ.actr(k, q))
-
-  def compatibleWith(p: P) = true
-
   def random(size: Int)(implicit gen: scala.util.Random): P = {
     import spire.std.int._
     sorting(Seq.tabulate(size)(k => gen.nextInt))

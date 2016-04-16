@@ -148,7 +148,7 @@ trait PGrpLaws[G, GG <: PGrp[G]] extends GrpLaws[G, GG] {
 
       "find" -> forAll { (pGrp: GG) =>
         forAll(Grps.genRandomElement(pGrp)) { g =>
-          val Opt(recov) = pGrp.find(pGrp.pRep.permutationAction.to[Perm](g))
+          val Opt(recov) = pGrp.find(pGrp.pRep.permutationAction.toPermutation[Perm](g))
           recov === g
         }
       },
@@ -156,8 +156,8 @@ trait PGrpLaws[G, GG <: PGrp[G]] extends GrpLaws[G, GG] {
       "lexElements" -> forAll { (pGrp: GG) =>
         import net.alasc.optional.lexPermutationOrder._
         val lexSeq = pGrp.lexElements.iterator
-          .map( g => pGrp.pRep.permutationAction.to[Perm](g) ).toSeq
-        val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.to[Perm] < g2.to[Perm] }
+          .map( g => pGrp.pRep.permutationAction.toPermutation[Perm](g) ).toSeq
+        val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
         (lexSeq.size == pGrp.order) && ordered
       },
 
@@ -204,7 +204,7 @@ trait PGrpLaws[G, GG <: PGrp[G]] extends GrpLaws[G, GG] {
 
       "find" -> forAll { (pGrp: GG, g: G) =>
         pGrp.pRep.represents(g) ==> {
-          val permEl = pGrp.pRep.permutationAction.to[Perm](g)
+          val permEl = pGrp.pRep.permutationAction.toPermutation[Perm](g)
           pGrp.find(permEl) match {
             case Opt(h) => g === h
             case _ => !pGrp.contains(g)

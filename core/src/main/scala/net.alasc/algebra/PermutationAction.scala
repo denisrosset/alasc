@@ -8,6 +8,8 @@ import metal.syntax._
 
 import net.alasc.util._
 
+import metal.syntax._
+
 trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Tests if the point `i` is in the support of `g`. */
@@ -30,6 +32,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   /** Returns an upper bound on the maximal element in the support of any element of `G`. */
   def supportMaxElement: Int
 
+  /** Returns the orbit of the domain element `i` under the action of `g`. */
   def orbit(g: G, i: Int): Set[Int] = {
     val mut = metal.mutable.BitSet(i)
     @tailrec def rec(k: Int): Unit =
@@ -41,14 +44,16 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     mut.toScala
   }
 
-  // TODO: remove, as `to` is sufficient
+  /** Returns the images of `g` on the domain (0 until n).
+    *
+    * Requires that `n > supportMax(g)`.*/
   def images(g: G, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
     require(supportMax(g).getOrElseFast(-1) < n)
     def length = n
     def apply(idx: Int) = actr(idx, g)
   }
 
-  def to[P](g: G)(implicit evP: PermutationBuilder[P]): P =
+  def toPermutation[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(support(g), k => actr(k, g))
 
 }

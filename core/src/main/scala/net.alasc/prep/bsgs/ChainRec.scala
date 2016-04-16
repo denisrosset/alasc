@@ -103,8 +103,8 @@ object ChainRec {
           siftOther(node.next, pInv |+| node.uInv(b), q)
       case _: Term[P] =>
         val p = pInv.inverse
-        val pPerm = FaithfulPermutationAction[P].to[Perm](p)
-        val qPerm = FaithfulPermutationAction[Q].to[Perm](q)
+        val pPerm = FaithfulPermutationAction[P].toPermutation[Perm](p)
+        val qPerm = FaithfulPermutationAction[Q].toPermutation[Perm](q)
         if (pPerm === qPerm) Opt(p) else Opt.empty[P]
     }
 
