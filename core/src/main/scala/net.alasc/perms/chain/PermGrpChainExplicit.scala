@@ -4,13 +4,18 @@ package chain
 import spire.util.Opt
 import scala.util.Random
 
+import spire.algebra.{Eq, Group}
+
+import net.alasc.algebra.Permutation
 import net.alasc.prep.bsgs._
 
 final class PermGrpChainExplicit[G](val chain: Chain[G], generatorsOpt: Opt[Iterable[G]])
-                                   (implicit val builder: PermGrpChainBuilder[G])
+                                   (implicit val equ: Eq[G],
+                                    val group: Group[G],
+                                    val permutation: Permutation[G])
   extends PermGrpChain[G] {
 
-  def this(chain: Chain[G])(implicit builder: PermGrpChainBuilder[G]) = this(chain, Opt.empty[Iterable[G]])(builder)
+  def this(chain: Chain[G])(implicit permutation: Permutation[G]) = this(chain, Opt.empty[Iterable[G]])
 
   def chainOpt = Opt(chain)
 
@@ -27,6 +32,5 @@ final class PermGrpChainExplicit[G](val chain: Chain[G], generatorsOpt: Opt[Iter
 
   def randomElement(random: Random): G = chain.randomElement(random)
 
-  def base = chain.base
 
 }

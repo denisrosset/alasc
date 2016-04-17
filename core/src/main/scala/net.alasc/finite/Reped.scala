@@ -1,10 +1,12 @@
 package net.alasc.finite
 
-import net.alasc.algebra.Permutation
-import net.alasc.prep.{FaithfulPRep}
-import net.alasc.util.NNOption
-import shapeless.Witness
 import spire.algebra.{Eq, Group}
+
+import shapeless.Witness
+
+import net.alasc.algebra.Permutation
+import net.alasc.perms.FaithfulPermRep
+import net.alasc.util.NNOption
 
 /** Wraps a group element of type G such that it is represented by representation `R`. */
 final class Reped[G, R <: Rep[G] with Singleton](val underlying: G) extends AnyVal {
@@ -38,13 +40,14 @@ abstract class Reped0 {
 
 object Reped extends Reped0 {
 
-  case class Predicate[G, R <: FaithfulPRep[G] with Singleton](p: G => Boolean) extends Function1[Reped[G, R], Boolean] {
+  case class Predicate[G, R <: FaithfulPermRep[G] with Singleton](p: G => Boolean)
+    extends Function1[Reped[G, R], Boolean] {
 
     def apply(r: Reped[G, R]): Boolean = p(r.underlying)
 
   }
 
-  implicit def repedPermutation[G, R <: FaithfulPRep[G] with Singleton]
+  implicit def repedPermutation[G, R <: FaithfulPermRep[G] with Singleton]
   (implicit equ: Eq[G], group: Group[G], w: Witness.Aux[R]): Permutation[Reped[G, R]] =
     new Permutation[Reped[G, R]] {
 

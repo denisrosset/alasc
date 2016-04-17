@@ -45,3 +45,9 @@ abstract class GrpBuilder[G] {
   def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G]
 
 }
+
+object GrpBuilder {
+
+  type Aux[G, GG0 <: Grp[G]] = GrpBuilder[G] { type GG = GG0 }
+
+}

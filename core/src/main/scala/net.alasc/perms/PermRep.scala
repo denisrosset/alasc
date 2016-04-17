@@ -11,3 +11,5 @@ trait PermRep[G] extends Rep[G] {
   def size: Int
 
 }
+
+trait FaithfulPermRep[G] extends PermRep[G]

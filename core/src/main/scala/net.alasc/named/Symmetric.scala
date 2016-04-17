@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.util.Random
 
 import net.alasc.algebra._
-import net.alasc.prep._
+import net.alasc.finite.{Grp, GrpBuilder}
 
 object Symmetric {
 
@@ -18,9 +18,9 @@ object Symmetric {
 
   def randomElement[G:PermutationBuilder](degree: Int, random: Random) = PermutationBuilder[G].fromImages(random.shuffle(domainArray(degree)))
 
-  def apply[G:PermutationBuilder:PGrpBuilder](degree: Int): PGrp[G] =
-    if (degree < 2) PGrpBuilder[G].trivial else
-    PGrpBuilder[G].fromGeneratorsAndOrder(
+  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
+    if (degree < 2) Grp.trivial[G] else
+    Grp.fromGeneratorsAndOrder(
       Seq(Cyclic.shift[G](degree), transposition[G](0, 1)),
       order(degree)
     )

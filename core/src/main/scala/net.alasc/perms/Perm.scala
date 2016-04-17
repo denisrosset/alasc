@@ -58,8 +58,6 @@ object Perm extends PermCompanion {
 
   implicit val permutationBuilder: PermutationBuilder[Perm] = new PermPermutationBuilder
 
-  implicit val permutationRepBuilder: PermutationRepBuilder[Perm] = new PermutationRepBuilder[Perm]()(permutationBuilder)
-
   def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
       Perm32.fromImagesAndHighSupportMax(images, supportMax)

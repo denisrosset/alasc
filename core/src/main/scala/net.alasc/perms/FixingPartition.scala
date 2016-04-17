@@ -2,8 +2,8 @@ package net.alasc.perms
 
 import net.alasc.algebra._
 import net.alasc.domains.Partition
+import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
-import net.alasc.prep._
 
 object FixingPartition {
 
@@ -28,7 +28,7 @@ object FixingPartition {
   def generators[G:PermutationBuilder](partition: Partition): Iterable[G] =
     partition.blocks.flatMap(blockGenerators[G](_))
 
-  def apply[G:PermutationBuilder:PGrpBuilder](partition: Partition): PGrp[G] =
-    PGrpBuilder[G].fromGeneratorsAndOrder(generators[G](partition), order(partition))
+  def apply[G:PermutationBuilder:PermGrpBuilder](partition: Partition): PermGrp[G] =
+    Grp.fromGeneratorsAndOrder(generators[G](partition), order(partition))
 
 }

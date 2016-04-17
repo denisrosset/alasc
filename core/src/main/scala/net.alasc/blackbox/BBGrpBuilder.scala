@@ -14,7 +14,7 @@ class BBGrpBuilder[G](implicit
 
   type GG = BBGrp[G]
 
-  def trivial: GG = new BBGrp(Iterable.empty[G], Set(group.id))(this)
+  def trivial: GG = new BBGrp(Iterable.empty[G], Set(group.id))
 
   def fromGenerators(generators: Iterable[G]): GG = {
     @tailrec def rec(elements: Set[G]): Set[G] = {
@@ -23,7 +23,7 @@ class BBGrpBuilder[G](implicit
         .filterNot(elements.contains(_))
       if (newElements.isEmpty) elements else rec(elements ++ newElements)
     }
-    new BBGrp(generators, rec(generators.toSet))(this)
+    new BBGrp(generators, rec(generators.toSet))
   }
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG =
@@ -31,14 +31,14 @@ class BBGrpBuilder[G](implicit
 
   def fromGrp(grp: Grp[G]): GG = grp match {
     case bb: BBGrp[G] => bb
-    case _ => new BBGrp(grp.generators, grp.iterator.toSet)(this)
+    case _ => new BBGrp(grp.generators, grp.iterator.toSet)
   }
 
   def union(x: Grp[G], y: Grp[G]): GG = fromGenerators(x.generators ++ y.generators)
 
   def intersect(x: Grp[G], y: Grp[G]): GG = {
     val newElements = fromGrp(x).elements intersect fromGrp(y).elements
-    new BBGrp[G](newElements.filterNot(_.isId), newElements)(this)
+    new BBGrp[G](newElements.filterNot(_.isId), newElements)
   }
 
   def leftCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): LeftCosets[G] = {

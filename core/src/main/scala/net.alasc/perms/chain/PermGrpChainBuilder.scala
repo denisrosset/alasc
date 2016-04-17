@@ -1,6 +1,7 @@
 package net.alasc.perms
 package chain
 
+import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Group, Order}
@@ -8,7 +9,7 @@ import spire.syntax.action._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.Permutation
+import net.alasc.algebra.{BigIndexedSeq, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, RightCosets}
 import net.alasc.prep.bsgs._
@@ -25,14 +26,14 @@ class PermGrpChainBuilder[G](implicit
 
   // builder methods
 
-  def trivial = new PermGrpChainExplicit[G](Term[G], generatorsOpt = Opt(Iterable.empty[G]))(this)
+  def trivial = new PermGrpChainExplicit[G](Term[G], generatorsOpt = Opt(Iterable.empty[G]))
 
   def fromGenerators(generators: Iterable[G]): GG =
     fromGenerators(generators, Opt.empty[BaseGuide])
 
   def fromGenerators(generators: Iterable[G], baseGuideOpt: Opt[BaseGuide]): GG = {
     val chain = BuildChain.fromGenerators(generators, permutation, baseGuideOpt)
-    new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))(this)
+    new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))
   }
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG =
@@ -40,7 +41,7 @@ class PermGrpChainBuilder[G](implicit
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt, baseGuideOpt: Opt[BaseGuide]): GG = {
     val chain = BuildChain.fromGeneratorsAndOrder(generators, order, permutation, baseGuideOpt)
-    new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))(this)
+    new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))
   }
 
   def fromGrp(grp: Grp[G]): GG = fromGrp(grp, Opt.empty[BaseGuide])
@@ -66,13 +67,13 @@ class PermGrpChainBuilder[G](implicit
   def someStabilizerTransversal(grp: Grp[G]): Opt[(GG, Transversal[G])] = grp match {
     case conj: PermGrpChainConjugated[G] => conj.originalChain match {
       case node: Node[G] =>
-        val nextGrp = new PermGrpChainConjugated(node.next, conj.g, conj.gInv)(this)
+        val nextGrp = new PermGrpChainConjugated(node.next, conj.g, conj.gInv)
         val trv = ConjugatedTransversal(node, conj.g, conj.gInv)
         Opt((nextGrp, trv))
       case _ => Opt.empty[(GG, Transversal[G])]
     }
     case cg: PermGrpChain[G] => cg.chain match {
-      case node: Node[G] => Opt((new PermGrpChainExplicit(node.next)(this), node))
+      case node: Node[G] => Opt((new PermGrpChainExplicit(node.next), node))
       case _ => Opt.empty[(GG, Transversal[G])]
     }
     case _ => someStabilizerTransversal(fromGrp(grp): PermGrpChain[G])
@@ -91,7 +92,7 @@ class PermGrpChainBuilder[G](implicit
             val uInv = node.uInv(a)
             val newG = u |+| g
             val newGInv = gInv |+| uInv
-            val nextGrp = new PermGrpChainConjugated[G](node.next, newG, newGInv)(this)
+            val nextGrp = new PermGrpChainConjugated[G](node.next, newG, newGInv)
             val trv = ConjugatedTransversal(node, newG, newGInv)
             (nextGrp, trv)
           } else if (node.isFixed(a))
@@ -99,7 +100,7 @@ class PermGrpChainBuilder[G](implicit
           else {
             val newChain = BuildChain.fromChain(originalChain, permutation, Opt(BaseGuideSeq(Seq(a))))
             val (nextOriginalChain, originalTransversal) = newChain.detach(a)
-            val nextGrp = new PermGrpChainConjugated[G](nextOriginalChain, g, gInv)(this)
+            val nextGrp = new PermGrpChainConjugated[G](nextOriginalChain, g, gInv)
             val trv = ConjugatedTransversal(originalTransversal, g, gInv)
             (nextGrp, trv)
           }
@@ -110,7 +111,7 @@ class PermGrpChainBuilder[G](implicit
       case node: Node[G] if node.inOrbit(b) =>
         val u = node.u(b)
         val uInv = node.uInv(b)
-        val nextGrp = new PermGrpChainConjugated[G](node.next, u, uInv)(this)
+        val nextGrp = new PermGrpChainConjugated[G](node.next, u, uInv)
         val trv: Transversal[G] = ConjugatedTransversal(node, u, uInv)
         (nextGrp, trv)
       case node: Node[G] if node.isFixed(b) =>
@@ -118,13 +119,13 @@ class PermGrpChainBuilder[G](implicit
       case _ =>
         val newChain = BuildChain.fromChain(cg.chain, permutation, Opt(BaseGuideSeq(Seq(b))))
         val (nextChain, trv) = newChain.detach(b)
-        val nextGrp = new PermGrpChainExplicit[G](nextChain)(this)
+        val nextGrp = new PermGrpChainExplicit[G](nextChain)
         (nextGrp, trv)
     }
     case _ =>
       val chain = BuildChain.fromGeneratorsAndOrder(grp.generators, grp.order, permutation, Opt(BaseGuideSeq(Seq(b))))
       val (nextChain, trv) = chain.detach(b)
-      val nextGrp = new PermGrpChainExplicit[G](nextChain)(this)
+      val nextGrp = new PermGrpChainExplicit[G](nextChain)
       (nextGrp, trv)
   }
 
@@ -144,16 +145,16 @@ class PermGrpChainBuilder[G](implicit
       case _ =>
         BuildChain.fromGeneratorsAndOrder(grp.generators, grp.order, permutation, Opt(guide))
     }
-    new PermGrpChainExplicit[G](PointwiseStabilizer.recurse(guidedChain, set))(this)
+    new PermGrpChainExplicit[G](PointwiseStabilizer.recurse(guidedChain, set))
   }
 
   override def conjugatedBy(grp: Grp[G], h: G): PermGrpChain[G] = grp match {
     case conj: PermGrpChainConjugated[G] =>
       new PermGrpChainConjugated[G](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv,
-        originalGeneratorsOpt = Opt(conj.originalGenerators))(this)
+        originalGeneratorsOpt = Opt(conj.originalGenerators))
     case cg: PermGrpChain[G] =>
       new PermGrpChainConjugated[G](cg.chain, h, h.inverse,
-        originalGeneratorsOpt = Opt(cg.generators))(this)
+        originalGeneratorsOpt = Opt(cg.generators))
     case _ =>
       val hInv = h.inverse
       fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
@@ -182,7 +183,7 @@ class PermGrpChainBuilder[G](implicit
           Opt(lhs.generators ++ newGenerators)
         else
           Opt.empty[Iterable[G]]
-      new PermGrpChainExplicit(mutableChain.toChain(), generatorsOpt)(this)
+      new PermGrpChainExplicit(mutableChain.toChain(), generatorsOpt)
     }
 
   def subgroupFor(grp: Grp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): PermGrpChain[G] =
@@ -205,7 +206,7 @@ class PermGrpChainBuilder[G](implicit
         BuildChain.fromGeneratorsAndOrder(grp.generators, grp.order, permutation, definition.baseGuideOpt)
     }
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new PermGrpChainExplicit[G](subChain)(this)
+    new PermGrpChainExplicit[G](subChain)
   }
 
   def fixingPartition(grp: Grp[G], partition: Partition): GG =
@@ -249,5 +250,66 @@ class PermGrpChainBuilder[G](implicit
       val subgrp = subgrp0
       def iterator = leftCosetsBy(grp0, subgrp0).iterator.map(_.inverse)
     }
+
+  // enumeration of subgroup elements
+  def lexElements(grp: Grp[G]): BigIndexedSeq[G] = {
+    val cg = fromGrp(grp)
+    val sizeOfDomain = cg.largestMovedPoint.getOrElseFast(-1) + 1
+    val lexChain = BuildChain.fromChain(cg.chain, permutation, Opt(BaseGuideLex(sizeOfDomain)))
+    new PermGrpChainBuilder.LexElements[G](lexChain)
+  }
+
+  def base(grp: Grp[G]): Seq[Int] = grp match {
+    case cj: PermGrpChainConjugated[G] => cj.originalChain.base.map(_ <|+| cj.gInv)
+    case cg: PermGrpChain[G] => cg.chain.base
+    case _ => base(fromGrp(grp): PermGrpChain[G])
+  }
+
+  def find[Q:Permutation](grp: Grp[G], q: Q): Opt[G] = grp match {
+    case cg: PermGrpChain[G] => cg.chain.siftOther(q)
+    case _ => find(fromGrp(grp): PermGrpChain[G], q)
+  }
+
+}
+
+object PermGrpChainBuilder {
+
+  final class LexElements[G:Permutation](val lexChain: Chain[G]) extends BigIndexedSeq[G] {
+
+    def length = lexChain.order
+
+    def contains(g: G) = lexChain.sifts(g)
+
+    def apply(idx: BigInt): G = {
+      @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {
+        case node: Node[G] =>
+          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
+          val nextOrder = curOrder / node.orbitSize
+          val nextIdx = curIdx % nextOrder
+          val orbitIndex = ((curIdx - nextIdx) / nextOrder).toInt
+          val nextG = node.u(sortedOrbit(orbitIndex)) |+| curG
+          rec(node.next, nextIdx, nextOrder, nextG)
+        case _: Term[G] =>
+          assert(curIdx == 0)
+          curG
+      }
+      rec(lexChain, idx, lexChain.order, Group[G].id)
+    }
+
+    def iterator: Iterator[G] = {
+      def rec(current: Chain[G], curG: G): Iterator[G] = current match {
+        case node: Node[G] =>
+          val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
+          for {
+            b <- sortedOrbit.iterator
+            nextG = node.u(b) |+| curG
+            rest <- rec(node.next, nextG)
+          } yield rest
+        case _: Term[G] => Iterator(curG)
+      }
+      rec(lexChain, Group[G].id)
+    }
+
+  }
 
 }

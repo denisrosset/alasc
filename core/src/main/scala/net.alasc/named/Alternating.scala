@@ -1,7 +1,7 @@
 package net.alasc.named
 
 import net.alasc.algebra._
-import net.alasc.prep._
+import net.alasc.finite.{Grp, GrpBuilder}
 
 object Alternating {
 
@@ -17,9 +17,9 @@ object Alternating {
     * - (0 1 2), (0 1 2 ... n-1) for n odd and
     * - (0 1 2), (1 2 ... n-1) for n even.
     */
-  def apply[G:PermutationBuilder:PGrpBuilder](degree: Int): PGrp[G] =
-    if (degree < 3) PGrpBuilder[G].trivial else
-      PGrpBuilder[G].fromGeneratorsAndOrder(
+  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
+    if (degree < 3) Grp.trivial[G] else
+      Grp.fromGeneratorsAndOrder(
         Seq(shift[G](degree), PermutationBuilder[G].fromImages(Seq(1,2,0))),
         order(degree)
       )

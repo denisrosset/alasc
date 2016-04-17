@@ -1,22 +1,30 @@
 package net.alasc.perms
 package chain
 
+import scala.reflect.ClassTag
 import scala.util.Random
-import spire.syntax.action._
+
+import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.util.Opt
 
+import net.alasc.algebra.Permutation
 import net.alasc.prep.bsgs._
+
+/** Represents a conjugated group from an original group G (represented by `originalChain`)
+  * conjugated by g (with gInv == g.inverse).
+  * The represented group is `H = gInv G g`.
+  */
 
 class PermGrpChainConjugated[G](val originalChain: Chain[G], val g: G, val gInv: G,
                                 originalGeneratorsOpt: Opt[Iterable[G]])
-                               (implicit val builder: PermGrpChainBuilder[G])
-  extends PermGrpChain[G] {
+                               (implicit val classTag: ClassTag[G],
+                                val group: Group[G],
+                                val equ: Eq[G],
+                                val permutation: Permutation[G])  extends PermGrpChain[G] {
 
-  import builder.classTag
-
-  def this(originalChain: Chain[G], g: G, gInv: G)(implicit builder: PermGrpChainBuilder[G]) =
-    this(originalChain, g, gInv, Opt.empty[Iterable[G]])(builder)
+  def this(originalChain: Chain[G], g: G, gInv: G)(implicit classTag: ClassTag[G], permutation: Permutation[G]) =
+    this(originalChain, g, gInv, Opt.empty[Iterable[G]])
 
   def originalGenerators = originalGeneratorsOpt match {
     case Opt(gen) => gen
@@ -53,7 +61,5 @@ class PermGrpChainConjugated[G](val originalChain: Chain[G], val g: G, val gInv:
     val h = originalChain.randomElement(random)
     gInv |+| h |+| g
   }
-
-  def base = originalChain.base.map(_ <|+| gInv)
 
 }

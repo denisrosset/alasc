@@ -2,13 +2,16 @@ package net.alasc.blackbox
 
 import scala.util.Random
 
+import spire.algebra.{Eq, Group}
+
 import net.alasc.finite._
 
 class BBGrp[G](
     val generators: Iterable[G],
     val elements: Set[G]
   )(implicit
-    val builder: BBGrpBuilder[G]
+    val equ: Eq[G],
+    val group: Group[G]
 ) extends Grp[G] {
 
   def iterator = elements.iterator

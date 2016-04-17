@@ -1,8 +1,8 @@
 package net.alasc.named
 
 import net.alasc.algebra._
+import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.perms._
-import net.alasc.prep._
 
 object Mathieu {
 
@@ -42,7 +42,7 @@ object Mathieu {
 
   def notDefined: Nothing = throw new IllegalArgumentException("Mathieu groups are only defined for degrees " + generatorsAndOrders.keys.toSeq.sorted.mkString(", "))
 
-  def apply[G:PermutationBuilder:PGrpBuilder](degree: Int): PGrp[G] = {
+  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] = {
     val (generators, order) = generatorsAndOrders.getOrElse(degree, notDefined)
     generate[G](generators, order)
   }

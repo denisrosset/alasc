@@ -1,6 +1,6 @@
 package net.alasc.perms
 
-import net.alasc.algebra.Permutation
+import net.alasc.algebra.{BigIndexedSeq, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.prep.bsgs.Transversal
@@ -8,13 +8,13 @@ import spire.util.Opt
 
 abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 
+  type GG <: PermGrp[G]
+
   implicit def permutation: Permutation[G]
 
   def group = permutation
 
   def equ = permutation
-
-  type GG <: PermGrp[G]
 
   def setwiseStabilizer(grp: Grp[G], set: Set[Int]): GG
 
@@ -31,5 +31,17 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
   def fixingPartition(grp: Grp[G], partition: Partition): GG
 
   def subgroupFor(grp: Grp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): GG
+
+  def lexElements(grp: Grp[G]): BigIndexedSeq[G]
+
+  def base(grp: Grp[G]): Seq[Int]
+
+  def find[Q:Permutation](grp: Grp[G], q: Q): Opt[G]
+
+}
+
+object PermGrpBuilder {
+
+  type Aux[G, GG0 <: PermGrp[G]] = PermGrpBuilder[G] { type GG = GG0 }
 
 }

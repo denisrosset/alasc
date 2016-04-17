@@ -1,8 +1,8 @@
 package net.alasc.named
 
 import net.alasc.algebra._
+import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.perms._
-import net.alasc.prep._
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
 object RubikCube {
@@ -27,6 +27,6 @@ object RubikCube {
 
   val order = BigInt("43252003274489856000")
 
-  def apply[G:PermutationBuilder:PGrpBuilder]: PGrp[G] = generate(generators, order)
+  def apply[G:PermutationBuilder:GrpBuilder]: Grp[G] = generate(generators, order)
 
 }
