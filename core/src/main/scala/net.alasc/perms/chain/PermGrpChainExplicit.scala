@@ -2,12 +2,15 @@ package net.alasc.perms
 package chain
 
 import spire.util.Opt
-
 import scala.util.Random
 
-final class PermGrpChainExplicit[G, I](val chain: bsgs.Chain[I], generatorsOpt: Opt[Iterable[I]] = Opt.empty[Iterable[I]])
+import net.alasc.prep.bsgs._
+
+final class PermGrpChainExplicit[G](val chain: Chain[G], generatorsOpt: Opt[Iterable[G]])
                                    (implicit val builder: PermGrpChainBuilder[G])
   extends PermGrpChain[G] {
+
+  def this(chain: Chain[G])(implicit builder: PermGrpChainBuilder[G]) = this(chain, Opt.empty[Iterable[G]])(builder)
 
   def chainOpt = Opt(chain)
 
@@ -23,5 +26,7 @@ final class PermGrpChainExplicit[G, I](val chain: bsgs.Chain[I], generatorsOpt: 
   def order: BigInt = chain.order
 
   def randomElement(random: Random): G = chain.randomElement(random)
+
+  def base = chain.base
 
 }

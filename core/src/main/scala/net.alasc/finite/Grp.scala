@@ -11,15 +11,9 @@ abstract class Grp[G] { lhs =>
 
   override def toString = generators.mkString("Grp(", ", ", ")") +  s" of order $order"
 
-  override def hashCode = sys.error("HashCode not defined for Grp")
+  override def hashCode = sys.error("Object.hashCode not defined for Grp")
 
-  override def equals(any: Any) = any match {
-    case that: Grp[G] =>
-      order == that.order &&
-      group.id == that.group.id &&
-      that.generators.forall(contains(_))
-    case _ => false
-  }
+  override def equals(any: Any) = sys.error("Object.equals not defined for Grp")
 
   implicit def builder: GrpBuilder[G]
 
@@ -55,6 +49,14 @@ abstract class Grp[G] { lhs =>
 
   /** Tests whether this group is a subgroup of `rhs`. */
   def isSubgroupOf(rhs: Grp[G]): Boolean = generators.forall(rhs.contains)
+
+  /** This group `lhs` normalizes the group `rhs` if for every g in lhs and u in rhs, the element g^-1 u g is
+    * a member of rhs. Note that `rhs` needs not be a subgroup of `lhs`.
+    * */
+  def normalizes(rhs: Grp[G]): Boolean = generators.forall { g =>
+    val gInv = g.inverse
+    rhs.generators.forall(u => rhs.contains(gInv |+| u |+| g))
+  }
 
   /** Union (closure) of groups. */
   def union(rhs: Grp[G]): Grp[G] = builder.union(lhs, rhs)

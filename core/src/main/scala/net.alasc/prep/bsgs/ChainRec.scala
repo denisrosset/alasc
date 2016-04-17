@@ -93,7 +93,7 @@ object ChainRec {
     case _: Term[P] => remaining.isId
   }
 
-  @tailrec def siftOther[P:Eq:Group:FaithfulPermutationAction, Q:Eq:PermutationBuilder](chain: Chain[P], pInv: P, q: Q): Opt[P] =
+  @tailrec def siftOther[P:Eq:Group:FaithfulPermutationAction, Q:Permutation](chain: Chain[P], pInv: P, q: Q): Opt[P] =
     chain match {
       case node: Node[P] =>
         val b = (node.beta <|+| q) <|+| pInv

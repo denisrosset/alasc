@@ -14,20 +14,22 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 
   def equ = permutation
 
-  type GG = PermGrp[G]
+  type GG <: PermGrp[G]
 
-  def setwiseStabilizer(set: Set[Int]): Grp[G] = ???
+  def setwiseStabilizer(grp: Grp[G], set: Set[Int]): GG
 
-  def pointwiseStabilizer(set: Set[Int]): Grp[G] = ???
+  def pointwiseStabilizer(grp: Grp[G], set: Set[Int]): GG
 
-  def stabilizerTransversal(lhs: PermGrp[G], b: Int): (Grp[G], Transversal[G]) = ???
+  def stabilizerTransversal(grp: Grp[G], b: Int): (GG, Transversal[G])
 
-  def someStabilizerTransversal(lhs: PermGrp[G]): Opt[(Grp[G], Transversal[G])] = ???
+  def someStabilizerTransversal(grp: Grp[G]): Opt[(GG, Transversal[G])]
 
-  def stabilizer(lhs: PermGrp[G], b: Int): Grp[G] = ???
+  def stabilizer(grp: Grp[G], b: Int): GG
 
-  def someStabilizer(lhs: PermGrp[G]): Opt[Grp[G]] = ???
+  def someStabilizer(grp: Grp[G]): Opt[GG]
 
-  def fixingPartition(lhs: PermGrp[G], partition: Partition): Grp[G]
+  def fixingPartition(grp: Grp[G], partition: Partition): GG
+
+  def subgroupFor(grp: Grp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): GG
 
 }

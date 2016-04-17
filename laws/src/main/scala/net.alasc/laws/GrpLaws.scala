@@ -65,7 +65,7 @@ trait GrpLaws[G, GG <: Grp[G]] extends Laws {
 
       "generators" -> forAll { (grp: GG) =>
         val newGrp = Grp(grp.generators.toSeq: _*)
-        newGrp == grp
+        newGrp === (grp: Grp[G])
       },
 
       "conjugatedBy" -> forAll { (grp: GG, h: G) =>
@@ -79,7 +79,7 @@ trait GrpLaws[G, GG <: Grp[G]] extends Laws {
       "conjugatedBy composition" -> forAll { (grp: GG, h1: G, h2: G) =>
         val hInv1 = h1.inverse
         val hInv2 = h2.inverse
-        grp.conjugatedBy(h1).conjugatedBy(h2) == grp.conjugatedBy(h1 |+| h2)
+        grp.conjugatedBy(h1).conjugatedBy(h2) === grp.conjugatedBy(h1 |+| h2)
       },
 
       "randomElement" -> forAll { (grp: GG) =>

@@ -3,7 +3,6 @@ package chain
 
 import scala.util.Random
 
-import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.finite._

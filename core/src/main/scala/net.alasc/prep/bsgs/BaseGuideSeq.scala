@@ -2,6 +2,7 @@ package net.alasc.prep.bsgs
 
 import scala.annotation.tailrec
 
+// TODO: optimize base guide with a single element, and then rewrite the stabilizer(b: Int) methods
 case class BaseGuideSeq(seq: Seq[Int]) extends BaseGuide {
 
   final class Iter(val it: Iterator[Int]) extends BaseGuideIterator {

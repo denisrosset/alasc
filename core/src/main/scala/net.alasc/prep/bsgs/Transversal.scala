@@ -12,7 +12,7 @@ import metal.syntax._
 import net.alasc.algebra._
 
 /** Contains information about a transversal in a BSGS chain. */  
-trait Transversal[P] {
+trait Transversal[P] { // TODO: inherit finite.Transversal
   def beta: Int
   def inOrbit(b: Int): Boolean
   def orbitSize: Int
