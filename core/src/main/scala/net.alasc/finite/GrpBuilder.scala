@@ -32,9 +32,9 @@ abstract class GrpBuilder[G] {
     fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
   }
 
-  def union(x: Grp[G], y: Grp[G]): Grp[G]
+  def union(x: Grp[G], y: Grp[G]): GG
 
-  def intersect(x: Grp[G], y: Grp[G]): Grp[G]
+  def intersect(x: Grp[G], y: Grp[G]): GG
 
   def smallGeneratingSet(grp: Grp[G]): Iterable[G] = grp.generators // TODO: real implementation
 

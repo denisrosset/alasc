@@ -130,7 +130,7 @@ class PGrpChainBuilder[G](implicit
       fromGeneratorsRandomElementsAndOrderIn(pRep)(grp.generators, grp.randomElement, grp.order)
   }
 
-  def unionByAdding(pRep: FaithfulPRep[G], chain: Chain[G], generatorsToAdd: Iterable[G]): Grp[G] = {
+  def unionByAdding(pRep: FaithfulPRep[G], chain: Chain[G], generatorsToAdd: Iterable[G]): GG = {
     val mutableChain = BuildMutableChain.fromChain(chain, pRep.permutationAction)
     mutableChain.insertGenerators(generatorsToAdd)
     mutableChain.completeStrongGenerators()
@@ -138,9 +138,9 @@ class PGrpChainBuilder[G](implicit
     new PGrpExplicit[pRep.type, G](pRep, newChain)
   }
 
-  def union(lhs: Grp[G], rhs: Grp[G]): Grp[G] =
+  def union(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) union(rhs, lhs) // ensure lhs.order >= rhs.order
-    else if (lhs.hasSubgroup(rhs)) lhs
+    else if (lhs.hasSubgroup(rhs)) fromGrp(lhs)
     else lhs match {
       case pLhs: PGrpChain[G] if rhs.generators.forall(pLhs.pRep.represents) =>
         unionByAdding(pLhs.pRep, pLhs.chain, rhs.generators)
@@ -149,9 +149,9 @@ class PGrpChainBuilder[G](implicit
         unionByAdding(newRep, fromGrpIn(newRep)(lhs).chain, rhs.generators)
     }
 
-  def intersect(lhs: Grp[G], rhs: Grp[G]): Grp[G] =
+  def intersect(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) intersect(rhs, lhs) // ensure lhs.order >= rhs.order
-    else if (lhs.hasSubgroup(rhs)) rhs
+    else if (lhs.hasSubgroup(rhs)) fromGrp(rhs)
     else (lhs, rhs) match {
       case (pLhs: PGrpChain[G], pRhs: PGrp[G]) if rhs.generators.forall(pLhs.pRep.represents) =>
         val newRhsChain = fromGrpIn(pLhs.pRep)(rhs).chain
@@ -160,16 +160,16 @@ class PGrpChainBuilder[G](implicit
         val newRep = defaultRepBuilder.build(lhs.generators ++ rhs.generators)
         val newLhsGrp = fromGrpIn(newRep)(lhs)
         val newRhsChain = fromGrpIn(newRep)(rhs).chain
-        newLhsGrp.subgroupFor(Intersection(newRep.permutationAction, newRhsChain))
+        subgroupFor(newLhsGrp, Intersection(newRep.permutationAction, newRhsChain))
     }
 
-  def subgroupFor(grp: PGrp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): Grp[G] = grp match {
+  def subgroupFor(grp: PGrp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): GG = grp match {
     case cGrp: PGrpChain[G] =>
       subgroupFor(cGrp, SubgroupDefinition(grp.pRep.permutationAction, backtrackTest, predicate))
     case _ => subgroupFor(fromGrpIn(grp.pRep)(grp): PGrpChain[G], backtrackTest, predicate)
   }
 
-  def subgroupFor(grp: PGrpChain[G], definition: SubgroupDefinition[G]): Grp[G] = grp match {
+  def subgroupFor(grp: PGrpChain[G], definition: SubgroupDefinition[G]): GG = grp match {
     case lhs: PGrpConjugated[_, G] =>
       import lhs.{pRep, originalChain, g, gInv}
       val mut = imply(pRep.permutationAction) { originalChain.mutableChain }
