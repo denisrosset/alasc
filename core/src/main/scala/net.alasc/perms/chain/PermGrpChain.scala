@@ -7,20 +7,12 @@ import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.prep.bsgs
 import spire.util.Opt
 
-abstract class PermGrpChain[G, I] extends PermGrp[G] {
+abstract class PermGrpChain[G] extends PermGrp[G] {
 
-  implicit def builder: PermGrpChainBuilder[G, I]
+  implicit def builder: PermGrpChainBuilder[G]
 
-  implicit def internal: Internal[G, I]
+  def chain: bsgs.Chain[G]
 
-  implicit def groupI: Group[I]
-
-  implicit def equI: Eq[I]
-
-  implicit def permutationActionI: FaithfulPermutationAction[I]
-
-  def chain: bsgs.Chain[I]
-
-  def chainOpt: Opt[bsgs.Chain[I]]
+  def chainOpt: Opt[bsgs.Chain[G]]
 
 }
