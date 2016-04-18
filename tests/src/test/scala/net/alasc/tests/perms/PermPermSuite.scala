@@ -1,18 +1,17 @@
-package net.alasc.laws
+package net.alasc.tests
+package perms
 
-import spire.laws.{Perm => _, _}
+import spire.laws.{Perm => _}
 import spire.std.tuples._
 
 import org.scalacheck.Arbitrary
 
-import org.scalatest.FunSuite
-
 import net.alasc.algebra._
+import net.alasc.laws.{PermutationActionLaws, Permutations}
 import net.alasc.perms._
-import net.alasc.prep._
 import net.alasc.std.product._
 
-class Product2ActionTests extends FunSuite with NestedDiscipline {
+class PermPermSuite extends AlascSuite {
 
   import Permutations.arbDom
 
@@ -22,7 +21,8 @@ class Product2ActionTests extends FunSuite with NestedDiscipline {
       g2 <- Permutations.forSize[Perm](5)
     } yield (g1, g2) )
 
-  implicit def permPermAction: FaithfulPermutationAction[(Perm, Perm)] = implicitly[PRepBuilder[(Perm, Perm)]].build(Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
+  implicit def permPermAction: FaithfulPermutationAction[(Perm, Perm)] =
+    implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build(Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
 
   checkAll("(Perm, Perm)",      PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
 

@@ -1,6 +1,6 @@
 package net.alasc.perms
 
-import net.alasc.algebra.PermutationAction
+import net.alasc.algebra.{FaithfulPermutationAction, PermutationAction}
 import net.alasc.finite.Rep
 
 trait PermRep[G] extends Rep[G] {
@@ -12,4 +12,8 @@ trait PermRep[G] extends Rep[G] {
 
 }
 
-trait FaithfulPermRep[G] extends PermRep[G]
+trait FaithfulPermRep[G] extends PermRep[G] {
+
+  implicit def permutationAction: FaithfulPermutationAction[G]
+
+}

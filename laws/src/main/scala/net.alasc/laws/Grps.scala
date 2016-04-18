@@ -3,7 +3,6 @@ package net.alasc.laws
 import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.finite._
-import net.alasc.prep._
 
 object Grps {
 
@@ -25,11 +24,6 @@ object Grps {
         val elements = Gen.resize(gSize, implicitly[Arbitrary[G]].arbitrary)
         fromElements(elements)
       }
-    }
-
-  implicit def arbPGrp[G](implicit arb: Arbitrary[Grp[G]], builder: PGrpBuilder[G]): Arbitrary[PGrp[G]] =
-    Arbitrary {
-      arb.arbitrary.map(grp => builder.fromGrp(grp))
     }
 
   implicit def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =

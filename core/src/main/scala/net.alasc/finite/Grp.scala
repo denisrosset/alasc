@@ -9,7 +9,7 @@ import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, Permutation}
+import net.alasc.algebra.{PermutationBuilder, BigIndexedSeq, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.perms.{PermGrp, PermGrpBuilder}
 import net.alasc.prep.bsgs
@@ -26,8 +26,6 @@ abstract class Grp[G] { lhs =>
   override def toString = generators.mkString("Grp(", ", ", ")")
 
   override def hashCode = sys.error("Object.hashCode not defined for Grp")
-
-  override def equals(any: Any) = sys.error("Object.equals not defined for Grp")
 
   /** Group operations on type `G`. */
   implicit def group: Group[G]
@@ -170,12 +168,12 @@ abstract class Grp[G] { lhs =>
   def movesPoint(i: Int)(implicit permutation: Permutation[G]): Boolean = generators.exists(g => i <|+| g != g)
 
   /** Number of non-negative integers moved by the permutations in this group. */
-  def nMovedPoints(g: G)(implicit permutation: Permutation[G]): Int = movedPoints(g).size
+  def nMovedPoints(implicit permutation: Permutation[G]): Int = movedPoints.size
 
   /** Returns a bit set of all non-negative integers k that are moved by the action of this group,
     * i.e. `S = { k | exists g in this group s.t. k <|+| g != k }`.
     */
-  def movedPoints(g: G)(implicit permutation: Permutation[G]): Set[Int] =
+  def movedPoints(implicit permutation: Permutation[G]): Set[Int] =
     if (isTrivial) Set.empty[Int] else {
       val b = metal.mutable.BitSet.empty
       generators.foreach { g =>
@@ -186,6 +184,9 @@ abstract class Grp[G] { lhs =>
       }
       b.toScala
     }
+
+  def toPermutation[Q:PermutationBuilder:GrpBuilder](implicit permutation: Permutation[G]): Grp[Q] =
+    Grp.fromGeneratorsAndOrder(generators.map(_.toPermutation[Q]), order)
 
 }
 

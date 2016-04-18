@@ -73,16 +73,20 @@ class CycleOrder extends Order[Cycle] {
 }
 
 object Cycle {
+
   implicit final val permutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
+
   implicit final val order: Order[Cycle] = new CycleOrder
 
   def id = new Cycle(Seq.empty[Int])
+
   def apply(seq: Int*): Cycle = seq match {
     case Seq() => id
     case _ => 
       val i = seq.indexOf(seq.min)
       new Cycle(seq.drop(i) ++ seq.take(i))
   }
+
   def orbit(k: Int, image: Int => Int): Option[Cycle] = {
     @scala.annotation.tailrec def rec(cycle: List[Int]): List[Int] = {
       val i = image(cycle.head)
@@ -91,4 +95,5 @@ object Cycle {
     val res = rec(k :: Nil)
     if (res.size == 1) None else Some(Cycle(rec(k :: Nil): _*))
   }
+
 }

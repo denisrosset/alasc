@@ -9,6 +9,7 @@ import net.alasc.syntax.permutationAction._
 
 /** Lexicographically ordered sequence of permutations acting on `n` elements. */
 final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
+
   @tailrec def fact(k: Int, acc: BigInt = 1): BigInt =
     if (k < 2) acc else fact(k - 1, acc * k)
   def length = fact(n)
@@ -107,4 +108,5 @@ final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
     assert(remRank == 0)
     Perm.fromImages(images)
   }
+
 }

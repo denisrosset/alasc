@@ -1,12 +1,11 @@
-package net.alasc.perms
-
-import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers}
-import spire.syntax.order._
+package net.alasc.tests
+package perms
 
 import net.alasc.named.Symmetric
-import net.alasc.prep.PGrp.deterministic._
+import net.alasc.perms.{Perm, Perms}
+import net.alasc.perms.default._
 
-class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {
+class PermsSuite extends AlascSuite {
 
   test("Perms(n).iterator, Perms(n).apply(...) and Sym(n).elements.toSet return the same elements for n = 2,3,4,5,6") {
     for (n <- 2 to 6) {
@@ -14,15 +13,15 @@ class PermsSuite extends FunSuite with NonImplicitAssertions with Matchers {
       val perms = Perms(n)
       val seqFromPermsIterator = perms.iterator.toSeq
       import net.alasc.optional.lexPermutationOrder._
-      assert((seqFromPermsIterator.iterator zip seqFromPermsIterator.iterator.drop(1)).forall { case (x, y) => (x < y) })
+      (seqFromPermsIterator.iterator zip seqFromPermsIterator.iterator.drop(1)).forall { case (x, y) => x < y } shouldBe true
       val seqFromPermsApply = (0 until perms.size.toInt).map(perms(_)).toSeq
       val setFromSym = sym.iterator.toSet
       for (i <- 0 until perms.size.toInt) {
         val perm = perms(i)
-        assert(perms.indexOf(perm).getOrElse(sys.error("Perm should be inside")) == i)
+        perms.indexOf(perm).getOrElse(sys.error("Perm should be inside")) should === (BigInt(i))
       }
-      assert(seqFromPermsApply == seqFromPermsIterator)
-      assert(seqFromPermsApply.toSet == setFromSym)
+      seqFromPermsApply shouldBe (seqFromPermsIterator)
+      seqFromPermsApply.toSet shouldBe (setFromSym)
     }
   }
 

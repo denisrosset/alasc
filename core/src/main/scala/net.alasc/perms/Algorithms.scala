@@ -3,10 +3,14 @@ package net.alasc.perms
 import scala.reflect.ClassTag
 import scala.util.Random
 
+import spire.NoImplicit
+import spire.algebra.{Group, Eq}
 import spire.util.Opt
 
 import net.alasc.algebra.Permutation
+import net.alasc.finite.{Rep, GrpBuilder}
 import net.alasc.perms.chain.PermGrpChainBuilder
+import net.alasc.perms.wrap.WrapGrpBuilder
 import net.alasc.prep.bsgs.{BaseChange, BaseSwap, SchreierSims}
 
 class Algorithms(
@@ -34,5 +38,18 @@ class Algorithms(
 
   implicit def permGrpChainBuilder[G:ClassTag:Permutation]: PermGrpChainBuilder[G] =
     new chain.PermGrpChainBuilder[G]
+
+  final class MyWrapGrpBuilder[G:Eq:Group:FaithfulPermRepBuilder] extends WrapGrpBuilder[G] {
+
+    def getBuilder(rep: FaithfulPermRep[G]): GrpBuilder[rep.Wrap] = {
+      implicit def w = shapeless.Witness(rep)
+      implicit val permutation = Rep.Wrap.repedPermutation[G, rep.type]
+      permGrpChainBuilder[rep.Wrap]
+    }
+
+  }
+
+  implicit def wrapGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermRepBuilder]
+    (implicit np: NoImplicit[Permutation[G]]): WrapGrpBuilder[G] = new MyWrapGrpBuilder[G]
 
 }

@@ -216,7 +216,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
       },
 
       "base" -> forAll { (grp: Grp[G], g: G) =>
-        g.isId == grp.base.forall(!g.movesPoint)
+        g.isId == grp.base.forall(!g.movesPoint(_))
       }
   )
 

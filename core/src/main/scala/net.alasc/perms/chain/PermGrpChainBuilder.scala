@@ -274,6 +274,8 @@ class PermGrpChainBuilder[G](implicit
 
 object PermGrpChainBuilder {
 
+  type Aux[G, GG0 <: PermGrpChain[G]] = PermGrpChainBuilder[G] { type GG = GG0 }
+
   final class LexElements[G:Permutation](val lexChain: Chain[G]) extends BigIndexedSeq[G] {
 
     def length = lexChain.order

@@ -51,8 +51,7 @@ lazy val buildSettings = Seq(
 
 lazy val commonSettings = Seq(
   scalacOptions ++= commonScalacOptions.diff(Seq(
-    "-Xfatal-warnings", 
-    "-language:existentials",
+    "-Xfatal-warnings",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard"

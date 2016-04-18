@@ -48,6 +48,6 @@ abstract class GrpBuilder[G] {
 
 object GrpBuilder {
 
-  type Aux[G, GG0 <: Grp[G]] = GrpBuilder[G] { type GG = GG0 }
+  type Aux[G, GG0 <: Grp[G]] = GrpBuilder[G] { type GG <: GG0 }
 
 }

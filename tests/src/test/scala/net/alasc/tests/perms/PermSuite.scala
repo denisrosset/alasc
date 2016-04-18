@@ -1,12 +1,15 @@
-package net.alasc.perms
+package net.alasc.tests
+package perms
 
-import org.scalatest.{FunSuite, NonImplicitAssertions, Matchers, EqMatchers}
-import spire.syntax.eq._
-import spire.syntax.group._
-import spire.syntax.action._
-import net.alasc.syntax.permutationAction._
+import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
+import net.alasc.perms.{Cycle, Cycles, Perm}
 
-class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with EqMatchers {
+class PermSuite extends AlascSuite {
+
+  import Permutations._
+
+  checkAll("Perm", AnyRefLaws[Perm]._eq)
+  checkAll("Perm", PermutationActionLaws[Perm].faithfulPermutationAction)
 
   test("For g = (1, 2, 3), 1 <* g = 2, 2 <* g = 3, 3 <* g = 1") {
     val g = Perm(1, 2, 3)
@@ -24,12 +27,12 @@ class PermSuite extends FunSuite with NonImplicitAssertions with Matchers with E
     val g1 = Perm(1, 2, 3)
     val g2 = Perm(1, 2)
 
-    (g1 |+| g2) shouldEqv Perm(2, 3)
-    (g2 |+| g1) shouldEqv Perm(1, 3)
+    (g1 |+| g2) should === (Perm(2, 3))
+    (g2 |+| g1) should === (Perm(1, 3))
   }
 
   test ("Inverse of (1, 5, 3, 6)(2, 8, 7) is (6, 3, 5, 1) (7, 8, 2) = (1, 6, 3, 5)(2, 7, 8) -- Holt 2.1.5") {
-    Perm(1,5,3,6)(2,8,7).inverse shouldEqv Perm(1,6,3,5)(2,7,8)
+    (Perm(1,5,3,6)(2,8,7).inverse) should === (Perm(1,6,3,5)(2,7,8))
   }
 
 }
