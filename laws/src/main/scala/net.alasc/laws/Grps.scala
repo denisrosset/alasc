@@ -22,7 +22,10 @@ object Grps {
       Gen.parameterized { parameters =>
         val gSize = math.max(parameters.size / 10, 3)
         val elements = Gen.resize(gSize, implicitly[Arbitrary[G]].arbitrary)
-        fromElements(elements)
+        for {
+          c <- implicitly[Arbitrary[G]].arbitrary
+          grp <- fromElements(elements)
+        } yield grp.conjugatedBy[Grp[G]](c)
       }
     }
 

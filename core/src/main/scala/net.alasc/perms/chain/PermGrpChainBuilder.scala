@@ -223,19 +223,23 @@ class PermGrpChainBuilder[G](implicit
         case _ => fromGrp(grp0)
       }
       val subgrp: Grp[G] = subgrp0
+      require(grp.hasSubgroup(subgrp))
 
       def iterator: Iterator[LeftCoset[G]] = {
-        val bo = BaseOrder(permutation, grp.chain.base)
+        val myBase = base(grp)
+        val bo = BaseOrder(permutation, base(grp))
+        val bordering = Order.ordering(bo)
         def rec(g: G, chain: Chain[G], subSubgrp: Grp[G]): Iterator[LeftCoset[G]] = chain match {
           case node: Node[G] =>
             for {
               b <- node.orbit.iterator
               bg = b <|+| g
-              (nextSubSubGrp, transversal) = stabilizerTransversal(subSubgrp, bg) if transversal.orbit.min(Order.ordering(bo)) == bg
+              (nextSubSubGrp, trv) = stabilizerTransversal(subSubgrp, bg) if trv.orbit.min(bordering) == bg
               nextG = node.u(b) |+| g
               element <- rec(nextG, node.next, nextSubSubGrp)
             } yield element
           case _: Term[G] =>
+            assert(pointwiseStabilizer(subgrp, myBase.map(_ <|+| g).toSet).isTrivial)
             assert(subSubgrp.order == 1)
             Iterator(new LeftCoset(g, subgrp))
         }
@@ -260,7 +264,7 @@ class PermGrpChainBuilder[G](implicit
   }
 
   def base(grp: Grp[G]): Seq[Int] = grp match {
-    case cj: PermGrpChainConjugated[G] => cj.originalChain.base.map(_ <|+| cj.gInv)
+    case cj: PermGrpChainConjugated[G] => cj.originalChain.base.map(_ <|+| cj.g)
     case cg: PermGrpChain[G] => cg.chain.base
     case _ => base(fromGrp(grp): PermGrpChain[G])
   }
