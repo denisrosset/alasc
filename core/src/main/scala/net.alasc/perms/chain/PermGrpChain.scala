@@ -1,8 +1,9 @@
 package net.alasc.perms
 package chain
 
-import net.alasc.prep.bsgs
 import spire.util.Opt
+
+import net.alasc.bsgs
 
 abstract class PermGrpChain[G] extends PermGrp[G] { lhs =>
 

@@ -9,14 +9,14 @@ import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{PermutationBuilder, BigIndexedSeq, Permutation}
+import net.alasc.algebra.{BigIndexedSeq, Permutation, PermutationBuilder}
 import net.alasc.domains.Partition
 import net.alasc.perms.{PermGrp, PermGrpBuilder}
-import net.alasc.prep.bsgs
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
-
 import metal.syntax._
+
+import net.alasc.bsgs
 
 /** Finite group base class. */
 abstract class Grp[G] { lhs =>

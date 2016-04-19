@@ -4,7 +4,7 @@ package finite
 import spire.laws.LatticePartialOrderLaws
 
 import net.alasc.finite.Grp
-import net.alasc.laws.{GrpLaws, Grps, PermGrpLaws, Permutations}
+import net.alasc.laws.{Grps, PermGrpLaws, Permutations}
 import net.alasc.perms.Perm
 import net.alasc.perms.default._
 

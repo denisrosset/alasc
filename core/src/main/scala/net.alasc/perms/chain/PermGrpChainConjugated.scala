@@ -9,7 +9,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.Permutation
-import net.alasc.prep.bsgs._
+import net.alasc.bsgs.{Chain, MutableChain, Node, Term}
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`)
   * conjugated by g (with gInv == g.inverse).

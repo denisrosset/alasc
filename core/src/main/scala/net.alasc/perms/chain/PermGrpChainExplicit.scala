@@ -7,7 +7,8 @@ import scala.util.Random
 import spire.algebra.{Eq, Group}
 
 import net.alasc.algebra.Permutation
-import net.alasc.prep.bsgs._
+import net.alasc.bsgs.Chain
+import net.alasc.bsgs._
 
 final class PermGrpChainExplicit[G](val chain: Chain[G], generatorsOpt: Opt[Iterable[G]])
                                    (implicit val equ: Eq[G],

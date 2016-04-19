@@ -3,8 +3,9 @@ package net.alasc.perms
 import net.alasc.algebra.{BigIndexedSeq, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, GrpBuilder}
-import net.alasc.prep.bsgs.Transversal
 import spire.util.Opt
+
+import net.alasc.bsgs.Transversal
 
 abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 

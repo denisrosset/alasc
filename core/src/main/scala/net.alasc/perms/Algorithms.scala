@@ -4,14 +4,15 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.NoImplicit
-import spire.algebra.{Group, Eq}
+import spire.algebra.{Eq, Group}
 import spire.util.Opt
 
 import net.alasc.algebra.Permutation
-import net.alasc.finite.{Rep, GrpBuilder}
+import net.alasc.bsgs.{BaseChange, BaseSwap, SchreierSims}
+import net.alasc.finite.{GrpBuilder, Rep}
 import net.alasc.perms.chain.PermGrpChainBuilder
 import net.alasc.perms.wrap.WrapGrpBuilder
-import net.alasc.prep.bsgs.{BaseChange, BaseSwap, SchreierSims}
+import net.alasc.bsgs.SchreierSims
 
 class Algorithms(
                   val randomOpt: Opt[Random] = Opt(Random),
