@@ -100,22 +100,22 @@ trait GrpLaws[G] extends Laws {
         val e2 = grp2.iterator.toSet
         val ei = int.iterator.toSet
         int.isSubgroupOf(grp1) &&
-        int.isSubgroupOf(grp2) &&
-        ((e1 intersect e2) == ei)
+          int.isSubgroupOf(grp2) &&
+          ((e1 intersect e2) == ei)
       },
 
       "leftCosetsBy" -> forAll { (grp: Grp[G]) =>
-        forAll(Grps.genSubgrp(grp)) { subGrp =>
+        (grp.order < 65536) ==> forAll(Grps.genSubgrp(grp)) { subGrp =>
           val cosets = grp.leftCosetsBy(subGrp)
           val setOfSets = cosets.iterator.map(coset => coset.iterator.toSet).toSet
-          val sumSizes = setOfSets.foldLeft(0)( _ + _.size )
+          val sumSizes = setOfSets.foldLeft(0)(_ + _.size)
           val union = setOfSets.flatten
           (sumSizes == grp.order) && (union == grp.iterator.toSet)
         }
       },
 
       "rightCosetsBy" -> forAll { (grp: Grp[G]) =>
-        forAll(Grps.genSubgrp(grp)) { subGrp =>
+        (grp.order < 65536) ==> forAll(Grps.genSubgrp(grp)) { subGrp =>
           val cosets = grp.rightCosetsBy(subGrp)
           val setOfSets = cosets.iterator.map(coset => coset.iterator.toSet).toSet
           val sumSizes = setOfSets.foldLeft(0)( _ + _.size )
@@ -162,62 +162,74 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
       },
 
       "lexElements" -> forAll { (grp: Grp[G]) =>
-        import net.alasc.optional.lexPermutationOrder._
-        val lexSeq = grp.lexElements.iterator
-          .map( g => g.toPermutation[Perm] ).toSeq
-        val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
-        (lexSeq.size == grp.order) && ordered
+        (grp.order < 65536) ==> {
+          import net.alasc.optional.lexPermutationOrder._
+          val lexSeq = grp.lexElements.iterator
+            .map(g => g.toPermutation[Perm]).toSeq
+          val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
+          (lexSeq.size == grp.order) && ordered
+        }
       },
 
       "stabilizer(b)" -> forAll { (grp: Grp[G], dom: Dom) =>
-        val k = dom.value
-        val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
-        val stabEls2 = grp.stabilizer(k).iterator.toSet
-        stabEls1 == stabEls2
+        (grp.order < 65536) ==> {
+          val k = dom.value
+          val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
+          val stabEls2 = grp.stabilizer(k).iterator.toSet
+          stabEls1 == stabEls2
+        }
       },
 
       "setwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[Dom]) =>
-        val setInt = set.map(_.value)
-        def setStabilized(g: G) =
-          setInt.forall(i => setInt.contains(i <|+| g))
-        val stabEls1 = grp.iterator.filter(setStabilized(_)).toSet
-        val stabEls2 = grp.setwiseStabilizer(setInt).iterator.toSet
-        stabEls1 == stabEls2
+        (grp.order < 65536) ==> {
+          val setInt = set.map(_.value)
+          def setStabilized(g: G) =
+            setInt.forall(i => setInt.contains(i <|+| g))
+          val stabEls1 = grp.iterator.filter(setStabilized(_)).toSet
+          val stabEls2 = grp.setwiseStabilizer(setInt).iterator.toSet
+          stabEls1 == stabEls2
+        }
       },
 
-      "pointwiseStabilizer" -> forAll { (pGrp: Grp[G], set: Set[Dom]) =>
-        val setInt = set.map(_.value)
-        def setStabilized(g: G) =
-          setInt.forall(i => i == (i <|+| g))
-        val stabEls1 = pGrp.iterator.filter(setStabilized(_)).toSet
-        val stabEls2 = pGrp.pointwiseStabilizer(setInt).iterator.toSet
-        stabEls1 == stabEls2
+      "pointwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[Dom]) =>
+        (grp.order < 65536) ==> {
+          val setInt = set.map(_.value)
+          def setStabilized(g: G) =
+            setInt.forall(i => i == (i <|+| g))
+          val stabEls1 = grp.iterator.filter(setStabilized(_)).toSet
+          val stabEls2 = grp.pointwiseStabilizer(setInt).iterator.toSet
+          stabEls1 == stabEls2
+        }
       },
 
       "someStabilizerTransversal" -> forAll { (grp: Grp[G]) =>
-        grp.someStabilizerTransversal match {
-          case Opt(subgrp, trv) =>
-            val els1 = grp.iterator.toSet
-            val els2 = (for {
-              g <- subgrp.iterator
-              b <- trv.orbit
-            } yield g |+| trv.u(b)).toSet
-            els1 == els2
-          case _ => grp.isTrivial
+        (grp.order < 65536) ==> {
+          grp.someStabilizerTransversal match {
+            case Opt(subgrp, trv) =>
+              val els1 = grp.iterator.toSet
+              val els2 = (for {
+                g <- subgrp.iterator
+                b <- trv.orbit
+              } yield g |+| trv.u(b)).toSet
+              els1 == els2
+            case _ => grp.isTrivial
+          }
         }
       },
 
       "stabilizerTransversal" -> forAll { (grp: Grp[G], dom: Dom) =>
-        val k = dom.value
-        val (subgrp, trv) = grp.stabilizerTransversal(k)
-        val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
-        val stabEls2 = subgrp.iterator.toSet
-        val els1 = grp.iterator.toSet
-        val els2 = (for {
-          g <- stabEls2
-          b <- trv.orbit
-        } yield g |+| trv.u(b)).toSet
-        (els1 == els2) && (stabEls1 == stabEls2) && (grp.order == (subgrp.order * trv.orbitSize))
+        (grp.order < 65536) ==> {
+          val k = dom.value
+          val (subgrp, trv) = grp.stabilizerTransversal(k)
+          val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
+          val stabEls2 = subgrp.iterator.toSet
+          val els1 = grp.iterator.toSet
+          val els2 = (for {
+            g <- stabEls2
+            b <- trv.orbit
+          } yield g |+| trv.u(b)).toSet
+          (els1 == els2) && (stabEls1 == stabEls2) && (grp.order == (subgrp.order * trv.orbitSize))
+        }
       },
 
       "find" -> forAll { (grp: Grp[G], g: G) =>
