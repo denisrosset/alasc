@@ -25,7 +25,7 @@ object Grps {
         for {
           c <- implicitly[Arbitrary[G]].arbitrary
           grp <- fromElements(elements)
-        } yield grp.conjugatedBy[Grp[G]](c)
+        } yield grp.conjugatedBy(c)
       }
     }
 

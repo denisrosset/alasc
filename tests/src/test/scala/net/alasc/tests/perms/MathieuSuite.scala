@@ -2,10 +2,10 @@ package net.alasc.tests
 package perms
 
 import net.alasc.named.Mathieu
-import net.alasc.perms.{Perm, PermGrp, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.tests.bsgs.BSGSSuite
 
-class MathieuSuite(implicit builder: PermGrpBuilder.Aux[Perm, _ <: PermGrp[Perm]]) extends AlascSuite {
+class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 
   def allPointStabilizersHaveOrder(first: Int, degree: Int, stabilizerOrder: BigInt): Boolean = {
     val grp = Mathieu[Perm](degree)

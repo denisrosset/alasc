@@ -21,7 +21,7 @@ trait Rep[G] { self =>
     new Rep.Wrap[G, self.type](g)
   }
 
-  def wrap[GW <: Grp[Wrap]](grp: Grp[G])(implicit builder: GrpBuilder.Aux[Wrap, GW]): GW =
+  def wrap(grp: Grp[G])(implicit builder: GrpBuilder[Wrap]): Grp[Wrap] =
     builder.fromGeneratorsAndOrder(grp.generators.map(Wrap(_)), grp.order)
 
 }

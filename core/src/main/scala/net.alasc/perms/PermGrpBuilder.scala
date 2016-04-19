@@ -40,9 +40,3 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
   def find[Q:Permutation](grp: Grp[G], q: Q): Opt[G]
 
 }
-
-object PermGrpBuilder {
-
-  type Aux[G, GG0 <: PermGrp[G]] = PermGrpBuilder[G] { type GG = GG0 }
-
-}

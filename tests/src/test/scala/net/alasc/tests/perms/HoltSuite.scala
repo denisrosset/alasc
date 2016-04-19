@@ -2,10 +2,10 @@ package net.alasc.tests
 package perms
 
 import net.alasc.finite._
-import net.alasc.perms.{Perm, PermGrp, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.tests.bsgs.BSGSSuite
 
-abstract class HoltSuite(implicit builder: PermGrpBuilder.Aux[Perm, _ <: PermGrp[Perm]]) extends AlascSuite {
+abstract class HoltSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 /*
   test("Example 4.4 page 111") {
     val alg = algorithms.BasicAlgorithms.randomized[Perm]()

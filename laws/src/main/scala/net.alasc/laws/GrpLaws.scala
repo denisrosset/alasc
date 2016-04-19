@@ -12,7 +12,7 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
-import net.alasc.perms.{Perm, PermGrp, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.syntax.all._
 
 object GrpLaws {
@@ -45,7 +45,7 @@ trait GrpLaws[G] extends Laws {
   implicit def arbG: Arbitrary[G]
   implicit def arbGrpG: Arbitrary[Grp[G]]
 
-  def grp(implicit builder: GrpBuilder.Aux[G, _ <: Grp[G]]) =
+  def grp(implicit builder: GrpBuilder[G]) =
     new GrpProperties(
       name = "grp",
       parent = None,
@@ -149,7 +149,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
 
   implicit def arbDom: Arbitrary[Dom]
 
-  def permGrp(implicit builder: PermGrpBuilder.Aux[G, _ <: PermGrp[G]]) =
+  def permGrp(implicit builder: PermGrpBuilder[G]) =
     new GrpProperties(
       name = "permGrp",
       parent = Some(grp(builder)),

@@ -12,7 +12,7 @@ abstract class WrapGrpBuilder[G](implicit val equ: Eq[G],
                                  val group: Group[G],
                                  val repBuilder: FaithfulPermRepBuilder[G]) extends GrpBuilder[G] {
 
-  def getBuilder(rep: FaithfulPermRep[G]): GrpBuilder.Aux[rep.Wrap, Grp[rep.Wrap]]
+  def getBuilder(rep: FaithfulPermRep[G]): GrpBuilder[rep.Wrap]
 
   type GG = WrapGrp[G, R] forSome { type R <: FaithfulPermRep[G] with Singleton }
 

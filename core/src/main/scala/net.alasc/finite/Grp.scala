@@ -11,7 +11,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, Permutation, PermutationBuilder}
 import net.alasc.domains.Partition
-import net.alasc.perms.{PermGrp, PermGrpBuilder}
+import net.alasc.perms.{PermGrpBuilder}
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
@@ -49,7 +49,7 @@ abstract class Grp[G] { lhs =>
   def isTrivial: Boolean = generators.isEmpty
 
   /** Returns the group H = hInv G h, where G is this group. */
-  def conjugatedBy[GG <: Grp[G]](h: G)(implicit builder: GrpBuilder.Aux[G, GG]): GG = builder.conjugatedBy(lhs, h)
+  def conjugatedBy(h: G)(implicit builder: GrpBuilder[G]): Grp[G] = builder.conjugatedBy(lhs, h)
 
   /** Generates a random element. */
   def randomElement(random: Random): G
@@ -69,10 +69,10 @@ abstract class Grp[G] { lhs =>
   }
 
   /** Union (closure) of groups. */
-  def union[GG <: Grp[G]](rhs: Grp[G])(implicit builder: GrpBuilder.Aux[G, GG]): GG = builder.union(lhs, rhs)
+  def union(rhs: Grp[G])(implicit builder: GrpBuilder[G]): Grp[G] = builder.union(lhs, rhs)
 
   /** Intersection of groups. */
-  def intersect[GG <: Grp[G]](rhs: Grp[G])(implicit builder: GrpBuilder.Aux[G, GG]): GG = builder.intersect(lhs, rhs)
+  def intersect(rhs: Grp[G])(implicit builder: GrpBuilder[G]): Grp[G] = builder.intersect(lhs, rhs)
 
   /** Left cosets. */
   def leftCosetsBy(subgrp: Grp[G])(implicit builder: GrpBuilder[G]): LeftCosets[G] =
@@ -89,37 +89,37 @@ abstract class Grp[G] { lhs =>
   def lexElements(implicit builder: PermGrpBuilder[G]): BigIndexedSeq[G] = builder.lexElements(lhs)
 
   /** Returns the subgroup that fixes the given partition. */
-  def fixingPartition[GG <: PermGrp[G]](partition: Partition)(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def fixingPartition(partition: Partition)(implicit builder: PermGrpBuilder[G]): Grp[G] =
     builder.fixingPartition(lhs, partition)
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point. */
-  def someStabilizer[GG <: PermGrp[G]](implicit builder: PermGrpBuilder.Aux[G, GG]): Opt[GG] =
+  def someStabilizer(implicit builder: PermGrpBuilder[G]): Opt[Grp[G]] =
     builder.someStabilizer(lhs)
 
   /** Returns the subgroup that stabilizes `b`. */
-  def stabilizer[GG <: PermGrp[G]](b: Int)(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def stabilizer(b: Int)(implicit builder: PermGrpBuilder[G]): Grp[G] =
     builder.stabilizer(lhs, b)
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */ // TODO: Transversal
-  def someStabilizerTransversal[GG <: PermGrp[G]](implicit builder: PermGrpBuilder.Aux[G, GG]): Opt[(GG, bsgs.Transversal[G])] =
+  def someStabilizerTransversal(implicit builder: PermGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G])] =
     builder.someStabilizerTransversal(lhs)
 
   /** Returns the subgroup that stabilizes `b` and the associated transversal. */
-  def stabilizerTransversal[GG <: PermGrp[G]](b: Int)(implicit builder: PermGrpBuilder.Aux[G, GG]): (GG, bsgs.Transversal[G]) =
+  def stabilizerTransversal(b: Int)(implicit builder: PermGrpBuilder[G]): (Grp[G], bsgs.Transversal[G]) =
     builder.stabilizerTransversal(lhs, b)
 
-  def pointwiseStabilizer[GG <: PermGrp[G]](set: Set[Int])(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def pointwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder[G]): Grp[G] =
     builder.pointwiseStabilizer(lhs, set)
 
-  def pointwiseStabilizer[GG <: PermGrp[G]](points: Int*)(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def pointwiseStabilizer(points: Int*)(implicit builder: PermGrpBuilder[G]): Grp[G] =
     pointwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
-  def setwiseStabilizer[GG <: PermGrp[G]](set: Set[Int])(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def setwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder[G]): Grp[G] =
     builder.setwiseStabilizer(lhs, set)
 
-  def setwiseStabilizer[GG <: PermGrp[G]](points: Int *)(implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def setwiseStabilizer(points: Int *)(implicit builder: PermGrpBuilder[G]): Grp[G] =
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
   /** Finds an element of this group with the image as `q`, if it exists. */
@@ -133,8 +133,8 @@ abstract class Grp[G] { lhs =>
     * @param predicate Tests if an element is member of the subgroup
     * @return the subgroup satisfying `predicate`
     */
-  def subgroupFor[GG <: PermGrp[G]](backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)
-                                   (implicit builder: PermGrpBuilder.Aux[G, GG]): GG =
+  def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)
+                                   (implicit builder: PermGrpBuilder[G]): Grp[G] =
     builder.subgroupFor(lhs, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
@@ -196,17 +196,17 @@ object Grp {
 
   implicit def lattice[G](implicit builder: GrpBuilder[G]): Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G]
 
-  def apply[G](generators: G*)(implicit builder: GrpBuilder[G]): builder.GG = {
+  def apply[G](generators: G*)(implicit builder: GrpBuilder[G]): Grp[G] = {
     import builder.{equ, group}
     builder.fromGenerators(generators.filterNot(_.isId))
   }
 
-  def trivial[G](implicit builder: GrpBuilder[G]): builder.GG = builder.trivial
+  def trivial[G](implicit builder: GrpBuilder[G]): Grp[G] = builder.trivial
 
-  def fromGenerators[G](generators: Iterable[G])(implicit builder: GrpBuilder[G]): builder.GG =
+  def fromGenerators[G](generators: Iterable[G])(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGenerators(generators)
 
-  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit builder: GrpBuilder[G]): builder.GG =
+  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGeneratorsAndOrder(generators, order)
 
 }

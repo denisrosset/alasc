@@ -28,7 +28,7 @@ object FixingPartition {
   def generators[G:PermutationBuilder](partition: Partition): Iterable[G] =
     partition.blocks.flatMap(blockGenerators[G](_))
 
-  def apply[G:PermutationBuilder:PermGrpBuilder](partition: Partition): PermGrp[G] =
+  def apply[G:PermutationBuilder:PermGrpBuilder](partition: Partition): Grp[G] =
     Grp.fromGeneratorsAndOrder(generators[G](partition), order(partition))
 
 }
