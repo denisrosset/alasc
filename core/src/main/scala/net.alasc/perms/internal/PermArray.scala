@@ -1,6 +1,8 @@
 package net.alasc.perms
 package internal
 
+import spire.syntax.cfor._
+
 import metal.syntax._
 
 import net.alasc.util._
@@ -10,8 +12,9 @@ import net.alasc.util._
   * 
   * - images(images.length - 1) != images.length - 1.
   */
-final class PermArray(val images: Array[Int]) extends PermBase {
+final class PermArray(val images: Array[Int]) extends PermBase { lhs =>
   require(images(images.length - 1) != images.length - 1)
+
   def isId = {
     assert(images.length > Perm16Encoding.movedPointsUpperBound + 1)
     false
@@ -89,7 +92,12 @@ final class PermArray(val images: Array[Int]) extends PermBase {
   }
 
   override def genEqv(rhs: AbstractPerm): Boolean = rhs match {
-    case rhs1: PermArray => images.sameElements(rhs1.images)
+    case rhs1: PermArray => (lhs.images.length == rhs1.images.length) && {
+      cforRange(0 until lhs.images.length) { k =>
+        if (lhs.images(k) != rhs1.images(k)) return false
+      }
+      true
+    }
     case _ => super.genEqv(rhs)
   }
 }
