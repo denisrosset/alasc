@@ -84,7 +84,7 @@ class PermGrpChainBuilder[G](implicit
   def stabilizerTransversal(grp: Grp[G], b: Int): (GG, Transversal[G]) = grp match {
     case conj: PermGrpChainConjugated[G] =>
       import conj.{g, gInv, originalChain}
-      conj.chain match {
+      originalChain match {
         case node: Node[G] =>
           val a = b <|+| gInv
           if (node.inOrbit(a)) {
@@ -95,7 +95,8 @@ class PermGrpChainBuilder[G](implicit
             val nextGrp = new PermGrpChainConjugated[G](node.next, newG, newGInv)
             val trv = ConjugatedTransversal(node, newG, newGInv)
             (nextGrp, trv)
-          } else if (node.isFixed(a))
+          }
+          else if (node.isFixed(a))
             (conj, Transversal.empty(b))
           else {
             val newChain = BuildChain.fromChain(originalChain, permutation, Opt(BaseGuideSeq(Seq(a))))
