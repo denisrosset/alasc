@@ -207,14 +207,14 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "stabilizerTransversal(b)" -> forAll { (grp: Grp[G], dom: Dom) =>
+      "stabilizerTransversal" -> forAll { (grp: Grp[G], dom: Dom) =>
         val k = dom.value
         val (subgrp, trv) = grp.stabilizerTransversal(k)
         val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
         val stabEls2 = subgrp.iterator.toSet
         val els1 = grp.iterator.toSet
         val els2 = (for {
-          g <- subgrp.iterator
+          g <- stabEls2
           b <- trv.orbit
         } yield g |+| trv.u(b)).toSet
         (els1 == els2) && (stabEls1 == stabEls2) && (grp.order == (subgrp.order * trv.orbitSize))
