@@ -4,7 +4,7 @@ package perms
 import net.alasc.domains._
 import net.alasc.named.RubikCube
 import net.alasc.perms.{Perm, PermGrp, PermGrpBuilder}
-import net.alasc.tests.prep.BSGSSuite
+import net.alasc.tests.bsgs.BSGSSuite
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
 abstract class RubikCubeSuite(implicit builder: PermGrpBuilder.Aux[Perm, _ <: PermGrp[Perm]]) extends AlascSuite {

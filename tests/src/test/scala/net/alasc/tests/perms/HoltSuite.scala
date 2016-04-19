@@ -3,7 +3,7 @@ package perms
 
 import net.alasc.finite._
 import net.alasc.perms.{Perm, PermGrp, PermGrpBuilder}
-import net.alasc.tests.prep.BSGSSuite
+import net.alasc.tests.bsgs.BSGSSuite
 
 abstract class HoltSuite(implicit builder: PermGrpBuilder.Aux[Perm, _ <: PermGrp[Perm]]) extends AlascSuite {
 /*
