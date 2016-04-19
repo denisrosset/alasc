@@ -5,6 +5,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.syntax.eq._
@@ -51,7 +52,7 @@ object ChainRec {
     case _: Term[P] => acc
   }
 
-  @tailrec def order[P](chain: Chain[P], acc: BigInt): BigInt = chain match {
+  @tailrec def order[P](chain: Chain[P], acc: SafeLong): SafeLong = chain match {
     case node: Node[P] => order(node.next, acc * node.orbitSize)
     case _: Term[P] => acc
   }

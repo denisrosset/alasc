@@ -1,6 +1,7 @@
 package net.alasc.finite
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.syntax.group._
 
 /** Builder for groups composed of elements of type `G`. */
@@ -20,7 +21,7 @@ abstract class GrpBuilder[G] {
 
   def fromGenerators(generators: Iterable[G]): GG
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG
 
   def fromGrp(grp: Grp[G]): GG
 

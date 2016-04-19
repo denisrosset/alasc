@@ -5,6 +5,7 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Group, Order}
+import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.group._
 import spire.util.Opt
@@ -37,10 +38,10 @@ class PermGrpChainBuilder[G](implicit
     new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG =
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG =
     fromGeneratorsAndOrder(generators, order, Opt.empty[BaseGuide])
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt, baseGuideOpt: Opt[BaseGuide]): GG = {
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong, baseGuideOpt: Opt[BaseGuide]): GG = {
     val chain = BuildChain.fromGeneratorsAndOrder(generators, order, permutation, baseGuideOpt)
     new PermGrpChainExplicit(chain, generatorsOpt = Opt(generators))
   }
@@ -286,8 +287,8 @@ object PermGrpChainBuilder {
 
     def contains(g: G) = lexChain.sifts(g)
 
-    def apply(idx: BigInt): G = {
-      @tailrec def rec(current: Chain[G], curIdx: BigInt, curOrder: BigInt, curG: G): G = current match {
+    def apply(idx: SafeLong): G = {
+      @tailrec def rec(current: Chain[G], curIdx: SafeLong, curOrder: SafeLong, curG: G): G = current match {
         case node: Node[G] =>
           val sortedOrbit = node.orbit.toSeq.sortBy(k => k <|+| curG)
           val nextOrder = curOrder / node.orbitSize

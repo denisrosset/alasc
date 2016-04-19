@@ -1,11 +1,13 @@
 package net.alasc.named
 
+import spire.math.SafeLong
+
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
 
 object Alternating {
 
-  def order(degree: Int): BigInt = Symmetric.order(degree) / 2
+  def order(degree: Int): SafeLong = Symmetric.order(degree) / 2
 
   def shift[G:PermutationBuilder](n: Int): G =
     if (n % 2 == 1) Cyclic.shift[G](n) else

@@ -1,13 +1,15 @@
 package net.alasc.tests
 package perms
 
+import spire.math.SafeLong
+
 import net.alasc.named.Mathieu
 import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.tests.bsgs.BSGSSuite
 
 class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 
-  def allPointStabilizersHaveOrder(first: Int, degree: Int, stabilizerOrder: BigInt): Boolean = {
+  def allPointStabilizersHaveOrder(first: Int, degree: Int, stabilizerOrder: SafeLong): Boolean = {
     val grp = Mathieu[Perm](degree)
     val domain = (first until first + degree)
     domain.forall ( k => grp.stabilizer(k).order === stabilizerOrder )
@@ -31,7 +33,7 @@ class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
     }
 
     test("Mathieu group 11 stabilizer of {2,9} has order 144") {
-      Mathieu[Perm](11).setwiseStabilizer(2, 9).order should === (BigInt(144))
+      Mathieu[Perm](11).setwiseStabilizer(2, 9).order should === (SafeLong(144))
     }
 
   }

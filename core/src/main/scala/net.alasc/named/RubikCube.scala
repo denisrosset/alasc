@@ -1,5 +1,7 @@
 package net.alasc.named
 
+import spire.math.SafeLong
+
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.perms._
@@ -25,7 +27,7 @@ object RubikCube {
     Perm(33,35,40,38)(34,37,39,36)( 3, 9,46,32)( 2,12,47,29)( 1,14,48,27),
     Perm(41,43,48,46)(42,45,47,44)(14,22,30,38)(15,23,31,39)(16,24,32,40))
 
-  val order = BigInt("43252003274489856000")
+  val order = SafeLong(BigInt("43252003274489856000"))
 
   def apply[G:PermutationBuilder:GrpBuilder]: Grp[G] = generate(generators, order)
 

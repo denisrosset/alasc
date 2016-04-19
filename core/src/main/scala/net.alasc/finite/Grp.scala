@@ -4,6 +4,7 @@ import scala.util.Random
 
 import spire.algebra.{Eq, Group, PartialOrder}
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
+import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.syntax.group._
@@ -11,7 +12,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, Permutation, PermutationBuilder}
 import net.alasc.domains.Partition
-import net.alasc.perms.{PermGrpBuilder}
+import net.alasc.perms.PermGrpBuilder
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
@@ -43,7 +44,7 @@ abstract class Grp[G] { lhs =>
   def generators: Iterable[G]
 
   /** Group order. */
-  def order: BigInt // TODO: replace by SafeLong
+  def order: SafeLong
 
   /** Returns whether this is the trivial group with a single identity element. */
   def isTrivial: Boolean = generators.isEmpty
@@ -206,7 +207,7 @@ object Grp {
   def fromGenerators[G](generators: Iterable[G])(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGenerators(generators)
 
-  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: BigInt)(implicit builder: GrpBuilder[G]): Grp[G] =
+  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: SafeLong)(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGeneratorsAndOrder(generators, order)
 
 }

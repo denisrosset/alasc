@@ -3,6 +3,7 @@ package net.alasc.perms
 package wrap
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 
 import net.alasc.finite._
 
@@ -27,7 +28,7 @@ abstract class WrapGrpBuilder[G](implicit val equ: Eq[G],
     new WrapGrp[G, rep.type](rep, wg)
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG = {
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG = {
     implicit val rep = repBuilder.build(generators)
     val wg = getBuilder(rep).fromGeneratorsAndOrder(generators.map(rep.Wrap), order)
     new WrapGrp[G, rep.type](rep, wg)

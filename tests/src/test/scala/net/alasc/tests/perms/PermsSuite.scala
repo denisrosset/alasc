@@ -1,6 +1,8 @@
 package net.alasc.tests
 package perms
 
+import spire.math.SafeLong
+
 import net.alasc.named.Symmetric
 import net.alasc.perms.{Perm, Perms}
 import net.alasc.perms.default._
@@ -18,7 +20,7 @@ class PermsSuite extends AlascSuite {
       val setFromSym = sym.iterator.toSet
       for (i <- 0 until perms.size.toInt) {
         val perm = perms(i)
-        perms.indexOf(perm).getOrElse(sys.error("Perm should be inside")) should === (BigInt(i))
+        perms.indexOf(perm).getOrElse(sys.error("Perm should be inside")) should === (SafeLong(i))
       }
       seqFromPermsApply shouldBe (seqFromPermsIterator)
       seqFromPermsApply.toSet shouldBe (setFromSym)

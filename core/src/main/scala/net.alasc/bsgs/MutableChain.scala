@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.cfor._
 
@@ -138,8 +139,8 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
     */
-  def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])(
-    implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], BigInt) = {
+  def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])
+                 (implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], SafeLong) = {
     implicit def action = start.action
     require(prev.next eq node1)
     require(node1.prev eq prev)

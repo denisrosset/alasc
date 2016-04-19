@@ -1,5 +1,7 @@
 package net.alasc.perms
 
+import spire.math.SafeLong
+
 import net.alasc.algebra._
 import net.alasc.domains.Partition
 import net.alasc.finite.Grp
@@ -7,7 +9,7 @@ import net.alasc.named.Symmetric
 
 object FixingPartition {
 
-  def blockOrder(block: Partition#Block): BigInt = Symmetric.order(block.size)
+  def blockOrder(block: Partition#Block): SafeLong = Symmetric.order(block.size)
 
   def blockGenerators[G:PermutationBuilder](block: Partition#Block): Iterable[G] =
     if (block.size <= 1) Iterable.empty else {
@@ -22,8 +24,8 @@ object FixingPartition {
       builder.result()
     }
 
-  def order(partition: Partition): BigInt =
-    (BigInt(1) /: partition.blocks) { case (o, block) => o * blockOrder(block) }
+  def order(partition: Partition): SafeLong =
+    (SafeLong.one /: partition.blocks) { case (o, block) => o * blockOrder(block) }
 
   def generators[G:PermutationBuilder](partition: Partition): Iterable[G] =
     partition.blocks.flatMap(blockGenerators[G](_))

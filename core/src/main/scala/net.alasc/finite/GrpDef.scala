@@ -1,8 +1,9 @@
 package net.alasc.finite
 
+import spire.math.SafeLong
 import spire.util.Opt
 
-case class GrpDef[G](generators: Iterable[G], orderOpt: Opt[BigInt] = Opt.empty[BigInt])
+case class GrpDef[G](generators: Iterable[G], orderOpt: Opt[SafeLong] = Opt.empty[SafeLong])
 
 object GrpDef {
 

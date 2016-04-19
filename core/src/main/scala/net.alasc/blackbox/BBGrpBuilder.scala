@@ -3,6 +3,7 @@ package net.alasc.blackbox
 import scala.annotation.tailrec
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.syntax.group._
 
 import net.alasc.finite._
@@ -26,7 +27,7 @@ class BBGrpBuilder[G](implicit
     new BBGrp(generators, rec(generators.toSet))
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: BigInt): GG =
+  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG =
     fromGenerators(generators)
 
   def fromGrp(grp: Grp[G]): GG = grp match {

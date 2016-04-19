@@ -3,6 +3,7 @@ package net.alasc.perms.wrap
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 
 import net.alasc.finite.Grp
 import net.alasc.perms.FaithfulPermRep
@@ -16,7 +17,7 @@ class WrapGrp[G, R <: FaithfulPermRep[G] with Singleton](val rep: R,
 
   override def generators: Iterable[G] = underlying.generators.map(_.underlying)
 
-  override def order: BigInt = underlying.order
+  override def order: SafeLong = underlying.order
 
   override def randomElement(random: Random): G = underlying.randomElement(random).underlying
 

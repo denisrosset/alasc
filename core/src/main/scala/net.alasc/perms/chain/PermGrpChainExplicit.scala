@@ -5,6 +5,7 @@ import spire.util.Opt
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 
 import net.alasc.algebra.Permutation
 import net.alasc.bsgs.Chain
@@ -29,7 +30,7 @@ final class PermGrpChainExplicit[G](val chain: Chain[G], generatorsOpt: Opt[Iter
 
   def contains(g: G) = chain.sifts(g)
 
-  def order: BigInt = chain.order
+  def order: SafeLong = chain.order
 
   def randomElement(random: Random): G = chain.randomElement(random)
 

@@ -2,6 +2,8 @@ package net.alasc.perms
 
 import scala.annotation.tailrec
 
+import spire.syntax.order._
+import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra._
@@ -10,7 +12,7 @@ import net.alasc.syntax.permutationAction._
 /** Lexicographically ordered sequence of permutations acting on `n` elements. */
 final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
 
-  @tailrec def fact(k: Int, acc: BigInt = 1): BigInt =
+  @tailrec def fact(k: Int, acc: SafeLong = 1): SafeLong =
     if (k < 2) acc else fact(k - 1, acc * k)
   def length = fact(n)
 
@@ -18,12 +20,12 @@ final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
     * 
     * Inspired by sympy.combinatorics.permutations.
     */
-  override def indexOf(perm: Perm): Opt[BigInt] =
-    if (perm.largestMovedPoint.getOrElseFast(-1) >= n) Opt.empty[BigInt] else {
-      var rank = BigInt(0)
+  override def indexOf(perm: Perm): Opt[SafeLong] =
+    if (perm.largestMovedPoint.getOrElseFast(-1) >= n) Opt.empty[SafeLong] else {
+      var rank = SafeLong.zero
       val rho: Array[Int] = perm.images(n).toArray
       var k = n - 1
-      var psize: BigInt = fact(k)
+      var psize = fact(k)
       var j = 0
       while (j < n - 1) {
         rank += rho(j) * psize
@@ -86,9 +88,9 @@ final case class Perms(n: Int) extends BigIndexedSeq[Perm] {
     * 
     * Inspired by sympy.combinatorics.permutations.
     */
-  def apply(rank: BigInt): Perm = {
+  def apply(rank: SafeLong): Perm = {
     val images = Array.fill(n)(0)
-    var psize = BigInt(1)
+    var psize = SafeLong.one
     var i = 0
     var remRank = rank
     while (i < n) {

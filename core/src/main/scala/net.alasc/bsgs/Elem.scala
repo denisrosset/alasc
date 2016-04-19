@@ -5,6 +5,7 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
@@ -173,7 +174,7 @@ sealed trait Chain[P] extends Elem[P] {
 
   def elementsIterator(implicit group: Group[P]): Iterator[P]
 
-  def order: BigInt = ChainRec.order(chain, BigInt(1))
+  def order: SafeLong = ChainRec.order(chain, SafeLong(1))
 
   def randomElement(rand: Random)(implicit group: Group[P]): P
 

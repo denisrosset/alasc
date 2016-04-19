@@ -1,5 +1,6 @@
 package net.alasc.finite
 
+import spire.math.SafeLong
 import spire.syntax.group._
 
 trait Coset[G] {
@@ -7,7 +8,7 @@ trait Coset[G] {
   def subgrp: Grp[G]
 
   /** Number of elements in this coset. */
-  def size: BigInt
+  def size: SafeLong
 
   /** Iterator through the coset elements. */
   def iterator: Iterator[G]
@@ -25,7 +26,7 @@ class RightCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
 
   def contains(el: G) = subgrp.contains(el |+| g.inverse)
 
-  def size: BigInt = subgrp.order
+  def size: SafeLong = subgrp.order
 
   def iterator: Iterator[G] = subgrp.iterator.map( h => h |+| g )
 
@@ -41,7 +42,7 @@ class LeftCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
 
   def contains(el: G) = subgrp.contains(g.inverse |+| el)
 
-  def size: BigInt = subgrp.order
+  def size: SafeLong = subgrp.order
 
   def iterator: Iterator[G] = subgrp.iterator.map( h => g |+| h )
 
