@@ -1,6 +1,8 @@
 package net.alasc.tests
 package perms
 
+import spire.laws.PartialActionLaws
+
 import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
 import net.alasc.perms.{Cycle, Cycles, Perm}
 

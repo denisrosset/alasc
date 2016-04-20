@@ -11,10 +11,9 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, Permutation}
-import net.alasc.bsgs.{BaseChange, BaseGuide, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSwap, BuildChain, BuildMutableChain, Chain, ConjugatedTransversal, FixingPartition, Intersection, Node, PointwiseStabilizer, SchreierSims, SetwiseStabilizer, SubgroupDefinition, SubgroupSearch, Term, Transversal}
+import net.alasc.bsgs._
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, RightCosets}
-import net.alasc.bsgs._
 
 class PermGrpChainBuilder[G](implicit
                              val baseChange: BaseChange,

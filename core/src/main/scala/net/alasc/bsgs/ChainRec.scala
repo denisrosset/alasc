@@ -26,6 +26,14 @@ object MutableChainRec {
 }
 
 object ChainRec {
+
+  @tailrec def hasLexicographicBase[P](chain: Chain[P], prev: Int = -1): Boolean = chain match {
+    case node: Node[P] =>
+      val b = node.beta
+      if (b < prev) false else hasLexicographicBase(node.next, b)
+    case _: Term[P] => true
+  }
+
   @tailrec def isFixed[P](chain: Chain[P], k: Int): Boolean = chain match {
     case node: Node[P] =>
       cforRange(0 until node.nOwnGenerators) { i =>

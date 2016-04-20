@@ -5,6 +5,8 @@ import org.scalacheck._
 import spire.algebra.{Group, Order}
 import spire.util.Opt
 
+import org.scalatest.matchers.{MatchResult, Matcher}
+
 import net.alasc.algebra._
 import net.alasc.bsgs.{BuildChain, Chain, Node, Term}
 import net.alasc.domains._
@@ -36,11 +38,12 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
   test("Base change guided by partition has base points corresponding to blocks of increasing size") {
     forAll(genChain) { chain =>
       val n = chainSupportMax(chain) + 1
-      Prop.forAll(Partitions.forDomain(Domain(n))) { partition =>
+      val domain = Domain(n)
+      forAll(Partitions.forDomain(domain)) { partition =>
         val definition = FixingPartitionDef[Perm](implicitly, partition)
         val newChain = BuildChain.fromChain(chain, PermutationBuilder[Perm], definition.baseGuideOpt)
         val baseBlockSize = newChain.base.map(partition.blockFor(_).size)
-        isNonDecreasing(baseBlockSize)
+        baseBlockSize should beWeaklyIncreasing[Int]
       }
     }
   }
@@ -53,7 +56,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
           val node1 = mutableChain.mutable(mutableChain.start.next.nodesNext(index))
           val node2 = mutableChain.mutable(mutableChain.start.next.nodesNext(index + 1))
           builder.baseSwap.baseSwap(mutableChain, node1, node2)
-          mutableChain.start.next.order === chain.order
+          mutableChain.start.next.order should === (chain.order)
         case _ => discardEvaluation()
       }
     }
@@ -65,7 +68,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
         case Opt(k) =>
           val mutableChain = chain.mutableChain
           mutableChain.putExistingBasePointAfter(mutableChain.start, k)
-          mutableChain.start.next.order === chain.order
+          mutableChain.start.next.order should === (chain.order)
         case _ => discardEvaluation()
       }
     }
@@ -76,7 +79,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
       forAll(genSwappedSeq(chain.base)) { newBase =>
         val mutableChain = chain.mutableChain
         baseChange.changeBase(mutableChain, newBase)
-        mutableChain.start.next.order === chain.order
+        mutableChain.start.next.order should === (chain.order)
       }
     }
   }
@@ -86,7 +89,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
       forAll(genNewBase(chain)) { newBase =>
         val mutableChain = chain.mutableChain
         baseChange.changeBase(mutableChain, newBase)
-        mutableChain.start.next.order === chain.order
+        mutableChain.start.next.order should === (chain.order)
       }
     }
   }
@@ -101,7 +104,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
         mutableChain.check
         baseChange.changeBase(mutableChain, oldBase)
         val newOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
-        oldOrbitSizes.sameElements(newOrbitSizes)
+        oldOrbitSizes should === (newOrbitSizes)
       }
     }
   }
@@ -153,9 +156,17 @@ object BSGSSuite {
   def genRandomElement[G:Group](chain: Chain[G]): Gen[G] =
     Gen.parameterized( p => chain.randomElement(p.rng) )
 
-  def isNonDecreasing[A:Order](seq: Seq[A]): Boolean = {
-    val pairs = seq.iterator zip seq.iterator.drop(1)
-    pairs.forall { case (i, j) => i <= j }
+  def beWeaklyIncreasing[A:Order] = new Matcher[Seq[A]] {
+
+    def apply(left: Seq[A]) = {
+      val pairs = left.iterator zip left.iterator.drop(1)
+      MatchResult(
+        pairs.forall { case (i, j) => i <= j },
+        s"""Sequence $left was not (weakly) increasing""",
+        s"""Sequence $left was (weakly) increasing"""
+      )
+    }
+
   }
 
   val deterministic = {

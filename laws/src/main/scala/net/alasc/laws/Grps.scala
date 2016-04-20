@@ -15,7 +15,8 @@ object Grps {
     for {
       n <- Gen.choose(0, 4)
       generators <- Gen.containerOfN[Seq, G](n, elements)
-    } yield Grp(generators: _*)
+      c <- elements
+    } yield Grp(generators: _*).conjugatedBy(c)
 
   implicit def arbGrp[G:Arbitrary:GrpBuilder]: Arbitrary[Grp[G]] = 
     Arbitrary {
@@ -29,7 +30,7 @@ object Grps {
       }
     }
 
-  implicit def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =
+  def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =
     Arbitrary(genSubgrp(witness.value: GG))
 
   implicit def instances[G:Instances:GrpBuilder]: Instances[Grp[G]] =

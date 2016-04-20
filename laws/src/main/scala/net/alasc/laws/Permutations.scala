@@ -43,7 +43,7 @@ object Permutations {
 
   def domForSize(size: Int): Gen[Dom] = Gen.choose(0, size - 1).map(Dom(_))
 
-  implicit def arbPermutation[P : PermutationBuilder]: Arbitrary[P] = Arbitrary(sized[P])
+  implicit def arbPermutation[P:PermutationBuilder]: Arbitrary[P] = Arbitrary(sized[P])
 
   implicit def arbDom: Arbitrary[Dom] = Arbitrary(domSized)
 

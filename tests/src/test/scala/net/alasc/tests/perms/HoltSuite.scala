@@ -1,6 +1,8 @@
 package net.alasc.tests
 package perms
 
+import spire.math.SafeLong
+
 import net.alasc.finite._
 import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.tests.bsgs.BSGSSuite
@@ -39,16 +41,16 @@ abstract class HoltSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSu
   test("Example 4.6") {
     val g = Grp(Perm(1,2,3), Perm(4,5,6), Perm(1,4)(2,5)(3,6)(7,8))
     val h = Grp(Perm(1,6)(2,4)(3,5)(7,8), Perm(1,2)(3,7)(4,6)(5,8), Perm(2,3,7)(4,5,8))
-    g.order should equal(18)
-    h.order should equal(24)
+    g.order should ===(SafeLong(18))
+    h.order should ===(SafeLong(24))
     val ginterg = g intersect g
     val hinterh = h intersect h
-    ginterg.order should equal(18)
-    hinterh.order should equal(24)
+    ginterg.order should ===(SafeLong(18))
+    hinterh.order should ===(SafeLong(24))
     val ginterh = g intersect h
     val hinterg = h intersect g
-    ginterh.order should equal(6)
-    hinterg.order should equal(6)
+    ginterh.order should ===(SafeLong(6))
+    hinterg.order should ===(SafeLong(6))
   }
 
 }

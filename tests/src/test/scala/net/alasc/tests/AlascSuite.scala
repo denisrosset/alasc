@@ -5,7 +5,7 @@ import spire.syntax.EqOps
 
 import org.scalacheck.Shrink
 import org.scalatest.exceptions.DiscardedEvaluationException
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
+import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FunSuite, Matchers}
 import org.typelevel.discipline.scalatest.Discipline
 
@@ -16,11 +16,11 @@ import net.alasc.laws.NestedDiscipline
   * boilerplate in Cats tests.
   */
 trait AlascSuite extends FunSuite with Matchers
-  with GeneratorDrivenPropertyChecks
+  with PropertyChecks
   with Discipline with NestedDiscipline
   with StrictAlascEquality
   with spire.syntax.AllSyntax with spire.std.AnyInstances
-  with net.alasc.syntax.AllSyntax
+  with net.alasc.syntax.AllSyntax with net.alasc.std.AnyInstances
   with spire.syntax.GroupoidSyntax {
 
   // disable Eq syntax (by making `eqOps` not implicit), since it collides

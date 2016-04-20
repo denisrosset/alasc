@@ -45,9 +45,9 @@ trait GrpLaws[G] extends Laws {
   implicit def arbG: Arbitrary[G]
   implicit def arbGrpG: Arbitrary[Grp[G]]
 
-  def grp(implicit builder: GrpBuilder[G]) =
+  def grpWithoutHashCodeEquals(implicit builder: GrpBuilder[G]) =
     new GrpProperties(
-      name = "grp",
+      name = "grpBase",
       parent = None,
 
       "order / iterator.size" -> forAll( (grp: Grp[G]) =>
@@ -94,6 +94,19 @@ trait GrpLaws[G] extends Laws {
         grp1.isSubgroupOf(u) && grp2.isSubgroupOf(u)
       },
 
+      "smallGeneratingSet" -> forAll { (grp: Grp[G]) =>
+        val newGrp: Grp[G] = Grp.fromGenerators(grp.smallGeneratingSet)
+        newGrp === grp
+      }
+
+
+    )
+
+  def grp(implicit builder: GrpBuilder[G]) =
+    new GrpProperties(
+      name = "grp",
+      parent = Some(grpWithoutHashCodeEquals),
+
       "intersect" -> forAll { (grp1: Grp[G], grp2: Grp[G]) =>
         val int = grp1 intersect grp2
         val e1 = grp1.iterator.toSet
@@ -122,11 +135,6 @@ trait GrpLaws[G] extends Laws {
           val union = setOfSets.flatten
           (sumSizes == grp.order) && (union == grp.iterator.toSet)
         }
-      },
-
-      "smallGeneratingSet" -> forAll { (grp: Grp[G]) =>
-        val newGrp: Grp[G] = Grp.fromGenerators(grp.smallGeneratingSet)
-        newGrp === grp
       }
 
     )

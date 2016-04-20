@@ -23,9 +23,9 @@ class SemigroupoidSuite extends AlascSuite {
 
     (Seq(1,2) |+|? Seq(1,2,3)).isEmpty shouldBe true
 
-    (Seq(1,2) |+|? Seq(1,2)).get shouldBe Seq(2,4)
+    (Seq(1,2) |+|? Seq(1,2)).get should === (Seq(2,4))
 
-    (Seq(1,2) |+|? Seq(1,2)).get shouldBe Seq(2,4)
+    (Seq(1,2) |+|? Seq(1,2)).get should === (Seq(2,4))
   }
 
 }

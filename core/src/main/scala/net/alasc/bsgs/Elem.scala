@@ -182,6 +182,10 @@ sealed trait Chain[P] extends Elem[P] {
 
   def base: Seq[Int] = ChainRec.base(chain)
 
+  /** Tests whether the base of this chain is in the lexicographic order
+    * (i.e. successive elements are increasing). */
+  def hasLexicographicBase: Boolean = ChainRec.hasLexicographicBase(chain)
+
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
   def basicSift(p: P)(implicit group: Group[P], equ: Eq[P]): (Seq[Int], P) = ChainRec.basicSift(chain, p)

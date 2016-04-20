@@ -10,25 +10,23 @@ import spire.syntax.cfor._
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.prep._
+import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-class WrImprimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A: PRepBuilder[A]) extends PRepBuilder[Wr[A, H]] {
+class WrFaithfulPermRepBuilder[A:Group, H:Permutation](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A, H]] {
 
   def build(generators: Iterable[Wr[A, H]]) = {
-    val n = (1 /: generators) { case (m, g) => m.max(g.aSeq.size).max(g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
+    val n = (1 /: generators) { case (m, g) => spire.math.max(spire.math.max(m, g.aSeq.size), g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
     val aRep = A.build(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
 
-  case class R(n: Int, aRep: A.R) extends BuiltRep[Wr[A, H]] with FaithfulPRep[Wr[A, H]] {
-    type B = WrImprimitivePRepBuilder.this.type
-    val builder: B = WrImprimitivePRepBuilder.this
+  case class R(n: Int, aRep: FaithfulPermRep[A]) extends FaithfulPermRep[Wr[A, H]] {
     val aSize = aRep.size
     val size = n * aSize
     val aDiv = Divisor(size - 1, aSize)
-    def represents(w: Wr[A, H]) = w.aSeq.size < n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
+    def represents(w: Wr[A, H]) = w.aSeq.size <= n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     val permutationAction = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
@@ -110,29 +108,6 @@ class WrImprimitivePRepBuilder[A:Group, H:PermutationBuilder](implicit val A: PR
         NNNone
       }
     }
-  }
-
-  val classTagR = classTag[R]
-
-  implicit object partialOrder extends PartialOrder[R] {
-
-    def partialCompare(x: R, y: R) = {
-      val sizeC = (x.n - y.n).signum
-      val compR = A.partialOrder.partialCompare(x.aRep, y.aRep)
-      if (compR == sizeC.toDouble) compR
-      Double.NaN
-    }
-
-  }
-
-  implicit object lattice extends Lattice[R] with BoundedJoinSemilattice[R] {
-
-    def zero = R(1, A.lattice.zero)
-
-    def join(x: R, y: R) = R(x.n.max(y.n), A.lattice.join(x.aRep, y.aRep))
-
-    def meet(x: R, y: R) = R(x.n.min(y.n), A.lattice.meet(x.aRep, y.aRep))
-
   }
 
 }

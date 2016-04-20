@@ -26,7 +26,7 @@ class CycleSuite extends AlascSuite {
   }
 
   test ("Inverse of (1, 5, 3, 6)(2, 8, 7) is (6, 3, 5, 1) (7, 8, 2) = (1, 6, 3, 5)(2, 7, 8) -- Holt 2.1.5") {
-    (Cycles(1,5,3,6)(2,8,7).inverse === Cycles(1,6,3,5)(2,7,8)) shouldBe true
+    Cycles(1,5,3,6)(2,8,7).inverse should === (Cycles(1,6,3,5)(2,7,8))
   }
 
 }

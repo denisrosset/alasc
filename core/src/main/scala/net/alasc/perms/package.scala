@@ -14,5 +14,4 @@ package object perms {
 
   object default extends Algorithms(Opt(Random), false, true)
 
-
 }

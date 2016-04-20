@@ -22,7 +22,6 @@ abstract class RubikCubeSuite(implicit builder: PermGrpBuilder[Perm]) extends Al
     grp.fixingPartition(partition).isTrivial shouldBe true
   }
 
-
 }
 
 class RubikCubeSuiteDeterministic extends RubikCubeSuite()(BSGSSuite.deterministic)

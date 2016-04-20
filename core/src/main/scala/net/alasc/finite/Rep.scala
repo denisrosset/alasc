@@ -17,6 +17,7 @@ trait Rep[G] { self =>
 
   /** Wraps the given group element, to be represented by this representation. */
   def Wrap(g: G): Wrap = {
+    if (!represents(g)) println(g)
     require(represents(g))
     new Rep.Wrap[G, self.type](g)
   }
