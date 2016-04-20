@@ -11,10 +11,11 @@ import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
+import spire.syntax.group._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-class WrFaithfulPermRepBuilder[A:Group, H:Permutation](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A, H]] {
+class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A, H]] {
 
   def build(generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => spire.math.max(spire.math.max(m, g.aSeq.size), g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
@@ -26,7 +27,11 @@ class WrFaithfulPermRepBuilder[A:Group, H:Permutation](implicit val A: FaithfulP
     val aSize = aRep.size
     val size = n * aSize
     val aDiv = Divisor(size - 1, aSize)
-    def represents(w: Wr[A, H]) = w.aSeq.size <= n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
+    def represents(w: Wr[A, H]) = {
+      var lastNotId = -1
+      cforRange(0 until w.aSeq.size) { k => if (!w.aSeq(k).isId) lastNotId = k }
+      lastNotId < n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
+    }
     val permutationAction = new FaithfulPermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
