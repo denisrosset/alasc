@@ -10,7 +10,7 @@ import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, FaithfulPermutationAction, Permutation, PermutationBuilder}
+import net.alasc.algebra.{BigIndexedSeq, PermutationAction, Permutation, PermutationBuilder}
 import net.alasc.domains.Partition
 import net.alasc.perms.PermGrpBuilder
 import net.alasc.syntax.all._
@@ -100,11 +100,11 @@ abstract class Grp[G] { lhs =>
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */ // TODO: Transversal
-  def someStabilizerTransversal(implicit builder: PermGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G, _ <: FaithfulPermutationAction[G] with Singleton])] =
+  def someStabilizerTransversal(implicit builder: PermGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G, _ <: PermutationAction[G] with Singleton])] =
     builder.someStabilizerTransversal(lhs)
 
   /** Returns the subgroup that stabilizes `b` and the associated transversal. */
-  def stabilizerTransversal(b: Int)(implicit builder: PermGrpBuilder[G]): (Grp[G], bsgs.Transversal[G, _ <: FaithfulPermutationAction[G] with Singleton]) =
+  def stabilizerTransversal(b: Int)(implicit builder: PermGrpBuilder[G]): (Grp[G], bsgs.Transversal[G, _ <: PermutationAction[G] with Singleton]) =
     builder.stabilizerTransversal(lhs, b)
 
   def pointwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder[G]): Grp[G] =

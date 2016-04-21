@@ -9,13 +9,13 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
 // note: some tail recursive methods were moved to the RichMutableChain companion
 // object, due to an elusive bug in the Scala compiler
-final class RichMutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
+final class RichMutableChain[G, F <: PermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
 
   def mutableChain: MutableChain[G, F] = new MutableChain[G, F](start)
 
@@ -177,7 +177,7 @@ final class RichMutableChain[G, F <: FaithfulPermutationAction[G] with Singleton
     (implicit classTag: ClassTag[G], equ: Eq[G],
       group: Group[G]): Unit = {
 
-    implicit def action: FaithfulPermutationAction[G] = mutableChain.start.action
+    implicit def action: PermutationAction[G] = mutableChain.start.action
 
     if (generators.isEmpty) return
 
@@ -259,7 +259,7 @@ final class RichMutableChain[G, F <: FaithfulPermutationAction[G] with Singleton
 
 object RichMutableChain {
 
-  @tailrec def siftAndUpdateBaseFrom[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], elem: StartOrNode[G, F], g: G)
+  @tailrec def siftAndUpdateBaseFrom[G, F <: PermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], elem: StartOrNode[G, F], g: G)
     (implicit classTag: ClassTag[G], equ: Eq[G],
       group: Group[G]): Opt[(MutableNode[G, F], G)] = {
     implicit def action = mutableChain.start.action
@@ -283,10 +283,10 @@ object RichMutableChain {
     }
   }
 
-  def findNewStrongGeneratorAt[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], node: Node[G, F])
+  def findNewStrongGeneratorAt[G, F <: PermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], node: Node[G, F])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G, F], G)] = {
     node.foreachOrbit { b =>
-      implicit def action: FaithfulPermutationAction[G] = node.action
+      implicit def action: PermutationAction[G] = node.action
       val ub = node.u(b)
       for (x <- node.strongGeneratingSet) {
         val i = b <|+| x
@@ -308,7 +308,7 @@ object RichMutableChain {
     * 
     * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
     */
-  @tailrec final def completeStrongGeneratorsAt[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F],
+  @tailrec final def completeStrongGeneratorsAt[G, F <: PermutationAction[G] with Singleton](mutableChain: MutableChain[G, F],
     mutableNode: MutableNode[G, F])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit =
     mutableChain.findNewStrongGeneratorAt(mutableNode) match {

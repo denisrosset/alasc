@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 /** Guide used during the base change. */
 trait BaseGuide {
@@ -25,7 +25,7 @@ trait BaseGuide {
 
   /** Returns an incomplete base for the given generators,
     * used when base has to be computed from scratch. */
-  def baseAnsatz[G, F <: FaithfulPermutationAction[G] with Singleton](generators: Iterable[G])(implicit action: F): Seq[Int] = {
+  def baseAnsatz[G, F <: PermutationAction[G] with Singleton](generators: Iterable[G])(implicit action: F): Seq[Int] = {
     val base = mutable.ArrayBuffer.empty[Int]
     val it = iterator
     @tailrec def rec(remaining: Iterable[G]): Unit =

@@ -19,7 +19,8 @@ object FaithfulPermRepBuilder {
 
     final class R(val size: Int) extends FaithfulPermRep[G] {
 
-      def permutationAction = permutation
+      type F = permutation.type
+      val permutationAction: F = permutation
 
       def represents(g: G) = permutationAction.largestMovedPoint(g).getOrElseFast(-1) < size
 

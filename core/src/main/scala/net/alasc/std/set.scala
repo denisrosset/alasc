@@ -9,7 +9,7 @@ import spire.syntax.action._
 
 import net.alasc.algebra._
 
-class SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P:Group:FaithfulPermutationAction](
+class SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P:Group:PermutationAction](
   implicit cbf: CanBuildFrom[Nothing, Int, S]) extends Action[S, P] {
 
   def actr(s: S, p: P): S = {
@@ -24,7 +24,7 @@ class SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P:Group:Faithf
 }
 
 trait SetInstances0 {
-  implicit def SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P:Group:FaithfulPermutationAction](
+  implicit def SetIntPermutationAction[S <: SetLike[Int, S] with Set[Int], P:Group:PermutationAction](
     implicit cbf: CanBuildFrom[Nothing, Int, S]): Action[S, P] = new SetIntPermutationAction[S, P]
 }
 

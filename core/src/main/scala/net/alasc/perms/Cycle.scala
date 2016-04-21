@@ -6,7 +6,7 @@ import scala.collection.immutable.BitSet
 import spire.algebra._
 import spire.syntax.order._
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 import net.alasc.util._
 
 /** Represent a cyclic permutation of non-negative indices.
@@ -40,7 +40,7 @@ class Cycle private[alasc](val seq: Seq[Int]) {
   def inverse = Cycle(seq.reverse: _*)
 }
 
-class CyclePermutationAction extends FaithfulPermutationAction[Cycle] {
+class CyclePermutationAction extends PermutationAction[Cycle] {
   def movedPoints(c: Cycle): BitSet = BitSet(c.seq: _*)
   def largestMovedPoint(c: Cycle) = NNSome(c.seq.max)
   def smallestMovedPoint(c: Cycle) = NNSome(c.seq.min)
@@ -74,7 +74,7 @@ class CycleOrder extends Order[Cycle] {
 
 object Cycle {
 
-  implicit final val permutationAction: FaithfulPermutationAction[Cycle] = new CyclePermutationAction
+  implicit final val permutationAction: PermutationAction[Cycle] = new CyclePermutationAction
 
   implicit final val order: Order[Cycle] = new CycleOrder
 

@@ -10,7 +10,7 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 
-class ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction] extends PartialAction[Array[A], P] {
+class ArrayPermutationAction[A: ClassTag, P: PermutationAction] extends PartialAction[Array[A], P] {
 
   override def actlIsDefined(p: P, s: Array[A]) = p.largestMovedPoint.getOrElseFast(-1) < s.length
   override def actrIsDefined(s: Array[A], p: P) = p.largestMovedPoint.getOrElseFast(-1) < s.length
@@ -35,7 +35,7 @@ class ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction] extends 
 }
 
 trait ArrayInstances0 {
-  implicit def ArrayPermutationAction[A: ClassTag, P: FaithfulPermutationAction]: PartialAction[Array[A], P] = new ArrayPermutationAction[A, P]
+  implicit def ArrayPermutationAction[A: ClassTag, P: PermutationAction]: PartialAction[Array[A], P] = new ArrayPermutationAction[A, P]
 }
 
 trait ArrayInstances extends ArrayInstances0

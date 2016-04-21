@@ -9,12 +9,12 @@ import spire.syntax.action._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, FaithfulPermutationAction, PermutationAction}
+import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs
 import net.alasc.domains.{MutableOrbit, Partition}
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
 
-abstract class GrpChain[G, F <: FaithfulPermutationAction[G] with Singleton] extends Grp[G] { lhs =>
+abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
   implicit def action: F
 
@@ -28,7 +28,7 @@ abstract class GrpChain[G, F <: FaithfulPermutationAction[G] with Singleton] ext
 
 object GrpChain {
 
-  def subgroupFor[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def subgroupFor[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], definition: SubgroupDefinition[G, F])
     (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
     import grp.{action, classTag, equ, group}
@@ -49,13 +49,13 @@ object GrpChain {
     new GrpChainExplicit[G, F](subChain)
   }
 
-  def fixingPartition[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def fixingPartition[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], partition: Partition)(implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
     import grp.{action, group}
     subgroupFor(grp, net.alasc.bsgs.FixingPartition[G, F](partition))
   }
 
-  def someStabilizerTransversal[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def someStabilizerTransversal[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F]): Opt[(GrpChain[G, F], Transversal[G, F])] = {
     import grp.{action, classTag, equ, group}
     grp match {
@@ -73,7 +73,7 @@ object GrpChain {
     }
   }
 
-  def stabilizerTransversal[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def stabilizerTransversal[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], b: Int)
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): (GrpChain[G, F], Transversal[G, F]) = {
     // duplicated code with stabilizer below
@@ -140,7 +140,7 @@ object GrpChain {
     }
   }
 
-  def stabilizer[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def stabilizer[G, F <: PermutationAction[G] with Singleton]
   (grp: GrpChain[G, F], b: Int)
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): GrpChain[G, F] = {
     // duplicated code with stabilizerTransversal above
@@ -199,7 +199,7 @@ object GrpChain {
     }
   }
 
-  def pointwiseStabilizer[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def pointwiseStabilizer[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], set: Set[Int])(implicit baseChange: BaseChange): GrpChain[G, F] = {
     import grp.{action, classTag, equ, group}
     val guide = PointwiseStabilizer.baseGuide(set)
@@ -218,7 +218,7 @@ object GrpChain {
     new GrpChainExplicit[G, F](PointwiseStabilizer.recurse(guidedChain, set))
   }
 
-  def leftCosetsBy[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def leftCosetsBy[G, F <: PermutationAction[G] with Singleton]
     (grp0: GrpChain[G, F], subgrp0: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): LeftCosets[G] = {
     import grp0.{action, classTag, group}
@@ -259,7 +259,7 @@ object GrpChain {
 
   }
 
-  final class LexElements[G, F <: FaithfulPermutationAction[G] with Singleton]
+  final class LexElements[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims) extends BigIndexedSeq[G] {
 
     import grp.{action, classTag, equ, group}

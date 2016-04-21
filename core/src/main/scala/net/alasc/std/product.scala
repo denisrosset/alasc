@@ -10,7 +10,7 @@ final class Product2FaithfulPermRepBuilder[A, B]
   case class R(_1: FaithfulPermRep[A], _2: FaithfulPermRep[B]) extends FaithfulPermRep[(A, B)] {
     def size = _1.size + _2.size
     def represents(x0: (A, B)) = _1.represents(x0._1) && _2.represents(x0._2)
-    val permutationAction = new FaithfulPermutationAction[(A, B)] {
+    object _permutationAction extends PermutationAction[(A, B)] {
       @inline def action1 = _1.permutationAction
       @inline def action2 = _2.permutationAction
       def actr(p: Int, x0: (A, B)) =
@@ -30,6 +30,8 @@ final class Product2FaithfulPermRepBuilder[A, B]
       def movedPointsUpperBound = _1.size + _2.size
       def nMovedPoints(x0: (A, B)): Int = action1.nMovedPoints(x0._1) + action2.nMovedPoints(x0._2)
     }
+    type F = _permutationAction.type
+    def permutationAction: F = _permutationAction
   }
 
   def build(generators: Iterable[(A, B)]): R =

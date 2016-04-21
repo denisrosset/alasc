@@ -4,10 +4,10 @@ import spire.algebra.Group
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 import net.alasc.domains.Partition
 
-case class FixingPartition[G:Group, F <: FaithfulPermutationAction[G] with Singleton]
+case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
   (partition: Partition)(implicit val action: F) extends SubgroupDefinition[G, F] {
 
   val n = partition.size

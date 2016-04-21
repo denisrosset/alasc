@@ -18,9 +18,7 @@ import net.alasc.domains.MutableOrbit
 import net.alasc.util._
 import metal.mutable.Buffer
 
-// TODO: convert to take in only Chain, not GrpChain
-
-final case class Representatives[G, F <: FaithfulPermutationAction[G] with Singleton]
+final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
@@ -246,7 +244,7 @@ object Representatives {
     *                 for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     */
 
-  def permutationTo[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def permutationTo[G, F <: PermutationAction[G] with Singleton]
     (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): Opt[G] = {
     import grp.{action, classTag, equ, group}
@@ -291,7 +289,7 @@ object Representatives {
     rec(0, Group[G].id, chainGrp0, symGrp, MutableOrbit.forSize(n))
   }
 
-  def findPermutationToMaximal[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def findPermutationToMaximal[G, F <: PermutationAction[G] with Singleton]
     (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     val invArray = new Array[Int](array.length)
@@ -307,7 +305,7 @@ object Representatives {
     *               for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     * @return the permutation `g` in `chainGrp` such that `seq <|+| g` is the lexicographic minimal sequence.
     */
-  def findPermutationToMinimal[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def findPermutationToMinimal[G, F <: PermutationAction[G] with Singleton]
     (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     import grp.{action, classTag, equ, group}

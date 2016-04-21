@@ -64,7 +64,7 @@ class SeqEqGroup[SG <: SeqLike[G, SG], G:Eq:Group](implicit cbf: CanBuildFrom[No
 
 }
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationAction](
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:PermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
 
   import spire.syntax.action._

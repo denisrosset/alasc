@@ -7,9 +7,9 @@ import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
-final class GrpChainExplicit[G, F <: FaithfulPermutationAction[G] with Singleton]
+final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
   (val chain: Chain[G, F], generatorsOpt: Opt[Iterable[G]])
   (implicit val classTag: ClassTag[G], val equ: Eq[G], val group: Group[G], val action: F) extends GrpChain[G, F] {
 

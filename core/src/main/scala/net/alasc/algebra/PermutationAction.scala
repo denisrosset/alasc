@@ -1,7 +1,5 @@
 package net.alasc.algebra
 
-import spire.math.SafeLong
-
 import scala.annotation.tailrec
 
 import spire.algebra._
@@ -133,20 +131,5 @@ object PermutationAction {
     }
     if (mx >= 0) NNOption(mx) else NNNone
   }
-
-}
-
-trait FaithfulPermutationAction[G] extends PermutationAction[G] {
-
-  def order(g: G): SafeLong = {
-    val cs = cycleStructure(g)
-    cs.keys.foldLeft(SafeLong(1)) { case (acc, len) => spire.math.lcm(acc, SafeLong(len)) }
-  }
-
-}
-
-object FaithfulPermutationAction {
-
-  def apply[P](implicit P: FaithfulPermutationAction[P]): FaithfulPermutationAction[P] = P
 
 }

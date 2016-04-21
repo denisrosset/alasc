@@ -7,13 +7,13 @@ import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`)
   * conjugated by g (with gInv == g.inverse).
   * The represented group is `H = gInv G g`.
   */
-final class GrpChainConjugated[G, F <: FaithfulPermutationAction[G] with Singleton]
+final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
   (val originalChain: Chain[G, F], val g: G, val gInv: G, originalGeneratorsOpt: Opt[Iterable[G]])
   (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
 

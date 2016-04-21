@@ -7,7 +7,7 @@ import spire.algebra.Group
 
 import net.alasc.algebra._
 
-case class TrivialNode[G:ClassTag:Group, F <: FaithfulPermutationAction[G] with Singleton](beta: Int, next: Chain[G, F])
+case class TrivialNode[G:ClassTag:Group, F <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, F])
                                                             (implicit val action: F) extends Node[G, F] {
 
   def elements = Iterable(Group[G].id)

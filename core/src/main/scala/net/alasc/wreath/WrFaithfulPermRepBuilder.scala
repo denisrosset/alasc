@@ -29,7 +29,9 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
       cforRange(0 until w.aSeq.size) { k => if (!w.aSeq(k).isId) lastNotId = k }
       lastNotId < n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     }
-    val permutationAction = new FaithfulPermutationAction[Wr[A, H]] {
+    type F = _permutationAction.type
+    def permutationAction: F = _permutationAction
+    object _permutationAction extends PermutationAction[Wr[A, H]] {
       def actr(k: Int, w: Wr[A, H]): Int =
         if (k >= size) k else {
           val block = aDiv.divide(k)

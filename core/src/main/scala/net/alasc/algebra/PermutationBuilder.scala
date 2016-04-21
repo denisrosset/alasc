@@ -3,12 +3,6 @@ package net.alasc.algebra
 
 import spire.algebra._
 
-/** Type class for Permutation-like objects.
-  *
-  * Combines [[Eq]], [[Group]] and [[FaithfulPermutationAction]] in a single typeclass.
-  */
-trait Permutation[P] extends Eq[P] with Group[P] with FaithfulPermutationAction[P]
-
 /** Type class for Permutation-like objects, where instances can be constructed
   * from arbitrary images.
   */

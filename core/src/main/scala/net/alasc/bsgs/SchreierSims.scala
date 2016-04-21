@@ -8,27 +8,27 @@ import spire.math.SafeLong
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 trait SchreierSims {
 
-  def completeChainChangeAction[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
-    (oldChain: Chain[G, F], newAction: FaithfulPermutationAction[G], givenBase: Seq[Int] = Seq.empty): MutableChain[G, newAction.type] = {
+  def completeChainChangeAction[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
+    (oldChain: Chain[G, F], newAction: PermutationAction[G], givenBase: Seq[Int] = Seq.empty): MutableChain[G, newAction.type] = {
     implicit def newActionValue: newAction.type = newAction
     completeChainFromGeneratorsRandomElementsAndOrder[G, newAction.type](oldChain.strongGeneratingSet, oldChain.randomElement(_), oldChain.order)
   }
 
-  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F]
 
-  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F]
 
-  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F]
 
   /** Deterministic Schreier-Sims algorithm. */
-  def deterministicSchreierSims[G:ClassTag:Eq:FaithfulPermutationAction:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def deterministicSchreierSims[G:ClassTag:Eq:PermutationAction:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = MutableChain.incompleteWithGenerators(generators, givenBase)
     mutableChain.completeStrongGenerators()
@@ -39,18 +39,18 @@ trait SchreierSims {
 
 final class SchreierSimsDeterministic extends SchreierSims {
 
-  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] =
     deterministicSchreierSims(generators, givenBase)
 
-  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = deterministicSchreierSims(generators, givenBase)
     assert(mutableChain.start.next.order == order)
     mutableChain
   }
 
-  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] =
     completeChainFromGeneratorsAndOrder(generators, order, givenBase)
 
@@ -58,18 +58,18 @@ final class SchreierSimsDeterministic extends SchreierSims {
 
 final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
 
-  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] =
     deterministicSchreierSims(generators, givenBase)
 
-  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     import net.alasc.blackbox.RandomBag
     val bag = RandomBag(generators, random)
     randomizedSchreierSims(bag.randomElement(_), order, givenBase)
   }
 
-  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def completeChainFromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] =
     randomizedSchreierSims(randomElement, order, givenBase)
 
@@ -78,7 +78,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
    * 
    * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
    */
-  def randomizedSchreierSims[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def randomizedSchreierSims[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = MutableChain.emptyWithBase[G, F](givenBase)
     while (mutableChain.start.next.order < order) {

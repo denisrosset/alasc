@@ -11,10 +11,10 @@ import spire.util.Opt
 
 import metal.syntax._
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 import net.alasc.util._
 
-trait SubgroupDefinition[G, F <: FaithfulPermutationAction[G] with Singleton] {
+trait SubgroupDefinition[G, F <: PermutationAction[G] with Singleton] {
 
   implicit def action: F
 
@@ -32,7 +32,7 @@ trait SubgroupDefinition[G, F <: FaithfulPermutationAction[G] with Singleton] {
 
 object SubgroupDefinition {
 
-  class Simple[G, F <: FaithfulPermutationAction[G] with Singleton]
+  class Simple[G, F <: PermutationAction[G] with Singleton]
     (backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)(implicit val action: F) extends SubgroupDefinition[G, F] {
 
     def inSubgroup(g: G) = predicate(g)
@@ -59,14 +59,14 @@ object SubgroupDefinition {
     * @return the subgroup definition.
     */
 
-  def apply[G, F <: FaithfulPermutationAction[G] with Singleton]
+  def apply[G, F <: PermutationAction[G] with Singleton]
     (backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)(implicit action: F): SubgroupDefinition[G, F] =
     new Simple[G, F](backtrackTest, predicate)
 
 }
 
 
-trait SubgroupTest[G, F <: FaithfulPermutationAction[G] with Singleton] {
+trait SubgroupTest[G, F <: PermutationAction[G] with Singleton] {
 
   def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, F]): Opt[SubgroupTest[G, F]]
 
@@ -76,7 +76,7 @@ trait SubgroupTest[G, F <: FaithfulPermutationAction[G] with Singleton] {
 
 object SubgroupSearch {
 
-  def generalSearch[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def generalSearch[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (definition: SubgroupDefinition[G, F], guidedChain: Chain[G, F]): Iterator[G] = {
     import definition.action
     val bo = BaseOrder[G, F](guidedChain.base)
@@ -98,7 +98,7 @@ object SubgroupSearch {
     rec(guidedChain, Group[G].id, firstTest)
   }
 
-  def subgroupSearch[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def subgroupSearch[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (definition: SubgroupDefinition[G, F], guidedChain: Chain[G, F]): MutableChain[G, F] = {
     implicit def action: F = definition.action
     val bo = BaseOrder[G, F](guidedChain.base)
@@ -155,7 +155,7 @@ object SubgroupSearch {
     * 
     * The considered domain is `0 ... domainSize - 1`.
     */
-  def basePointGroups[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F], domainSize: Int): Array[Array[Int]] = {
+  def basePointGroups[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F], domainSize: Int): Array[Array[Int]] = {
     val remaining = metal.mutable.BitSet((0 until domainSize): _*)
     val groups = metal.mutable.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[G, F]): Array[Array[Int]] = current match {

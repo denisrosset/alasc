@@ -8,9 +8,9 @@ import spire.util.Opt
 
 import metal.syntax._
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
-case class SetwiseStabilizer[G:Group, F <: FaithfulPermutationAction[G] with Singleton]
+case class SetwiseStabilizer[G:Group, F <: PermutationAction[G] with Singleton]
   (set: Set[Int])(implicit val action: F) extends SubgroupDefinition[G, F] {
 
   def inSubgroup(g: G): Boolean =
@@ -66,7 +66,7 @@ object PointwiseStabilizer {
 
   def baseGuide(set: Set[Int]) = BaseGuideSet(set)
 
-  def recurse[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](guidedChain: Chain[G, F], set: Set[Int]): Chain[G, F] =
+  def recurse[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](guidedChain: Chain[G, F], set: Set[Int]): Chain[G, F] =
     guidedChain match {
       case node: Node[G, F] =>
         @tailrec def firstNotInSet(current: Chain[G, F]): Chain[G, F] = current match {

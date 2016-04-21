@@ -9,7 +9,7 @@ import spire.syntax.action._
 import spire.syntax.order._
 import spire.syntax.group._
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 abstract class BaseSwap {
 
@@ -17,7 +17,7 @@ abstract class BaseSwap {
     * 
     * @return the two swapped mutable nodes.
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F]
 
 
@@ -35,7 +35,7 @@ final class BaseSwapDeterministic extends BaseSwap {
     * See also http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf 
     * for an alternate implementation.
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
     import net.alasc.domains.OrbitInstances._
     implicit def action: F = mutableChain.start.action
@@ -78,9 +78,9 @@ final class BaseSwapRandom(val random: Random) extends BaseSwap {
     * Based on algorithm 2.8 of 
     * http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf .
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
-    implicit def action: FaithfulPermutationAction[G] = mutableChain.start.action
+    implicit def action: PermutationAction[G] = mutableChain.start.action
     val node2next = node2.next
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     while (newNode2.orbitSize < sizeGoal2) {

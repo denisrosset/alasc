@@ -15,7 +15,7 @@ import metal.syntax._
 import net.alasc.algebra._
 import net.alasc.util._
 
-final class MutableNodeExplicit[G, F <: FaithfulPermutationAction[G] with Singleton](
+final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
   var beta: Int,
   var transversal: metal.mutable.HashMap2[Int, G, G],
   var nOwnGenerators: Int,
@@ -334,7 +334,7 @@ final class MutableNodeExplicit[G, F <: FaithfulPermutationAction[G] with Single
 
 class MutableNodeExplicitBuilder[G] extends NodeBuilder[G] {
 
-  def standaloneClone[F <: FaithfulPermutationAction[G] with Singleton](node: Node[G, F])(implicit group: Group[G], classTag: ClassTag[G]) = node match {
+  def standaloneClone[F <: PermutationAction[G] with Singleton](node: Node[G, F])(implicit group: Group[G], classTag: ClassTag[G]) = node match {
     case mne: MutableNodeExplicit[G, F] =>
       new MutableNodeExplicit(mne.beta, mne.transversal.mutableCopy, mne.nOwnGenerators, mne.ownGeneratorsArray.clone, mne.ownGeneratorsArrayInv.clone)(mne.action)
     case _ => ??? /* TODO
@@ -344,7 +344,7 @@ class MutableNodeExplicitBuilder[G] extends NodeBuilder[G] {
                    */
   }
 
-  def standalone[F <: FaithfulPermutationAction[G] with Singleton](beta: Int)(implicit action: F, group: Group[G], classTag: ClassTag[G]) = {
+  def standalone[F <: PermutationAction[G] with Singleton](beta: Int)(implicit action: F, group: Group[G], classTag: ClassTag[G]) = {
     val transversal = metal.mutable.HashMap2.empty[Int, G, G]
     val id = Group[G].id
     transversal(beta) = (id, id)

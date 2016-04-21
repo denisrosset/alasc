@@ -18,7 +18,7 @@ import net.alasc.syntax.permutationAction._
 
 object MutableChainRec {
 
-  @tailrec def foreach[G, F <: FaithfulPermutationAction[G] with Singleton, U]
+  @tailrec def foreach[G, F <: PermutationAction[G] with Singleton, U]
     (elem: MutableStartOrNode[G, F], f: MutableNode[G, F] => U): Unit = elem match {
     case IsMutableNode(mn) =>
       f(mn)
@@ -34,7 +34,7 @@ object ChainRec {
   /** Tests whether this chain has a lexicographic base, i.e. the base point for any stabilizer in the chain
     * is the smallest domain element it moves.
     */
-  def hasLexicographicBase[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F]): Boolean = {
+  def hasLexicographicBase[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Boolean = {
     def smallestPointMovedByOwnGenerators(node: Node[G, F]): Int =
       if (node.nOwnGenerators == 0) -1 else {
         import node.action
@@ -72,7 +72,7 @@ object ChainRec {
     rec(chain) != -2
   }
 
-  @tailrec def isFixed[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F], k: Int): Boolean = chain match {
+  @tailrec def isFixed[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F], k: Int): Boolean = chain match {
     case node: Node[G, F] =>
       cforRange(0 until node.nOwnGenerators) { i =>
         if (node.action.actr(k, node.ownGenerator(i)) != k) return false
@@ -81,7 +81,7 @@ object ChainRec {
     case _: Term[G, F] => true
   }
 
-  @tailrec def foreach[G, F <: FaithfulPermutationAction[G] with Singleton, U](chain: Chain[G, F], f: Node[G, F] => U): Unit = chain match {
+  @tailrec def foreach[G, F <: PermutationAction[G] with Singleton, U](chain: Chain[G, F], f: Node[G, F] => U): Unit = chain match {
     case node: Node[G, F] =>
       f(node)
       foreach(node.next, f)
@@ -103,7 +103,7 @@ object ChainRec {
     case _: Term[_, _] => acc
   }
 
-  @tailrec def isTrivial[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F]): Boolean = chain match {
+  @tailrec def isTrivial[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Boolean = chain match {
     case node: Node[G, F] if node.orbitSize != 1 => false
     case node: Node[G, F] => isTrivial(node.next)
     case _: Term[G, F] => true
@@ -128,7 +128,7 @@ object ChainRec {
     case _: Term[_, _] => baseToCheck.isEmpty
   }
 
-  @tailrec def sifts[G:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  @tailrec def sifts[G:Eq:Group, F <: PermutationAction[G] with Singleton]
     (chain: Chain[G, F], remaining: G): Boolean = chain match {
     case node: Node[G, F] =>
       implicit def action: F = node.action
@@ -140,7 +140,7 @@ object ChainRec {
     case _: Term[G, F] => remaining.isId
   }
 
-  @tailrec def siftOther[G:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton, Q:Permutation]
+  @tailrec def siftOther[G:Eq:Group, F <: PermutationAction[G] with Singleton, Q:Permutation]
     (chain: Chain[G, F], gInv: G, q: Q)(implicit action: F): Opt[G] =
     chain match {
       case node: Node[G, F] =>
@@ -151,12 +151,12 @@ object ChainRec {
           siftOther(node.next, gInv |+| node.uInv(b), q)
       case _: Term[G, F] =>
         val g = gInv.inverse
-        val gPerm = FaithfulPermutationAction[G].toPermutation[Perm](g)
-        val qPerm = FaithfulPermutationAction[Q].toPermutation[Perm](q)
+        val gPerm = PermutationAction[G].toPermutation[Perm](g)
+        val qPerm = PermutationAction[Q].toPermutation[Perm](q)
         if (gPerm === qPerm) Opt(g) else Opt.empty[G]
     }
 
-  @tailrec def basicSift[G:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  @tailrec def basicSift[G:Group, F <: PermutationAction[G] with Singleton]
     (chain: Chain[G, F], remaining: G,
      transversalIndices: metal.mutable.Buffer[Int] = metal.mutable.Buffer.empty[Int]): (Seq[Int], G) =
     chain match {

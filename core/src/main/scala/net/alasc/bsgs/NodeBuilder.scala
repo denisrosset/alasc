@@ -4,7 +4,7 @@ import scala.reflect.ClassTag
 
 import spire.algebra.Group
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 trait NodeBuilder[G] {
 
@@ -12,14 +12,14 @@ trait NodeBuilder[G] {
     * 
     * @param node   Node to clone
     */
-  def standaloneClone[F <: FaithfulPermutationAction[G] with Singleton](node: Node[G, F])
+  def standaloneClone[F <: PermutationAction[G] with Singleton](node: Node[G, F])
                                                                        (implicit group: Group[G], classTag: ClassTag[G]): MutableNode[G, F]
 
   /** Creates a new standalone BSGS node with a transversal of size 1.
     * 
     * @param beta  New node base point.
     */
-  def standalone[F <: FaithfulPermutationAction[G] with Singleton](beta: Int)
+  def standalone[F <: PermutationAction[G] with Singleton](beta: Int)
                                                                   (implicit action: F, group: Group[G], classTag: ClassTag[G]): MutableNode[G, F]
 
 }

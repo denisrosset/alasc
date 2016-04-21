@@ -7,11 +7,11 @@ import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.util.Opt
 
-import net.alasc.algebra.FaithfulPermutationAction
+import net.alasc.algebra.PermutationAction
 
 object BuildChain {
 
-  def fromChain[G:ClassTag:Eq:Group, F1 <: FaithfulPermutationAction[G] with Singleton, F2 <: FaithfulPermutationAction[G] with Singleton]
+  def fromChain[G:ClassTag:Eq:Group, F1 <: PermutationAction[G] with Singleton, F2 <: PermutationAction[G] with Singleton]
     (from: Chain[G, F1], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
     (implicit newAction: F2, baseChange: BaseChange, schreierSims: SchreierSims): Chain[G, F2] = baseGuideOpt match {
     case Opt(baseGuide) => from match {
@@ -42,17 +42,17 @@ object BuildChain {
     }
   }
 
-  def fromGenerators[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def fromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
     (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): Chain[G, F] =
     BuildMutableChain.fromGenerators[G, F](generators, baseGuideOpt).toChain
 
-  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], order: SafeLong, baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
     (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): Chain[G, F] =
     BuildMutableChain.fromGeneratorsAndOrder[G, F](generators, order, baseGuideOpt).toChain
 
-  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], randomElement: Random => G, order: SafeLong, baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
     (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): Chain[G, F] =
     BuildMutableChain.fromGeneratorsRandomElementsAndOrder[G, F](generators, randomElement, order, baseGuideOpt).toChain

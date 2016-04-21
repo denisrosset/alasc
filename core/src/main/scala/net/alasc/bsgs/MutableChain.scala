@@ -37,7 +37,7 @@ import net.alasc.syntax.check._
   * 
   * `MutableChain` is not thread-safe.
   */
-class MutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
+class MutableChain[G, F <: PermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
   override def toString = start.toString
 
   /** Insert `node` in the chain between `prev` and `next`.
@@ -345,7 +345,7 @@ class MutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](val star
   }
 }
 
-final class MutableChainCheck[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton] extends Check[MutableChain[G, F]] {
+final class MutableChainCheck[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton] extends Check[MutableChain[G, F]] {
   import Check._
 
   @tailrec def checkMutablePrev(checked: Checked, elem: MutableStartOrNode[G, F]): Checked = elem.next match {
@@ -364,11 +364,11 @@ final class MutableChainCheck[G:ClassTag:Eq:Group, F <: FaithfulPermutationActio
 object MutableChain {
 
   /** Returns an empty mutable chain. */
-  def empty[G:Group, F <: FaithfulPermutationAction[G] with Singleton](implicit action: F): MutableChain[G, F] =
+  def empty[G:Group, F <: PermutationAction[G] with Singleton](implicit action: F): MutableChain[G, F] =
     new MutableChain(new Start(next = Term[G, F]))
 
   /** Returns a newly created empty mutable chain with the given base and action. */
-  def emptyWithBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  def emptyWithBase[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (base: Seq[Int])(implicit action: F): MutableChain[G, F] = {
     val mutableChain = MutableChain.empty[G, F]
     @tailrec def rec(prev: MutableStartOrNode[G, F], iterator: Iterator[Int]): Unit =
@@ -382,14 +382,14 @@ object MutableChain {
     mutableChain
   }
 
-  def incompleteWithGenerators[G:ClassTag:Eq:Group:NodeBuilder, F <: FaithfulPermutationAction[G] with Singleton]
+  def incompleteWithGenerators[G:ClassTag:Eq:Group:NodeBuilder, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], base: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = emptyWithBase[G, F](base)
     mutableChain.insertGenerators(generators)
     mutableChain
   }
 
-  implicit def check[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]: Check[MutableChain[G, F]] =
+  implicit def check[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]: Check[MutableChain[G, F]] =
     new MutableChainCheck[G, F]
 
 }

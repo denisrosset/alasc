@@ -3,7 +3,7 @@ package net.alasc.std
 import net.alasc.algebra._
 import net.alasc.util._
 
-final class UnitFaithfulPermutationAction extends FaithfulPermutationAction[Unit] {
+final class UnitPermutationAction extends PermutationAction[Unit] {
   def actl(g: Unit, p: Int): Int = p
   override def actr(p: Int, g: Unit): Int = p
   def movedPoints(g: Unit): Set[Int] = Set.empty[Int]
@@ -15,6 +15,6 @@ final class UnitFaithfulPermutationAction extends FaithfulPermutationAction[Unit
 
 trait UnitInstances {
 
-  implicit final val unitFaithfulPermutationAction = new UnitFaithfulPermutationAction
+  implicit final val unitPermutationAction = new UnitPermutationAction
 
 }

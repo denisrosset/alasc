@@ -15,7 +15,7 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 
-class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationAction](
+class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:PermutationAction](
   implicit cbf: CanBuildFrom[Nothing, A, SA]) extends PartialAction[SA, P] {
 
   override def actlIsDefined(p: P, s: SA) = p.largestMovedPoint.getOrElseFast(-1) < s.length
@@ -35,7 +35,7 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:FaithfulPermutationA
 }
 
 trait SeqInstances0 {
-  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P:Group:FaithfulPermutationAction](
+  implicit def SeqPermutationAction[CC[A] <: SeqLike[A, CC[A]], A, P:Group:PermutationAction](
     implicit cbf: CanBuildFrom[Nothing, A, CC[A]]): PartialAction[CC[A], P] = new SeqPermutationAction[CC[A], A, P]
 }
 

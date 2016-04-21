@@ -9,7 +9,7 @@ import spire.syntax.action._
 
 import net.alasc.algebra._
 
-final class ChainCheck[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton] extends Check[Chain[G, F]] {
+final class ChainCheck[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton] extends Check[Chain[G, F]] {
   import Check._
 
   def checkBaseAndStrongGeneratingSet(chain: Chain[G, F]): Checked = chain match {
