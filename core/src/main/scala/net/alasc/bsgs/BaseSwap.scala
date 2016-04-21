@@ -10,6 +10,9 @@ import spire.syntax.order._
 import spire.syntax.group._
 
 import net.alasc.algebra.PermutationAction
+import metal.syntax._
+
+import net.alasc.domains.MutableOrbit
 
 abstract class BaseSwap {
 
@@ -37,9 +40,10 @@ final class BaseSwapDeterministic extends BaseSwap {
     */
   def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
-    import net.alasc.domains.OrbitInstances._
     implicit def action: F = mutableChain.start.action
-    val gammaSet = mutable.BitSet.empty ++ node1.orbit
+    val gammaSet = scala.collection.mutable.BitSet.empty ++= node1.orbit
+    val n = PermutationAction.largestMovedPoint(node1.strongGeneratingSet).getOrElseFast(0) + 1
+    val mutableOrbit = MutableOrbit.forSize(n)
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     require(newNode1.next eq newNode2)
     gammaSet -= newNode1.beta
@@ -50,9 +54,10 @@ final class BaseSwapDeterministic extends BaseSwap {
       val xInv = node1.uInv(gamma)
       assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
-      if (!node2.inOrbit(b))
-        gammaSet --= immutable.BitSet(gamma) <|+| newNode2.strongGeneratingSet
-      else {
+      if (!node2.inOrbit(b)) {
+        val bm = MutableOrbit.orbitBitMask(n, gamma, newNode2.strongGeneratingSet, mutableOrbit)
+        gammaSet &~= scala.collection.mutable.BitSet.fromBitMaskNoCopy(bm)
+      } else {
         val y = node2.u(b)
         val yInv = node2.uInv(b)
         val yx = y |+| x

@@ -47,5 +47,13 @@ class MutableOrbitSuite extends AlascSuite {
     o.inOrbit(25) shouldBe true
   }
 
+  forAll { set: Set[Int] =>
+    val bitset = scala.collection.immutable.BitSet(set.map(x => (x / 2).abs % 10000).toSeq: _*)
+    val n = bitset.toBitMask.length * 64
+    val mo = MutableOrbit.forSize(n)
+    mo.addNew(bitset)
+    val newSet = scala.collection.immutable.BitSet.fromBitMaskNoCopy(mo.toBitMask)
+    bitset shouldBe newSet
+  }
 
 }

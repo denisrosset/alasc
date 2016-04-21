@@ -31,7 +31,7 @@ object BSGSs {
   def genSwappedSeq[A](seq: Seq[A]): Gen[Seq[A]] =
     Permutations.forSize[Perm](seq.size).map( perm => (seq <|+|? perm).get )
 
-  def genNewBase[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F]): Gen[Seq[Int]] = chain match {
+  def genNewBase[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Gen[Seq[Int]] = chain match {
     case _: Term[G, F] => Gen.const(Seq.empty[Int])
     case node: Node[G, F] =>
       import node.action

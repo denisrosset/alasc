@@ -22,7 +22,7 @@ class PermPermSuite extends AlascSuite {
         g2 <- Permutations.forSize[Perm](5)
       } yield (g1, g2))
 
-    implicit val permPermAction: FaithfulPermutationAction[(Perm, Perm)] =
+    implicit val permPermAction: PermutationAction[(Perm, Perm)] =
       implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build(Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
 
     checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
