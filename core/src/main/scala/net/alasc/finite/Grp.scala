@@ -99,7 +99,7 @@ abstract class Grp[G] { lhs =>
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
-    */ // TODO: Transversal
+    */
   def someStabilizerTransversal(implicit builder: PermGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G, _ <: PermutationAction[G] with Singleton])] =
     builder.someStabilizerTransversal(lhs)
 
