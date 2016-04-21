@@ -12,13 +12,9 @@ import net.alasc.bsgs._
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, LeftCosets, RightCosets}
 
-class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton](implicit
-                             val baseChange: BaseChange,
-                             val baseSwap: BaseSwap,
-                             val classTag: ClassTag[G],
-                             val permutation: F,
-                             val schreierSims: SchreierSims
-                            ) extends PermGrpBuilder[G] {
+class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
+  (implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val classTag: ClassTag[G],
+   val permutation: F, val schreierSims: SchreierSims) extends PermGrpBuilder[G] {
 
   type GG = GrpChain[G, F]
 
