@@ -1,6 +1,6 @@
 package net.alasc.perms
 
-import net.alasc.algebra.{BigIndexedSeq, Permutation}
+import net.alasc.algebra.{BigIndexedSeq, FaithfulPermutationAction, Permutation}
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, GrpBuilder}
 import spire.util.Opt
@@ -8,8 +8,6 @@ import spire.util.Opt
 import net.alasc.bsgs.Transversal
 
 abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
-
-  type GG <: PermGrp[G]
 
   implicit def permutation: Permutation[G]
 
@@ -21,13 +19,11 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 
   def pointwiseStabilizer(grp: Grp[G], set: Set[Int]): GG
 
-  def stabilizerTransversal(grp: Grp[G], b: Int): (GG, Transversal[G])
+  def stabilizerTransversal(grp: Grp[G], b: Int): (GG, Transversal[G, _ <: FaithfulPermutationAction[G] with Singleton])
 
-  def someStabilizerTransversal(grp: Grp[G]): Opt[(GG, Transversal[G])]
+  def someStabilizerTransversal(grp: Grp[G]): Opt[(GG, Transversal[G, _ <: FaithfulPermutationAction[G] with Singleton])]
 
   def stabilizer(grp: Grp[G], b: Int): GG
-
-  def someStabilizer(grp: Grp[G]): Opt[GG]
 
   def fixingPartition(grp: Grp[G], partition: Partition): GG
 

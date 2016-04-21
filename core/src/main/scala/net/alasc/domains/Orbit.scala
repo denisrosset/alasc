@@ -8,7 +8,7 @@ import scala.collection.mutable
 
 import metal.syntax._
 
-// TODO: optimize
+// TODO: optimize using the new MutableOrbit
 // TODO: move these instances to optional
 object OrbitInstances {
 

@@ -9,12 +9,12 @@ import spire.syntax.action._
 
 import net.alasc.algebra._
 
-final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
+final class ChainCheck[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton] extends Check[Chain[G, F]] {
   import Check._
 
-  def checkBaseAndStrongGeneratingSet(chain: Chain[P]): Checked = chain match {
-    case node: Node[P] =>
-      implicit def action = node.action
+  def checkBaseAndStrongGeneratingSet(chain: Chain[G, F]): Checked = chain match {
+    case node: Node[G, F] =>
+      implicit def action: F = node.action
 //      TODO
 /*      val alg = algorithms.BasicAlgorithms.deterministic[P] // use deterministic algorithms to avoid looping forever on bad data
       val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
@@ -25,10 +25,10 @@ final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
     case _ => Check.success
   }
 
-  def checkOwnGenerators(chain: Chain[P]): Checked = {
+  def checkOwnGenerators(chain: Chain[G, F]): Checked = {
     val baseSoFar = mutable.ArrayBuffer.empty[Int]
-    @tailrec def rec(currentChecked: Checked, current: Chain[P], checkImmutable: Boolean): Checked = current match {
-      case node: Node[P] =>
+    @tailrec def rec(currentChecked: Checked, current: Chain[G, F], checkImmutable: Boolean): Checked = current match {
+      case node: Node[G, F] =>
         implicit def action = node.action
         val fixingBase =
           node.ownGenerators.toList.flatMap(g => baseSoFar.flatMap(b => Check.equals(b <|+| g, b, s"Generator $g should fix")))
@@ -38,11 +38,11 @@ final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
         val immutableOk =
           if (checkImmutable) Check.equals(node.isImmutable, true, "All nodes after immutable node should be immutable") else Check.success
         rec(currentChecked ++ fixingBase ++ ownGeneratorsMoveBase ++ immutableOk, node.next, node.isImmutable)
-      case _: Term[P] => currentChecked
+      case _: Term[G, F] => currentChecked
     }
     rec(Check.success, chain, false)
   }
 
-  def check(chain: Chain[P]): Checked =
+  def check(chain: Chain[G, F]): Checked =
     checkBaseAndStrongGeneratingSet(chain) ++ checkOwnGenerators(chain)
 }

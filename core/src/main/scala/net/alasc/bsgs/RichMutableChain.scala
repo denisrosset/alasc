@@ -15,61 +15,60 @@ import net.alasc.util._
 
 // note: some tail recursive methods were moved to the RichMutableChain companion
 // object, due to an elusive bug in the Scala compiler
-final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
+final class RichMutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
 
-  def mutableChain: MutableChain[G] = new MutableChain[G](start)
+  def mutableChain: MutableChain[G, F] = new MutableChain[G, F](start)
 
   /** Checks if there exist a base point with orbit size 1 in `mutableChain`, 
     * starting from `chain`. 
     */
-  @tailrec final def existsRedundantBasePoint(chain: Chain[G]): Boolean = chain match {
-    case node: Node[G] =>
+  @tailrec final def existsRedundantBasePoint(chain: Chain[G, F]): Boolean = chain match {
+    case node: Node[G, F] =>
       if (node.orbitSize == 1)
         true
       else
         existsRedundantBasePoint(node.next)
-    case _: Term[G] => false
+    case _: Term[G, F] => false
   }
 
   /** Returns the node with base `basePoint` in `mutableChain` starting from `chain`,
     * or `Opt.empty` if it cannot be found.  
     */
-  @tailrec final def findBasePoint(chain: Chain[G], basePoint: Int): Opt[Node[G]] = chain match {
-    case node: Node[G] =>
+  @tailrec final def findBasePoint(chain: Chain[G, F], basePoint: Int): Opt[Node[G, F]] = chain match {
+    case node: Node[G, F] =>
       if (node.beta == basePoint)
         Opt(node)
       else
         findBasePoint(node.next, basePoint)
-    case _: Term[G] => Opt.empty[Node[G]]
+    case _: Term[G, F] => Opt.empty[Node[G, F]]
   }
 
   /** Finds the last redundant node in `mutableChain`, starting from `chain`. */
-  def findLastRedundant(from: Chain[G]): Opt[Node[G]] = {
-    @tailrec def rec(chain: Chain[G], lastRedundantOption: Opt[Node[G]]): Opt[Node[G]] = chain match {
-      case _: Term[G] => lastRedundantOption
-      case node: Node[G] =>
+  def findLastRedundant(from: Chain[G, F]): Opt[Node[G, F]] = {
+    @tailrec def rec(chain: Chain[G, F], lastRedundantOption: Opt[Node[G, F]]): Opt[Node[G, F]] = chain match {
+      case _: Term[G, F] => lastRedundantOption
+      case node: Node[G, F] =>
         if (node.orbitSize == 1)
           rec(node.next, Opt(node))
         else
           rec(node.next, lastRedundantOption)
     }
-    rec(from, Opt.empty[Node[G]])
+    rec(from, Opt.empty[Node[G, F]])
   }
 
   /** Removes redundant nodes in `mutableChain` after `afterThis`.
     * 
-    * @param mutableChain Mutable chain on which to perform the operation
     * @param afterThis    Element whose next elements are cleaned up
     * @return the number of removed elements
     */
-  def cutRedundantAfter(afterThis: StartOrNode[G])
+  def cutRedundantAfter(afterThis: StartOrNode[G, F])
       (implicit classTag: ClassTag[G], eq: Eq[G], group: Group[G]): Int =
     mutableChain.findLastRedundant(afterThis.next) match {
       case Opt(lastR) =>
-        @tailrec def eliminateRedundantTail(prev: StartOrNode[G], removed: Int): Int =
+        @tailrec def eliminateRedundantTail(prev: StartOrNode[G, F], removed: Int): Int =
           prev.next match {
-            case _: Term[G] => sys.error("lastR should have been encountered before")
-            case node: Node[G] =>
+            case _: Term[G, F] => sys.error("lastR should have been encountered before")
+            case node: Node[G, F] =>
               if (node.orbitSize == 1) {
                 val isLastR = node eq lastR
                 val mutablePrev = mutableChain.mutableStartOrNode(prev)
@@ -86,13 +85,13 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     }
 
   /** Finds an element such that `beta` is stabilized by the subgroup after the element. */
-  def findElemBeforeStabilizer(from: StartOrNode[G], beta: Int): StartOrNode[G] = {
+  def findElemBeforeStabilizer(from: StartOrNode[G, F], beta: Int): StartOrNode[G, F] = {
     implicit def action = start.action
     require(beta >= 0)
-    @tailrec def rec(chain: Chain[G], lastCandidate: StartOrNode[G]): StartOrNode[G] =
+    @tailrec def rec(chain: Chain[G, F], lastCandidate: StartOrNode[G, F]): StartOrNode[G, F] =
       chain match {
-        case _: Term[G] => lastCandidate
-        case node: Node[G] =>
+        case _: Term[G, F] => lastCandidate
+        case node: Node[G, F] =>
           if (node.ownGenerators.exists(g => (beta <|+| g) != beta))
             rec(node.next, node)
           else
@@ -103,7 +102,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
 
 
   /** Inserts a (non-existing) base point after the element `afterThis`. */
-  def insertNewBasePointAfter(afterThis: MutableStartOrNode[G], beta: Int)
+  def insertNewBasePointAfter(afterThis: MutableStartOrNode[G, F], beta: Int)
       (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
     implicit def action = start.action
     require(beta >= 0)
@@ -114,10 +113,10 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
 
   /** Change the base point after the element `afterThis` to `beta` and returns
     * this node with base point `beta`. */
-  def changeBasePointAfter(afterThis: MutableStartOrNode[G], beta: Int)
+  def changeBasePointAfter(afterThis: MutableStartOrNode[G, F], beta: Int)
     (implicit baseSwap: BaseSwap, classTag: ClassTag[G],
-      equ: Eq[G], group: Group[G]): Node[G] = {
-    implicit def action = start.action
+      equ: Eq[G], group: Group[G]): Node[G, F] = {
+    implicit def action: F = start.action
     mutableChain.putExistingBasePointAfter(afterThis, beta).getOrElse {
       mutableChain.insertNewBasePointAfter(afterThis, beta)
       mutableChain.putExistingBasePointAfter(afterThis, beta).get
@@ -130,25 +129,25 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * @return The shifted node with base point `beta` if the chain contains `basePoint` 
     * and the shift was performed, `Opt.empty` otherwise.
     */
-  def putExistingBasePointAfter(after: MutableStartOrNode[G], beta: Int)
+  def putExistingBasePointAfter(after: MutableStartOrNode[G, F], beta: Int)
     (implicit baseSwap: BaseSwap, classTag: ClassTag[G],
-      equ: Eq[G], group: Group[G]): Opt[Node[G]] = {
+      equ: Eq[G], group: Group[G]): Opt[Node[G, F]] = {
     mutableChain.findBasePoint(after.next, beta) match {
       case Opt(toShift) =>
         val mutableToShift = mutableChain.mutable(toShift, after)
-        @tailrec def shift(pos: MutableNode[G]): Opt[Node[G]] =
+        @tailrec def shift(pos: MutableNode[G, F]): Opt[Node[G, F]] =
           if (pos.prev ne after) {
             pos.prev match {
-              case prevNode: MutableNode[G] =>
+              case prevNode: MutableNode[G, F] =>
                 val MutableNodeAndNext(node1, node2) =
                   baseSwap.baseSwap(mutableChain, prevNode, pos)
                 shift(node1)
-              case _: Start[G] => sys.error("mutableHere should be before mutableToShift")
+              case _: Start[G, F] => sys.error("mutableHere should be before mutableToShift")
             }
           } else
             Opt(pos)
         shift(mutableToShift)
-      case _ => Opt.empty[Node[G]]
+      case _ => Opt.empty[Node[G, F]]
     }
   }
 
@@ -160,9 +159,9 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * 
     * Based on Holt (2005) RANDOMSCHREIER procedure, page 98.
     */
-  def siftAndUpdateBaseFrom(elem: StartOrNode[G], g: G)
+  def siftAndUpdateBaseFrom(elem: StartOrNode[G, F], g: G)
     (implicit classTag: ClassTag[G], equ: Eq[G],
-      group: Group[G]): Opt[(MutableNode[G], G)] = RichMutableChain.siftAndUpdateBaseFrom(mutableChain, elem, g)
+      group: Group[G]): Opt[(MutableNode[G, F], G)] = RichMutableChain.siftAndUpdateBaseFrom(mutableChain, elem, g)
 
   /** Adds the given generators to the BSGS chain, adding base elements
     * if necessary, and updates the transversals.
@@ -184,7 +183,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
 
     def badGen = sys.error("Generator must not be identity")
 
-    def rec(mutableNode: MutableNode[G], remaining: Iterable[G]): Unit = {
+    def rec(mutableNode: MutableNode[G, F], remaining: Iterable[G]): Unit = {
       val (generatorsThere, forNext) = remaining.partition(g => (mutableNode.beta <|+| g) != mutableNode.beta)
       if (!forNext.isEmpty)
         rec(mutableChain.mutableNodeAfter(mutableNode, forNext.head.findMovedPoint.getOrElse(badGen)), forNext)
@@ -196,7 +195,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
   /** Add a new strong generator `gen` at the node `mutableNode`, and updates the transversal
     * of `mutableNode` and any previous node in the chain.
     */
-  def addStrongGeneratorHere(mutableNode: MutableNode[G], gen: G, genInv: G)
+  def addStrongGeneratorHere(mutableNode: MutableNode[G, F], gen: G, genInv: G)
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
     implicit def action = mutableChain.start.action
     mutableNode.addToOwnGenerators(gen, genInv)
@@ -206,7 +205,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
   /** Update the transversals of this node and the previous nodes with the new
     * strong generator `gen`, given with its inverse `genInv`.
     */
-  @tailrec def updateTransversalsFrom(mutableNode: MutableNode[G], gen: G, genInv: G)
+  @tailrec def updateTransversalsFrom(mutableNode: MutableNode[G, F], gen: G, genInv: G)
                             (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
     mutableNode.updateTransversal(gen, genInv)
     mutableNode.prev match {
@@ -218,7 +217,7 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
   /** Removes redundant strong generators in the given chain. */
   def removeRedundantGenerators()
       (implicit equ: Eq[G], group: Group[G]): Unit = {
-    @tailrec def rec(mutableNode: MutableNode[G]): Unit = {
+    @tailrec def rec(mutableNode: MutableNode[G, F]): Unit = {
       mutableNode.removeRedundantGenerators
       mutableNode.prev match {
         case IsMutableNode(g) => rec(g)
@@ -237,8 +236,8 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * If a new strong generator is found, returns some pair containing
     * the node and the strong generator to insert there.
     */
-  def findNewStrongGeneratorAt(node: Node[G])
-    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G], G)] =
+  def findNewStrongGeneratorAt(node: Node[G, F])
+    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G, F], G)] =
     RichMutableChain.findNewStrongGeneratorAt(mutableChain, node)
 
   /** Completes the set of strong generators starting at `node`, assuming 
@@ -246,34 +245,34 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     * 
     * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
     */
-  final def completeStrongGeneratorsAt(mutableNode: MutableNode[G])
+  final def completeStrongGeneratorsAt(mutableNode: MutableNode[G, F])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit =
     RichMutableChain.completeStrongGeneratorsAt(mutableChain, mutableNode)
 
   /** Deterministic Schreier-Sims algorithm. */
   def completeStrongGenerators()(implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = mutableChain.findLast() match {
-    case _: Start[G] => // chain is empty, no generators to find
-    case node: Node[G] => mutableChain.completeStrongGeneratorsAt(mutableChain.mutable(node))
+    case _: Start[G, F] => // chain is empty, no generators to find
+    case node: Node[G, F] => mutableChain.completeStrongGeneratorsAt(mutableChain.mutable(node))
   }
 
 }
 
 object RichMutableChain {
 
-  @tailrec def siftAndUpdateBaseFrom[G](mutableChain: MutableChain[G], elem: StartOrNode[G], g: G)
+  @tailrec def siftAndUpdateBaseFrom[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], elem: StartOrNode[G, F], g: G)
     (implicit classTag: ClassTag[G], equ: Eq[G],
-      group: Group[G]): Opt[(MutableNode[G], G)] = {
+      group: Group[G]): Opt[(MutableNode[G, F], G)] = {
     implicit def action = mutableChain.start.action
     elem.next match {
-      case _: Term[G] =>
+      case _: Term[G, F] =>
         g.findMovedPoint match {
           case NNOption(k) =>
             val newNode = NodeBuilder[G].standalone(k)
             mutableChain.insertInChain(mutableChain.mutableStartOrNode(elem), elem.next, newNode)
             Opt(newNode -> g)
-          case _ => Opt.empty[(MutableNode[G], G)]
+          case _ => Opt.empty[(MutableNode[G, F], G)]
         }
-      case node: Node[G] =>
+      case node: Node[G, F] =>
         val b = node.beta <|+| g
         if (!node.inOrbit(b))
           Opt(mutableChain.mutable(node) -> g)
@@ -284,8 +283,8 @@ object RichMutableChain {
     }
   }
 
-  def findNewStrongGeneratorAt[G](mutableChain: MutableChain[G], node: Node[G])
-    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G], G)] = {
+  def findNewStrongGeneratorAt[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], node: Node[G, F])
+    (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Opt[(MutableNode[G, F], G)] = {
     node.foreachOrbit { b =>
       implicit def action: FaithfulPermutationAction[G] = node.action
       val ub = node.u(b)
@@ -296,12 +295,12 @@ object RichMutableChain {
         val ubx = ub |+| x
         if (ubx =!= node.u(i)) {
           val schreierGen = ubx |+| node.uInv(i)
-          val res: Opt[(MutableNode[G], G)] = mutableChain.siftAndUpdateBaseFrom(node, schreierGen)
+          val res: Opt[(MutableNode[G, F], G)] = mutableChain.siftAndUpdateBaseFrom(node, schreierGen)
           if (!res.isEmpty) return res
         }
       }
     }
-    Opt.empty[(MutableNode[G], G)]
+    Opt.empty[(MutableNode[G, F], G)]
   }
 
     /** Completes the set of strong generators starting at `node`, assuming 
@@ -309,8 +308,8 @@ object RichMutableChain {
     * 
     * Inspired (but rewritten) from SCHREIERSIMS, page 91 of Holt (2005).
     */
-  @tailrec final def completeStrongGeneratorsAt[G](mutableChain: MutableChain[G],
-    mutableNode: MutableNode[G])
+  @tailrec final def completeStrongGeneratorsAt[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F],
+    mutableNode: MutableNode[G, F])
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit =
     mutableChain.findNewStrongGeneratorAt(mutableNode) match {
       case Opt((where, newGenerator)) =>
@@ -322,8 +321,8 @@ object RichMutableChain {
         case IsMutableNode(mutablePrev) =>
           // current node does not have new strong generators, but node has parent that has to be completed
           completeStrongGeneratorsAt(mutableChain, mutablePrev)
-        case node: Node[G] => sys.error("mutableNode.prev cannot be immutable")
-        case start: Start[G] =>
+        case node: Node[G, F] => sys.error("mutableNode.prev cannot be immutable")
+        case start: Start[G, F] =>
           // current node does not have new strong generators, and current node starts the chain, we are finished
       }
     }

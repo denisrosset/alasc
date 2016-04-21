@@ -8,6 +8,8 @@ import spire.algebra.{Eq, Group}
 import spire.syntax.action._
 import spire.syntax.group._
 
+import net.alasc.algebra.FaithfulPermutationAction
+
 abstract class BaseChange {
 
   /** Change the base in `mutableChain` using the base guide provided.
@@ -18,16 +20,16 @@ abstract class BaseChange {
     * @param mutableChain Mutable chain on which to perform the base change.
     * @param baseGuide    Guide for the new base.
     */
-  def changeBase[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], baseGuide: BaseGuide): Unit
+  def changeBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], baseGuide: BaseGuide): Unit
 
-  def changeBase[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], base: Seq[Int]): Unit =
-  changeBase(mutableChain, BaseGuideSeq(base))
+  def changeBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], base: Seq[Int]): Unit =
+    changeBase(mutableChain, BaseGuideSeq(base))
 
 }
 
 final class BaseChangeFromScratch(implicit val schreierSims: SchreierSims) extends BaseChange {
 
-  def changeBase[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], baseGuide: BaseGuide): Unit = {
+  def changeBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], baseGuide: BaseGuide): Unit = {
     implicit def action = mutableChain.start.action
     val oldChain = mutableChain.start.next
     val tempChain = schreierSims.completeChainFromGeneratorsRandomElementsAndOrder(
@@ -40,11 +42,10 @@ final class BaseChangeFromScratch(implicit val schreierSims: SchreierSims) exten
 
 final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
 
-  def changeBase[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], guide: BaseGuide): Unit = {
+  def changeBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], guide: BaseGuide): Unit = {
     implicit def action = mutableChain.start.action
     val iter = guide.iterator
-    @tailrec def rec(prev: StartOrNode[G],
-      lastMutableStartOrNode: MutableStartOrNode[G]): Unit = {
+    @tailrec def rec(prev: StartOrNode[G, F], lastMutableStartOrNode: MutableStartOrNode[G, F]): Unit = {
       if (prev.next.isTrivial || !iter.hasNext)
         mutableChain.cutRedundantAfter(prev)
       else prev.next match {
@@ -57,7 +58,7 @@ final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
             val newNode = mutableChain.changeBasePointAfter(mutablePrev, beta)
             rec(newNode, mutablePrev)
           }
-        case node: Node[G] =>
+        case node: Node[G, F] =>
           val beta = iter.next(node.beta, Set(node.beta), node.isFixed(_))
           if (node.beta == beta)
             rec(node, lastMutableStartOrNode)
@@ -66,7 +67,7 @@ final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
             val newNode = mutableChain.changeBasePointAfter(mutablePrev, beta)
             rec(newNode, mutablePrev)
           }
-        case term: Term[G] => // finished
+        case term: Term[G, F] => // finished
       }
     }
     rec(mutableChain.start, mutableChain.start)
@@ -76,10 +77,10 @@ final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
 
 final class BaseChangeSwapConjugation(implicit val baseSwap: BaseSwap) extends BaseChange {
 
-  def changeBaseConjugation[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], guide: BaseGuide): (G, G) = {
+  def changeBaseConjugation[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], guide: BaseGuide): (G, G) = {
     implicit def action = mutableChain.start.action
     val iter = guide.iterator
-    @tailrec def rec(prev: StartOrNode[G], lastMutableStartOrNode: MutableStartOrNode[G], conj: G, conjInv: G): (G, G) = {
+    @tailrec def rec(prev: StartOrNode[G, F], lastMutableStartOrNode: MutableStartOrNode[G, F], conj: G, conjInv: G): (G, G) = {
       if (prev.next.isTrivial || !iter.hasNext) {
         mutableChain.cutRedundantAfter(prev)
         (conj, conjInv)
@@ -100,7 +101,7 @@ final class BaseChangeSwapConjugation(implicit val baseSwap: BaseSwap) extends B
             val newNode = mutableChain.changeBasePointAfter(mutablePrev, alpha)
             rec(newNode, mutablePrev, conj, conjInv)
           }
-        case node: Node[G] =>
+        case node: Node[G, F] =>
           val easyPoints = mutable.BitSet.empty
           node.foreachOrbit { k => easyPoints += (k <|+| conj) }
           val beta = iter.next(node.beta <|+| conj, easyPoints, k => node.isFixed(k <|+| conjInv))
@@ -116,13 +117,13 @@ final class BaseChangeSwapConjugation(implicit val baseSwap: BaseSwap) extends B
             val newNode = mutableChain.changeBasePointAfter(mutablePrev, alpha)
             rec(newNode, mutablePrev, conj, conjInv)
           }
-        case term: Term[G] => (conj, conjInv)
+        case term: Term[G, F] => (conj, conjInv)
       }
     }
     rec(mutableChain.start, mutableChain.start, Group[G].id, Group[G].id)
   }
 
-  def changeBase[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], guide: BaseGuide): Unit = {
+  def changeBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F], guide: BaseGuide): Unit = {
     val (g, gInv) = changeBaseConjugation(mutableChain, guide)
     mutableChain.conjugate(g, gInv)
   }

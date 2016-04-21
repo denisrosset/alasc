@@ -8,15 +8,17 @@ import metal.syntax._
 
 import net.alasc.algebra.FaithfulPermutationAction
 
-trait BaseOrder[G] extends Order[Int] {
+trait BaseOrder[G, F <: FaithfulPermutationAction[G] with Singleton] extends Order[Int] {
+
+  implicit def action: F
 
   def base: Seq[Int]
 
-  implicit def action: FaithfulPermutationAction[G]
 
 }
 
-class BaseMapOrder[G](val action: FaithfulPermutationAction[G], val base: Seq[Int], val reorderedMap: metal.generic.HashMap[Int, Int]) extends BaseOrder[G] {
+class BaseMapOrder[G, F <: FaithfulPermutationAction[G] with Singleton]
+  (val base: Seq[Int], val reorderedMap: metal.generic.HashMap[Int, Int])(implicit val action: F) extends BaseOrder[G, F] {
 
   def compare(a: Int, b: Int): Int =
     (reorderedMap.getOrElse(a, a).toLong - reorderedMap.getOrElse(b, b).toLong).signum.toInt
@@ -25,7 +27,7 @@ class BaseMapOrder[G](val action: FaithfulPermutationAction[G], val base: Seq[In
 
 object BaseMapOrder {
 
-  def apply[G](action: FaithfulPermutationAction[G], base: Seq[Int]) = {
+  def apply[G, F <: FaithfulPermutationAction[G] with Singleton](base: Seq[Int])(implicit action: F): BaseMapOrder[G, F] = {
     val reorderedMap = metal.mutable.HashMap.empty[Int, Int]
     val iter = base.iterator
     var v = Int.MinValue + 1
@@ -34,34 +36,36 @@ object BaseMapOrder {
       reorderedMap.update(beta, v)
       v += 1
     }
-    new BaseMapOrder(action, base, reorderedMap)
+    new BaseMapOrder[G, F](base, reorderedMap)
   }
 
 }
 
 object BaseOrder {
 
-  def apply[G](action: FaithfulPermutationAction[G], base: Seq[Int]): BaseOrder[G] = BaseMapOrder[G](action, base)
+  def apply[G, F <: FaithfulPermutationAction[G] with Singleton](base: Seq[Int])(implicit action: F): BaseOrder[G, F] =
+    BaseMapOrder[G, F](base)
 
-  def orderedIterator[G:Group](mutableChain: MutableChain[G]): Iterator[G] = {
-    implicit def action = mutableChain.start.action
-    val bo = apply[G](action, mutableChain.start.next.base)
-    def rec(chain: Chain[G], gPrev: G): Iterator[G] = chain match {
-      case node: Node[G] =>
+  def orderedIterator[G:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, F]): Iterator[G] = {
+    implicit def action: F = mutableChain.start.action
+    val bo = apply[G, F](mutableChain.start.next.base)
+    def rec(chain: Chain[G, F], gPrev: G): Iterator[G] = chain match {
+      case node: Node[G, F] =>
         val io = ImageOrder(bo, gPrev)
         for {
           b <- node.orbit.toSeq.sorted(Order.ordering(io)).toIterator
           gThis = node.u(b) |+| gPrev
           g <- rec(node.next, gThis)
         } yield g
-      case _: Term[G] => Iterator(gPrev)
+      case _: Term[G, F] => Iterator(gPrev)
     }
     rec(mutableChain.start.next, Group[G].id)
   }
 
 }
 
-final class ElementOrder[G](val baseOrder: BaseOrder[G]) extends Order[G] {
+final class ElementOrder[G, F <: FaithfulPermutationAction[G] with Singleton](val baseOrder: BaseOrder[G, F]) extends Order[G] {
 
   def compare(a: G, b: G): Int = {
     implicit def action =  baseOrder.action
@@ -79,11 +83,13 @@ final class ElementOrder[G](val baseOrder: BaseOrder[G]) extends Order[G] {
 
 object ElementOrder {
 
-  def apply[G](baseOrder: BaseOrder[G]): Order[G] = new ElementOrder(baseOrder)
+  def apply[G, F <: FaithfulPermutationAction[G] with Singleton](baseOrder: BaseOrder[G, F]): Order[G] =
+    new ElementOrder(baseOrder)
 
 }
 
-final class ImageOrder[G](val baseOrder: BaseOrder[G], val g: G) extends Order[Int] {
+final class ImageOrder[G, F <: FaithfulPermutationAction[G] with Singleton]
+  (val baseOrder: BaseOrder[G, F], val g: G) extends Order[Int] {
 
   implicit def action =  baseOrder.action
 
@@ -93,7 +99,8 @@ final class ImageOrder[G](val baseOrder: BaseOrder[G], val g: G) extends Order[I
 
 object ImageOrder {
 
-  def apply[G](baseOrder: BaseOrder[G], g: G): Order[Int] = new ImageOrder(baseOrder, g)
+  def apply[G, F <: FaithfulPermutationAction[G] with Singleton](baseOrder: BaseOrder[G, F], g: G): Order[Int] =
+    new ImageOrder(baseOrder, g)
   
 }
 

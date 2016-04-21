@@ -14,9 +14,9 @@ import metal.syntax._
 import net.alasc.algebra.FaithfulPermutationAction
 import net.alasc.util._
 
-trait SubgroupDefinition[G] {
+trait SubgroupDefinition[G, F <: FaithfulPermutationAction[G] with Singleton] {
 
-  implicit def action: FaithfulPermutationAction[G]
+  implicit def action: F
 
   def baseGuideOpt: Opt[BaseGuide]
 
@@ -26,24 +26,25 @@ trait SubgroupDefinition[G] {
     * `guidedChain` must be using `action` and have a
     * base guided by `baseGuideOpt`.
     */
-  def firstLevelTest(guidedChain: Chain[G]): SubgroupTest[G]
+  def firstLevelTest(guidedChain: Chain[G, F]): SubgroupTest[G, F]
 
 }
 
 object SubgroupDefinition {
 
-  class Simple[G](val action: FaithfulPermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean) extends SubgroupDefinition[G] {
+  class Simple[G, F <: FaithfulPermutationAction[G] with Singleton]
+    (backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)(implicit val action: F) extends SubgroupDefinition[G, F] {
 
     def inSubgroup(g: G) = predicate(g)
 
     def baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide]
 
-    object Test extends SubgroupTest[G] {
-      def test(b: Int, orbitImage: Int, currentG: G, node: Node[G]): Opt[SubgroupTest[G]] =
+    object Test extends SubgroupTest[G, F] {
+      def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, F]): Opt[SubgroupTest[G, F]] =
         if (backtrackTest(node.beta, orbitImage)) Opt(this) else Opt.empty
     }
 
-    def firstLevelTest(guidedChain: Chain[G]) = Test
+    def firstLevelTest(guidedChain: Chain[G, F]) = Test
 
   }
 
@@ -58,14 +59,16 @@ object SubgroupDefinition {
     * @return the subgroup definition.
     */
 
-  def apply[G](action: FaithfulPermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): SubgroupDefinition[G] = new Simple[G](action, backtrackTest, predicate)
+  def apply[G, F <: FaithfulPermutationAction[G] with Singleton]
+    (backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)(implicit action: F): SubgroupDefinition[G, F] =
+    new Simple[G, F](backtrackTest, predicate)
 
 }
 
 
-trait SubgroupTest[G] {
+trait SubgroupTest[G, F <: FaithfulPermutationAction[G] with Singleton] {
 
-  def test(b: Int, orbitImage: Int, currentG: G, node: Node[G]): Opt[SubgroupTest[G]]
+  def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, F]): Opt[SubgroupTest[G, F]]
 
 }
 
@@ -73,12 +76,13 @@ trait SubgroupTest[G] {
 
 object SubgroupSearch {
 
-  def generalSearch[G:ClassTag:Eq:Group](definition: SubgroupDefinition[G], guidedChain: Chain[G]): Iterator[G] = {
+  def generalSearch[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (definition: SubgroupDefinition[G, F], guidedChain: Chain[G, F]): Iterator[G] = {
     import definition.action
-    val bo = BaseOrder[G](action, guidedChain.base)
+    val bo = BaseOrder[G, F](guidedChain.base)
     val firstTest = definition.firstLevelTest(guidedChain)
-    def rec(currentChain: Chain[G], currentG: G, currentTest: SubgroupTest[G]): Iterator[G] = currentChain match {
-      case node: Node[G] =>
+    def rec(currentChain: Chain[G, F], currentG: G, currentTest: SubgroupTest[G, F]): Iterator[G] = currentChain match {
+      case node: Node[G, F] =>
         val sortedOrbit = node.orbit.toSeq.sorted(Order.ordering(ImageOrder(bo, currentG)))
         for {
           b <- sortedOrbit.iterator
@@ -88,29 +92,30 @@ object SubgroupSearch {
           newG = node.u(b) |+| currentG
           g <- rec(node.next, newG, newTest)
         } yield g
-      case _: Term[G] =>
+      case _: Term[G, F] =>
         if (definition.inSubgroup(currentG)) Iterator(currentG) else Iterator.empty
     }
     rec(guidedChain, Group[G].id, firstTest)
   }
 
-  def subgroupSearch[G:ClassTag:Eq:Group](definition: SubgroupDefinition[G], guidedChain: Chain[G]): MutableChain[G] = {
-    import definition.action
-    val bo = BaseOrder[G](action, guidedChain.base)
+  def subgroupSearch[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (definition: SubgroupDefinition[G, F], guidedChain: Chain[G, F]): MutableChain[G, F] = {
+    implicit def action: F = definition.action
+    val bo = BaseOrder[G, F](guidedChain.base)
     val orbits = guidedChain.nodesIterator.map(_.orbit.toArray).toArray
     val length = orbits.length
-    val subgroupChain = MutableChain.emptyWithBase(guidedChain.base)
+    val subgroupChain = MutableChain.emptyWithBase[G, F](guidedChain.base)
     val firstTest = definition.firstLevelTest(guidedChain)
     // Tuple2Int contains (restartFrom, levelCompleted)
-    def rec(level: Int, levelCompleted: Int, currentChain: Chain[G], currentSubgroup: Chain[G], currentG: G, currentTest: SubgroupTest[G]): Tuple2Int = (currentChain, currentSubgroup) match {
+    def rec(level: Int, levelCompleted: Int, currentChain: Chain[G, F], currentSubgroup: Chain[G, F], currentG: G, currentTest: SubgroupTest[G, F]): Tuple2Int = (currentChain, currentSubgroup) match {
       // TODO: remove tuple allocation
-      case (_: Term[G], _) =>
+      case (_: Term[G, F], _) =>
         if (definition.inSubgroup(currentG) && !currentG.isId) {
           subgroupChain.insertGenerators(Iterable(currentG))
           Tuple2Int(levelCompleted - 1, levelCompleted)
         } else
           Tuple2Int(level - 1, levelCompleted)
-      case (node: Node[G], IsMutableNode(subgroupNode)) =>
+      case (node: Node[G, F], IsMutableNode(subgroupNode)) =>
         var newLevelCompleted = levelCompleted
         val orbit = orbits(level)
         Sorting.sort(orbit)(ImageOrder(bo, currentG), implicitly[ClassTag[Int]])
@@ -150,11 +155,11 @@ object SubgroupSearch {
     * 
     * The considered domain is `0 ... domainSize - 1`.
     */
-  def basePointGroups[G](chain: Chain[G], domainSize: Int): Array[Array[Int]] = {
+  def basePointGroups[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F], domainSize: Int): Array[Array[Int]] = {
     val remaining = metal.mutable.BitSet((0 until domainSize): _*)
     val groups = metal.mutable.Buffer.empty[Array[Int]]
-    @tailrec def rec(current: Chain[G]): Array[Array[Int]] = current match {
-      case node: Node[G] =>
+    @tailrec def rec(current: Chain[G, F]): Array[Array[Int]] = current match {
+      case node: Node[G, F] =>
         import node.action
         val fixed = metal.mutable.Buffer[Int](node.beta)
         remaining -= node.beta
@@ -166,7 +171,7 @@ object SubgroupSearch {
         fixed.foreach { k => remaining -= k }
         groups += array
         rec(node.next)
-      case _: Term[G] => groups.toArray
+      case _: Term[G, F] => groups.toArray
     }
     rec(chain)
   }

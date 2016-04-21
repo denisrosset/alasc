@@ -1,19 +1,13 @@
 package net.alasc
 
-import spire.util.Opt
+import net.alasc.algebra.FaithfulPermutationAction
 
 package object bsgs {
 
-  implicit def richChain[G](chain: Chain[G]): RichChain[G] =
-    new RichChain[G](chain)
+  implicit def richChain[G, F <: FaithfulPermutationAction[G] with Singleton](chain: Chain[G, F]): RichChain[G, F] =
+    new RichChain[G, F](chain)
 
-  implicit def richMutableChain[G](mutableChain: MutableChain[G]): RichMutableChain[G] =
-    new RichMutableChain[G](mutableChain.start)
-
-  implicit def richBaseGuideOpt(baseGuideOpt: Opt[BaseGuide]): RichBaseGuideOpt =
-    baseGuideOpt match {
-      case Opt(baseGuide) => new RichBaseGuideOpt(baseGuide)
-      case _ => new RichBaseGuideOpt(null)
-    }
+  implicit def richMutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](mutableChain: MutableChain[G, F]): RichMutableChain[G, F] =
+    new RichMutableChain[G, F](mutableChain.start)
 
 }

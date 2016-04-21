@@ -26,8 +26,8 @@ object WrSize {
 
   implicit val arbWrSize: Arbitrary[WrSize] =
     Arbitrary(for {
-      a <- Gen.choose(1, 5)
-      h <- Gen.choose(1, 5)
+      a <- Gen.choose(1, 3)
+      h <- Gen.choose(1, 3)
     } yield WrSize(a, h))
 
 }

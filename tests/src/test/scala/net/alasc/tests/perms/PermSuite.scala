@@ -4,7 +4,7 @@ package perms
 import spire.laws.PartialActionLaws
 
 import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
-import net.alasc.perms.{Cycle, Cycles, Perm}
+import net.alasc.perms.{Cycle, Cycles, Perm, PermGrpChainBuilder}
 
 class PermSuite extends AlascSuite {
 
@@ -36,5 +36,21 @@ class PermSuite extends AlascSuite {
   test ("Inverse of (1, 5, 3, 6)(2, 8, 7) is (6, 3, 5, 1) (7, 8, 2) = (1, 6, 3, 5)(2, 7, 8) -- Holt 2.1.5") {
     (Perm(1,5,3,6)(2,8,7).inverse) should === (Perm(1,6,3,5)(2,7,8))
   }
+
+}
+
+object PermSuite {
+
+  val deterministic = {
+    import net.alasc.perms.deterministic._
+    implicitly[PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]]
+  }
+
+  val randomized = {
+    import net.alasc.perms.default._
+    implicitly[PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]]
+  }
+
+
 
 }

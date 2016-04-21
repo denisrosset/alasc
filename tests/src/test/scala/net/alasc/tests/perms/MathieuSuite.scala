@@ -17,7 +17,6 @@ class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
     }
   }
 
-
   test("Mathieu group 22 one-point stabilizers have order 20160") {
     val grp = Mathieu[Perm](22)
     forAll(Table("k", 1 to 22:_*)) { k =>
@@ -38,6 +37,6 @@ class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 
 }
 
-class MathieuSuiteDeterministic extends MathieuSuite()(BSGSSuite.deterministic)
+class MathieuSuiteDeterministic extends MathieuSuite()(PermSuite.deterministic)
 
-class MathieuSuiteRandomized extends MathieuSuite()(BSGSSuite.randomized)
+class MathieuSuiteRandomized extends MathieuSuite()(PermSuite.randomized)

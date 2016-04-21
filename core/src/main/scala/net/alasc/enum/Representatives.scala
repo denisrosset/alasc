@@ -1,7 +1,6 @@
 package net.alasc.enum
 
 import scala.annotation.tailrec
-import scala.reflect.ClassTag
 
 import spire.algebra._
 import spire.math.SafeLong
@@ -14,22 +13,22 @@ import metal._
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.bsgs.{BaseGuideLex, BaseOrder, BuildChain, Chain, ChainRec, Node, SubgroupSearch, Term}
-import net.alasc.domains.{MutableOrbit, Partition}
-import net.alasc.finite._
-import net.alasc.perms.chain.PermGrpChainBuilder
+import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
+import net.alasc.domains.MutableOrbit
 import net.alasc.util._
 import metal.mutable.Buffer
 
-final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Array[Int], val grp: Grp[G]) {
+// TODO: convert to take in only Chain, not GrpChain
 
-  implicit def classTag: ClassTag[G] = implicitly[PermGrpChainBuilder[G]].classTag
+final case class Representatives[G, F <: FaithfulPermutationAction[G] with Singleton]
+  (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims) {
+
+  import grp.{action, classTag, equ, group}
 
   val n = seq.length
 
-  val lexChain = implicitly[PermGrpChainBuilder[G]].fromGrp(grp, Opt(BaseGuideLex(n))).chain
-
-  val symGrp = grp.fixingPartition(Partition.fromSeq(seq))
+  val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
+    BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideLex(n)))
 
   val arrayMaxInt = {
     var res = 0
@@ -79,7 +78,7 @@ final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Arr
   }
 
   abstract class Block {
-    def chain: Chain[G]
+    def chain: Chain[G, F]
     def size: SafeLong
     def index: SafeLong
     def images: Long
@@ -88,24 +87,24 @@ final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Arr
 
   object Block {
     def start = lexChain match {
-      case node: Node[G] => NodeBlock(0, node, 0L, SafeLong.zero, Buffer(Group[G].id), metal.mutable.Buffer(symGrp))
-      case term: Term[G] => TermBlock(0, term, 0L, SafeLong.zero, Group[G].id)
+      case node: Node[G, F] => NodeBlock(0, node, 0L, SafeLong.zero, Buffer(Group[G].id), metal.mutable.Buffer(symGrp))
+      case term: Term[G, F] => TermBlock(0, term, 0L, SafeLong.zero, Group[G].id)
     }
   }
 
-  case class TermBlock(level: Int, chain: Term[G], images: Long, index: SafeLong, gInverse: G) extends Block {
+  case class TermBlock(level: Int, chain: Term[G, F], images: Long, index: SafeLong, gInverse: G) extends Block {
     def size = SafeLong.one
     def element = gInverse.inverse
   }
 
-  case class NodeBlock(level: Int, chain: Node[G], images: Long, index: SafeLong, candidates: Buffer[G], symGrps: Buffer[Grp[G]]) extends Block {
+  case class NodeBlock(level: Int, chain: Node[G, F], images: Long, index: SafeLong, candidates: Buffer[G], symGrps: Buffer[GrpChain[G, F]]) extends Block {
 
     case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
 
     val beta = chain.beta
 
     val chainNextBeta = chain.next match {
-      case nextNode: Node[G] => nextNode.beta
+      case nextNode: Node[G, F] => nextNode.beta
       case _ => n
     }
     assert(beta < chainNextBeta)
@@ -151,7 +150,7 @@ final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Arr
     }
 
     lazy val size: SafeLong = {
-      val co = ChainRec.order(chain: Chain[G], SafeLong.one)
+      val co = ChainRec.order(chain: Chain[G, F], SafeLong.one)
 
       symGrps.foldLeft(SafeLong.zero) { case (sm, symGrp) => sm + co / symGrp.order }
     }
@@ -199,7 +198,7 @@ final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Arr
       def next: Block = {
         val images = sortedImages(i)
         val newBlockCandidates = metal.mutable.Buffer.empty[G]
-        val newBlockSymGrps = metal.mutable.Buffer.empty[Grp[G]]
+        val newBlockSymGrps = metal.mutable.Buffer.empty[GrpChain[G, F]]
         var it = Opt(candidatesForImages(images.toLong))
         val sOrbit = MutableOrbit.forSize(n)
         while (it.nonEmpty) {
@@ -208,20 +207,20 @@ final case class Representatives[G:Permutation:PermGrpChainBuilder](val seq: Arr
           val g = candidates(c)
           val bg = b <|+| g
           if (MutableOrbit.isSmallestPointInOrbit(n, bg, symGrps(c).generators, sOrbit)(implicitly, spire.std.int.IntAlgebra)) {
-            val nextSym = symGrps(c).stabilizer(bg)
+            val nextSym = GrpChain.stabilizer(symGrps(c), bg)
             newBlockCandidates += u |+| g
             newBlockSymGrps += nextSym
           }
           it = next
         }
         val block = chain.next match {
-          case nextNode: Node[G] if nextNode.beta == nextBeta =>
+          case nextNode: Node[G, F] if nextNode.beta == nextBeta =>
             NodeBlock(level + 1, nextNode, images, blockIndex, newBlockCandidates, newBlockSymGrps)
-          case nextNode: Node[G] =>
+          case nextNode: Node[G, F] =>
             assert(nextNode.beta < nextBeta)
             val nNode = Node.trivial(nextBeta, nextNode)
             NodeBlock(level + 1, nNode, images, blockIndex, newBlockCandidates, newBlockSymGrps)
-          case termNode: Term[G] =>
+          case termNode: Term[G, F] =>
             assert(newBlockCandidates.length == 1)
             TermBlock(level + 1, termNode, images, blockIndex, newBlockCandidates(0))
         }
@@ -241,123 +240,128 @@ object Representatives {
     *
     * @param seq  Array of integers
     * @param repr Another array of integers
-    * @param chainGrp0 Group of permutations, described as a BSGS chain
-    * @param symGrp   Maximal subgroup of the group described by `chainGrp` leaving `seq` invariant, i.e.
+    * @param grp Group of permutations
+    * @param symGrp   Maximal subgroup of the group described by `grp` leaving `seq` invariant, i.e.
     *                 for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     */
 
-  def permutationTo[G:Permutation:PermGrpChainBuilder](seq: Array[Int], repr: Array[Int], chainGrp0: Chain[G], symGrp: Grp[G]): Opt[G] = {
+  def permutationTo[G, F <: FaithfulPermutationAction[G] with Singleton]
+    (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+    (implicit baseChange: BaseChange, schreierSims: SchreierSims): Opt[G] = {
+    import grp.{action, classTag, equ, group}
+    val chainGrp0 = grp.chain
     val n = seq.length
-    val bo = BaseOrder[G](implicitly, chainGrp0.base)
+    val bo = BaseOrder[G, F](chainGrp0.base)
     val basePointGroups = SubgroupSearch.basePointGroups(chainGrp0, n)
     if (chainGrp0.isTrivial)
       return (if (seq.sameElements(repr)) Opt(Group[G].id) else Opt.empty[G])
-    def rec(level: Int, g: G, chainGrp: Chain[G], chainSym: Grp[G], sOrbit: MutableOrbit): Opt[G] = chainGrp match {
-      case node: Node[G] =>
-        val beta = node.beta
-        val orbitIt = node.orbitIterator
-        while (orbitIt.hasNext) {
-          val b = orbitIt.next
-          val bg = b <|+| g
-          if (repr(beta) == seq(bg)) {
-            val nextG = node.u(b) |+| g
-            var j = 1
-            var disagree = false
-            val m = basePointGroups(level).length
-            while (j < m && !disagree) {
-              val c = basePointGroups(level)(j)
-              if (repr(c) != seq(c <|+| nextG))
-                disagree = true
-              j += 1
-            }
-            if (!disagree) {
-              if (MutableOrbit.isSmallestPointInOrbit(n, bg, chainSym.generators, sOrbit)(implicitly, bo)) {
-                val nextSym = chainSym.stabilizer(bg)
-                val res = rec(level + 1, nextG, node.next, nextSym, sOrbit)
-                if (res.nonEmpty)
-                  return res
+    def rec(level: Int, g: G, chainGrp: Chain[G, F], chainSym: GrpChain[G, F], sOrbit: MutableOrbit): Opt[G] =
+      chainGrp match {
+        case node: Node[G, F] =>
+          val beta = node.beta
+          val orbitIt = node.orbitIterator
+          while (orbitIt.hasNext) {
+            val b = orbitIt.next
+            val bg = b <|+| g
+            if (repr(beta) == seq(bg)) {
+              val nextG = node.u(b) |+| g
+              var j = 1
+              var disagree = false
+              val m = basePointGroups(level).length
+              while (j < m && !disagree) {
+                val c = basePointGroups(level)(j)
+                if (repr(c) != seq(c <|+| nextG))
+                  disagree = true
+                j += 1
+              }
+              if (!disagree) {
+                if (MutableOrbit.isSmallestPointInOrbit(n, bg, chainSym.generators, sOrbit)(implicitly, bo)) {
+                  val nextSym = GrpChain.stabilizer(chainSym, bg)
+                  val res = rec(level + 1, nextG, node.next, nextSym, sOrbit)
+                  if (res.nonEmpty)
+                    return res
+                }
               }
             }
           }
-        }
-        Opt.empty[G]
-      case _: Term[G] => Opt(g.inverse)
-    }
+          Opt.empty[G]
+        case _: Term[G, F] => Opt(g.inverse)
+      }
     rec(0, Group[G].id, chainGrp0, symGrp, MutableOrbit.forSize(n))
   }
 
-  def findPermutationToMaximal[G:Permutation:PermGrpChainBuilder](array: Array[Int], chainGrp: Chain[G], symGrp: Grp[G]): G = {
+  def findPermutationToMaximal[G, F <: FaithfulPermutationAction[G] with Singleton]
+    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims): G = {
     val invArray = new Array[Int](array.length)
     cforRange(0 until array.length) { i => invArray(i) = Int.MaxValue - array(i) }
-    findPermutationToMinimal(invArray, chainGrp, symGrp)
+    findPermutationToMinimal(invArray, grp, symGrp)
   }
 
   /** Returns the minimal lexicographic representative of an array of integers under permutation.
     *
-    * @param array      Array of integers
-    * @param chainGrp Group of permutations, described as a BSGS chain
-    * @param symGrp   Subgroup of the group described by `chainGrp` leaving `sym` invariant, i.e.
-    *                 for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
+    * @param array  Array of integers
+    * @param grp    Group of permutations, described as a BSGS chain
+    * @param symGrp Subgroup of the group described by `chainGrp` leaving `sym` invariant, i.e.
+    *               for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     * @return the permutation `g` in `chainGrp` such that `seq <|+| g` is the lexicographic minimal sequence.
     */
-  def findPermutationToMinimal[G:Permutation:PermGrpChainBuilder](array: Array[Int], chainGrp: Chain[G], symGrp: Grp[G]): G = {
+  def findPermutationToMinimal[G, F <: FaithfulPermutationAction[G] with Singleton]
+    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims): G = {
+    import grp.{action, classTag, equ, group}
     val n = array.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0
     var minimalG = Group[G].id
     // Implements breadth-first search in the cosets `symGrp \ grp`, filtering elements that do not lead to a minimal
     // lexicographic representative at each step in the stabilizer chain.
-    def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G], curSymGrp: Grp[G], sOrbit: MutableOrbit): Unit = curChainGrp match {
-      case node: Node[G] if level <= toLevel =>
-        val candidates = metal.mutable.Buffer.empty[Int]
-        val beta = node.beta
-        val nextBeta = node.next match {
-          case nextNode: Node[G] => nextNode.beta
-          case _: Term[G] => n
-        }
-        if (nextBeta > minimalCorrectBefore) {
-          cforRange(minimalCorrectBefore until nextBeta) { k =>
-            minimal(k) = array(k <|+| minimalG)
+    def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G, F], curSymGrp: GrpChain[G, F], sOrbit: MutableOrbit): Unit =
+      curChainGrp match {
+        case node: Node[G, F] if level <= toLevel =>
+          val candidates = metal.mutable.Buffer.empty[Int]
+          val beta = node.beta
+          val nextBeta = node.next match {
+            case nextNode: Node[G, F] => nextNode.beta
+            case _: Term[G, F] => n
           }
-          minimalCorrectBefore = nextBeta
-        }
-        node.foreachOrbit { b =>
-          val bg = b <|+| curG
-          var comp = array(bg) - minimal(beta)
-          var k = beta + 1
-          lazy val nextG = node.u(b) |+| curG
-          while (k < nextBeta && comp == 0) {
-            comp = array(k <|+| nextG) - minimal(k)
-            k += 1
-          }
-          if (comp <= 0) {
-            if (comp < 0) {
-              cforRange(beta until minimalCorrectBefore) { k =>
-                minimal(k) = array(k <|+| nextG)
-              }
-              minimalG = nextG
-              candidates.clear
+          if (nextBeta > minimalCorrectBefore) {
+            cforRange(minimalCorrectBefore until nextBeta) { k =>
+              minimal(k) = array(k <|+| minimalG)
             }
-            candidates += b
+            minimalCorrectBefore = nextBeta
           }
-        }
-        cforRange(0 until candidates.length.toInt) { i =>
-          val b = candidates(i)
-          val bg = b <|+| curG
-          if (MutableOrbit.isSmallestPointInOrbit(n, bg, curSymGrp.generators, sOrbit)(implicitly, spire.std.int.IntAlgebra)) {
-            val nextG = node.u(b) |+| curG
-            rec(level + 1, toLevel, nextG, node.next, curSymGrp.stabilizer(bg), sOrbit)
+          node.foreachOrbit { b =>
+            val bg = b <|+| curG
+            var comp = array(bg) - minimal(beta)
+            var k = beta + 1
+            lazy val nextG = node.u(b) |+| curG
+            while (k < nextBeta && comp == 0) {
+              comp = array(k <|+| nextG) - minimal(k)
+              k += 1
+            }
+            if (comp <= 0) {
+              if (comp < 0) {
+                cforRange(beta until minimalCorrectBefore) { k =>
+                  minimal(k) = array(k <|+| nextG)
+                }
+                minimalG = nextG
+                candidates.clear
+              }
+              candidates += b
+            }
           }
-        }
-      case _ =>
-    }
+          cforRange(0 until candidates.length.toInt) { i =>
+            val b = candidates(i)
+            val bg = b <|+| curG
+            if (MutableOrbit.isSmallestPointInOrbit(n, bg, curSymGrp.generators, sOrbit)(implicitly, spire.std.int.IntAlgebra)) {
+              val nextG = node.u(b) |+| curG
+              rec(level + 1, toLevel, nextG, node.next, GrpChain.stabilizer(curSymGrp, bg), sOrbit)
+            }
+          }
+        case _ =>
+      }
     val sOrbit = MutableOrbit.forSize(n)
-    val builder = implicitly[PermGrpChainBuilder[G]]
-    import builder.{baseChange, classTag, schreierSims}
-    val lexChain = if (chainGrp.hasLexicographicBase)
-      chainGrp
-    else
-      BuildChain.fromChain(chainGrp, implicitly[Permutation[G]], Opt(BaseGuideLex(n)))
+    val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
+      BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideLex(n)))
     cforRange(0 until lexChain.length) { i =>
       rec(0, i, Group[G].id, lexChain, symGrp, sOrbit)
     }

@@ -55,6 +55,6 @@ abstract class HoltSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSu
 
 }
 
-class HoltSuiteDeterministic extends HoltSuite()(BSGSSuite.deterministic)
+class HoltSuiteDeterministic extends HoltSuite()(PermSuite.deterministic)
 
-class HoltSuiteRandomized extends HoltSuite()(BSGSSuite.randomized)
+class HoltSuiteRandomized extends HoltSuite()(PermSuite.randomized)

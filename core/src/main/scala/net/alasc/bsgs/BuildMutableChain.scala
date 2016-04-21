@@ -11,49 +11,53 @@ import net.alasc.algebra.FaithfulPermutationAction
 
 object BuildMutableChain {
 
-  protected def shapeAndReturn[G:ClassTag:Eq:Group](mutableChain: MutableChain[G], baseGuideOpt: Opt[BaseGuide])
-                                                   (implicit baseChange: BaseChange): MutableChain[G] = baseGuideOpt match {
+  protected def shapeAndReturn[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, F], baseGuideOpt: Opt[BaseGuide])
+    (implicit baseChange: BaseChange): MutableChain[G, F] = baseGuideOpt match {
     case Opt(baseGuide) =>
       baseChange.changeBase(mutableChain, baseGuide)
       mutableChain
     case _ => mutableChain
   }
 
-  def fromChain[G:ClassTag:Eq:Group](from: Chain[G], action: FaithfulPermutationAction[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-                                    (implicit baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G] = {
+  def fromChain[G:ClassTag:Eq:Group, F1 <: FaithfulPermutationAction[G] with Singleton, F2 <: FaithfulPermutationAction[G] with Singleton]
+    (from: Chain[G, F1], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+    (implicit newAction: F2, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F2] = {
     val mut = from match {
-      case node: Node[G] if action == node.action => imply(action) { node.mutableChain }
-      case node: Node[G] =>
-        val baseStart = baseGuideOpt.baseAnsatz(from.strongGeneratingSet, action)
-        schreierSims.completeChainChangeAction(from, action, baseStart)
-      case _: Term[G] => imply(action) { MutableChain.empty[G] }
+      case node: Node[G, F1] =>
+        if (node.action eq newAction)
+          node.asInstanceOf[Node[G, F2]].mutableChain
+        else {
+          val baseStart = baseGuideOpt.getOrElseFast(BaseGuide.empty).baseAnsatz[G, F2](from.strongGeneratingSet)
+          schreierSims.completeChainChangeAction(from, newAction: F2, baseStart)
+        }
+      case _: Term[G, F1] => MutableChain.empty[G, F2]
     }
-    shapeAndReturn(mut, baseGuideOpt)
+    shapeAndReturn[G, F2](mut, baseGuideOpt)
   }
 
-  def fromGenerators[G:ClassTag:Eq:Group](generators: Iterable[G], action: FaithfulPermutationAction[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-                                         (implicit baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G] = {
-    val ansatz = baseGuideOpt.baseAnsatz(generators, action)
-    val mut = imply(action) { schreierSims.completeChainFromGenerators(generators, ansatz) }
-    shapeAndReturn(mut, baseGuideOpt)
+  def fromGenerators[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (generators: Iterable[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+    (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+    val ansatz = baseGuideOpt.getOrElseFast(BaseGuide.empty).baseAnsatz[G, F](generators)
+    val mut = schreierSims.completeChainFromGenerators[G, F](generators, ansatz)
+    shapeAndReturn[G, F](mut, baseGuideOpt)
   }
 
-  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group](generators: Iterable[G], order: SafeLong, action: FaithfulPermutationAction[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-                                                 (implicit baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G] = {
-    val ansatz = baseGuideOpt.baseAnsatz(generators, action)
-    val mut = imply(action) {
-      schreierSims.completeChainFromGeneratorsAndOrder(generators, order, ansatz)
-    }
-    shapeAndReturn(mut, baseGuideOpt)
+  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (generators: Iterable[G], order: SafeLong, baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+    (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+    val ansatz = baseGuideOpt.getOrElseFast(BaseGuide.empty).baseAnsatz[G, F](generators)
+    val mut = schreierSims.completeChainFromGeneratorsAndOrder[G, F](generators, order, ansatz)
+    shapeAndReturn[G, F](mut, baseGuideOpt)
   }
 
-  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group](generators: Iterable[G], randomElement: Random => G, order: SafeLong, action: FaithfulPermutationAction[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-                                                               (implicit baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G] = {
-    val ansatz = baseGuideOpt.baseAnsatz(generators, action)
-    val mut = imply(action) {
-      schreierSims.completeChainFromGeneratorsRandomElementsAndOrder(generators, randomElement, order, ansatz)
-    }
-    shapeAndReturn(mut, baseGuideOpt)
+  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (generators: Iterable[G], randomElement: Random => G, order: SafeLong, baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
+    (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+    val ansatz = baseGuideOpt.getOrElseFast(BaseGuide.empty).baseAnsatz[G, F](generators)
+    val mut = schreierSims.completeChainFromGeneratorsRandomElementsAndOrder[G, F](generators, randomElement, order, ansatz)
+    shapeAndReturn[G, F](mut, baseGuideOpt)
   }
 
 }

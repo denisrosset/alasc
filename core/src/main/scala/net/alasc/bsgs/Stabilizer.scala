@@ -10,16 +10,17 @@ import metal.syntax._
 
 import net.alasc.algebra.FaithfulPermutationAction
 
-case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], val set: Set[Int]) extends SubgroupDefinition[G] {
+case class SetwiseStabilizer[G:Group, F <: FaithfulPermutationAction[G] with Singleton]
+  (set: Set[Int])(implicit val action: F) extends SubgroupDefinition[G, F] {
 
   def inSubgroup(g: G): Boolean =
     set.forall { k => set.contains(action.actr(k, g)) }
 
   def baseGuideOpt = Opt(BaseGuideSet(set))
 
-  class Test(level: Int, pointSetsToTest: Array[metal.generic.BitSet]) extends SubgroupTest[G] {
+  class Test(level: Int, pointSetsToTest: Array[metal.generic.BitSet]) extends SubgroupTest[G, F] {
 
-    def test(b: Int, orbitImage: Int, currentG: G, node: Node[G]): Opt[Test] =
+    def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, F]): Opt[Test] =
       if (level < pointSetsToTest.length) {
         if (!set.contains(orbitImage))
           return Opt.empty[Test]
@@ -35,15 +36,15 @@ case class SetwiseStabilizer[G:Group](val action: FaithfulPermutationAction[G], 
         Opt(this)
   }
 
-  def firstLevelTest(guidedChain: Chain[G]): Test = {
+  def firstLevelTest(guidedChain: Chain[G, F]): Test = {
     // Finds for each base point the additional points that are stabilized (i.e. are
     // not moved by the next subgroup in the stabilizer chain.
     // The points considered are those contained in `set`.
     val pointSetsToTest: Array[metal.generic.BitSet] = {
       val remaining = metal.mutable.BitSet.fromIterable(set)
       val groups = metal.mutable.Buffer.empty[metal.generic.BitSet]
-      @tailrec def rec(current: Chain[G]): Array[metal.generic.BitSet] = current match {
-        case node: Node[G] if remaining.contains(node.beta) =>
+      @tailrec def rec(current: Chain[G, F]): Array[metal.generic.BitSet] = current match {
+        case node: Node[G, F] if remaining.contains(node.beta) =>
           val fixed = metal.mutable.BitSet(node.beta)
           remaining -= node.beta
           remaining.foreach { k =>
@@ -65,17 +66,17 @@ object PointwiseStabilizer {
 
   def baseGuide(set: Set[Int]) = BaseGuideSet(set)
 
-  def recurse[G:ClassTag:Eq:Group](guidedChain: Chain[G], set: Set[Int]): Chain[G] =
+  def recurse[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton](guidedChain: Chain[G, F], set: Set[Int]): Chain[G, F] =
     guidedChain match {
-      case node: Node[G] =>
-        @tailrec def firstNotInSet(current: Chain[G]): Chain[G] = current match {
-          case currentNode: Node[G] if set.contains(currentNode.beta) => firstNotInSet(currentNode.next)
+      case node: Node[G, F] =>
+        @tailrec def firstNotInSet(current: Chain[G, F]): Chain[G, F] = current match {
+          case currentNode: Node[G, F] if set.contains(currentNode.beta) => firstNotInSet(currentNode.next)
           case _ => current
         }
         val res = firstNotInSet(guidedChain)
         assert(set.forall(res.isFixed(_))) // TODO: remove
         res
-      case term: Term[G] => term
+      case term: Term[G, F] => term
     }
 
 }

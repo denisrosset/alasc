@@ -10,7 +10,6 @@ import spire.util.Opt
 import net.alasc.algebra.Permutation
 import net.alasc.bsgs.{BaseChange, BaseSwap, SchreierSims}
 import net.alasc.finite.{GrpBuilder, Rep}
-import net.alasc.perms.chain.PermGrpChainBuilder
 import net.alasc.perms.wrap.WrapGrpBuilder
 import net.alasc.bsgs.SchreierSims
 
@@ -37,8 +36,8 @@ class Algorithms(
     else
       BaseChange.swap
 
-  implicit def permGrpChainBuilder[G:ClassTag:Permutation]: PermGrpChainBuilder[G] =
-    new chain.PermGrpChainBuilder[G]
+  implicit def permGrpChainBuilder[G:ClassTag](implicit permutation: Permutation[G]): PermGrpChainBuilder[G, permutation.type] =
+    new PermGrpChainBuilder[G, permutation.type]()(implicitly, implicitly, implicitly, permutation, implicitly)
 
   final class MyWrapGrpBuilder[G:Eq:Group:FaithfulPermRepBuilder] extends WrapGrpBuilder[G] {
 

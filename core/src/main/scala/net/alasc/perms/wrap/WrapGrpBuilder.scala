@@ -57,7 +57,7 @@ abstract class WrapGrpBuilder[G](implicit val equ: Eq[G],
     val grp1 = rep.wrap(grp0)
     val subgrp1 = rep.wrap(subgrp0)
     val cosets1 = grp1.leftCosetsBy(subgrp1)
-    new LeftCosets[G] {
+    new LeftCosetsImpl[G] {
       def iterator: Iterator[LeftCoset[G]] = cosets1.iterator.map { coset1 => new LeftCoset[G](coset1.g.underlying, subgrp) }
       val subgrp: Grp[G] = subgrp0
       val grp: Grp[G] = grp0
@@ -65,12 +65,6 @@ abstract class WrapGrpBuilder[G](implicit val equ: Eq[G],
 
   }
 
-  def rightCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): RightCosets[G] =
-    new RightCosets[G] {
-      val grp = grp0
-      val subgrp = subgrp0
-      def iterator = leftCosetsBy(grp0, subgrp0).iterator.map(_.inverse)
-    }
-
+  def rightCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): RightCosets[G] = leftCosetsBy(grp0, subgrp0).inverse
 
 }

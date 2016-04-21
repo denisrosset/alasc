@@ -4,10 +4,11 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
+import spire.util.Opt
 
 import net.alasc.algebra.FaithfulPermutationAction
 
-final class RichChain[G](val chain: Chain[G]) extends AnyVal {
+final class RichChain[G, F <: FaithfulPermutationAction[G] with Singleton](val chain: Chain[G, F]) extends AnyVal {
 
   /** Returns a newly created mutable copy of `chain`, cloning all mutable nodes 
     * in the given chain.
@@ -16,25 +17,40 @@ final class RichChain[G](val chain: Chain[G]) extends AnyVal {
     * 
     * The provided `action` is used only if the given `chain` is a terminal.
     */
-  def mutableChain(implicit
-    classTag: ClassTag[G],
-    equ: Eq[G],
-    action: FaithfulPermutationAction[G],
-    group: Group[G]
-  ): MutableChain[G] = {
+  def mutableChain(implicit action: F, classTag: ClassTag[G], equ: Eq[G], group: Group[G]): MutableChain[G, F] = {
     chain.mapOrElse(node => require(node.action == FaithfulPermutationAction[G]), ())
-    val mutableChain = MutableChain.empty
-    @tailrec def rec(after: MutableStartOrNode[G], toInsert: Chain[G]): Unit = toInsert match {
+    val mutableChain = MutableChain.empty[G, F]
+    @tailrec def rec(after: MutableStartOrNode[G, F], toInsert: Chain[G, F]): Unit = toInsert match {
       case IsMutableNode(mutableNode) =>
-        val nodeCopy = NodeBuilder[G].standaloneClone(mutableNode)
+        val nodeCopy = NodeBuilder[G].standaloneClone[F](mutableNode)
         mutableChain.insertInChain(after, after.next, nodeCopy)
         rec(nodeCopy, mutableNode.next)
-      case node: Node[G] => // immutable
+      case node: Node[G, F] => // immutable
         after.next = node
-      case _: Term[G] => // at the end
+      case _: Term[G, F] => // at the end
     }
     rec(mutableChain.start, chain)
     mutableChain
+  }
+
+  /** Finds the conjugate element `g` for the domain element `b` such that `b <|+| g.inverse` is a base point of the current chain,
+    * meaning that the current chain, conjugated by `g` will have `b` as a base point. Returns nothing if no such `g` exists.
+    */
+  def findConjugateElement(chain: Chain[G, F], b: Int): Opt[G] = {
+    @tailrec def rec(current: Chain[G, F]): Opt[G] = current match {
+      case node: Node[G, F] if node.inOrbit(b) => Opt(node.u(b))
+      case node: Node[G, F] => rec(node.next)
+      case _: Term[G, F] => Opt.empty[G]
+    }
+    rec(chain)
+  }
+
+  def withFirstBasePoint(node: Node[G, F], b: Int)
+                        (implicit baseSwap: BaseSwap, classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Chain[G, F] = {
+    import node.action
+    val mutableChain = node.mutableChain
+    mutableChain.changeBasePointAfter(mutableChain.start, b)
+    mutableChain.toChain()
   }
 
 }

@@ -37,7 +37,7 @@ import net.alasc.syntax.check._
   * 
   * `MutableChain` is not thread-safe.
   */
-class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that all algebra in the chain are x eq y, not only x == y
+class MutableChain[G, F <: FaithfulPermutationAction[G] with Singleton](val start: Start[G, F]) extends AnyVal {
   override def toString = start.toString
 
   /** Insert `node` in the chain between `prev` and `next`.
@@ -49,7 +49,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param next  Next element, can be an (im)mutable node or a terminal.
     * @param node  Standalone mutable node to insert, with the same (eq) action as the mutable chain.
     */
-  def insertInChain(prev: MutableStartOrNode[P], next: Chain[P], node: MutableNode[P]): Unit = {
+  def insertInChain(prev: MutableStartOrNode[G, F], next: Chain[G, F], node: MutableNode[G, F]): Unit = {
     require(node.action eq start.action)
     require(node.isStandalone)
     // prev and next must be immediate neighbors
@@ -72,7 +72,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param next    Next (im)mutable node or terminal.
     * @param newNode Standalone mutable node to replace `node` by.
     */ 
-  def replaceInChain(prev: MutableStartOrNode[P], node: Node[P], next: Chain[P], newNode: MutableNode[P]): Unit = {
+  def replaceInChain(prev: MutableStartOrNode[G, F], node: Node[G, F], next: Chain[G, F], newNode: MutableNode[G, F]): Unit = {
     require(newNode.action eq start.action)
     require(newNode.isStandalone)
     // require prev -> node -> next
@@ -100,7 +100,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param node Im(mutable) node to remove, with orbit size = 1, and empty `ownGenerators`.
     * @param next Next (im)mutable node or terminal.
     */
-  def remove(prev: MutableStartOrNode[P], node: Node[P], next: Chain[P]): Unit = {
+  def remove(prev: MutableStartOrNode[G, F], node: Node[G, F], next: Chain[G, F]): Unit = {
     require(node.orbitSize == 1)
     // remove node from chain
     prev.next = next
@@ -120,7 +120,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param newStart Start element whose next elements provide the new chain.
     * 
     */
-  def replaceChain(prev: MutableStartOrNode[P], newStart: Start[P]): Unit = {
+  def replaceChain(prev: MutableStartOrNode[G, F], newStart: Start[G, F]): Unit = {
     require(newStart.action eq start.action)
     // invalidate the previous chain
     IsMutableNode.unapply(prev.next).foreach { n => n.prev = null }
@@ -139,8 +139,8 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the two newly created nodes, and the orbit size goal (new1, new2, sizeGoal2).
     */
-  def prepareSwap(prev: MutableStartOrNode[P], node1: MutableNode[P], node2: MutableNode[P], next: Chain[P])
-                 (implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): (MutableNode[P], MutableNode[P], SafeLong) = {
+  def prepareSwap(prev: MutableStartOrNode[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F], next: Chain[G, F])
+                 (implicit group: Group[G], nodeBuilder: NodeBuilder[G], classTag: ClassTag[G]): (MutableNode[G, F], MutableNode[G, F], SafeLong) = {
     implicit def action = start.action
     require(prev.next eq node1)
     require(node1.prev eq prev)
@@ -167,13 +167,13 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
     var chainIt = newNode2
-    @tailrec def rec(current: Chain[P]): Unit = current match {
-      case node: Node[P] =>
+    @tailrec def rec(current: Chain[G, F]): Unit = current match {
+      case node: Node[G, F] =>
         cforRange(0 until node.nOwnGenerators) { i =>
           newNode2.updateTransversal(node.ownGenerator(i), node.ownGeneratorInv(i))
         }
         rec(node.next)
-      case _: Term[P] =>
+      case _: Term[G, F] =>
     }
     rec(newNode2)
 
@@ -200,12 +200,12 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the mutable node after `elem`.
     */  
-  def mutableNodeAfter(elem: MutableStartOrNode[P], beta: => Int)(implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): MutableNode[P] = elem.next match {
+  def mutableNodeAfter(elem: MutableStartOrNode[G, F], beta: => Int)(implicit group: Group[G], nodeBuilder: NodeBuilder[G], classTag: ClassTag[G]): MutableNode[G, F] = elem.next match {
     case IsMutableNode(mutableNode) => mutableNode
-    case immutableNode: Node[P] => immutableToMutable(elem, immutableNode)
-    case term: Term[P] =>
+    case immutableNode: Node[G, F] => immutableToMutable(elem, immutableNode)
+    case term: Term[G, F] =>
       implicit def action = start.action
-      val mutableNode = nodeBuilder.standalone(beta)
+      val mutableNode = nodeBuilder.standalone[F](beta)
       insertInChain(elem, term, mutableNode)
       mutableNode
   }
@@ -216,30 +216,30 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param immutableNode Immutable node to replace by a mutable copy.
     * @return the mutable copy of `immutableNode`
     */
-  def immutableToMutable(prev: MutableStartOrNode[P], immutableNode: Node[P])(
-    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableNode[P] = {
+  def immutableToMutable(prev: MutableStartOrNode[G, F], immutableNode: Node[G, F])(
+    implicit builder: NodeBuilder[G], group: Group[G], classTag: ClassTag[G]): MutableNode[G, F] = {
     require(immutableNode.isImmutable)
-    val mutableNode = builder.standaloneClone(immutableNode)
+    val mutableNode = builder.standaloneClone[F](immutableNode)
     replaceInChain(prev, immutableNode, immutableNode.next, mutableNode)
     mutableNode
   }
 
   /** Finds the last mutable node in the chain starting at `current`. */
-  @tailrec def findLastMutable(current: MutableStartOrNode[P] = start): MutableStartOrNode[P] = current.next match {
+  @tailrec def findLastMutable(current: MutableStartOrNode[G, F] = start): MutableStartOrNode[G, F] = current.next match {
     case IsMutableNode(mutableNext) => findLastMutable(mutableNext)
     case _ => current
   }
 
   /** Finds the last node/start in the chain starting at `current`. */
-  @tailrec def findLast(current: StartOrNode[P] = start): StartOrNode[P] = current.next match {
-    case nextNode: Node[P] => findLast(nextNode)
-    case _: Term[P] => current
+  @tailrec def findLast(current: StartOrNode[G, F] = start): StartOrNode[G, F] = current.next match {
+    case nextNode: Node[G, F] => findLast(nextNode)
+    case _: Term[G, F] => current
   }
 
-  def makeFullyMutable(after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): Unit =
+  def makeFullyMutable(after: MutableStartOrNode[G, F] = start)(
+    implicit builder: NodeBuilder[G], group: Group[G], classTag: ClassTag[G]): Unit =
     findLast(after) match {
-      case node: Node[P] => mutable(node)
+      case node: Node[G, F] => mutable(node)
       case _ =>
     }
 
@@ -248,15 +248,15 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * @param elem  Element with tail to be made immutable. Default = `start`, which will
     *              make the whole chain immutable.
     */
-  def makeImmutableAfter(elem: MutableStartOrNode[P] = start): Unit = {
-    @tailrec def rec(mutable: MutableNode[P]): Unit = {
+  def makeImmutableAfter(elem: MutableStartOrNode[G, F] = start): Unit = {
+    @tailrec def rec(mutable: MutableNode[G, F]): Unit = {
       if (mutable ne elem) {
         mutable.prev match {
           case IsMutableNode(mutablePrev) =>
             mutable.makeImmutable
             rec(mutablePrev)
-          case _: Node[P] => sys.error("An immutable node cannot be before a mutable node.")
-          case start: Start[P] =>
+          case _: Node[G, F] => sys.error("An immutable node cannot be before a mutable node.")
+          case start: Start[G, F] =>
             mutable.makeImmutable
             assert(start eq elem) // finished
         }
@@ -264,7 +264,7 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     }
     findLastMutable(elem) match {
       case IsMutableNode(mn) => rec(mn)
-      case _: Start[P] => // nothing to do, chain is empty
+      case _: Start[G, F] => // nothing to do, chain is empty
     }
   }
 
@@ -275,9 +275,9 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the mutable node corresponding `node`
     */
-  def mutable(node: Node[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableNode[P] = {
-    @tailrec def rec(prev: MutableStartOrNode[P]): MutableNode[P] = {
+  def mutable(node: Node[G, F], after: MutableStartOrNode[G, F] = start)(
+    implicit builder: NodeBuilder[G], group: Group[G], classTag: ClassTag[G]): MutableNode[G, F] = {
+    @tailrec def rec(prev: MutableStartOrNode[G, F]): MutableNode[G, F] = {
       val nextIsNode = prev.next eq node
       prev.next match {
         case IsMutableNode(mutableNext) =>
@@ -285,38 +285,39 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
             mutableNext
           else
             rec(mutableNext)
-        case next: Node[P] =>
+        case next: Node[G, F] =>
           val mutableNext = immutableToMutable(prev, next)
           if (nextIsNode)
             mutableNext
           else
             rec(mutableNext)
-         case _: Term[P] => sys.error("Node cannot be found in the chain.")
+         case _: Term[G, F] => sys.error("Node cannot be found in the chain.")
       }
     }
     rec(after)
   }
 
-  def mutableStartOrNode(startOrNode: StartOrNode[P], after: MutableStartOrNode[P] = start)(
-    implicit builder: NodeBuilder[P], group: Group[P], classTag: ClassTag[P]): MutableStartOrNode[P] =
+  def mutableStartOrNode(startOrNode: StartOrNode[G, F], after: MutableStartOrNode[G, F] = start)(
+    implicit builder: NodeBuilder[G], group: Group[G], classTag: ClassTag[G]): MutableStartOrNode[G, F] =
     startOrNode match {
-      case node: Node[P] => mutable(node, after)
-      case start: Start[P] => start
+      case node: Node[G, F] => mutable(node, after)
+      case start: Start[G, F] => start
     }
 
   /** Removes the first node from the chain and returns it. If the chain is empty,
     * an empty node with given base point is created. */
-  def detachFirstNode(beta: => Int)(implicit builder: NodeBuilder[P], group: Group[P], action: FaithfulPermutationAction[P], classTag: ClassTag[P]): Node[P] = start.next match {
+  def detachFirstNode(beta: => Int)
+                     (implicit builder: NodeBuilder[G], group: Group[G], action: F, classTag: ClassTag[G]): Node[G, F] = start.next match {
     case IsMutableNode(mn) =>
       start.next = mn.next
       IsMutableNode.unapply(mn.next).foreach { n => n.prev = start }
       mn.prev = null
       mn.next = null
       mn
-    case node: Node[P] =>
+    case node: Node[G, F] =>
       start.next = node.next
       node
-    case term: Term[P] =>
+    case term: Term[G, F] =>
       builder.standalone(beta)
   }
 
@@ -324,60 +325,53 @@ class MutableChain[P](val start: Start[P]) extends AnyVal { // TODO: ensure that
     * 
     * @return the immutable chain.
     */
-  def toChain(): Chain[P] = {
+  def toChain(): Chain[G, F] = {
     makeImmutableAfter(start)
     start.next
   }
 
-  def conjugate(g: P, gInv: P)(implicit group: Group[P], nodeBuilder: NodeBuilder[P], classTag: ClassTag[P]): Unit = {
-    @tailrec def rec(prev: MutableStartOrNode[P]): Unit = prev.next match {
+  def conjugate(g: G, gInv: G)(implicit group: Group[G], nodeBuilder: NodeBuilder[G], classTag: ClassTag[G]): Unit = {
+    @tailrec def rec(prev: MutableStartOrNode[G, F]): Unit = prev.next match {
       case IsMutableNode(mn) =>
         mn.conjugate(g, gInv)
         rec(mn)
-      case node: Node[P] =>
+      case node: Node[G, F] =>
         val mutableNode = mutable(node, prev)
         mutableNode.conjugate(g, gInv)
         rec(mutableNode)
-      case _: Term[P] => // finished
+      case _: Term[G, F] => // finished
     }
     rec(start)
   }
 }
 
-final class MutableChainCheck[P:ClassTag:Eq:Group] extends Check[MutableChain[P]] {
+final class MutableChainCheck[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton] extends Check[MutableChain[G, F]] {
   import Check._
 
-  @tailrec def checkAllAction(checked: Checked, chain: Chain[P], action: FaithfulPermutationAction[P]): Checked = chain match {
-    case node: Node[P] =>
-      checkAllAction(checked ++ Check.eq(node.action, action, "Same action for all nodes"),
-        node.next, action)
-    case _: Term[P] => checked
-  }
-
-  @tailrec def checkMutablePrev(checked: Checked, elem: MutableStartOrNode[P]): Checked = elem.next match {
+  @tailrec def checkMutablePrev(checked: Checked, elem: MutableStartOrNode[G, F]): Checked = elem.next match {
     case IsMutableNode(mutableNode) =>
       checkMutablePrev(checked ++ Check.eq(mutableNode.prev, elem, "Chain consistency"),
         mutableNode)
     case _ => checked
   }
 
-  def check(mutableChain: MutableChain[P]): Checked =
-    (checkAllAction(Check.success, mutableChain.start.next, mutableChain.start.action) ++
-      checkMutablePrev(Check.success, mutableChain.start) ++
-      mutableChain.start.next.check)
+  def check(mutableChain: MutableChain[G, F]): Checked =
+    (checkMutablePrev(Check.success, mutableChain.start) ++
+     mutableChain.start.next.check)
 
 }
 
 object MutableChain {
 
   /** Returns an empty mutable chain. */
-  def empty[G:FaithfulPermutationAction:Group]: MutableChain[G] =
-    new MutableChain(new Start(next = Term[G]))
+  def empty[G:Group, F <: FaithfulPermutationAction[G] with Singleton](implicit action: F): MutableChain[G, F] =
+    new MutableChain(new Start(next = Term[G, F]))
 
   /** Returns a newly created empty mutable chain with the given base and action. */
-  def emptyWithBase[G:ClassTag:Eq:FaithfulPermutationAction:Group](base: Seq[Int]): MutableChain[G] = {
-    val mutableChain = MutableChain.empty[G]
-    @tailrec def rec(prev: MutableStartOrNode[G], iterator: Iterator[Int]): Unit =
+  def emptyWithBase[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]
+    (base: Seq[Int])(implicit action: F): MutableChain[G, F] = {
+    val mutableChain = MutableChain.empty[G, F]
+    @tailrec def rec(prev: MutableStartOrNode[G, F], iterator: Iterator[Int]): Unit =
       if (iterator.hasNext) {
         val beta = iterator.next
         val newNode = NodeBuilder[G].standalone(beta)
@@ -388,13 +382,14 @@ object MutableChain {
     mutableChain
   }
 
-  def incompleteWithGenerators[G:ClassTag:Eq:FaithfulPermutationAction:Group:NodeBuilder](
-    generators: Iterable[G], base: Seq[Int] = Seq.empty): MutableChain[G] = {
-    val mutableChain = emptyWithBase(base)
+  def incompleteWithGenerators[G:ClassTag:Eq:Group:NodeBuilder, F <: FaithfulPermutationAction[G] with Singleton]
+    (generators: Iterable[G], base: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
+    val mutableChain = emptyWithBase[G, F](base)
     mutableChain.insertGenerators(generators)
     mutableChain
   }
 
-  implicit def check[G:ClassTag:Eq:Group]: Check[MutableChain[G]] = new MutableChainCheck[G]
+  implicit def check[G:ClassTag:Eq:Group, F <: FaithfulPermutationAction[G] with Singleton]: Check[MutableChain[G, F]] =
+    new MutableChainCheck[G, F]
 
 }

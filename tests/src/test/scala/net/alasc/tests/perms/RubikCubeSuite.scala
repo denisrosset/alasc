@@ -24,6 +24,6 @@ abstract class RubikCubeSuite(implicit builder: PermGrpBuilder[Perm]) extends Al
 
 }
 
-class RubikCubeSuiteDeterministic extends RubikCubeSuite()(BSGSSuite.deterministic)
+class RubikCubeSuiteDeterministic extends RubikCubeSuite()(PermSuite.deterministic)
 
-class RubikCubeSuiteRandomized extends RubikCubeSuite()(BSGSSuite.randomized)
+class RubikCubeSuiteRandomized extends RubikCubeSuite()(PermSuite.randomized)

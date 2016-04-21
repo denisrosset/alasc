@@ -1,9 +1,6 @@
 package net.alasc.wreath
 
-import scala.reflect.classTag
-
 import spire.algebra._
-import spire.algebra.lattice._
 import spire.syntax.action._
 import spire.syntax.cfor._
 

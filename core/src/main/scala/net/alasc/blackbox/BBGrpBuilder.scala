@@ -58,6 +58,7 @@ class BBGrpBuilder[G](implicit
       val grp = grp0
       val subgrp = subgrp0
       def iterator = transversal.iterator.map( g => new LeftCoset(g, subgrp0) )
+      def inverse = rightCosetsBy(grp, subgrp)
     }
   }
 
@@ -77,6 +78,7 @@ class BBGrpBuilder[G](implicit
       val grp = grp0
       val subgrp = subgrp0
       def iterator = transversal.iterator.map( g => new RightCoset(g, subgrp0) )
+      def inverse = leftCosetsBy(grp, subgrp)
     }
   }
 

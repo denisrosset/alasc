@@ -1,5 +1,4 @@
-package net.alasc.perms
-package chain
+package net.alasc.bsgs
 
 import scala.reflect.ClassTag
 import scala.util.Random
@@ -8,22 +7,18 @@ import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.Permutation
-import net.alasc.bsgs.{Chain, MutableChain, Node, Term}
+import net.alasc.algebra.FaithfulPermutationAction
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`)
   * conjugated by g (with gInv == g.inverse).
   * The represented group is `H = gInv G g`.
   */
+final class GrpChainConjugated[G, F <: FaithfulPermutationAction[G] with Singleton]
+  (val originalChain: Chain[G, F], val g: G, val gInv: G, originalGeneratorsOpt: Opt[Iterable[G]])
+  (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
 
-class PermGrpChainConjugated[G](val originalChain: Chain[G], val g: G, val gInv: G,
-                                originalGeneratorsOpt: Opt[Iterable[G]])
-                               (implicit val classTag: ClassTag[G],
-                                val group: Group[G],
-                                val equ: Eq[G],
-                                val permutation: Permutation[G])  extends PermGrpChain[G] {
-
-  def this(originalChain: Chain[G], g: G, gInv: G)(implicit classTag: ClassTag[G], permutation: Permutation[G]) =
+  def this(originalChain: Chain[G, F], g: G, gInv: G)
+          (implicit classTag: ClassTag[G], group: Group[G], equ: Eq[G], action: F) =
     this(originalChain, g, gInv, Opt.empty[Iterable[G]])
 
   def originalGenerators = originalGeneratorsOpt match {
@@ -33,20 +28,20 @@ class PermGrpChainConjugated[G](val originalChain: Chain[G], val g: G, val gInv:
 
   def generators = originalGenerators.map(h => gInv |+| h |+| g)
 
-  // TODO: make protected
-  var chainOpt: Opt[Chain[G]] = Opt.empty[Chain[G]]
+  private[this] var _chainOpt: Opt[Chain[G, F]] = Opt.empty[Chain[G, F]]
 
-  def chain = chainOpt match {
+  def chainOpt = _chainOpt
+  def chain = _chainOpt match {
     case Opt(computed) => computed
     case _ =>
       val computed = originalChain match {
-        case node: Node[G] =>
-          val mut: MutableChain[G] = imply(node.action) { node.mutableChain }
+        case node: Node[G, F] =>
+          val mut: MutableChain[G, F] = node.mutableChain
           mut.conjugate(g, gInv)
           mut.toChain()
-        case term: Term[G] => term
+        case term: Term[G, F] => term
       }
-      chainOpt = Opt(computed)
+      _chainOpt = Opt(computed)
       computed
   }
 

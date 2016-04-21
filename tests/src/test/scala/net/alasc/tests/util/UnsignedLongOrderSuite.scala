@@ -1,6 +1,5 @@
 package net.alasc.tests.util
 
-import spire.algebra.Eq
 import spire.laws.OrderLaws
 import spire.math.ULong
 

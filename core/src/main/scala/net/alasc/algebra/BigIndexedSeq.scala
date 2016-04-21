@@ -2,7 +2,6 @@ package net.alasc
 package algebra
 
 import spire.math.SafeLong
-import spire.syntax.order._
 import spire.util.Opt
 
 /** An indexed sequence that allows for greater lengths than Int.MaxValue; only a few

@@ -108,7 +108,31 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
 object PermutationAction {
 
-  def apply[P](implicit P: PermutationAction[P]): PermutationAction[P] = P
+  def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
+
+  /** Return the smallest element of the domain moved by the given generators, or [[NNNone]]. */
+  def smallestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+    var mn = Int.MaxValue
+    var moved = false
+    generators.foreach { g =>
+      action.smallestMovedPoint(g) match {
+        case NNOption(i) =>
+          mn = spire.math.min(mn, i)
+          moved = true
+        case _ =>
+      }
+    }
+    if (moved) NNOption(mn) else NNNone
+  }
+
+  /** Return the largest element of the domain moved by the given generators, or [[NNNone]]. */
+  def largestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+    var mx = -1
+    generators.foreach { g =>
+      mx = spire.math.max(action.largestMovedPoint(g).getOrElseFast(-1), mx)
+    }
+    if (mx >= 0) NNOption(mx) else NNNone
+  }
 
 }
 

@@ -11,17 +11,20 @@ import net.alasc.algebra._
 import net.alasc.bsgs.{BuildChain, Chain, Node, Term}
 import net.alasc.domains._
 import net.alasc.finite.Grp
-import net.alasc.laws.{Partitions, Permutations}
+import net.alasc.laws.{BSGSs, Partitions, Permutations}
 import net.alasc.named._
-import net.alasc.perms._
-import net.alasc.perms.chain.PermGrpChainBuilder
+import net.alasc.perms.{PermGrpChainBuilder, _}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
+import net.alasc.tests.perms.PermSuite
 
-abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extends AlascSuite {
+abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {
 
-  import BSGSSuite._
+  import BSGSs._
 
   import builder.{baseChange, baseSwap, schreierSims}
+
+  type F = Perm.permutationBuilder.type
+  implicit def F: F = Perm.permutationBuilder
 
   val groups = Seq(
     RubikCube[Perm], Dihedral[Perm](8),
@@ -30,18 +33,18 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
     Mathieu[Perm](12), Mathieu[Perm](20)
   )
 
-  val genChain: Gen[Chain[Perm]] =
+  val genChain: Gen[Chain[Perm, F]] =
     Gen.oneOf(groups).map(grp => builder.fromGrp(grp).chain)
 
-  implicit val noShrinkChain = noShrink[Chain[Perm]]
+  implicit val noShrinkChain = noShrink[Chain[Perm, F]]
 
   test("Base change guided by partition has base points corresponding to blocks of increasing size") {
     forAll(genChain) { chain =>
-      val n = chainSupportMax(chain) + 1
+      val n = PermutationAction.largestMovedPoint(chain.strongGeneratingSet).getOrElseFast(0) + 1
       val domain = Domain(n)
       forAll(Partitions.forDomain(domain)) { partition =>
-        val definition = FixingPartitionDef[Perm](implicitly, partition)
-        val newChain = BuildChain.fromChain(chain, PermutationBuilder[Perm], definition.baseGuideOpt)
+        val definition = FixingPartitionDef[Perm, F](partition)
+        val newChain = BuildChain.fromChain[Perm, F, F](chain, definition.baseGuideOpt)
         val baseBlockSize = newChain.base.map(partition.blockFor(_).size)
         baseBlockSize should beWeaklyIncreasing[Int]
       }
@@ -112,76 +115,6 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
 
 }
 
-object BSGSSuite {
+final class BSGSSuiteDeterministic extends BSGSSuite()(PermSuite.deterministic)
 
-  import net.alasc.syntax.all._
-  import net.alasc.std.any._
-  import spire.syntax.order._
-  import spire.syntax.partialAction._
-
-  def generatorsSupportMax[G:PermutationAction](generators: Iterable[G]): Int =
-    generators.foldLeft(-1) {
-      case (mx, g) => spire.math.max(mx, g.largestMovedPoint.getOrElse(-1))
-    }
-
-  def groupSupportMax[G:Permutation](grp: Grp[G]): Int =
-    grp.largestMovedPoint.getOrElseFast(-1)
-
-  def chainSupportMax[G](chain: Chain[G]): Int = chain match {
-    case _: Term[G] => -1
-    case node: Node[G] =>
-      generatorsSupportMax(node.strongGeneratingSet)(node.action)
-  }
-
-  def genExistingBasePoint[G](chain: Chain[G]): Gen[Opt[Int]] = {
-    val base = chain.base
-    if (base.isEmpty) Gen.const(Opt.empty[Int]) else Gen.oneOf(base).map(k => Opt(k))
-  }
-
-  def genSwapIndex[G](chain: Chain[G]): Gen[Opt[Int]] =
-    if (chain.length < 2)
-      Gen.const(Opt.empty[Int])
-    else
-      Gen.choose(0, chain.length - 2).map(i => Opt(i))
-
-  def genSwappedSeq[A](seq: Seq[A]): Gen[Seq[A]] =
-    Permutations.forSize[Perm](seq.size).map( perm => (seq <|+|? perm).get )
-
-  def genNewBase[G](chain: Chain[G]): Gen[Seq[Int]] = chain match {
-    case _: Term[G] => Gen.const(Seq.empty[Int])
-    case node: Node[G] =>
-      val n = generatorsSupportMax(chain.strongGeneratingSet)(node.action) + 1
-      genSwappedSeq(0 until n).flatMap( full => Gen.choose(0, n - 1).map( m => full.take(m) ) )
-  }
-
-  def genRandomElement[G:Group](chain: Chain[G]): Gen[G] =
-    Gen.parameterized( p => chain.randomElement(p.rng) )
-
-  def beWeaklyIncreasing[A:Order] = new Matcher[Seq[A]] {
-
-    def apply(left: Seq[A]) = {
-      val pairs = left.iterator zip left.iterator.drop(1)
-      MatchResult(
-        pairs.forall { case (i, j) => i <= j },
-        s"""Sequence $left was not (weakly) increasing""",
-        s"""Sequence $left was (weakly) increasing"""
-      )
-    }
-
-  }
-
-  val deterministic = {
-    import net.alasc.perms.deterministic._
-    implicitly[PermGrpChainBuilder[Perm]]
-  }
-
-  val randomized = {
-    import net.alasc.perms.default._
-    implicitly[PermGrpChainBuilder[Perm]]
-  }
-
-}
-
-final class BSGSSuiteDeterministic extends BSGSSuite()(BSGSSuite.deterministic)
-
-final class BSGSSuiteRandomized extends BSGSSuite()(BSGSSuite.randomized)
+final class BSGSSuiteRandomized extends BSGSSuite()(PermSuite.randomized)

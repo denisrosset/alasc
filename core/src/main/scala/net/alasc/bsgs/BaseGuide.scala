@@ -5,26 +5,27 @@ import scala.collection.mutable
 
 import net.alasc.algebra.FaithfulPermutationAction
 
+/** Guide used during the base change. */
 trait BaseGuide {
 
   def iterator: BaseGuideIterator
 
-  def isSatisfiedBy[G](chain: Chain[G]): Boolean = {
+  def isSatisfiedBy(chain: Chain[_, _]): Boolean = {
     val it = iterator
-    @tailrec def check(current: Chain[G]): Boolean = current match {
-      case node: Node[G] =>
+    @tailrec def check(current: Chain[_, _]): Boolean = current match {
+      case node: Node[_, _] =>
         if (!it.checksNext(node.beta, node.isFixed(_)))
           false
         else
           check(node.next)
-      case _: Term[G] => true
+      case _: Term[_, _] => true
     }
     check(chain)
   }
 
   /** Returns an incomplete base for the given generators,
     * used when base has to be computed from scratch. */
-  def baseAnsatz[G](generators: Iterable[G], action: FaithfulPermutationAction[G]): Seq[Int] = {
+  def baseAnsatz[G, F <: FaithfulPermutationAction[G] with Singleton](generators: Iterable[G])(implicit action: F): Seq[Int] = {
     val base = mutable.ArrayBuffer.empty[Int]
     val it = iterator
     @tailrec def rec(remaining: Iterable[G]): Unit =
@@ -48,7 +49,7 @@ trait BaseGuide {
 
 object BaseGuide {
 
-  def empty = new BaseGuide {
+  val empty = new BaseGuide {
 
     def iterator = new BaseGuideIterator {
 

@@ -2,31 +2,40 @@ package net.alasc.bsgs
 
 import spire.util.Opt
 
+import net.alasc.algebra.FaithfulPermutationAction
+
 object IsStart {
-  def unapply[P](elem: Elem[P]): Opt[Start[P]] = elem match {
-    case start: Start[P] => Opt(start)
-    case _ => Opt.empty[Start[P]]
+
+  def unapply[G, F <: FaithfulPermutationAction[G] with Singleton](elem: Elem[G, F]): Opt[Start[G, F]] = elem match {
+    case start: Start[G, F] => Opt(start)
+    case _ => Opt.empty[Start[G, F]]
   }
 }
 
 object IsChain {
-  def unapply[P](elem: Elem[P]): Opt[Chain[P]] = elem match {
-    case chain: Chain[P] => Opt(chain)
-    case _ => Opt.empty[Chain[P]]
+
+  def unapply[G, F <: FaithfulPermutationAction[G] with Singleton](elem: Elem[G, F]): Opt[Chain[G, F]] = elem match {
+    case chain: Chain[G, F] => Opt(chain)
+    case _ => Opt.empty[Chain[G, F]]
   }
+
 }
 
 object IsMutableStartOrNode {
-  def unapply[P](elem: Elem[P]): Opt[MutableStartOrNode[P]] = elem match {
-    case start: Start[P] => Opt(start)
-    case mn: MutableNode[P] if mn.isMutable => Opt(mn)
-    case _ => Opt.empty[MutableStartOrNode[P]]
+
+  def unapply[G, F <: FaithfulPermutationAction[G] with Singleton](elem: Elem[G, F]): Opt[MutableStartOrNode[G, F]] = elem match {
+    case start: Start[G, F] => Opt(start)
+    case mn: MutableNode[G, F] if mn.isMutable => Opt(mn)
+    case _ => Opt.empty[MutableStartOrNode[G, F]]
   }
+
 }
 
 object IsMutableNode {
-  def unapply[P](elem: Elem[P]): Opt[MutableNode[P]] = elem match {
-    case mn: MutableNode[P] if mn.isMutable => Opt(mn)
-    case _ => Opt.empty[MutableNode[P]]
+
+  def unapply[G, F <: FaithfulPermutationAction[G] with Singleton](elem: Elem[G, F]): Opt[MutableNode[G, F]] = elem match {
+    case mn: MutableNode[G, F] if mn.isMutable => Opt(mn)
+    case _ => Opt.empty[MutableNode[G, F]]
   }
+
 }
