@@ -76,10 +76,10 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton](implicit
     GrpChain.someStabilizerTransversal[G, F](convertGrp(grp))
 
   def stabilizer(grp: Grp[G], b: Int): GG =
-    GrpChain.stabilizer[G, F](convertGrp(grp, BaseGuideSeq(Seq(b))), b)
+    GrpChain.stabilizer[G, F](convertGrp(grp, BaseGuideSingle(b)), b)
 
   def stabilizerTransversal(grp: Grp[G], b: Int): (GG, Transversal[G, F]) =
-    GrpChain.stabilizerTransversal[G, F](convertGrp(grp, BaseGuideSeq(Seq(b))), b)
+    GrpChain.stabilizerTransversal[G, F](convertGrp(grp, BaseGuideSingle(b)), b)
 
   def pointwiseStabilizer(grp: Grp[G], set: Set[Int]): GG =
     GrpChain.pointwiseStabilizer[G, F](convertGrp(grp, BaseGuideSet(set)), set)

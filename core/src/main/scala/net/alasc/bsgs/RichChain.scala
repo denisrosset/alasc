@@ -36,7 +36,7 @@ final class RichChain[G, F <: FaithfulPermutationAction[G] with Singleton](val c
   /** Finds the conjugate element `g` for the domain element `b` such that `b <|+| g.inverse` is a base point of the current chain,
     * meaning that the current chain, conjugated by `g` will have `b` as a base point. Returns nothing if no such `g` exists.
     */
-  def findConjugateElement(chain: Chain[G, F], b: Int): Opt[G] = {
+  def findConjugateElement(b: Int): Opt[G] = {
     @tailrec def rec(current: Chain[G, F]): Opt[G] = current match {
       case node: Node[G, F] if node.inOrbit(b) => Opt(node.u(b))
       case node: Node[G, F] => rec(node.next)
@@ -45,10 +45,11 @@ final class RichChain[G, F <: FaithfulPermutationAction[G] with Singleton](val c
     rec(chain)
   }
 
-  def withFirstBasePoint(node: Node[G, F], b: Int)
-                        (implicit baseSwap: BaseSwap, classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Chain[G, F] = {
-    import node.action
-    val mutableChain = node.mutableChain
+  /** Returns a chain with the (possibly new) base point `b` in front. */
+  def withFirstBasePoint(b: Int)
+                        (implicit action: F, baseSwap: BaseSwap, classTag: ClassTag[G],
+                         equ: Eq[G], group: Group[G]): Chain[G, F] = {
+    val mutableChain = chain.mutableChain
     mutableChain.changeBasePointAfter(mutableChain.start, b)
     mutableChain.toChain()
   }

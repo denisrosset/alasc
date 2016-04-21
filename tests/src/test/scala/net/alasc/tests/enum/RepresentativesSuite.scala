@@ -20,7 +20,7 @@ import net.alasc.tests.perms.PermSuite
 
 abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {
 
-  import builder.{baseChange, schreierSims}
+  import builder.{baseChange, baseSwap, schreierSims}
 
   def genSizedArrayInt(size: Int): Gen[Array[Int]] = Gen.containerOfN[Array, Int](size, Gen.choose(0, 3))
 
@@ -33,14 +33,6 @@ abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, 
 
   implicit val noShrinkArrayInt = noShrink[Array[Int]]
   implicit val noShrinkPerm = noShrink[Perm]
-  /*
-  test("All representatives are generated") =
-    Prop.forAllNoShrink(genSeqGrp) { case (seq, grp) =>
-      val bruteForceSet = grp.iterator.map(g => (seq <|+|? g).get).toSet
-      val cleverSeq = Representatives(seq, grp).iterator.map(_.get).toSeq
-        (cleverSeq.size == bruteForceSet.size) && (cleverSeq.toSet == bruteForceSet)
-    }
-*/
 
   test("Minimal representative is found") {
     forAll(genArrayInt) { array =>

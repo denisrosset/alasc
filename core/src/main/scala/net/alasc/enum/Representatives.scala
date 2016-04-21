@@ -13,7 +13,7 @@ import metal._
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
+import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.domains.MutableOrbit
 import net.alasc.util._
 import metal.mutable.Buffer
@@ -21,7 +21,8 @@ import metal.mutable.Buffer
 // TODO: convert to take in only Chain, not GrpChain
 
 final case class Representatives[G, F <: FaithfulPermutationAction[G] with Singleton]
-  (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims) {
+  (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
+  (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
   import grp.{action, classTag, equ, group}
 
@@ -247,7 +248,7 @@ object Representatives {
 
   def permutationTo[G, F <: FaithfulPermutationAction[G] with Singleton]
     (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): Opt[G] = {
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): Opt[G] = {
     import grp.{action, classTag, equ, group}
     val chainGrp0 = grp.chain
     val n = seq.length
@@ -291,7 +292,8 @@ object Representatives {
   }
 
   def findPermutationToMaximal[G, F <: FaithfulPermutationAction[G] with Singleton]
-    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims): G = {
+    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     val invArray = new Array[Int](array.length)
     cforRange(0 until array.length) { i => invArray(i) = Int.MaxValue - array(i) }
     findPermutationToMinimal(invArray, grp, symGrp)
@@ -306,7 +308,8 @@ object Representatives {
     * @return the permutation `g` in `chainGrp` such that `seq <|+| g` is the lexicographic minimal sequence.
     */
   def findPermutationToMinimal[G, F <: FaithfulPermutationAction[G] with Singleton]
-    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims): G = {
+    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     import grp.{action, classTag, equ, group}
     val n = array.length
     val minimal = new Array[Int](n)

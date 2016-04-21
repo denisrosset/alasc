@@ -14,7 +14,6 @@ import net.alasc.bsgs
 import net.alasc.domains.{MutableOrbit, Partition}
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
 
-// TODO: move to bsgs
 abstract class GrpChain[G, F <: FaithfulPermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
   implicit def action: F
@@ -56,7 +55,6 @@ object GrpChain {
     subgroupFor(grp, net.alasc.bsgs.FixingPartition[G, F](partition))
   }
 
-
   def someStabilizerTransversal[G, F <: FaithfulPermutationAction[G] with Singleton]
     (grp: GrpChain[G, F]): Opt[(GrpChain[G, F], Transversal[G, F])] = {
     import grp.{action, classTag, equ, group}
@@ -77,7 +75,7 @@ object GrpChain {
 
   def stabilizerTransversal[G, F <: FaithfulPermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], b: Int)
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): (GrpChain[G, F], Transversal[G, F]) = {
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): (GrpChain[G, F], Transversal[G, F]) = {
     // duplicated code with stabilizer below
     import grp.{action, classTag, equ, group}
     grp match {
@@ -86,50 +84,65 @@ object GrpChain {
         originalChain match {
           case node: Node[G, F] =>
             val a = b <|+| gInv
-            if (node.inOrbit(a)) {
-              val u = node.u(a)
-              val uInv = node.uInv(a)
-              val newG = u |+| g
-              val newGInv = gInv |+| uInv
-              val nextGrp = new GrpChainConjugated[G, F](node.next, newG, newGInv)
-              val trv = ConjugatedTransversal[G, F](node, newG, newGInv)
-              (nextGrp, trv)
-            }
-            else if (node.isFixed(a))
-              (conj, Transversal.empty[G, F](b))
-            else {
-              // TODO: optimize single element base change
-              val newChain = BuildChain.fromChain[G, F, F](originalChain, Opt(BaseGuideSeq(Seq(a))))
-              val (nextOriginalChain, originalTransversal) = newChain.detach(a)
-              val nextGrp = new GrpChainConjugated[G, F](nextOriginalChain, g, gInv)
-              val trv = ConjugatedTransversal[G, F](originalTransversal, g, gInv)
-              (nextGrp, trv)
+            node.findConjugateElement(a) match {
+              case Opt(h) =>
+                val hInv = h.inverse
+                val c = a <|+| hInv
+                val (nextOriginalChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
+                val newG = h |+| g
+                if (newG.isId) {
+                  val nextGrp = new GrpChainExplicit[G, F](nextOriginalChain)
+                  (nextGrp, originalTrv)
+                } else {
+                  val newGInv = gInv |+| hInv
+                  val nextGrp = new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv)
+                  val trv = ConjugatedTransversal[G, F](originalTrv, newG, newGInv)
+                  (nextGrp, trv)
+                }
+              case _ =>
+                if (node.isFixed(a))
+                  (conj, Transversal.empty[G, F](b))
+                else {
+                  val mutableChain = originalChain.mutableChain
+                  mutableChain.conjugate(g, gInv)
+                  mutableChain.changeBasePointAfter(mutableChain.start, b)
+                  val (nextChain, trv) = mutableChain.toChain.detach(b)
+                  val nextGrp = new GrpChainExplicit[G, F](nextChain)
+                  (nextGrp, trv)
+                }
             }
           case term: Term[G, F] => (conj, Transversal.empty[G, F](b))
         }
       case _ => grp.chain match {
         case term: Term[G, F] => (grp, Transversal.empty[G, F](b))
-        case node: Node[G, F] if node.inOrbit(b) =>
-          val u = node.u(b)
-          val uInv = node.uInv(b)
-          val nextGrp = new GrpChainConjugated[G, F](node.next, u, uInv)
-          val trv: Transversal[G, F] = ConjugatedTransversal[G, F](node, u, uInv)
-          (nextGrp, trv)
-        case node: Node[G, F] if node.isFixed(b) =>
-          (grp, Transversal.empty[G, F](b))
-        case _ =>
-          // TODO: optimize single element base change
-          val newChain = BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideSeq(Seq(b))))
-          val (nextChain, trv) = newChain.detach(b)
-          val nextGrp = new GrpChainExplicit[G, F](nextChain)
-          (nextGrp, trv)
+        case node: Node[G, F] => node.findConjugateElement(b) match {
+          case Opt(g) =>
+            if (g.isId) {
+              val (nextChain, trv) = node.withFirstBasePoint(b).detach(b)
+              (new GrpChainExplicit[G, F](nextChain), trv)
+            } else {
+              val gInv = g.inverse
+              val c = b <|+| gInv
+              val (nextChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
+              val nextGrp = new GrpChainConjugated[G, F](nextChain, g, gInv)
+              val trv = ConjugatedTransversal[G, F](originalTrv, g, gInv)
+              (nextGrp, trv)
+            }
+          case _ =>
+            if (node.isFixed(b))
+              (grp, Transversal.empty[G, F](b))
+            else {
+              val (nextChain, trv) = node.withFirstBasePoint(b).detach(b)
+              (new GrpChainExplicit[G, F](nextChain), trv)
+            }
+        }
       }
     }
   }
 
   def stabilizer[G, F <: FaithfulPermutationAction[G] with Singleton]
-    (grp: GrpChain[G, F], b: Int)
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
+  (grp: GrpChain[G, F], b: Int)
+  (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): GrpChain[G, F] = {
     // duplicated code with stabilizerTransversal above
     import grp.{action, classTag, equ, group}
     grp match {
@@ -138,35 +151,50 @@ object GrpChain {
         originalChain match {
           case node: Node[G, F] =>
             val a = b <|+| gInv
-            if (node.inOrbit(a)) {
-              val u = node.u(a)
-              val uInv = node.uInv(a)
-              val newG = u |+| g
-              val newGInv = gInv |+| uInv
-              new GrpChainConjugated[G, F](node.next, newG, newGInv)
-            }
-            else if (node.isFixed(a))
-              conj
-            else {
-              // TODO: optimize single element base change
-              val newChain = BuildChain.fromChain[G, F, F](originalChain, Opt(BaseGuideSeq(Seq(a))))
-              val (nextOriginalChain, originalTransversal) = newChain.detach(a)
-              new GrpChainConjugated[G, F](nextOriginalChain, g, gInv)
+            node.findConjugateElement(a) match {
+              case Opt(h) =>
+                val hInv = h.inverse
+                val c = a <|+| hInv
+                val (nextOriginalChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
+                val newG = h |+| g
+                if (newG.isId)
+                  new GrpChainExplicit[G, F](nextOriginalChain)
+                else {
+                  val newGInv = gInv |+| hInv
+                  new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv)
+                }
+              case _ =>
+                if (node.isFixed(a)) conj
+                else {
+                  val mutableChain = originalChain.mutableChain
+                  mutableChain.conjugate(g, gInv)
+                  mutableChain.changeBasePointAfter(mutableChain.start, b)
+                  val (nextChain, _) = mutableChain.toChain.detach(b)
+                  new GrpChainExplicit[G, F](nextChain)
+                }
             }
           case term: Term[G, F] => conj
         }
       case _ => grp.chain match {
         case term: Term[G, F] => grp
-        case node: Node[G, F] if node.inOrbit(b) =>
-          val u = node.u(b)
-          val uInv = node.uInv(b)
-          new GrpChainConjugated[G, F](node.next, u, uInv)
-        case node: Node[G, F] if node.isFixed(b) => grp
-        case _ =>
-          // TODO: optimize single element base change
-          val newChain = BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideSeq(Seq(b))))
-          val (nextChain, _) = newChain.detach(b)
-          new GrpChainExplicit[G, F](nextChain)
+        case node: Node[G, F] => node.findConjugateElement(b) match {
+          case Opt(g) =>
+            if (g.isId) {
+              val (nextChain, _) = node.withFirstBasePoint(b).detach(b)
+              new GrpChainExplicit[G, F](nextChain)
+            } else {
+              val gInv = g.inverse
+              val c = b <|+| gInv
+              val (nextChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
+              new GrpChainConjugated[G, F](nextChain, g, gInv)
+            }
+          case _ =>
+            if (node.isFixed(b)) grp
+            else {
+              val (nextChain, _) = node.withFirstBasePoint(b).detach(b)
+              new GrpChainExplicit[G, F](nextChain)
+            }
+        }
       }
     }
   }
@@ -192,7 +220,7 @@ object GrpChain {
 
   def leftCosetsBy[G, F <: FaithfulPermutationAction[G] with Singleton]
     (grp0: GrpChain[G, F], subgrp0: GrpChain[G, F])
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): LeftCosets[G] = {
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): LeftCosets[G] = {
     import grp0.{action, classTag, group}
     require(grp0.hasSubgroup(subgrp0)) // TODO: add NC variant
     new LeftCosetsImpl[G] {

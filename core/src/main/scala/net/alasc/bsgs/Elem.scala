@@ -189,7 +189,7 @@ trait Node[G, F <: FaithfulPermutationAction[G] with Singleton]
   def elementsIterator(implicit group: Group[G]): Iterator[G] = for {
     rest <- next.elementsIterator
     b <- orbit.iterator
-  } yield rest |+| u(b) // TODO optimize
+  } yield rest |+| u(b)
 
   def randomElement(rand: Random)(implicit group: Group[G]): G = ChainRec.random(node.next, rand, node.randomU(rand))
 

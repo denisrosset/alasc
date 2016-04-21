@@ -74,7 +74,6 @@ object PointwiseStabilizer {
           case _ => current
         }
         val res = firstNotInSet(guidedChain)
-        assert(set.forall(res.isFixed(_))) // TODO: remove
         res
       case term: Term[G, F] => term
     }

@@ -58,8 +58,6 @@ object Check {
       case (path, message) => (pathElement :: path, message)
     }
 
-    def assert(): Unit = ??? // TODO
-
   }
 
 }
