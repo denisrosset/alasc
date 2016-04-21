@@ -107,15 +107,15 @@ object SubgroupSearch {
     val subgroupChain = MutableChain.emptyWithBase[G, F](guidedChain.base)
     val firstTest = definition.firstLevelTest(guidedChain)
     // Tuple2Int contains (restartFrom, levelCompleted)
-    def rec(level: Int, levelCompleted: Int, currentChain: Chain[G, F], currentSubgroup: Chain[G, F], currentG: G, currentTest: SubgroupTest[G, F]): Tuple2Int = (currentChain, currentSubgroup) match {
-      // TODO: remove tuple allocation
-      case (_: Term[G, F], _) =>
+    def rec(level: Int, levelCompleted: Int, currentChain: Chain[G, F], currentSubgroup: Chain[G, F], currentG: G, currentTest: SubgroupTest[G, F]): Tuple2Int = currentChain match {
+      case _: Term[G, F] =>
         if (definition.inSubgroup(currentG) && !currentG.isId) {
           subgroupChain.insertGenerators(Iterable(currentG))
           Tuple2Int(levelCompleted - 1, levelCompleted)
         } else
           Tuple2Int(level - 1, levelCompleted)
-      case (node: Node[G, F], IsMutableNode(subgroupNode)) =>
+      case node: Node[G, F] =>
+        val IsMutableNode(subgroupNode) = currentSubgroup
         var newLevelCompleted = levelCompleted
         val orbit = orbits(level)
         Sorting.sort(orbit)(ImageOrder(bo, currentG), implicitly[ClassTag[Int]])
@@ -140,7 +140,6 @@ object SubgroupSearch {
           i += 1
         }
         Tuple2Int(level - 1, level)
-      case _ => sys.error("Invalid argument")
     }
     val Tuple2Int(restartFrom, levelCompleted) = rec(0, length, guidedChain, subgroupChain.start.next, Group[G].id, firstTest)
     assert(levelCompleted == 0)
