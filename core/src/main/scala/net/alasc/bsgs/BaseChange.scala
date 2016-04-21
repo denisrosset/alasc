@@ -45,7 +45,7 @@ final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
     val iter = guide.iterator
     @tailrec def rec(prev: StartOrNode[G],
       lastMutableStartOrNode: MutableStartOrNode[G]): Unit = {
-      if (prev.next.nodesNext.forall(_.orbitSize == 1) || !iter.hasNext)
+      if (prev.next.isTrivial || !iter.hasNext)
         mutableChain.cutRedundantAfter(prev)
       else prev.next match {
         case IsMutableNode(mutableNode) =>
@@ -80,7 +80,7 @@ final class BaseChangeSwapConjugation(implicit val baseSwap: BaseSwap) extends B
     implicit def action = mutableChain.start.action
     val iter = guide.iterator
     @tailrec def rec(prev: StartOrNode[G], lastMutableStartOrNode: MutableStartOrNode[G], conj: G, conjInv: G): (G, G) = {
-      if (prev.next.nodesNext.forall(_.orbitSize == 1) || !iter.hasNext) {
+      if (prev.next.isTrivial || !iter.hasNext) {
         mutableChain.cutRedundantAfter(prev)
         (conj, conjInv)
       } else prev.next match {

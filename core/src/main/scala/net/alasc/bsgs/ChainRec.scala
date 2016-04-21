@@ -131,4 +131,10 @@ object ChainRec {
         }
       case _: Term[P] => (transversalIndices.toArray, remaining) // TODO replace by toSeq if debox implements it
     }
+
+  @tailrec def nStrongGenerators(chain: Chain[_], acc: Int = 0): Int = chain match {
+    case node: Node[_] => nStrongGenerators(node.next, acc + node.nOwnGenerators)
+    case _: Term[_] => acc
+  }
+
 }

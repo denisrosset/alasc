@@ -53,8 +53,9 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
       forAll(genSwapIndex(chain)) {
         case Opt(index) =>
           val mutableChain = chain.mutableChain
-          val node1 = mutableChain.mutable(mutableChain.start.next.nodesNext(index))
-          val node2 = mutableChain.mutable(mutableChain.start.next.nodesNext(index + 1))
+          val nodeSeq = mutableChain.start.next.nodesIterator.toSeq
+          val node1 = mutableChain.mutable(nodeSeq(index))
+          val node2 = mutableChain.mutable(nodeSeq(index + 1))
           builder.baseSwap.baseSwap(mutableChain, node1, node2)
           mutableChain.start.next.order should === (chain.order)
         case _ => discardEvaluation()
@@ -98,12 +99,12 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm]) extend
     forAll(genChain) { chain =>
       forAll(genRandomElement(chain)) { g =>
         val oldBase = chain.base
-        val oldOrbitSizes = chain.nodesNext.map(_.orbitSize)
+        val oldOrbitSizes = chain.nodesIterator.map(_.orbitSize).toSeq
         val mutableChain = chain.mutableChain
         mutableChain.conjugate(g, g.inverse)
         mutableChain.check
         baseChange.changeBase(mutableChain, oldBase)
-        val newOrbitSizes = mutableChain.start.next.nodesNext.map(_.orbitSize)
+        val newOrbitSizes = mutableChain.start.next.nodesIterator.map(_.orbitSize).toSeq
         oldOrbitSizes should === (newOrbitSizes)
       }
     }

@@ -16,66 +16,18 @@ import net.alasc.algebra._
 sealed trait Elem[G]
 
 sealed trait StartOrNode[G] extends Elem[G] { elem =>
+
   implicit def action: FaithfulPermutationAction[G]
+
+  /** Next element in this BSGS chain. */
   def next: Chain[G]
-}
 
-final class PrevSeq[P](val elem: MutableStartOrNode[P]) extends Seq[MutableNode[P]] {
-  override def foreach[U](f: MutableNode[P] => U): Unit = MutableChainRec.foreach(elem, f)
-  def length = iterator.length
-  def apply(k: Int) = iterator.drop(k).next
-  def iterator: Iterator[MutableNode[P]] = new Iterator[MutableNode[P]] {
-    private var cursor: MutableStartOrNode[P] = elem
-    def hasNext = !cursor.isInstanceOf[Start[P]]
-    def next = cursor match {
-      case IsMutableNode(mn) =>
-        cursor = mn.prev
-        mn
-      case _: Node[P] => sys.error("An immutable node cannot precede a mutable node in the chain.")
-      case _ => Iterator.empty.next
-    }
-  }
-  override def isEmpty = elem.isInstanceOf[Start[P]]
-  override def head: MutableNode[P] = elem match {
-    case IsMutableNode(prev) => prev
-    case _ => throw new NoSuchElementException("Empty seq")
-  }
-  override def tail: PrevSeq[P] = elem match {
-    case IsMutableNode(prev) => new PrevSeq(prev)
-    case _ => throw new UnsupportedOperationException("Empty seq")
-  }
-}
-
-final class NextSeq[P](val chain: Chain[P]) extends Seq[Node[P]] {
-  override def foreach[U](f: Node[P] => U): Unit = ChainRec.foreach(chain, f)
-  def length = ChainRec.length(chain)
-  def apply(k: Int) = iterator.drop(k).next
-  def iterator: Iterator[Node[P]] = new Iterator[Node[P]] {
-    private var cursor: Chain[P] = chain
-    def hasNext = !cursor.isTerminal
-    def next = cursor match {
-      case node: Node[P] =>
-          cursor = node.next
-        node
-      case _ => Iterator.empty.next
-    }
-  }
-  override def isEmpty = chain.isInstanceOf[Term[P]]
-  override def head: Node[P] = chain match {
-    case node: Node[P] => node
-    case _ => throw new NoSuchElementException("Empty seq")
-  }
-  override def tail: NextSeq[P] = chain match {
-    case node: Node[P] => new NextSeq[P](node.next)
-    case _ => throw new UnsupportedOperationException("Empty seq")
-  }
 }
 
 sealed trait MutableStartOrNode[P] extends StartOrNode[P] { elem =>
+
   protected[bsgs] def next_= (value: Chain[P]): Unit
 
-  /** Seq starting with this element and going for the previous nodes of the chain, in order. */
-  def nodesPrev: Seq[MutableNode[P]] = new PrevSeq[P](elem)
 }
 
 class Start[P](var next: Chain[P])(implicit val action: FaithfulPermutationAction[P]) extends MutableStartOrNode[P] {
@@ -99,32 +51,13 @@ class Start[P](var next: Chain[P])(implicit val action: FaithfulPermutationActio
   }
 }
 
-final class StrongGeneratingSetIterator[P](private[this] var chain: Chain[P], private[this] var index: Int, private[this] var inverse: Boolean) extends Iterator[P] {
-  @inline @tailrec def hasNext: Boolean = chain match {
-    case term: Term[P] => false
-    case node: Node[P] =>
-      if (index == node.nOwnGenerators) {
-        index = 0
-        chain = node.next
-        hasNext
-      } else true
-  }
-  def next: P = if (hasNext) {
-    val node = chain.asInstanceOf[Node[P]]
-    val p = if (inverse) node.ownGeneratorInv(index) else node.ownGenerator(index)
-    index += 1
-    p
-  } else Iterator.empty.next
-}
-
-
 /** Base class for elements in a BSGS chain, i.e. nodes or terminal elements, implementing
   * the chain as a single-linked list, with a double-linked list for mutable elements.
   */
 sealed trait Chain[P] extends Elem[P] {
   chain =>
 
-  override def toString = nodesNext.map { node => s"${node.beta}(${node.orbitSize})" }.mkString(" -> ")
+  override def toString = nodesIterator.map { node => s"${node.beta}(${node.orbitSize})" }.mkString(" -> ")
 
   /** Tests whether this element terminates the BSGS chain. */
   def isTerminal: Boolean
@@ -138,8 +71,17 @@ sealed trait Chain[P] extends Elem[P] {
   /** Tests whether this chain is trivial, i.e. describes the trivial group. */
   def isTrivial: Boolean = ChainRec.isTrivial(chain)
 
-  /** Seq starting with this element and going for the next nodes of the chain, in order. */
-  def nodesNext: Seq[Node[P]] = new NextSeq[P](chain)
+  /** Iterator through the nodes of this chain, including the current one if applicable. */
+  def nodesIterator: Iterator[Node[P]] = new Iterator[Node[P]] {
+    private var cursor: Chain[P] = chain
+    def hasNext = !cursor.isTerminal
+    def next = cursor match {
+      case node: Node[P] =>
+        cursor = node.next
+        node
+      case _ => Iterator.empty.next
+    }
+  }
 
   /** Maps the function `f` is this chain element is a node, or returns the default value. */
   def mapOrElse[A](f: Node[P] => A, default: => A): A = chain match {
@@ -155,22 +97,7 @@ sealed trait Chain[P] extends Elem[P] {
     * @note The strong generating set is stored piece by piece by having each
     *       node storing explicitly only the generators appearing at its level.
     */
-  def strongGeneratingSet: Iterable[P] = new Iterable[P] {
-    override def foreach[U](f: P => U): Unit = {
-      @tailrec def rec(current: Chain[P]): Unit = current match {
-        case node: Node[P] =>
-          cforRange(0 until node.nOwnGenerators)( i => f(node.ownGenerator(i)) )
-          rec(node.next)
-        case _: Term[P] =>
-      }
-      rec(chain)
-    }
-    def iterator = new StrongGeneratingSetIterator[P](chain, 0, false)
-  }
-
-  def strongGeneratingSetInv: Iterable[P] = new Iterable[P] {
-    def iterator = new StrongGeneratingSetIterator[P](chain, 0, true)
-  }
+  def strongGeneratingSet: Iterable[P] = new StrongGeneratingSetIterable[P](chain)
 
   def elementsIterator(implicit group: Group[P]): Iterator[P]
 
@@ -302,7 +229,9 @@ object Term {
 }
 
 trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
+
   override def toString = if (isStandalone) s"Node ($beta) orbit $orbit" else super.toString
+
   def isImmutable = prev eq null
   def isStandalone = (prev eq null) && (next eq null)
   def isMutable = (prev ne null)
@@ -337,4 +266,5 @@ trait MutableNode[P] extends Node[P] with MutableStartOrNode[P] {
     * `gInv` to avoid multiple inverse element computations. 
     */
   protected[bsgs] def conjugate(g: P, gInv: P)(implicit group: Group[P], classTag: ClassTag[P]): Unit
+
 }

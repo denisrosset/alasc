@@ -97,8 +97,8 @@ object SubgroupSearch {
   def subgroupSearch[G:ClassTag:Eq:Group](definition: SubgroupDefinition[G], guidedChain: Chain[G]): MutableChain[G] = {
     import definition.action
     val bo = BaseOrder[G](action, guidedChain.base)
-    val length = guidedChain.nodesNext.size
-    val orbits = guidedChain.nodesNext.map(_.orbit.toArray).toArray
+    val orbits = guidedChain.nodesIterator.map(_.orbit.toArray).toArray
+    val length = orbits.length
     val subgroupChain = MutableChain.emptyWithBase(guidedChain.base)
     val firstTest = definition.firstLevelTest(guidedChain)
     // Tuple2Int contains (restartFrom, levelCompleted)

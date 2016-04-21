@@ -200,7 +200,19 @@ final class RichMutableChain[G](val start: Start[G]) extends AnyVal {
     (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
     implicit def action = mutableChain.start.action
     mutableNode.addToOwnGenerators(gen, genInv)
-    mutableNode.nodesPrev.foreach( _.updateTransversal(gen, genInv) )
+    updateTransversalsFrom(mutableNode, gen, genInv)
+  }
+
+  /** Update the transversals of this node and the previous nodes with the new
+    * strong generator `gen`, given with its inverse `genInv`.
+    */
+  @tailrec def updateTransversalsFrom(mutableNode: MutableNode[G], gen: G, genInv: G)
+                            (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G]): Unit = {
+    mutableNode.updateTransversal(gen, genInv)
+    mutableNode.prev match {
+      case IsMutableNode(prev) => updateTransversalsFrom(prev, gen, genInv)
+      case _ => // at the end
+    }
   }
 
   /** Removes redundant strong generators in the given chain. */

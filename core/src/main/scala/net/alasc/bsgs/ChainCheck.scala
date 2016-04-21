@@ -18,8 +18,8 @@ final class ChainCheck[P:ClassTag:Eq:Group] extends Check[Chain[P]] {
 //      TODO
 /*      val alg = algorithms.BasicAlgorithms.deterministic[P] // use deterministic algorithms to avoid looping forever on bad data
       val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)
-      val reconstructedOrbits = reconstructedChain.start.next.nodesNext.map(_.orbitSize)
-      val originalOrbits = node.nodesNext.map(_.orbitSize)
+      val reconstructedOrbits = reconstructedChain.start.next.nodesIterator.toSeq.map(_.orbitSize)
+      val originalOrbits = node.nodesIterator.toSeq.map(_.orbitSize)
  Check.equals(originalOrbits, reconstructedOrbits, "Orbit sizes")*/
       Check.success
     case _ => Check.success
