@@ -126,20 +126,7 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
   def union(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) union(rhs, lhs) // ensure that lhs.order is the greatest
     else if (lhs.hasSubgroup(rhs)) fromGrp(lhs)
-    else {
-      val lhsChain = convertGrp(lhs).chain
-      val mutableChain = BuildMutableChain.fromChain[G, F, F](lhsChain)
-      val newGenerators = rhs.generators.filterNot(mutableChain.start.next.sifts)
-      mutableChain.insertGenerators(newGenerators)
-      mutableChain.completeStrongGenerators()
-      val newChain = mutableChain.toChain()
-      val generatorsOpt =
-        if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
-          Opt(lhs.generators ++ newGenerators)
-        else
-          Opt.empty[Iterable[G]]
-      new GrpChainExplicit(mutableChain.toChain(), generatorsOpt)
-    }
+    else GrpChain.union(convertGrp(lhs), rhs)
 
   def subgroupFor(grp: Grp[G], backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean): GG =
     subgroupFor(convertGrp(grp), SubgroupDefinition[G, F](backtrackTest, predicate))

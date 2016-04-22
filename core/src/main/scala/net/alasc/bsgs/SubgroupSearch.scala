@@ -72,8 +72,6 @@ trait SubgroupTest[G, F <: PermutationAction[G] with Singleton] {
 
 }
 
-
-
 object SubgroupSearch {
 
   def generalSearch[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]

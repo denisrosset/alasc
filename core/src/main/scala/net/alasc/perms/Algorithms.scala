@@ -9,7 +9,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.Permutation
 import net.alasc.bsgs.{BaseChange, BaseSwap, SchreierSims}
-import net.alasc.finite.{GrpBuilder, Rep}
+import net.alasc.finite.{GrpBuilder, GrpChainBuilder, Rep}
 import net.alasc.bsgs.SchreierSims
 
 class Algorithms(

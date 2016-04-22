@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.{Group, Order}
+import spire.algebra.{Eq, Group, Order}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.group._
@@ -16,7 +16,7 @@ import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
 
 abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
-  implicit def action: F
+  implicit val action: F
 
   implicit def classTag: ClassTag[G]
 
@@ -48,6 +48,22 @@ object GrpChain {
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
     new GrpChainExplicit[G, F](subChain)
   }
+
+  def union[G, F <: PermutationAction[G] with Singleton]
+    (lhs: GrpChain[G, F], rhs: Grp[G]): GrpChain[G, F] = {
+      import lhs.{action, classTag, equ, group}
+      val mutableChain = lhs.chain.mutableChain
+      val newGenerators = rhs.generators.filterNot(mutableChain.start.next.sifts)
+      mutableChain.insertGenerators(newGenerators)
+      mutableChain.completeStrongGenerators()
+      val newChain = mutableChain.toChain()
+      val generatorsOpt =
+        if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
+          Opt(lhs.generators ++ newGenerators)
+        else
+          Opt.empty[Iterable[G]]
+      new GrpChainExplicit(mutableChain.toChain(), generatorsOpt)
+    }
 
   def fixingPartition[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], partition: Partition)(implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
