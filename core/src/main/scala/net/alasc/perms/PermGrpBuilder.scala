@@ -1,6 +1,8 @@
 package net.alasc.perms
 
-import net.alasc.algebra.{BigIndexedSeq, PermutationAction, Permutation}
+import spire.algebra.{Eq, Group}
+
+import net.alasc.algebra.{BigIndexedSeq, Permutation, PermutationAction}
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, GrpBuilder}
 import spire.util.Opt
@@ -11,9 +13,9 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 
   implicit def permutation: Permutation[G]
 
-  def group = permutation
+  def group: Group[G] = permutation
 
-  def equ = permutation
+  def equ: Eq[G] = permutation
 
   def setwiseStabilizer(grp: Grp[G], set: Set[Int]): GG
 
