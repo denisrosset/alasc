@@ -76,11 +76,11 @@ abstract class Grp[G] { lhs =>
   def intersect(rhs: Grp[G])(implicit builder: GrpBuilder[G]): Grp[G] = builder.intersect(lhs, rhs)
 
   /** Left cosets. */
-  def leftCosetsBy(subgrp: Grp[G])(implicit builder: GrpBuilder[G]): LeftCosets[G] =
+  def leftCosetsBy(subgrp: Grp[G])(implicit builder: GrpBuilder[G]): LeftCosets[G, subgrp.type] =
     builder.leftCosetsBy(lhs, subgrp)
 
   /** Right cosets. */
-  def rightCosetsBy(subgrp: Grp[G])(implicit builder: GrpBuilder[G]): RightCosets[G] =
+  def rightCosetsBy(subgrp: Grp[G])(implicit builder: GrpBuilder[G]): RightCosets[G, subgrp.type] =
     builder.rightCosetsBy(lhs, subgrp)
 
   /** Simplifies the description current group.*/
@@ -120,7 +120,7 @@ abstract class Grp[G] { lhs =>
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
   /** Finds an element of this group with the image as `q`, if it exists. */
-  def find[Q:Permutation](q: Q)(implicit builder: PermGrpBuilder[G]): Opt[G] = builder.find(lhs, q)
+  def find[Q:Eq:Group:PermutationAction](q: Q)(implicit builder: PermGrpBuilder[G]): Opt[G] = builder.find(lhs, q)
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.

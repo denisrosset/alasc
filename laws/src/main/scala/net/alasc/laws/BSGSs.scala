@@ -8,9 +8,8 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 
 import spire.syntax.partialAction._
 
-import net.alasc.algebra.{FaithfulPermutationAction, Permutation, PermutationAction}
+import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{Chain, Node, Term}
-import net.alasc.finite.Grp
 import net.alasc.std.seq._
 import spire.syntax.order._
 import net.alasc.perms.Perm

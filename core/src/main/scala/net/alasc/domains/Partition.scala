@@ -16,7 +16,7 @@ import algos._
 /** Represents an union of disjoint subsets. The subsets are internally
   * stored in an array, sorted by their minimal element.
   */
-trait Partition extends InDomain {
+abstract class Partition extends InDomain {
 
   type InAnother[D0 <: Domain with Singleton] = Partition.In[D0]
 
@@ -33,7 +33,7 @@ trait Partition extends InDomain {
   /** Returns the minimal representative of the block in which `k` is contained.
     * Must have `0 <= k < size`.
     */
-  @inline def representative(k: Int): Int = startArray(indexArray(k))
+  def representative(k: Int): Int = startArray(indexArray(k))
 
   override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
 
@@ -44,10 +44,10 @@ trait Partition extends InDomain {
     case _ => false
   }
 
-  @inline def size: Int = domain.size
+  def size: Int = domain.size
 
   /** Returns the number of blocks. */
-  @inline def nBlocks = startArray.length
+  def nBlocks = startArray.length
 
   /** Returns the sequence of blocks, the block size increasing. */
   def sizeIncreasing: Seq[Set[Int]] = blocks.sortBy(b => (b.size, b.min))

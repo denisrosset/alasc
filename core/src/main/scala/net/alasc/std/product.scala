@@ -2,48 +2,50 @@ package net.alasc.std
 
 import net.alasc.algebra._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
+import net.alasc.util._
 
-final class Product2FaithfulPermRepBuilder[A, B]
-  (val structure1: FaithfulPermRepBuilder[A],
-   val structure2: FaithfulPermRepBuilder[B]) extends FaithfulPermRepBuilder[(A, B)] {
-
-  case class R(_1: FaithfulPermRep[A], _2: FaithfulPermRep[B]) extends FaithfulPermRep[(A, B)] {
-    def size = _1.size + _2.size
-    def represents(x0: (A, B)) = _1.represents(x0._1) && _2.represents(x0._2)
-    object _permutationAction extends PermutationAction[(A, B)] {
-      @inline def action1 = _1.permutationAction
-      @inline def action2 = _2.permutationAction
-      def actr(p: Int, x0: (A, B)) =
-        if (p < _1.size) action1.actr(p, x0._1)
-        else if (p < _1.size + _2.size) action2.actr(p - _1.size, x0._2) + _1.size
-        else p
-      def actl(x0: (A, B), p: Int) =
-        if (p < _1.size) action1.actl(x0._1, p)
-        else if (p < _1.size + _2.size) action2.actl(x0._2, p - _1.size) + _1.size
-        else p
-      def movedPoints(x0: (A, B)) =
-        action1.movedPoints(x0._1) ++ action2.movedPoints(x0._2).map(_ + _1.size)
-      def smallestMovedPoint(x0: (A, B)) =
-        action1.smallestMovedPoint(x0._1).orElseInt(action2.smallestMovedPoint(x0._2).mapInt(_ + _1.size))
-      def largestMovedPoint(x0: (A, B)) =
-        action2.largestMovedPoint(x0._2).mapInt(_ + _1.size).orElseInt(action1.largestMovedPoint(x0._1))
-      def movedPointsUpperBound = _1.size + _2.size
-      def nMovedPoints(x0: (A, B)): Int = action1.nMovedPoints(x0._1) + action2.nMovedPoints(x0._2)
-    }
-    type F = _permutationAction.type
-    def permutationAction: F = _permutationAction
+final case class Product2FaithfulPermRep[A, B](A: FaithfulPermRep[A], B: FaithfulPermRep[B]) extends FaithfulPermRep[(A, B)] {
+  def dimension = A.dimension + B.dimension
+  def represents(x0: (A, B)) = A.represents(x0._1) && B.represents(x0._2)
+  object _permutationAction extends PermutationAction[(A, B)] {
+    @inline def action1 = A.permutationAction
+    @inline def action2 = B.permutationAction
+    def actr(p: Int, x0: (A, B)) =
+      if (p < A.dimension) action1.actr(p, x0._1)
+      else if (p < A.dimension + B.dimension) action2.actr(p - A.dimension, x0._2) + A.dimension
+      else p
+    def actl(x0: (A, B), p: Int) =
+      if (p < A.dimension) action1.actl(x0._1, p)
+      else if (p < A.dimension + B.dimension) action2.actl(x0._2, p - A.dimension) + A.dimension
+      else p
+    override def movedPoints(x0: (A, B)) =
+      action1.movedPoints(x0._1) ++ action2.movedPoints(x0._2).map(_ + A.dimension)
+    override def smallestMovedPoint(x0: (A, B)) =
+      action1.smallestMovedPoint(x0._1).orElseInt(action2.smallestMovedPoint(x0._2).mapInt(_ + A.dimension))
+    override def largestMovedPoint(x0: (A, B)) =
+      action2.largestMovedPoint(x0._2).mapInt(_ + A.dimension).orElseInt(action1.largestMovedPoint(x0._1))
+    def movedPointsUpperBound(x0: (A, B)) = NNSome(A.dimension + B.dimension)
+    override def nMovedPoints(x0: (A, B)): Int = action1.nMovedPoints(x0._1) + action2.nMovedPoints(x0._2)
   }
+  type F = _permutationAction.type
+  def permutationAction: F = _permutationAction
 
-  def build(generators: Iterable[(A, B)]): R =
-    R(structure1.build(generators.map(_._1)), structure2.build(generators.map(_._2)))
+}
+
+final class Product2FaithfulPermRepBuilder[A:FaithfulPermRepBuilder, B:FaithfulPermRepBuilder]
+  extends FaithfulPermRepBuilder[(A, B)] {
+
+  def build(generators: Iterable[(A, B)]): Product2FaithfulPermRep[A, B] =
+    Product2FaithfulPermRep(
+      implicitly[FaithfulPermRepBuilder[A]].build(generators.map(_._1)),
+      implicitly[FaithfulPermRepBuilder[B]].build(generators.map(_._2))
+    )
 
 }
 
 trait ProductInstances {
 
-  implicit def product2FaithfulPermRepBuilder[A, B]
-    (implicit _structure1: FaithfulPermRepBuilder[A],
-     _structure2: FaithfulPermRepBuilder[B]): FaithfulPermRepBuilder[(A, B)] =
-    new Product2FaithfulPermRepBuilder[A, B](_structure1, _structure2)
+  implicit def product2FaithfulPermRepBuilder[A:FaithfulPermRepBuilder, B:FaithfulPermRepBuilder]: FaithfulPermRepBuilder[(A, B)] =
+    new Product2FaithfulPermRepBuilder[A, B]
 
 }

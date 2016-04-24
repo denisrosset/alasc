@@ -124,7 +124,7 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
 
   def basicSift(g: G)(implicit group: Group[G], equ: Eq[G]): (Seq[Int], G) = ChainRec.basicSift(chain, g)
 
-  def siftOther[Q:Permutation](q: Q)(implicit group: Group[G], equ: Eq[G]): Opt[G] = chain match {
+  def siftOther[Q:Eq:Group:PermutationAction](q: Q)(implicit group: Group[G], equ: Eq[G]): Opt[G] = chain match {
     case node: Node[G, F] =>
       implicit def action: F = node.action
       ChainRec.siftOther(chain, group.id, q)

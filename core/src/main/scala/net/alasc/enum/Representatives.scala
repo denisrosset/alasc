@@ -22,6 +22,8 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
+  import Representatives.toUnsignedLong
+
   import grp.{action, classTag, equ, group}
 
   val n = seq.length
@@ -108,8 +110,6 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
     }
     assert(beta < chainNextBeta)
     val nextBeta = chainNextBeta.min(beta + maxSkip)
-
-    @inline def toUnsignedLong(i: Int): Long = i & 0xFFFFFFFFL
 
     protected lazy val candidatesForImages: metal.mutable.Map[Long, NextCandidate] = {
       val map = metal.mutable.HashMap.empty[Long, NextCandidate]
@@ -235,6 +235,8 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
 
 object Representatives {
 
+  @inline def toUnsignedLong(i: Int): Long = i & 0xFFFFFFFFL
+
   /** Returns the permutation `g` in `chainGrp` such that `seq <|+| g == repr` if it exists.
     *
     * @param seq  Array of integers
@@ -247,7 +249,7 @@ object Representatives {
   def permutationTo[G, F <: PermutationAction[G] with Singleton]
     (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): Opt[G] = {
-    import grp.{action, classTag, equ, group}
+    import grp.{action, group}
     val chainGrp0 = grp.chain
     val n = seq.length
     val bo = BaseOrder[G, F](chainGrp0.base)

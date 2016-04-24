@@ -140,7 +140,7 @@ object ChainRec {
     case _: Term[G, F] => remaining.isId
   }
 
-  @tailrec def siftOther[G:Eq:Group, F <: PermutationAction[G] with Singleton, Q:Permutation]
+  @tailrec def siftOther[G:Eq:Group, F <: PermutationAction[G] with Singleton, Q:Eq:Group:PermutationAction]
     (chain: Chain[G, F], gInv: G, q: Q)(implicit action: F): Opt[G] =
     chain match {
       case node: Node[G, F] =>

@@ -1,12 +1,13 @@
 package net.alasc.tests
 package perms
 
+import spire.algebra.Eq
 import spire.laws.{LatticePartialOrderLaws, Perm => _}
 
 import org.scalacheck.Arbitrary
 
 import net.alasc.algebra._
-import net.alasc.finite.Grp
+import net.alasc.finite.{Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._
 import net.alasc.std.product._
@@ -31,16 +32,25 @@ class PermPermSuite extends AlascSuite {
   {
     import net.alasc.perms.default._
 
-    implicit val permTupleArbitrary: Arbitrary[(Perm, Perm)] =
-      Arbitrary(for {
-        g1 <- Permutations.forSize[Perm](3)
-        g2 <- Permutations.forSize[Perm](3)
-      } yield (g1, g2))
+    val rep: FaithfulPermRep[(Perm, Perm)] =
+      implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build(Seq((Perm(0,1,2), Perm(0,1,2))))
 
     import Grps.arbGrp
 
-    checkAll("Group laws", GrpLaws[(Perm, Perm)].grp)
-    checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[(Perm, Perm)]].boundedBelowLatticePartialOrder)
+    import net.alasc.finite.Rep.syntax._
+
+    type R = Rep.Of[(Perm, Perm), rep.type]
+    implicitly[Eq[(Perm, Perm)]]
+    Rep.syntax.permutation[(Perm, Perm), rep.type]
+    implicitly[Permutation[R]]
+    implicit val permTupleArbitrary: Arbitrary[R] =
+      Arbitrary(for {
+        g1 <- Permutations.forSize[Perm](3)
+        g2 <- Permutations.forSize[Perm](3)
+      } yield Rep.Of((g1, g2), rep))
+
+    checkAll("Group laws", GrpLaws[R].grp)
+    checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[R]].boundedBelowLatticePartialOrder)
   }
 
 }

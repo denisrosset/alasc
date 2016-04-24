@@ -48,8 +48,6 @@ class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
 
   def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 
-  def movedPointsUpperBound = Int.MaxValue
-
   def fromImages(images: Seq[Int]): Cycles = {
     val support = BitSet(0 until images.size:_*).filter(k => images(k) != k)
     fromSupportAndImageFun(support, images(_))
@@ -84,14 +82,16 @@ class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
   def actr(k: Int, g: Cycles) = (k /: g.seq) { case (kIt, cycle) => kIt <|+| cycle }
   override def actl(g: Cycles, k: Int) = (k /: g.seq) { case (kIt, cycle) => cycle |+|> kIt }
 
+  def movedPointsUpperBound(c: Cycles) = largestMovedPoint(c)
   override def findMovedPoint(c: Cycles) =
     if (c.seq.isEmpty) NNNone else NNSome(c.seq.head.seq.head)
-
-  def smallestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
-  def largestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))
-  def movedPoints(c: Cycles): BitSet =
+  override def smallestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.min(_)).fold(NNNone)(NNSome(_))
+  override def largestMovedPoint(c: Cycles) = c.seq.flatMap(_.seq).reduceOption(_.max(_)).fold(NNNone)(NNSome(_))
+  override def movedPoints(c: Cycles): BitSet =
     (BitSet.empty /: c.seq) { case (set, cycle) => set union cycle.support }
-  def nMovedPoints(c: Cycles): Int = c.seq.foldLeft(0) { case (acc, c) => acc + Cycle.permutationAction.nMovedPoints(c) }
+  override def nMovedPoints(c: Cycles): Int =
+    c.seq.foldLeft(0) { case (acc, c) => acc + Cycle.permutationAction.nMovedPoints(c) }
+
 }
 
 object Cycles {

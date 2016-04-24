@@ -42,7 +42,7 @@ class BBGrpBuilder[G](implicit
     new BBGrp[G](newElements.filterNot(_.isId), newElements)
   }
 
-  def leftCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): LeftCosets[G] = {
+  def leftCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): LeftCosets[G, subgrp0.type] = {
     @tailrec def rec(remaining: Set[G], transversal: Set[G]): Set[G] =
       if (remaining.isEmpty) transversal else {
         val g = remaining.head
@@ -54,15 +54,15 @@ class BBGrpBuilder[G](implicit
       case _ => grp0.iterator.toSet
     }
     val transversal = rec(elements diff subgrp0.iterator.toSet, subgrp0.iterator.toSet)
-    new LeftCosets[G] {
+    new LeftCosets[G, subgrp0.type] {
       val grp = grp0
-      val subgrp = subgrp0
+      val subgrp: subgrp0.type = subgrp0
       def iterator = transversal.iterator.map( g => new LeftCoset(g, subgrp0) )
       def inverse = rightCosetsBy(grp, subgrp)
     }
   }
 
-  def rightCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): RightCosets[G] = {
+  def rightCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): RightCosets[G, subgrp0.type] = {
     @tailrec def rec(remaining: Set[G], transversal: Set[G]): Set[G] =
       if (remaining.isEmpty) transversal else {
         val g = remaining.head
@@ -74,9 +74,9 @@ class BBGrpBuilder[G](implicit
       case _ => grp0.iterator.toSet
     }
     val transversal = rec(elements diff subgrp0.iterator.toSet, subgrp0.iterator.toSet)
-    new RightCosets[G] {
+    new RightCosets[G, subgrp0.type] {
       val grp = grp0
-      val subgrp = subgrp0
+      val subgrp : subgrp0.type = subgrp0
       def iterator = transversal.iterator.map( g => new RightCoset(g, subgrp0) )
       def inverse = leftCosetsBy(grp, subgrp)
     }

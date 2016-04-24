@@ -199,7 +199,7 @@ object MutableOrbit {
     true
   }
 
-  @inline protected def iterateOrbit[G:PermutationAction](orbit: MutableOrbit, firstStart: Int, generators: Iterable[G]): Unit = {
+  @inline def iterateOrbit[G:PermutationAction](orbit: MutableOrbit, firstStart: Int, generators: Iterable[G]): Unit = {
     var start = firstStart
     while (start != -1) {
       generators.foreach { g =>

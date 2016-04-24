@@ -1,11 +1,14 @@
 package net.alasc.finite
 
+import spire.algebra.{Eq, Group, LeftAction, RightAction}
 import spire.math.SafeLong
 import spire.syntax.group._
 
-trait Coset[G] {
+trait Coset[G, Subgrp <: Grp[G] with Singleton] {
 
-  def subgrp: Grp[G]
+  override def hashCode = sys.error("Not implemented")
+
+  val subgrp: Subgrp
 
   /** Number of elements in this coset. */
   def size: SafeLong
@@ -18,34 +21,80 @@ trait Coset[G] {
 
 }
 
-class RightCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
+class RightCoset[G, Subgrp <: Grp[G] with Singleton](val representative: G, val subgrp: Subgrp) extends Coset[G, Subgrp] { lhs =>
 
   import subgrp.group
 
-  override def toString = s"($subgrp) |+| $g"
+  override def equals(that: Any) = that match {
+    case rhs: RightCoset[G, _] if subgrp eq rhs.subgrp => // the type G is attested by the equality of subgroups
+      import subgrp.group
+      subgrp.contains(lhs.representative |+| rhs.representative.inverse)
+    case _ => false
+  }
 
-  def contains(el: G) = subgrp.contains(el |+| g.inverse)
+  override def toString = s"($subgrp) |+| $representative"
+
+  def contains(el: G) = subgrp.contains(el |+| representative.inverse)
 
   def size: SafeLong = subgrp.order
 
-  def iterator: Iterator[G] = subgrp.iterator.map( h => h |+| g )
+  def iterator: Iterator[G] = subgrp.iterator.map( h => h |+| representative )
 
-  def inverse: LeftCoset[G] = new LeftCoset(g.inverse, subgrp)
+  def inverse: LeftCoset[G, Subgrp] = new LeftCoset(representative.inverse, subgrp)
 
 }
 
-class LeftCoset[G](val g: G, val subgrp: Grp[G]) extends Coset[G] {
+object RightCoset {
+
+  /** Equivalence relation on cosets. */
+  implicit def equ[G:Group, Subgrp <: Grp[G] with Singleton]: Eq[RightCoset[G, Subgrp]] =
+    new Eq[RightCoset[G, Subgrp]] {
+      def eqv(lhs: RightCoset[G, Subgrp], rhs: RightCoset[G, Subgrp]) =
+        lhs.subgrp.contains(lhs.representative |+| rhs.representative.inverse)
+    }
+
+  implicit def action[G:Group, Subgrp <: Grp[G] with Singleton]: RightAction[RightCoset[G, Subgrp], G] =
+    new RightAction[RightCoset[G, Subgrp], G] {
+      def actr(lhs: RightCoset[G, Subgrp], rhs: G) = new RightCoset[G, Subgrp](lhs.representative |+| rhs, lhs.subgrp)
+    }
+
+}
+
+class LeftCoset[G, Subgrp <: Grp[G] with Singleton](val representative: G, val subgrp: Subgrp) extends Coset[G, Subgrp] { lhs =>
 
   import subgrp.group
 
-  override def toString = s"$g |+| ($subgrp)"
+  override def equals(that: Any) = that match {
+    case rhs: LeftCoset[G, _] if subgrp eq rhs.subgrp => // the type G is attested by the equality of subgroups
+      import subgrp.group
+      subgrp.contains(lhs.representative.inverse |+| rhs.representative)
+    case _ => false
+  }
 
-  def contains(el: G) = subgrp.contains(g.inverse |+| el)
+  override def toString = s"$representative |+| ($subgrp)"
+
+  def contains(el: G) = subgrp.contains(representative.inverse |+| el)
 
   def size: SafeLong = subgrp.order
 
-  def iterator: Iterator[G] = subgrp.iterator.map( h => g |+| h )
+  def iterator: Iterator[G] = subgrp.iterator.map( h => representative |+| h )
 
-  def inverse: RightCoset[G] = new RightCoset(g.inverse, subgrp)
+  def inverse: RightCoset[G, Subgrp] = new RightCoset(representative.inverse, subgrp)
+
+}
+
+object LeftCoset {
+
+  /** Equivalence relation on cosets. */
+  implicit def equ[G:Group, Subgrp <: Grp[G] with Singleton]: Eq[LeftCoset[G, Subgrp]] =
+    new Eq[LeftCoset[G, Subgrp]] {
+      def eqv(lhs: LeftCoset[G, Subgrp], rhs: LeftCoset[G, Subgrp]) =
+        lhs.subgrp.contains(lhs.representative.inverse |+| rhs.representative)
+    }
+
+  implicit def action[G:Group, Subgrp <: Grp[G] with Singleton]: LeftAction[LeftCoset[G, Subgrp], G] =
+    new LeftAction[LeftCoset[G, Subgrp], G] {
+      def actl(lhs: G, rhs: LeftCoset[G, Subgrp]) = new LeftCoset[G, Subgrp](lhs |+| rhs.representative, rhs.subgrp)
+    }
 
 }

@@ -1,6 +1,5 @@
 package net.alasc.bsgs
 
-import scala.collection.{immutable, mutable}
 import scala.reflect.ClassTag
 import scala.util.Random
 
@@ -10,7 +9,6 @@ import spire.syntax.order._
 import spire.syntax.group._
 
 import net.alasc.algebra.PermutationAction
-import metal.syntax._
 
 import net.alasc.domains.MutableOrbit
 
@@ -52,7 +50,7 @@ final class BaseSwapDeterministic extends BaseSwap {
       val gamma = gammaSet.head
       val x = node1.u(gamma)
       val xInv = node1.uInv(gamma)
-      assert((newNode2.beta <|+| x) == gamma)
+//      assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
       if (!node2.inOrbit(b)) {
         val bm = MutableOrbit.orbitBitMask(n, gamma, newNode2.strongGeneratingSet, mutableOrbit)

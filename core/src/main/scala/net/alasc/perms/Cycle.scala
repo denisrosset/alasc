@@ -41,12 +41,12 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 }
 
 class CyclePermutationAction extends PermutationAction[Cycle] {
-  def movedPoints(c: Cycle): BitSet = BitSet(c.seq: _*)
-  def largestMovedPoint(c: Cycle) = NNSome(c.seq.max)
-  def smallestMovedPoint(c: Cycle) = NNSome(c.seq.min)
-  def nMovedPoints(c: Cycle) = c.seq.size
+  override def movedPoints(c: Cycle): BitSet = BitSet(c.seq: _*)
+  override def largestMovedPoint(c: Cycle) = NNSome(c.seq.max)
+  override def smallestMovedPoint(c: Cycle) = NNSome(c.seq.min)
+  override def nMovedPoints(c: Cycle) = c.seq.size
   override def findMovedPoint(c: Cycle) = NNSome(c.seq.head)
-  def movedPointsUpperBound = Int.MaxValue
+  def movedPointsUpperBound(c: Cycle) = NNSome(c.seq.max)
   def actl(c: Cycle, k: Int) = c.seq.indexOf(k) match {
     case -1 => k
     case i => c.seq((c.seq.size + i - 1) % c.seq.size)
@@ -55,7 +55,6 @@ class CyclePermutationAction extends PermutationAction[Cycle] {
     case -1 => k
     case i => c.seq((i + 1) % c.seq.size)
   }
-  def compatibleWith(c: Cycle) = true
 }
 
 /** Canonical order for cycles.

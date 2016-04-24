@@ -1,14 +1,25 @@
 package net.alasc.perms
 
+import spire.math.Rational
+import spire.syntax.cfor._
+import spire.syntax.action._
+
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Rep
 
-trait PermRep[G] extends Rep[G] {
+trait PermRep[G] extends Rep[G, Rational] {
 
   implicit def permutationAction: PermutationAction[G]
 
-  /** Size of the representation, constraining the support of any permutation in 0 ... n-1. */
-  def size: Int
+  def apply(g: G): scalin.immutable.Mat[Rational] = {
+    import scalin.mutable.dense._ // TODO: use sparse matrices
+    import scalin.syntax.all._
+    val mat = zeros[Rational](dimension, dimension)
+    cforRange(0 until dimension) { i =>
+      mat(i, i <|+| g) := Rational.one
+    }
+    mat.result()
+  }
 
 }
 

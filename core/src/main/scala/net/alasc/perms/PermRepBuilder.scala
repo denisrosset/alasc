@@ -16,13 +16,12 @@ object FaithfulPermRepBuilder {
     extends FaithfulPermRepBuilder[G] {
     self =>
 
-
-    final class R(val size: Int) extends FaithfulPermRep[G] {
+    final class MyRep(val dimension: Int) extends FaithfulPermRep[G] {
 
       type F = permutation.type
       val permutationAction: F = permutation
 
-      def represents(g: G) = permutationAction.largestMovedPoint(g).getOrElseFast(-1) < size
+      def represents(g: G) = permutationAction.largestMovedPoint(g).getOrElseFast(-1) < dimension
 
     }
 
@@ -31,7 +30,7 @@ object FaithfulPermRepBuilder {
         adequateSize(size.max(permutation.largestMovedPoint(iterator.next).getOrElseFast(-1) + 1), iterator)
       else size
 
-    def build(generators: Iterable[G]): R = new R(adequateSize(1, generators.iterator))
+    def build(generators: Iterable[G]): MyRep = new MyRep(adequateSize(1, generators.iterator))
 
   }
 

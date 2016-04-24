@@ -6,7 +6,7 @@ import org.scalacheck._
 import net.alasc.domains._
 import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
-import net.alasc.perms.{FixingPartition, Perm}
+import net.alasc.perms.{GrpFixingPartition, Perm}
 import net.alasc.std.seq._
 
 final class FixingPartitionSuite extends AlascSuite {
@@ -23,7 +23,7 @@ final class FixingPartitionSuite extends AlascSuite {
   test("creation") {
     forAll(genSeq) { seq =>
       val partition = Partition.fromSeq(seq)
-      val subgroup1 = FixingPartition[Perm](Partition.fromSeq(seq))
+      val subgroup1 = GrpFixingPartition[Perm](Partition.fromSeq(seq))
       val subgroup2 = Symmetric[Perm](seq.size).fixingPartition(partition)
       (subgroup1: Grp[Perm]) should === (subgroup2: Grp[Perm])
       subgroup1.generators.forall(g => (seq <|+|? g).get.sameElements(seq)) shouldBe true

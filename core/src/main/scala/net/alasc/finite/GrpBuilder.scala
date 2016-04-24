@@ -40,9 +40,9 @@ abstract class GrpBuilder[G] {
   def smallGeneratingSet(grp: Grp[G]): Iterable[G] = grp.generators // TODO: real implementation
 
   /** Left cosets. */
-  def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G]
+  def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type]
 
   /** Right cosets. */
-  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G]
+  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type]
 
 }

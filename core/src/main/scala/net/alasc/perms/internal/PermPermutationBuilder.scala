@@ -41,13 +41,13 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
     }
   }
 
-  def movedPoints(p: Perm): Set[Int] = p.movedPoints
+  override def movedPoints(p: Perm): Set[Int] = p.movedPoints
 
-  def nMovedPoints(p: Perm): Int = p.nMovedPoints
+  override def nMovedPoints(p: Perm): Int = p.nMovedPoints
 
-  def smallestMovedPoint(p: Perm): NNOption = p.smallestMovedPoint
+  override def smallestMovedPoint(p: Perm): NNOption = p.smallestMovedPoint
 
-  def largestMovedPoint(p: Perm): NNOption = p.largestMovedPoint
+  override def largestMovedPoint(p: Perm): NNOption = p.largestMovedPoint
 
   def actr(preimage: Int, p: Perm): Int = p.image(preimage)
 
@@ -57,7 +57,7 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   val id = Perm16Encoding.id
 
-  def movedPointsUpperBound = PermArray.movedPointsUpperBound
+  def movedPointsUpperBound(p: Perm) = largestMovedPoint(p)
 
   def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
 

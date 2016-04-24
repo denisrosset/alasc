@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, Group, Order}
+import spire.algebra.{Group, Order}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.group._
@@ -13,6 +13,7 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs
 import net.alasc.domains.{MutableOrbit, Partition}
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
+import net.alasc.perms.FaithfulPermRep
 
 abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
@@ -23,6 +24,8 @@ abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp
   def chain: bsgs.Chain[G, F]
 
   def chainOpt: Opt[bsgs.Chain[G, F]]
+
+  def repOpt: Opt[FaithfulPermRep[G]] = Opt.empty[FaithfulPermRep[G]] // TODO: do a real implementation
 
 }
 
@@ -50,7 +53,7 @@ object GrpChain {
   }
 
   def union[G, F <: PermutationAction[G] with Singleton]
-    (lhs: GrpChain[G, F], rhs: Grp[G]): GrpChain[G, F] = {
+    (lhs: GrpChain[G, F], rhs: Grp[G]): GrpChain[G, F] = { // TODO: replace rhs by Iterable[G]
       import lhs.{action, classTag, equ, group}
       val mutableChain = lhs.chain.mutableChain
       val newGenerators = rhs.generators.filterNot(mutableChain.start.next.sifts)
@@ -235,26 +238,28 @@ object GrpChain {
   }
 
   def leftCosetsBy[G, F <: PermutationAction[G] with Singleton]
-    (grp0: GrpChain[G, F], subgrp0: GrpChain[G, F])
-    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): LeftCosets[G] = {
-    import grp0.{action, classTag, group}
+    (grp0: GrpChain[G, F], subgrp0: Grp[G], chainSubgrp0: GrpChain[G, F])
+    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): LeftCosets[G, subgrp0.type] = {
+    import grp0.{action, group}
     require(grp0.hasSubgroup(subgrp0)) // TODO: add NC variant
-    new LeftCosetsImpl[G] {
+    new LeftCosetsImpl[G, subgrp0.type] {
 
       val grp = grp0
 
-      val subgrp = subgrp0
+      val subgrp: subgrp0.type = subgrp0
+
+      val chainSubgrp = chainSubgrp0
 
       private[this] val n = PermutationAction.largestMovedPoint(grp.generators).getOrElse(0) + 1
 
-      def iterator: Iterator[LeftCoset[G]] = {
+      def iterator: Iterator[LeftCoset[G, subgrp0.type]] = {
         import grp.{action, group}
         val myBase = grp.chain.base
         val bo = BaseOrder[G, F](myBase)
         val bordering = Order.ordering(bo)
         val orbit = MutableOrbit.forSize(n)
         import spire.std.int.IntAlgebra
-        def rec(g: G, chain: Chain[G, F], subSubgrp: GrpChain[G, F]): Iterator[LeftCoset[G]] = chain match {
+        def rec(g: G, chain: Chain[G, F], subSubgrp: GrpChain[G, F]): Iterator[LeftCoset[G, subgrp0.type]] = chain match {
           case node: Node[G, F] =>
             for {
               b <- node.orbit.iterator
@@ -264,11 +269,9 @@ object GrpChain {
               element <- rec(nextG, node.next, nextSubSubgrp)
             } yield element
           case _: Term[G, F] =>
-            assert(pointwiseStabilizer(subgrp, myBase.map(_ <|+| g).toSet).isTrivial)
-            assert(subSubgrp.order == 1)
             Iterator(new LeftCoset(g, subgrp))
         }
-        rec(Group[G].id, grp.chain, subgrp)
+        rec(Group[G].id, grp.chain, chainSubgrp0)
       }
 
     }

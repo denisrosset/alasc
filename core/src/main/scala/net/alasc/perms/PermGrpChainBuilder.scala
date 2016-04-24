@@ -2,6 +2,7 @@ package net.alasc.perms
 
 import scala.reflect.ClassTag
 
+import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.group._
@@ -137,10 +138,10 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
   def setwiseStabilizer(grp: Grp[G], set: Set[Int]): GG =
     subgroupFor(grp, SetwiseStabilizer[G, F](set))
 
-  def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G] =
-    GrpChain.leftCosetsBy[G, F](convertGrp(grp), convertGrp(subgrp))
+  def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] =
+    GrpChain.leftCosetsBy[G, F](convertGrp(grp), subgrp, convertGrp(subgrp))
 
-  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G] =
+  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type] =
     leftCosetsBy(grp, subgrp).inverse
 
   // enumeration of subgroup elements
@@ -155,7 +156,7 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
     case cg => cg.chain.base
   }
 
-  def find[Q:Permutation](grp: Grp[G], q: Q): Opt[G] =
+  def find[Q:Eq:Group:PermutationAction](grp: Grp[G], q: Q): Opt[G] =
     convertGrp(grp).chain.siftOther(q)
 
 }

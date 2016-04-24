@@ -1,8 +1,6 @@
 package net.alasc.tests.wreath
 
-import spire.laws.{LatticePartialOrderLaws, Perm => _}
-
-import org.scalacheck.Arbitrary
+import spire.laws.{Perm => _}
 
 import net.alasc.finite.Grp
 import net.alasc.laws._

@@ -10,9 +10,6 @@ import spire.math.SafeLong
 trait Permutation[P] extends Eq[P] with Group[P] with PermutationAction[P] {
 
   /** Returns the order of this permutation. */
-  def order(p: P): SafeLong = {
-    val cs = cycleStructure(p)
-    cs.keys.foldLeft(SafeLong(1)) { case (acc, len) => spire.math.lcm(acc, SafeLong(len)) }
-  }
+  def order(p: P): SafeLong = permutationOrder(p)
 
 }

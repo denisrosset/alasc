@@ -70,12 +70,12 @@ final class GrpChainBuilder[G]
       GrpChain.subgroupFor(convertGrp[rep.F](lhs), Intersection[G, rep.F](convertGrp[rep.F](rhs).chain))
     }
 
-  override def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G] = {
+  override def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] = {
     val rep = repBuilder.build(grp.generators)
     import rep.permutationAction
-    GrpChain.leftCosetsBy(convertGrp[rep.F](grp), convertGrp[rep.F](subgrp))
+    GrpChain.leftCosetsBy(convertGrp[rep.F](grp), subgrp, convertGrp[rep.F](subgrp))
   }
 
-  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G] = leftCosetsBy(grp, subgrp).inverse
+  def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type] = leftCosetsBy(grp, subgrp).inverse
 
 }

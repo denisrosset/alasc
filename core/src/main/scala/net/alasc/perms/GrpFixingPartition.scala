@@ -7,7 +7,7 @@ import net.alasc.domains.Partition
 import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
 
-object FixingPartition {
+object GrpFixingPartition {
 
   def blockOrder(block: Partition#Block): SafeLong = Symmetric.order(block.size)
 

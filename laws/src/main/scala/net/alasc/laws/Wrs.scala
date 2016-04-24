@@ -6,7 +6,6 @@ import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.algebra._
 import net.alasc.perms._
-import net.alasc.prep._
 import net.alasc.syntax.permutationAction._
 import net.alasc.wreath._
 

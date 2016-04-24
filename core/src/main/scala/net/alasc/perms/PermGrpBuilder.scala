@@ -35,6 +35,6 @@ abstract class PermGrpBuilder[G] extends GrpBuilder[G] {
 
   def base(grp: Grp[G]): Seq[Int]
 
-  def find[Q:Permutation](grp: Grp[G], q: Q): Opt[G]
+  def find[Q:Eq:Group:PermutationAction](grp: Grp[G], q: Q): Opt[G]
 
 }

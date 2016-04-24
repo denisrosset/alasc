@@ -3,6 +3,7 @@ package net.alasc.algebra
 import scala.annotation.tailrec
 
 import spire.algebra._
+import spire.math.SafeLong
 import spire.std.int._
 
 import metal.syntax._
@@ -22,24 +23,59 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   def movesPoint(g: G, i: Int): Boolean = actr(i, g) != i
 
   /** Number of non-negative integers moved by the permutation. */
-  def nMovedPoints(g: G): Int
+  def nMovedPoints(g: G): Int = {
+    val n = movedPointsUpperBound(g).getOrElseFast(-1) + 1
+    var nMoved: Int = 0
+    var k: Int = 0
+    while (k < n) {
+      if (movesPoint(g, k))
+        nMoved += 1
+      k += 1
+    }
+    nMoved
+  }
 
   /** Returns a bit set of all non-negative integers k that are changed by the action of the permutation,
     * i.e. `S = { k | k <|+| g != k }`.
     */
-  def movedPoints(g: G): Set[Int]
+  def movedPoints(g: G): Set[Int] = {
+    val n = movedPointsUpperBound(g).getOrElseFast(-1) + 1
+    val bitset = metal.mutable.BitSet.fixedSize(largestMovedPoint(g).getOrElse(-1) + 1)
+    var k: Int = 0
+    while (k < n) {
+      if (movesPoint(g, k))
+        bitset += k
+      k += 1
+    }
+    bitset.toScala
+  }
 
   /** Returns the maximal element in the support of ` g`, or NNNone if the support is empty. */
-  def largestMovedPoint(g: G): NNOption
+  def largestMovedPoint(g: G): NNOption = {
+    var k: Int = movedPointsUpperBound(g).getOrElseFast(-1)
+    while (k > -1) {
+      if (movesPoint(g, k)) return NNSome(k)
+      k -= 1
+    }
+    NNNone
+  }
 
   /** Returns the minimal element in the support of `g`, or NNNone if the support is empty. */
-  def smallestMovedPoint(g: G): NNOption
+  def smallestMovedPoint(g: G): NNOption = {
+    var k: Int = 0
+    val n: Int = movedPointsUpperBound(g).getOrElseFast(-1) + 1
+    while (k < n) {
+      if (movesPoint(g, k)) return NNSome(k)
+      k += 1
+    }
+    NNNone
+  }
 
   /** Returns an arbitrary element in the support of `g` or NNNone if support empty. */
   def findMovedPoint(g: G): NNOption = largestMovedPoint(g)
 
-  /** Returns an upper bound on the maximal element in the support of any element of `G`. */
-  def movedPointsUpperBound: Int
+  /** Returns a fast to compute upper bound on the maximal element in the support of `g`. */
+  def movedPointsUpperBound(g: G): NNOption
 
   /** Returns the sign of the permutation `g`. */
   def signPerm(g: G): Int = {
@@ -78,6 +114,12 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     cs.toScala
   }
 
+  /** Returns the order of the permutation representation of this element. */
+  def permutationOrder(g: G): SafeLong = {
+    val cs = cycleStructure(g)
+    cs.keys.foldLeft(SafeLong(1)) { case (acc, len) => spire.math.lcm(acc, SafeLong(len)) }
+  }
+
   /** Returns the orbit of the domain element `i` under the action of `g`. */
   def orbit(g: G, i: Int): Set[Int] = {
     val mut = metal.mutable.BitSet(i)
@@ -99,6 +141,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     def apply(idx: Int) = actr(idx, g)
   }
 
+  /** Returns a permutation of type `P` with the same images as the action of `g`. */
   def toPermutation[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
 
