@@ -8,12 +8,11 @@ import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.perms.FaithfulPermRep
 
 final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
-  (val chain: Chain[G, F], generatorsOpt: Opt[Iterable[G]])
+  (val chain: Chain[G, F], generatorsOpt: Opt[Iterable[G]], val repOpt: Opt[FaithfulPermRep[G]])
   (implicit val classTag: ClassTag[G], val equ: Eq[G], val group: Group[G], val action: F) extends GrpChain[G, F] {
-
-  def this(chain: Chain[G, F])(implicit action: F, classTag: ClassTag[G], equ: Eq[G], group: Group[G]) = this(chain, Opt.empty[Iterable[G]])
 
   def chainOpt = Opt(chain)
 

@@ -8,7 +8,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{BaseChange, BaseSwap, BuildChain, GrpChain, GrpChainExplicit, Intersection, SchreierSims, Term}
-import net.alasc.perms.FaithfulPermRepBuilder
+import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 
 final class GrpChainBuilder[G]
   (implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val classTag: ClassTag[G],
@@ -21,21 +21,21 @@ final class GrpChainBuilder[G]
     val rep = repBuilder.build(Nil)
     type F = rep.F
     implicit def F: F = rep.permutationAction
-    new GrpChainExplicit[G, F](Term[G, F], generatorsOpt = Opt(Iterable.empty[G]))
+    new GrpChainExplicit[G, F](Term[G, F], Opt(Iterable.empty[G]), Opt(rep))
   }
 
   def fromGenerators(generators: Iterable[G]): GG = {
     val rep = repBuilder.build(generators)
     type F = rep.F
     implicit def F: F = rep.permutationAction
-    new GrpChainExplicit[G, F](BuildChain.fromGenerators[G, F](generators), generatorsOpt = Opt(generators))
+    new GrpChainExplicit[G, F](BuildChain.fromGenerators[G, F](generators), Opt(generators), Opt(rep))
   }
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG = {
     val rep = repBuilder.build(generators)
     type F = rep.F
     implicit def F: F = rep.permutationAction
-    new GrpChainExplicit[G, F](BuildChain.fromGeneratorsAndOrder[G, F](generators, order), generatorsOpt = Opt(generators))
+    new GrpChainExplicit[G, F](BuildChain.fromGeneratorsAndOrder[G, F](generators, order), Opt(generators), Opt(rep))
   }
 
   def fromGrp(grp: Grp[G]): GG = grp match {
@@ -43,37 +43,67 @@ final class GrpChainBuilder[G]
     case _ => fromGeneratorsAndOrder(grp.generators, grp.order)
   }
 
-  protected def convertGrp[F <: PermutationAction[G] with Singleton](grp: Grp[G])(implicit F: F): GrpChain[G, F] =
+  protected def convertGrp[F <: PermutationAction[G] with Singleton]
+  (grp: Grp[G], repOpt: Opt[FaithfulPermRep[G]])(implicit F: F): GrpChain[G, F] = {
+    val GF = GrpChain.In(F)
     grp match {
-      case gc: GrpChain[G, _] if gc.action eq F => gc.asInstanceOf[GrpChain[G, F]]
+      case GF(gc) => gc
       case _ =>
-        new GrpChainExplicit[G, F](BuildChain.fromGeneratorsAndOrder[G, F](grp.generators, grp.order),
-          Opt(grp.generators))
+        val chain = BuildChain.fromGeneratorsAndOrder[G, F](grp.generators, grp.order)
+        new GrpChainExplicit[G, F](chain, Opt(grp.generators), repOpt)
     }
+  }
 
   def union(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) union(rhs, lhs) // ensure that lhs.order >= rhs.order
     else if (lhs.hasSubgroup(rhs)) fromGrp(lhs)
     else {
-      val rep = repBuilder.build(lhs.generators ++ rhs.generators)
-      import rep.permutationAction
-      //implicit def F: F = rep.permutationAction
-      GrpChain.union(convertGrp[rep.F](lhs), rhs)
+      def fallback: GG = {
+        val rep = repBuilder.build(lhs.generators ++ rhs.generators)
+        import rep.permutationAction
+        GrpChain.union(convertGrp[rep.F](lhs, Opt(rep)), rhs.generators)
+      }
+      lhs match {
+        case GrpChain.AndAction(pair) => pair.grp.repOpt match {
+          case Opt(rep) if rhs.generators.forall(rep.represents) =>
+            GrpChain.union[G, pair.Action](pair.grp, rhs.generators)
+          case _ => fallback
+        }
+        case _ => fallback
+      }
     }
 
   def intersect(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) intersect(rhs, lhs) // ensure that lhs.order >= rhs.order
     else if (lhs.hasSubgroup(rhs)) fromGrp(rhs)
     else {
-      val rep = repBuilder.build(lhs.generators ++ rhs.generators)
-      import rep.permutationAction
-      GrpChain.subgroupFor(convertGrp[rep.F](lhs), Intersection[G, rep.F](convertGrp[rep.F](rhs).chain))
+      def fallback: GG = {
+        val rep = repBuilder.build(lhs.generators ++ rhs.generators)
+        import rep.permutationAction
+        GrpChain.intersect(convertGrp[rep.F](lhs, Opt(rep)), convertGrp[rep.F](rhs, Opt(rep)))
+      }
+      lhs match {
+        case GrpChain.AndAction(pair) =>
+          val GF = GrpChain.In(pair.action)
+          rhs match {
+            case GF(rhs1) => GrpChain.intersect[G, pair.Action](pair.grp, rhs1)
+            case _ => pair.grp.repOpt match {
+              case Opt(rep) if rhs.generators.forall(rep.represents) =>
+                GrpChain.intersect(pair.grp, convertGrp[pair.Action](rhs, pair.grp.repOpt)(pair.action))
+              case _ => fallback
+            }
+          }
+          case _ => fallback
+      }
     }
 
-  override def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] = {
-    val rep = repBuilder.build(grp.generators)
-    import rep.permutationAction
-    GrpChain.leftCosetsBy(convertGrp[rep.F](grp), subgrp, convertGrp[rep.F](subgrp))
+  override def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] = grp match {
+    case GrpChain.AndAction(pair) =>
+      GrpChain.leftCosetsBy[G, pair.Action](pair.grp, subgrp, convertGrp[pair.Action](subgrp, pair.grp.repOpt)(pair.action))
+    case _ =>
+      val rep = repBuilder.build(grp.generators)
+      import rep.permutationAction
+      GrpChain.leftCosetsBy(convertGrp[rep.F](grp, Opt(rep)), subgrp, convertGrp[rep.F](subgrp, Opt(rep)))
   }
 
   def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type] = leftCosetsBy(grp, subgrp).inverse

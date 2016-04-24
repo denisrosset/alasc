@@ -25,12 +25,66 @@ abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp
 
   def chainOpt: Opt[bsgs.Chain[G, F]]
 
-  def repOpt: Opt[FaithfulPermRep[G]] = Opt.empty[FaithfulPermRep[G]] // TODO: do a real implementation
+  def repOpt: Opt[FaithfulPermRep[G]]
 
 }
 
 object GrpChain {
 
+  trait In[G, F <: PermutationAction[G] with Singleton] {
+
+    def unapply(grp: Grp[G]): Option[GrpChain[G, F]]
+
+  }
+
+  /** Matches a `GrpChain[G, F]` with the requested action. */
+  object In {
+
+    def apply[G, PA[X] <: PermutationAction[X], F <: PermutationAction[G] with Singleton](action: F with PA[G]): In[G, F] =
+      new In[G, F] {
+        def unapply(grp: Grp[G]): Option[GrpChain[G, F]] = grp match {
+          case gc: GrpChain[G, _] if gc.action eq action => Some(gc.asInstanceOf[GrpChain[G, F]])
+          case _ => None // Opt.empty[GrpChain[G, F]]
+        }
+      }
+
+  }
+
+  trait Extracted[G] { self =>
+
+    def isEmpty = action eq null
+
+    type Action <: PermutationAction[G] with Singleton
+
+    implicit val action: Action
+
+    val grp: GrpChain[G, Action]
+
+    def get = self
+
+  }
+
+  object ExtractedEmpty extends Extracted[Nothing] {
+    val action = null
+    val grp = null
+    type Action = Null
+  }
+
+  object AndAction {
+
+    def unapply[G](lhs: Grp[G]): Extracted[G] = lhs match {
+      case gc: GrpChain[G, _] =>
+        new Extracted[G] {
+          type Action = gc.action.type
+          val action: Action = gc.action
+          val grp = gc.asInstanceOf[GrpChain[G, Action]]
+        }
+      case _ => ExtractedEmpty.asInstanceOf[Extracted[G]]
+    }
+
+  }
+
+  /** Returns the subgroup of `grp` that obeys the subgroup definition `definition`. */
   def subgroupFor[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], definition: SubgroupDefinition[G, F])
     (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
@@ -49,27 +103,38 @@ object GrpChain {
         BuildChain.fromChain[G, F, F](grp.chain, definition.baseGuideOpt)
     }
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new GrpChainExplicit[G, F](subChain)
+    new GrpChainExplicit[G, F](subChain, Opt.empty[Iterable[G]], grp.repOpt)
   }
 
+  /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
+    * It is required that the permutation action `F` can describe the `rhs` generators.
+    */
   def union[G, F <: PermutationAction[G] with Singleton]
-    (lhs: GrpChain[G, F], rhs: Grp[G]): GrpChain[G, F] = { // TODO: replace rhs by Iterable[G]
-      import lhs.{action, classTag, equ, group}
-      val mutableChain = lhs.chain.mutableChain
-      val newGenerators = rhs.generators.filterNot(mutableChain.start.next.sifts)
-      mutableChain.insertGenerators(newGenerators)
-      mutableChain.completeStrongGenerators()
-      val newChain = mutableChain.toChain()
-      val generatorsOpt =
-        if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
-          Opt(lhs.generators ++ newGenerators)
-        else
-          Opt.empty[Iterable[G]]
-      new GrpChainExplicit(mutableChain.toChain(), generatorsOpt)
-    }
+    (lhs: GrpChain[G, F], rhs: Iterable[G]): GrpChain[G, F] = {
+    import lhs.{action, classTag, equ, group}
+    val mutableChain = lhs.chain.mutableChain
+    val newGenerators = rhs.filterNot(mutableChain.start.next.sifts)
+    mutableChain.insertGenerators(newGenerators)
+    mutableChain.completeStrongGenerators()
+    val newChain = mutableChain.toChain()
+    val generatorsOpt =
+      if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
+        Opt(lhs.generators ++ newGenerators)
+      else
+        Opt.empty[Iterable[G]]
+    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt, lhs.repOpt)
+  }
 
+  def intersect[G, F <: PermutationAction[G] with Singleton](lhs: GrpChain[G, F], rhs: GrpChain[G, F])
+    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
+    import lhs.{action, classTag, equ, group}
+    subgroupFor(lhs, Intersection[G, F](rhs.chain))
+  }
+
+  /** Returns the subgroup of `grp` that fixes the partition `partition`. */
   def fixingPartition[G, F <: PermutationAction[G] with Singleton]
-    (grp: GrpChain[G, F], partition: Partition)(implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
+    (grp: GrpChain[G, F], partition: Partition)
+    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
     import grp.{action, group}
     subgroupFor(grp, net.alasc.bsgs.FixingPartition[G, F](partition))
   }
@@ -80,13 +145,13 @@ object GrpChain {
     grp match {
       case conj: GrpChainConjugated[G, F] => conj.originalChain match {
         case node: Node[G, F] =>
-          val nextGrp = new GrpChainConjugated(node.next, conj.g, conj.gInv)
+          val nextGrp = new GrpChainConjugated(node.next, conj.g, conj.gInv, Opt.empty[Iterable[G]], grp.repOpt)
           val trv = ConjugatedTransversal(node, conj.g, conj.gInv)
           Opt((nextGrp, trv))
         case _ => Opt.empty[(GrpChain[G, F], Transversal[G, F])]
       }
       case _ => grp.chain match {
-        case node: Node[G, F] => Opt((new GrpChainExplicit(node.next), node))
+        case node: Node[G, F] => Opt((new GrpChainExplicit(node.next, Opt.empty[Iterable[G]], grp.repOpt), node))
         case _ => Opt.empty[(GrpChain[G, F], Transversal[G, F])]
       }
     }
@@ -110,11 +175,12 @@ object GrpChain {
                 val (nextOriginalChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
                 val newG = h |+| g
                 if (newG.isId) {
-                  val nextGrp = new GrpChainExplicit[G, F](nextOriginalChain)
+                  val nextGrp = new GrpChainExplicit[G, F](nextOriginalChain, Opt.empty[Iterable[G]], grp.repOpt)
                   (nextGrp, originalTrv)
                 } else {
                   val newGInv = gInv |+| hInv
-                  val nextGrp = new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv)
+                  val nextGrp = new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv,
+                    Opt.empty[Iterable[G]], grp.repOpt)
                   val trv = ConjugatedTransversal[G, F](originalTrv, newG, newGInv)
                   (nextGrp, trv)
                 }
@@ -126,7 +192,7 @@ object GrpChain {
                   mutableChain.conjugate(g, gInv)
                   mutableChain.changeBasePointAfter(mutableChain.start, b)
                   val (nextChain, trv) = mutableChain.toChain.detach(b)
-                  val nextGrp = new GrpChainExplicit[G, F](nextChain)
+                  val nextGrp = new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt)
                   (nextGrp, trv)
                 }
             }
@@ -138,12 +204,12 @@ object GrpChain {
           case Opt(g) =>
             if (g.isId) {
               val (nextChain, trv) = node.withFirstBasePoint(b).detach(b)
-              (new GrpChainExplicit[G, F](nextChain), trv)
+              (new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt), trv)
             } else {
               val gInv = g.inverse
               val c = b <|+| gInv
               val (nextChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
-              val nextGrp = new GrpChainConjugated[G, F](nextChain, g, gInv)
+              val nextGrp = new GrpChainConjugated[G, F](nextChain, g, gInv, Opt.empty[Iterable[G]], grp.repOpt)
               val trv = ConjugatedTransversal[G, F](originalTrv, g, gInv)
               (nextGrp, trv)
             }
@@ -152,7 +218,7 @@ object GrpChain {
               (grp, Transversal.empty[G, F](b))
             else {
               val (nextChain, trv) = node.withFirstBasePoint(b).detach(b)
-              (new GrpChainExplicit[G, F](nextChain), trv)
+              (new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt), trv)
             }
         }
       }
@@ -177,10 +243,10 @@ object GrpChain {
                 val (nextOriginalChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
                 val newG = h |+| g
                 if (newG.isId)
-                  new GrpChainExplicit[G, F](nextOriginalChain)
+                  new GrpChainExplicit[G, F](nextOriginalChain, Opt.empty[Iterable[G]], grp.repOpt)
                 else {
                   val newGInv = gInv |+| hInv
-                  new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv)
+                  new GrpChainConjugated[G, F](nextOriginalChain, newG, newGInv, Opt.empty[Iterable[G]], grp.repOpt)
                 }
               case _ =>
                 if (node.isFixed(a)) conj
@@ -189,7 +255,7 @@ object GrpChain {
                   mutableChain.conjugate(g, gInv)
                   mutableChain.changeBasePointAfter(mutableChain.start, b)
                   val (nextChain, _) = mutableChain.toChain.detach(b)
-                  new GrpChainExplicit[G, F](nextChain)
+                  new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt)
                 }
             }
           case term: Term[G, F] => conj
@@ -200,18 +266,18 @@ object GrpChain {
           case Opt(g) =>
             if (g.isId) {
               val (nextChain, _) = node.withFirstBasePoint(b).detach(b)
-              new GrpChainExplicit[G, F](nextChain)
+              new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt)
             } else {
               val gInv = g.inverse
               val c = b <|+| gInv
               val (nextChain, originalTrv) = node.withFirstBasePoint(c).detach(c)
-              new GrpChainConjugated[G, F](nextChain, g, gInv)
+              new GrpChainConjugated[G, F](nextChain, g, gInv, Opt.empty[Iterable[G]], grp.repOpt)
             }
           case _ =>
             if (node.isFixed(b)) grp
             else {
               val (nextChain, _) = node.withFirstBasePoint(b).detach(b)
-              new GrpChainExplicit[G, F](nextChain)
+              new GrpChainExplicit[G, F](nextChain, Opt.empty[Iterable[G]], grp.repOpt)
             }
         }
       }
@@ -234,7 +300,7 @@ object GrpChain {
         baseChange.changeBase(mut, guide)
         mut.toChain()
     }
-    new GrpChainExplicit[G, F](PointwiseStabilizer.recurse(guidedChain, set))
+    new GrpChainExplicit[G, F](PointwiseStabilizer.recurse(guidedChain, set), Opt.empty[Iterable[G]], grp.repOpt)
   }
 
   def leftCosetsBy[G, F <: PermutationAction[G] with Singleton]
