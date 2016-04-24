@@ -10,7 +10,6 @@ import net.alasc.algebra._
 import net.alasc.finite.{Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._
-import net.alasc.std.product._
 
 class PermPermSuite extends AlascSuite {
 

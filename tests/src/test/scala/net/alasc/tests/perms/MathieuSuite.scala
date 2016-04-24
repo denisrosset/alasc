@@ -5,7 +5,6 @@ import spire.math.SafeLong
 
 import net.alasc.named.Mathieu
 import net.alasc.perms.{Perm, PermGrpBuilder}
-import net.alasc.tests.bsgs.BSGSSuite
 
 class MathieuSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 

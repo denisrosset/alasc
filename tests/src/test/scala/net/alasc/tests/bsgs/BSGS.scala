@@ -2,16 +2,12 @@ package net.alasc.tests
 package bsgs
 
 import org.scalacheck._
-import spire.algebra.{Group, Order}
 import spire.util.Opt
 
-import org.scalatest.matchers.{MatchResult, Matcher}
-
 import net.alasc.algebra._
-import net.alasc.bsgs.{BuildChain, Chain, Node, Term}
+import net.alasc.bsgs.{BuildChain, Chain}
 import net.alasc.domains._
-import net.alasc.finite.Grp
-import net.alasc.laws.{BSGSs, Partitions, Permutations}
+import net.alasc.laws.{BSGSs, Partitions}
 import net.alasc.named._
 import net.alasc.perms.{PermGrpChainBuilder, _}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}

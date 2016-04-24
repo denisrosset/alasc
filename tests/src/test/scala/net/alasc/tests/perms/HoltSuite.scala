@@ -5,7 +5,6 @@ import spire.math.SafeLong
 
 import net.alasc.finite._
 import net.alasc.perms.{Perm, PermGrpBuilder}
-import net.alasc.tests.bsgs.BSGSSuite
 
 abstract class HoltSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
 /*

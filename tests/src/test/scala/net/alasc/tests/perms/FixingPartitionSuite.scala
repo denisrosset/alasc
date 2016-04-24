@@ -7,7 +7,6 @@ import net.alasc.domains._
 import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
 import net.alasc.perms.{GrpFixingPartition, Perm}
-import net.alasc.std.seq._
 
 final class FixingPartitionSuite extends AlascSuite {
 

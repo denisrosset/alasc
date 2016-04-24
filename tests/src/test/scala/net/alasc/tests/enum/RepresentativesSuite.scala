@@ -2,8 +2,6 @@ package net.alasc.tests
 package enum
 
 import spire.algebra.Order
-import spire.std.int._
-import spire.syntax.partialAction._
 import spire.util.Opt
 
 import org.scalacheck._
@@ -14,8 +12,6 @@ import net.alasc.enum.Representatives
 import net.alasc.finite._
 import net.alasc.laws._
 import net.alasc.perms.{PermGrpChainBuilder, _}
-import net.alasc.std.array._
-import net.alasc.tests.bsgs.BSGSSuite
 import net.alasc.tests.perms.PermSuite
 
 abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {
