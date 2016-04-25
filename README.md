@@ -29,14 +29,7 @@ Welcome to Scala version 2.11.2 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_4
 Type in expressions to have them evaluated.
 Type :help for more information.
 
-scala> import net.alasc.math._; import bsgs._; import algorithms._; import net.alasc.algebra._; import net.alasc.syntax.all._; import net.alasc.std.any._; import spire.implicits._
-import net.alasc.math._
-import bsgs._
-import algorithms._
-import net.alasc.algebra._
-import net.alasc.syntax.all._
-import net.alasc.std.any._
-import spire.implicits._
+scala> import net.alasc.finite._; import net.alasc.perms._; import net.alasc.perms.default._; import net.alasc.syntax.all._; import net.alasc.std.any._; import spire.implicits._
 
 scala> val M11 = Grp(Perm(1,2,3,4,5,6,7,8,9,10,11), Perm(3,7,11,8)(4,10,5,6))
 M11: net.alasc.math.Grp[net.alasc.math.Perm] = Grp(Perm(1,2,3,4,5,6,7,8,9,10,11), Perm(3,7,11,8)(4,10,5,6))
