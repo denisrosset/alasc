@@ -20,17 +20,15 @@ trait AMat {
 
 }
 
-case class ProductAMat(a: AMat, b: AMat) extends AMat {
-  require(a.dimension == b.dimension)
-  def dimension = a.dimension
-  def value = a.value * b.value
+case class ProductAMat(a: AMat*) extends AMat {
+  require(a.nonEmpty)
+  require(a.tail.forall(_.dimension == a.head.dimension))
+  def dimension = a.head.dimension
+  def value = a.tail.foldLeft(a.head.value) { case (l, r) => l * r.value }
 }
 
-case class IdentityPermAMat(dimension: Int) extends AMat {
-  def value = eye[Cyclo](dimension)
-}
-
-case class AMatPerm(p: Perm, dimension: Int) extends AMat {
+trait AMatPermType extends AMat {
+  def p: Perm
   def value = DenseMat.tabulate[Cyclo](dimension, dimension) { (i, j) =>
     if ((i <|+| p) === j)
       Cyclo.one
@@ -39,10 +37,25 @@ case class AMatPerm(p: Perm, dimension: Int) extends AMat {
   }
 }
 
-case class AMatMon(mon: Mon) extends AMat {
-  def dimension = mon.diag.length
-
+trait AMatMonType extends AMat {
+  def mon: Mon
   def value = AMatPerm(mon.perm, mon.diag.length).value * DiagonalAMat(mon.diag).value
+}
+
+case class IdentityPermAMat(dimension: Int) extends AMatPermType {
+  def p = Perm.id
+  override def value = eye[Cyclo](dimension)
+}
+
+case class IdentityMonAMat(dimension: Int) extends AMatMonType {
+  def mon = Mon(Perm.id, ones[Cyclo](dimension))
+  override def value = eye[Cyclo](dimension)
+}
+
+case class AMatPerm(val p: Perm, val dimension: Int) extends AMatPermType
+
+case class AMatMon(mon: Mon) extends AMatMonType {
+  def dimension = mon.diag.length
 }
 
 case class AllOneAMat(dimension: Int) extends AMat {
