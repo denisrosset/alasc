@@ -1,8 +1,10 @@
 package net.alasc.gap3
 
+import java.io.{ByteArrayInputStream, File}
+
 import net.alasc.algebra.{Permutation, PermutationAction}
 import net.alasc.finite.{Grp, Rep}
-import net.alasc.perms.{Cycles, Perm}
+import net.alasc.perms.{Cycles, FaithfulPermRep, Perm}
 import net.alasc.syntax.all._
 import cyclo.Cyclo
 import scalin.immutable.{DenseMat, Mat, Vec}
@@ -13,6 +15,8 @@ import spire.syntax.action._
 import spire.syntax.group._
 import spire.std.int._
 
+import fastparse.core.Parsed
+
 trait ARep[G] extends Rep[G, Cyclo] {
   def grp: Grp[G]
   def represents(g: G) = grp.contains(g)
@@ -20,17 +24,48 @@ trait ARep[G] extends Rep[G, Cyclo] {
 
 object ARep {
 
-  def apply[G:Permutation](grp: Grp[G]): String = {
-    val n = PermutationAction.largestMovedPoint(grp.generators).getOrElse(-1) + 1
+  val gapDir = new File("/home/rossetd0/software/gap3")
+  val gapCmd = "/home/rossetd0/software/gap3/bin/gap-static-linux-i686"
+  val gapOptions = "-q"
+
+  def full[G, R <: FaithfulPermRep[G] with Singleton]
+  (grp: Grp[Rep.Of[G, R]])(implicit witness: shapeless.Witness.Aux[R], permutation: Permutation[Rep.Of[G, R]]): String = {
+    val R = witness.value
+    val n = R.dimension
     val perms: Iterable[Perm] = grp.generators.map(_.toPermutation[Perm])
     def gapPermString(p: Perm): String = p.toPermutation[Cycles].seq.map(_.seq.map(_ + 1).mkString("(",",",")")).mkString
     val gapGenerators = perms.map(gapPermString).mkString("[", ",", "]")
-
     val n1 = n + 1
     val imp = """LoadPackage("arep");; """
-    val gapString = imp + s"G := GroupWithGenerators( $gapGenerators );; A := ARepByImages(G, $gapGenerators, $n);; D := DecompositionMonRep(A);; D.conjugation.element;"
+    val gapInputString = imp + s"G := GroupWithGenerators( $gapGenerators );; A := ARepByImages(G, $gapGenerators, $n);; D := DecompositionMonRep(A);"
+    val gapInput = new ByteArrayInputStream(gapInputString.getBytes("UTF-8"))
+    import scala.sys.process._
+    val out = new java.io.ByteArrayOutputStream
+    Process(gapCmd :: gapOptions :: Nil, Some(gapDir)) #< gapInput #> out !
+    val gapOutput = new String(out.toByteArray(), "UTF-8")
+    out.close()
+    gapOutput
+  }
 
-    gapString
+  def apply[G, R <: FaithfulPermRep[G] with Singleton]
+    (grp: Grp[Rep.Of[G, R]])(implicit witness: shapeless.Witness.Aux[R], permutation: Permutation[Rep.Of[G, R]]): AMat = {
+    val R = witness.value
+    val n = R.dimension
+    val perms: Iterable[Perm] = grp.generators.map(_.toPermutation[Perm])
+    def gapPermString(p: Perm): String = p.toPermutation[Cycles].seq.map(_.seq.map(_ + 1).mkString("(",",",")")).mkString
+    val gapGenerators = perms.map(gapPermString).mkString("[", ",", "]")
+    val n1 = n + 1
+    val imp = """LoadPackage("arep");; """
+    val gapInputString = imp + s"G := GroupWithGenerators( $gapGenerators );; A := ARepByImages(G, $gapGenerators, $n);; D := DecompositionMonRep(A);; D.conjugation.element;"
+    val gapInput = new ByteArrayInputStream(gapInputString.getBytes("UTF-8"))
+    import scala.sys.process._
+    val out = new java.io.ByteArrayOutputStream
+    Process(gapCmd :: gapOptions :: Nil, Some(gapDir)) #< gapInput #> out !
+    val gapOutput = new String(out.toByteArray(), "UTF-8")
+    val gapOutputRemoveWarnings = gapOutput.split("\n").filterNot(_.head == '#').mkString("\n")
+    out.close()
+    val Parsed.Success(mat, _) = GapOutput.aMat.parse(gapOutputRemoveWarnings)
+    mat
   }
 
   def conjugate[G](rep: Rep[G, Cyclo], mat: Mat[Cyclo]): Rep[G, Cyclo] = new Rep[G, Cyclo] {

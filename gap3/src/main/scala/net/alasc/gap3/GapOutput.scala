@@ -20,7 +20,7 @@ object GapOutput {
 
   val White = WhitespaceApi.Wrapper{
     import fastparse.all._
-    NoTrace(CharsWhile(" \n\t".contains(_)))
+    NoTrace(CharsWhile(" \n\t".contains(_)).?)
   }
   import fastparse.noApi._
   import White._
@@ -54,8 +54,14 @@ object GapOutput {
 
   val rootOfUnity: P[Cyclo] = P( "E" ~ "(" ~ positiveInt ~ ")" ).map(Cyclo.e(_))
 
-  val nonNegativeCycloTerm: P[Cyclo] = P( nonNegativeRational ~ ("*" ~ rootOfUnity).? )
+  val rootOfUnityPower: P[Cyclo] = P( rootOfUnity ~ ("^" ~ int).? ).map {
+    case (root, optExp) => root.pow(optExp.getOrElse(1))
+  }
+
+  val nonNegativeCoeffCycloTerm: P[Cyclo] = P( nonNegativeRational ~ ("*" ~ rootOfUnityPower).? )
     .map { case (coeff, rootOpt) => Cyclo(coeff) * rootOpt.getOrElse(Cyclo.one) }
+
+  val nonNegativeCycloTerm: P[Cyclo] = rootOfUnityPower | nonNegativeCoeffCycloTerm
 
   val headCycloTerm: P[Cyclo] = P( "-".!.? ~ nonNegativeCycloTerm ).map {
     case (Some(_), ct) => -ct
@@ -90,52 +96,60 @@ object GapOutput {
   val mon: P[Mon] = P("Mon(" ~ perm ~ "," ~ cycloVec ~ ")")
     .map { case (p, v) => Mon(p, v) }
 
-  val groupWithGenerators: P[Grp[Perm]] = P("GroupWithGenerators" ~ "(" ~ permSeq ~ ")")
+  val groupWithGenerators: P[Grp[Perm]] = P("GroupWithGenerators" ~/ "(" ~ permSeq ~ ")")
     .map( seq => Grp(seq: _*) )
 
   val productAMat: P[ProductAMat] = P(aMat ~ "*" ~ aMat).map { case (lhs, rhs) => ProductAMat(lhs, rhs) }
 
-  val identityPermAMat: P[IdentityPermAMat] = P("IdentityPermAMat" ~ "(" ~ dimension ~ ")")
+  val identityPermAMat: P[IdentityPermAMat] = P("IdentityPermAMat" ~/ "(" ~ dimension ~ ")")
     .map( d => IdentityPermAMat(d) )
 
-  val aMatPerm: P[AMatPerm] = P("AMatPerm" ~ "(" ~ perm ~ "," ~ dimension ~ ")")
+  val aMatPerm: P[AMatPerm] = P("AMatPerm" ~/ "(" ~ perm ~ "," ~ dimension ~ ")")
     .map { case (p, d) => AMatPerm(p, d) }
 
-  val aMatMon: P[AMatMon] = P("AMatMon" ~ "(" ~ mon ~ ")").map(AMatMon)
+  val aMatMon: P[AMatMon] = P("AMatMon" ~/ "(" ~ mon ~ ")").map(AMatMon)
 
-  val allOneAMat: P[AllOneAMat] = P("AllOneAMat" ~ "(" ~ dimension ~ ")").map(AllOneAMat)
+  val allOneAMat: P[AllOneAMat] = P("AllOneAMat" ~/ "(" ~ dimension ~ ")").map(AllOneAMat)
 
-  val nullAMat: P[NullAMat] = P("NullAMat" ~ "(" ~ dimension ~ ")").map(NullAMat)
+  val nullAMat: P[NullAMat] = P("NullAMat" ~/ "(" ~ dimension ~ ")").map(NullAMat)
 
-  val diagonalAMat: P[DiagonalAMat] = P("DiagonalAMat" ~ "(" ~ cycloVec ~ ")").map(DiagonalAMat)
+  val diagonalAMat: P[DiagonalAMat] = P("DiagonalAMat" ~/ "(" ~ cycloVec ~ ")").map(DiagonalAMat)
 
-  val dftaMat: P[DFTAMat] = P("DFTAMat" ~ "(" ~ dimension ~ ")").map(DFTAMat)
+  val dftaMat: P[DFTAMat] = P("DFTAMat" ~/ "(" ~ dimension ~ ")").map(DFTAMat)
 
-  val soraMat: P[SORAMat] = P("SORAMat" ~ "(" ~ dimension ~ ")").map(SORAMat)
+  val soraMat: P[SORAMat] = P("SORAMat" ~/ "(" ~ dimension ~ ")").map(SORAMat)
 
   val scalarMultipleAMat: P[ScalarMultipleAMat] = P("ScalarMultipleAMat" ~ "(" ~ cyclo ~ "," ~ aMat ~ ")")
     .map { case (s, a) => ScalarMultipleAMat(s, a) }
 
-  val powerAMat: P[PowerAMat] = P("PowerAMat" ~ "(" ~ aMat ~ ", " ~ int ~ ")")
+  val powerAMat: P[PowerAMat] = P("PowerAMat" ~/ "(" ~ aMat ~ ", " ~ int ~ ")")
     .map { case (a, n) => PowerAMat(a, n) }
 
   val powerAMatInfix: P[PowerAMat] = P(aMat ~ "^" ~ int)
     .map { case (a, n) => PowerAMat(a, n) }
 
-  val conjugateAMat: P[ConjugateAMat] = P("ConjugateAMat" ~ "(" ~ aMat ~ "," ~ aMat ~ ")")
+  val conjugateAMat: P[ConjugateAMat] = P("ConjugateAMat" ~/ "(" ~ aMat ~ "," ~ aMat ~ ")")
     .map { case (a, b) => ConjugateAMat(a, b) }
 
-  val directSumAMat: P[DirectSumAMat] = P("DirectSumAMat" ~ "(" ~ aMat.rep(sep = ",") ~ ")")
+  val directSumAMat: P[DirectSumAMat] = P("DirectSumAMat" ~/ "(" ~ aMat.rep(sep = ",") ~ ")")
     .map( seq => DirectSumAMat(seq: _*) )
 
-  val tensorProductAMat: P[TensorProductAMat] = P("TensorProductAMat" ~ "(" ~ aMat.rep(sep = ",") ~ ")")
+  val tensorProductAMat: P[TensorProductAMat] = P("TensorProductAMat" ~/ "(" ~ aMat.rep(sep = ",") ~ ")")
     .map( seq => TensorProductAMat(seq: _*) )
 
-  val galoisConjugateAMat: P[GaloisConjugateAMat] = P("GaloisConjugateAMat" ~ "(" ~ aMat ~ "," ~ int ~ ")")
+  val galoisConjugateAMat: P[GaloisConjugateAMat] = P("GaloisConjugateAMat" ~/ "(" ~ aMat ~ "," ~ int ~ ")")
     .map { case (a, k) => GaloisConjugateAMat(a, k) }
 
-  val aMatSimple: P[AMat] = P(identityPermAMat | aMatPerm | aMatMon | allOneAMat |
-    nullAMat | diagonalAMat | dftaMat | soraMat | scalarMultipleAMat | powerAMat | powerAMatInfix |
+
+  val aMatMat: P[AMatMat] = P("AMatMat" ~/ "(" ~ "[" ~ cycloVec.rep(sep = ",") ~ "]" ~ ")").map { rows =>
+    val nCols = rows.head.length
+    val nRows = rows.size
+    val raw = rows.map(vec => Seq.tabulate(vec.length)(vec(_))).flatten
+    AMatMat(rowMajor[Cyclo](nRows, nCols)(raw: _*))
+  }
+
+  val aMatSimple: P[AMat] = P(identityPermAMat | aMatMat | aMatPerm | aMatMon | allOneAMat |
+    nullAMat | diagonalAMat | dftaMat | soraMat | scalarMultipleAMat | powerAMat |
     conjugateAMat | directSumAMat | tensorProductAMat | galoisConjugateAMat)
 
   val aMatFactor: P[AMat] = P(aMatSimple ~ ("^" ~/ int).?).map {
@@ -143,7 +157,9 @@ object GapOutput {
     case (a, Some(k)) => PowerAMat(a, k)
   }
 
-  val aMat: P[AMat] = P(aMatFactor ~ ("*" ~/ aMatFactor).rep )
-    .map { case (hd, tl) => ProductAMat((hd +: tl): _*) }
+  val aMat: P[AMat] = P(aMatFactor ~ ("*" ~/ aMatFactor).rep ).map {
+    case (hd, Seq()) => hd
+    case (hd, tl) => ProductAMat((hd +: tl): _*)
+  }
 
 }

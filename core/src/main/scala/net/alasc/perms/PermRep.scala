@@ -4,6 +4,8 @@ import spire.math.Rational
 import spire.syntax.cfor._
 import spire.syntax.action._
 
+import cyclo.Cyclo
+
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Rep
 

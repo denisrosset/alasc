@@ -52,6 +52,11 @@ case class IdentityMonAMat(dimension: Int) extends AMatMonType {
   override def value = eye[Cyclo](dimension)
 }
 
+case class AMatMat(val mat: Mat[Cyclo]) extends AMat {
+  def dimension = mat.nRows
+  def value = mat
+}
+
 case class AMatPerm(val p: Perm, val dimension: Int) extends AMatPermType
 
 case class AMatMon(mon: Mon) extends AMatMonType {

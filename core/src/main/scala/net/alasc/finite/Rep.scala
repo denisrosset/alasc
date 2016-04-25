@@ -9,6 +9,8 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
+import scalin.algebra.MatField
+
 import net.alasc.algebra.{Permutation, PermutationAction, PermutationBuilder}
 import net.alasc.bsgs.{BaseChange, BuildChain, SchreierSims}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, PermRep}
@@ -26,6 +28,12 @@ trait Rep[G, K] {
   /** Tests whether this representation can represent the element `g`. */
   def represents(g: G): Boolean
 
+  def widen[L](f: K => L)(implicit L: MatField[L, _ <: scalin.immutable.Mat[L]]): Rep[G, L] = new Rep[G, L] {
+    def dimension = self.dimension
+    def represents(g: G) = self.represents(g)
+    def apply(g: G): scalin.immutable.Mat[L] = self.apply(g).map(f(_))
+  }
+
 }
 
 object Rep {
@@ -33,6 +41,8 @@ object Rep {
   type Of[G, R <: Rep[G, _] with Singleton] = { type In = R; type Self = G }
 
   def Of[G](g: G, rep: Rep[G, _]): Of[G, rep.type] = g.asInstanceOf[Of[G, rep.type]]
+
+  implicit def convertBack[G](of: Of[G, _]): G = of.asInstanceOf[G]
 
   abstract class syntax0 {
 
