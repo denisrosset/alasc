@@ -1,5 +1,4 @@
-package net.alasc
-package std
+package net.alasc.std
 
 import spire.algebra.Group
 import spire.algebra.partial.PartialAction
@@ -12,9 +11,10 @@ import net.alasc.algebra._
 
 final class VecPermutation[A, V <: Vec[A], G:PermutationAction:Group](implicit V: VecEngine[A, V]) extends PartialAction[V, G] {
 
-  import net.alasc.syntax.permutationAction._
   import spire.syntax.action._
   import spire.syntax.group._
+
+  import net.alasc.syntax.permutationAction._
 
   override def actlIsDefined(g: G, v: V) = g.largestMovedPoint.getOrElseFast(-1) < v.length
 
@@ -33,5 +33,3 @@ trait VecInstances {
   implicit def vecPermutation[A, V <: Vec[A], G:PermutationAction:Group](implicit V: VecEngine[A, V]): PartialAction[V, G] = new VecPermutation[A, V, G]
 
 }
-
-object vec extends VecInstances

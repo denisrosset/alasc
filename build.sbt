@@ -1,30 +1,32 @@
 // inspired by Spire build.sbt file
 
 val disciplineVersion = "0.4"
+val cycloVersion = "0.11.0.1"
 val metalVersion = "0.11.0.6"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
-val scalinVersion = "0.11.0.4"
+val scalinVersion = "0.11.0.6"
 val shapelessVersion = "2.2.5"
 val spireVersion = "0.11.0"
+val fastParseVersion = "0.3.7"
 
 lazy val alasc = (project in file("."))
   .settings(moduleName := "alasc")
   .settings(alascSettings: _*)
   .settings(noPublishSettings)
-  .aggregate(core, laws, scalin, tests)
-  .dependsOn(core, laws, scalin, tests)
+  .aggregate(core, gap3, laws, tests)
+  .dependsOn(core, gap3, laws, tests)
 
 lazy val core = (project in file("core"))
   .settings(moduleName := "alasc-core")
   .settings(alascSettings: _*)
   .settings(commonJvmSettings: _*)
 
-lazy val scalin = (project in file("scalin"))
-  .settings(moduleName := "alasc-scalin")
+lazy val gap3 = (project in file("gap3"))
+  .settings(moduleName := "alasc-gap3")
   .settings(alascSettings: _*)
   .settings(commonJvmSettings: _*)
-  .dependsOn(core)
+  .dependsOn(core, laws)
 
 lazy val laws = (project in file("laws"))
   .settings(moduleName := "alasc-laws")
@@ -39,7 +41,7 @@ lazy val tests = (project in file("tests"))
   .settings(testSettings:_*)
   .settings(noPublishSettings:_*)
   .settings(commonJvmSettings: _*)
-  .dependsOn(core, laws)
+  .dependsOn(core, gap3, laws)
 
 lazy val alascSettings = buildSettings ++ commonSettings ++ publishSettings
 
@@ -63,12 +65,14 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("releases")
   ),
   libraryDependencies ++= Seq(
+    "net.alasc" %% "spire-cyclo" % cycloVersion,
     "org.spire-math" %% "spire" % spireVersion,
     "org.spire-math" %% "spire-laws" % spireVersion,
     "net.alasc" %% "scalin-core" % scalinVersion,
     "com.chuusai" %% "shapeless" % shapelessVersion,
     "org.scala-metal" %% "metal-core" % metalVersion,
-    "org.scala-metal" %% "metal-library" % metalVersion
+    "org.scala-metal" %% "metal-library" % metalVersion,
+    "com.lihaoyi" %% "fastparse" % fastParseVersion
   )    
 ) ++ scalaMacroDependencies ++ warnUnusedImport
 

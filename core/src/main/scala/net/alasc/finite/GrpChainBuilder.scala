@@ -7,7 +7,7 @@ import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.bsgs.{BaseChange, BaseSwap, BuildChain, GrpChain, GrpChainExplicit, Intersection, SchreierSims, Term}
+import net.alasc.bsgs.{BaseChange, BaseSwap, BuildChain, GrpChain, GrpChainExplicit, SchreierSims, Term}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 
 final class GrpChainBuilder[G]

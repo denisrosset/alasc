@@ -13,7 +13,7 @@ import net.alasc.laws.NestedDiscipline
 
 /**
   * An opinionated stack of traits to improve consistency and reduce
-  * boilerplate in Cats tests.
+  * boilerplate in Alasc tests (inspired by Cats).
   */
 trait AlascSuite extends FunSuite with Matchers
   with PropertyChecks
