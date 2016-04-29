@@ -40,61 +40,77 @@ object CGLMP3 {
     }
   }
 
-  val sdpBasisSym = implicitly[MatEngine[Int, DenseMat[Int]]].tabulate(13, 13) { (r, c) =>
-    val set = Set(r, c) - 0
-    if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
-      grpInRep.iterator.map(Set(r, c) <|+| _).reduce(spire.math.min(_, _)(SetIntOrder)).toSeq.sorted match {
-        case Seq(a, b) => a * 13 + b
-        case Seq(a) => a
-        case Seq() => 0
-      }
-    }
-  }
+  object basisInd {
 
-  val sdpBasisNoSym = implicitly[MatEngine[Int, DenseMat[Int]]].tabulate(13, 13) { (r, c) =>
+    val sym = tabulate(13, 13) { (r, c) =>
       val set = Set(r, c) - 0
-    if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
-      set.toSeq.sorted match {
-        case Seq(a, b) => a * 13 + b
-        case Seq(a) => a
-        case Seq() => 0
+      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
+        grpInRep.iterator.map(Set(r, c) <|+| _).reduce(spire.math.min(_, _)(SetIntOrder)).toSeq.sorted match {
+          case Seq(a, b) => a * 13 + b
+          case Seq(a) => a
+          case Seq() => 0
+        }
       }
     }
+
+    val noSym = tabulate(13, 13) { (r, c) =>
+      val set = Set(r, c) - 0
+      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
+        set.toSeq.sorted match {
+          case Seq(a, b) => a * 13 + b
+          case Seq(a) => a
+          case Seq() => 0
+        }
+      }
+    }
+
   }
 
-  def seqBasis(basis: Mat[Int]): Seq[Mat[Cyclo]] = {
-    val v = basis(::)
-    val values = Seq.tabulate(v.length)(v(_)).toSet.filter(_ >= 0).toSeq.sorted
-    values.map(ind => basis.map(k => if (k == ind) Cyclo.one else Cyclo.zero))
+  object basis {
+
+    def seqBasis(basis: Mat[Int]): Seq[Mat[Cyclo]] = {
+      val v = basis(::)
+      val values = Seq.tabulate(v.length)(v(_)).toSet.filter(_ >= 0).toSeq.sorted
+      values.map(ind => basis.map(k => if (k == ind) Cyclo.one else Cyclo.zero))
+    }
+
+    val sym = seqBasis(basisInd.sym)
+    val noSym = seqBasis(basisInd.noSym)
+
   }
 
-  val basisNoSym = seqBasis(sdpBasisNoSym)
-  val basisSym = seqBasis(sdpBasisSym)
+  object transform {
 
-  val aMat = ARep(grpInRep)
+    val structured = ARep(grpInRep)
 
-  val rec = rowMajor[Int](13, 9)(
-    1,  0,0,  0,0,  0,0,  0,0,
-    0,  1,0,  0,0,  0,0,  0,0,
-    0,  0,1,  0,0,  0,0,  0,0,
-    1, -1,-1, 0,0,  0,0,  0,0,
-    0,  0,0,  1,0,  0,0,  0,0,
-    0,  0,0,  0,1,  0,0,  0,0,
-    1,  0,0, -1,-1, 0,0,  0,0,
-    0,  0,0,  0,0,  1,0,  0,0,
-    0,  0,0,  0,0,  0,1,  0,0,
-    1,  0,0,  0,0, -1,-1, 0,0,
-    0,  0,0,  0,0,  0,0,  1,0,
-    0,  0,0,  0,0,  0,0,  0,1,
-    1,  0,0,  0,0,  0,0, -1,-1
-  )
+    val value = structured.value
 
-  val proj = {
-    val ortho = rec.map(Cyclo(_)).t.orthogonalized.t
-    val diag = (ortho.t * ortho).inverse
-    ortho*diag*ortho.t
   }
 
-  val av = aMat.value
+  object nonSigProj {
+
+    val rec = rowMajor[Int](13, 9)(
+      1,  0,0,  0,0,  0,0,  0,0,
+      0,  1,0,  0,0,  0,0,  0,0,
+      0,  0,1,  0,0,  0,0,  0,0,
+      1, -1,-1, 0,0,  0,0,  0,0,
+      0,  0,0,  1,0,  0,0,  0,0,
+      0,  0,0,  0,1,  0,0,  0,0,
+      1,  0,0, -1,-1, 0,0,  0,0,
+      0,  0,0,  0,0,  1,0,  0,0,
+      0,  0,0,  0,0,  0,1,  0,0,
+      1,  0,0,  0,0, -1,-1, 0,0,
+      0,  0,0,  0,0,  0,0,  1,0,
+      0,  0,0,  0,0,  0,0,  0,1,
+      1,  0,0,  0,0,  0,0, -1,-1
+    )
+
+    val proj = {
+      val ortho = rec.map(Cyclo(_)).t.orthogonalized.t
+      val diag = (ortho.t * ortho).inverse
+      ortho*diag*ortho.t
+    }
+
+  }
 
 }

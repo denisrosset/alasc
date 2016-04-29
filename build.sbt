@@ -26,6 +26,28 @@ lazy val gap3 = (project in file("gap3"))
   .settings(moduleName := "alasc-gap3")
   .settings(alascSettings: _*)
   .settings(commonJvmSettings: _*)
+    .settings(initialCommands in console :=
+      """
+        |import net.alasc.perms._
+        |import net.alasc.finite._
+        |import net.alasc.perms.default._
+        |import spire.implicits._
+        |import net.alasc.syntax.all._
+        |import net.alasc.enum._
+        |import net.alasc.domains._
+        |import net.alasc.std.any._
+        |import net.alasc.wreath._
+        |import net.alasc.algebra._
+        |import scalin.syntax.all._
+        |import scalin.immutable.dense._
+        |import spire.math._
+        |import net.alasc.finite.Rep.syntax._
+        |import scalin.immutable.{Mat,Vec}
+        |import net.alasc.gap3._
+        |import cyclo.Cyclo
+        |import net.alasc.print._
+        |import CGLMP3._
+      """.stripMargin)
   .dependsOn(core, laws)
 
 lazy val laws = (project in file("laws"))
