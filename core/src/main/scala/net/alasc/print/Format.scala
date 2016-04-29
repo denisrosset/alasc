@@ -9,7 +9,7 @@ trait Format { self =>
 
   type Output
 
-  type Self <: Format with Singleton
+//  type Self <: Format with Singleton
 
   def finalize(inner: Inner, options: Options): Output
 
