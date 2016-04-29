@@ -95,5 +95,6 @@ object CGLMP3 {
     ortho*diag*ortho.t
   }
 
+  val av = aMat.value
 
 }
