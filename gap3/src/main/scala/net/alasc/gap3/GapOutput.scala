@@ -148,9 +148,11 @@ object GapOutput {
     AMatMat(rowMajor[Cyclo](nRows, nCols)(raw: _*))
   }
 
+  val parenMat: P[AMat] = P("(" ~/ aMat ~ ")")
+
   val aMatSimple: P[AMat] = P(identityPermAMat | aMatMat | aMatPerm | aMatMon | allOneAMat |
     nullAMat | diagonalAMat | dftaMat | soraMat | scalarMultipleAMat | powerAMat |
-    conjugateAMat | directSumAMat | tensorProductAMat | galoisConjugateAMat)
+    conjugateAMat | directSumAMat | tensorProductAMat | galoisConjugateAMat | parenMat)
 
   val aMatFactor: P[AMat] = P(aMatSimple ~ ("^" ~/ int).?).map {
     case (a, None) => a
