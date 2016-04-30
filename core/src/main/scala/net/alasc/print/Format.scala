@@ -1,20 +1,23 @@
 package net.alasc.print
 
-/**
-  * Created by rossetd0 on 2016/4/29.
-  */
+case class Formatter[F <: Format with Singleton](format: F, options: Options) {
+
+  def apply[A](a: A)(implicit print: Print[A, F]): F#Internal = print(a, options)
+
+}
+
+/** Defines a pretty-printing format. This trait is designed to be implemented by singleton objects. */
 trait Format { self =>
 
-  type Inner
+  /** Intermediate internal representation of the output in construction. */
+  type Internal
 
+  /** Final output. */
   type Output
 
-//  type Self <: Format with Singleton
+  /** Transforms the internal representation to the output. */
+  def finalize(internal: Internal, options: Options): Output
 
-  def finalize(inner: Inner, options: Options): Output
-
-  def inner[A](a: A, options: Options)(implicit print: Print[A, self.type]): Inner = print(a, options)
-
-  def apply[A](a: A, options: Options = Options.empty)(implicit print: Print[A, self.type]): Output = finalize(inner(a, options), options)
+  def apply[A](a: A, options: Options = Options.empty)(implicit print: Print[A, self.type]): Output = finalize(print(a, options), options)
 
 }

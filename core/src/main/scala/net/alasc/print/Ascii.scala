@@ -1,8 +1,8 @@
 package net.alasc.print
+/*
 
-/**
-  * Created by rossetd0 on 2016/4/29.
-  */
+case class AsciiPicture(rows: Seq[String], baseLine: Int)
+
 object Ascii extends Format {
 
   type Inner = String
@@ -12,3 +12,4 @@ object Ascii extends Format {
   def finalize(inner: String, options: Options) = inner
 
 }
+*/
