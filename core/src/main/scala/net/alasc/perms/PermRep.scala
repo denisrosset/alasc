@@ -9,7 +9,7 @@ import cyclo.Cyclo
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Rep
 
-trait PermRep[G] extends Rep[G, Rational] {
+trait PermRep[G] extends Rep[G, Rational] { // TODO: SafeLong
 
   implicit def permutationAction: PermutationAction[G]
 

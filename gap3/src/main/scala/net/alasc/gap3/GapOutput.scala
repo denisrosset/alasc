@@ -7,12 +7,10 @@ import cyclo.Cyclo
 import fastparse.WhitespaceApi
 import scalin.immutable.Vec
 
-import net.alasc.finite.Grp
+import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.perms.{Cycle, Cycles, Perm}
-
 import net.alasc.syntax.all._
 import net.alasc.perms.default._
-
 import scalin.immutable.dense._
 import scalin.syntax.all._
 
@@ -96,9 +94,6 @@ object GapOutput {
   val mon: P[Mon] = P("Mon(" ~ perm ~ "," ~ cycloVec ~ ")")
     .map { case (p, v) => Mon(p, v) }
 
-  val groupWithGenerators: P[Grp[Perm]] = P("GroupWithGenerators" ~/ "(" ~ permSeq ~ ")")
-    .map( seq => Grp(seq: _*) )
-
   val productAMat: P[ProductAMat] = P(aMat ~ "*" ~ aMat).map { case (lhs, rhs) => ProductAMat(lhs, rhs) }
 
   val identityPermAMat: P[IdentityPermAMat] = P("IdentityPermAMat" ~/ "(" ~ dimension ~ ")")
@@ -163,5 +158,23 @@ object GapOutput {
     case (hd, Seq()) => hd
     case (hd, tl) => ProductAMat((hd +: tl): _*)
   }
+
+}
+
+class ParseARep[G:GrpBuilder](generator: fastparse.noApi.P[G]) {
+
+  import fastparse.noApi._
+  import GapOutput.White._
+
+  val generatorSeq: P[Seq[G]] = P("[" ~ generator.rep(sep =",") ~ "]")
+
+  val groupWithGenerators: P[Grp[G]] = P("GroupWithGenerators" ~/ "(" ~ generatorSeq ~ ")")
+    .map(Grp.fromGenerators(_))
+
+  val trivialMonARep: P[ARep[G]] = P("TrivialMonARep" ~/ "(" ~ groupWithGenerators ~ ")").map(TrivialMonARep(_))
+
+  val trivialPermARep: P[ARep[G]] = P("TrivialPermARep" ~/ "(" ~ groupWithGenerators ~ ")").map(TrivialPermARep(_))
+
+//  val trivialMatARep: P[ARep[G]]
 
 }

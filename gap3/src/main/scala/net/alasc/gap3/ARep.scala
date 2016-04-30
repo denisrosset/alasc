@@ -3,8 +3,8 @@ package net.alasc.gap3
 import java.io.{ByteArrayInputStream, File}
 
 import net.alasc.algebra.{Permutation, PermutationAction}
-import net.alasc.finite.{Grp, Rep}
-import net.alasc.perms.{Cycles, FaithfulPermRep, Perm}
+import net.alasc.finite.{Grp, GrpBuilder, Rep}
+import net.alasc.perms.{Cycles, FaithfulPermRep, Perm, PermRep}
 import net.alasc.syntax.all._
 import cyclo.Cyclo
 import scalin.immutable.{DenseMat, Mat, Vec}
@@ -17,9 +17,20 @@ import spire.std.int._
 
 import fastparse.core.Parsed
 
+trait MonRep[G] extends Rep[G, Cyclo] {
+
+  def mon(g: G): Mon
+
+  def apply(g: G) = mon(g).mat
+
+}
+
 trait ARep[G] extends Rep[G, Cyclo] {
+
   def grp: Grp[G]
+
   def represents(g: G) = grp.contains(g)
+
 }
 
 object ARep {
@@ -77,21 +88,25 @@ object ARep {
 
 }
 
-case class TrivialPermARep[G](grp: Grp[G], dimension: Int) extends ARep[G] {
+case class TrivialPermARep[G](grp: Grp[G]) extends ARep[G] /*with PermRep[G]*/ {
+  def dimension = 1
   import scalin.immutable.dense._
   def apply(g: G) = eye[Cyclo](dimension)
 }
 
-case class TrivialMonARep[G](grp: Grp[G], dimension: Int) extends ARep[G] {
+case class TrivialMonARep[G](grp: Grp[G]) extends ARep[G] with MonRep[G] {
+  def dimension = 1
+  import scalin.immutable.dense._
+  def mon(g: G) = Mon(Perm.id, vec(Cyclo.one))
+}
+
+case class TrivialMatARep[G](grp: Grp[G]) extends ARep[G] {
+  def dimension = 1
   import scalin.immutable.dense._
   def apply(g: G) = eye[Cyclo](dimension)
 }
 
-case class TrivialMatARep[G](grp: Grp[G], dimension: Int) extends ARep[G] {
-  import scalin.immutable.dense._
-  def apply(g: G) = eye[Cyclo](dimension)
-}
-
+/*
 case class RegularARep[G](grp: Grp[G]) extends ARep[G] {
   import grp.group
   require(grp.order.isValidInt)
@@ -118,35 +133,35 @@ case class NaturalARep[G:Permutation](grp: Grp[G], dimension: Int) extends ARep[
     }
     res.result()
   }
-}
-
+}*/
+/*
 trait ARepByImages[G, Image] extends ARep[G] {
 
   def hint: Option[String]
 
   def list: Seq[Image]
 
-}
-
-case class ARepByImagesMon[G](grp: Grp[G], list: Seq[Mon], dimension: Int, hint: Option[String] = None)
+}*/
+/*
+case class ARepByImagesMon[G](generators: Seq[G], list: Seq[Mon], dimension: Int, hint: Option[String] = None)
   extends ARepByImages[G, Mon] {
   def apply(g: G) = ???
 }
 
-case class ARepByImagesPerm[G](grp: Grp[G], list: Seq[Perm], dimension: Int, hint: Option[String] = None)
+case class ARepByImagesPerm[G](generators: Seq[G], list: Seq[Perm], dimension: Int, hint: Option[String] = None)
   extends ARepByImages[G, Perm] {
   def apply(g: G) = ???
 }
 
-case class ARepByImagesMat[G](grp: Grp[G], list: Seq[Mat[Cyclo]], dimension: Int, hint: Option[String] = None)
+case class ARepByImagesMat[G](generators: Seq[G], list: Seq[Mat[Cyclo]], dimension: Int, hint: Option[String] = None)
   extends ARepByImages[G, Mat[Cyclo]] {
   def apply(g: G) = ???
 }
 
-case class ARepByImagesAMat[G](grp: Grp[G], list: Seq[AMat], dimension: Int, hint: Option[String] = None)
+case class ARepByImagesAMat[G](generators: Seq[G], list: Seq[AMat], dimension: Int, hint: Option[String] = None)
   extends ARepByImages[G, AMat] {
   def apply(g: G) = ???
-}
+}*/
 
 case class ConjugateARep[G](rep: ARep[G], a: AMat, hint: Option[String] = None) extends ARep[G] {
   import scalin.immutable.dense._
@@ -163,10 +178,12 @@ case class DirectSumARep[G](r: ARep[G]*) extends ARep[G] {
   require(r.tail.forall(rep => rep.grp == r.head.grp))
   def grp = r.head.grp
   import scalin.immutable.dense._
+  def dimensions = r.map(_.dimension)
   def dimension = r.foldLeft(0) { (d, r) => d + r.dimension }
   def apply(g: G) = r.map(_.apply(g)).foldLeft(zeros[Cyclo](0, 0)) { (sm, m) => directSum(sm, m) }
 }
 
+/*
 case class InnerTensorProductARep[G](r: ARep[G]*) extends ARep[G] {
   require(r.nonEmpty)
   require(r.tail.forall(rep => rep.grp == r.head.grp))
@@ -175,3 +192,4 @@ case class InnerTensorProductARep[G](r: ARep[G]*) extends ARep[G] {
   def dimension = r.foldLeft(1) { (d, r) => d * r.dimension }
   def apply(g: G) = r.map(_.apply(g)).foldLeft(eye[Cyclo](1)) { (pd, m) => pd kron m }
 }
+*/
