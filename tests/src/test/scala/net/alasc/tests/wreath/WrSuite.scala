@@ -1,6 +1,7 @@
 package net.alasc.tests.wreath
 
 import spire.laws.{Perm => _}
+import spire.math.SafeLong
 
 import net.alasc.finite.Grp
 import net.alasc.laws._
@@ -17,7 +18,7 @@ class WrSuite extends AlascSuite {
   implicit val wrNoShrink = noShrink[Wr[Perm, Perm]]
 
   nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
-    implicit def action = wrSize.representation[Perm, Perm].permutationAction
+    implicit def action = wrSize.representation[Perm, Perm, SafeLong].permutationAction
     PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
   }
 

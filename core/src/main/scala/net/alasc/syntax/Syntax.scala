@@ -15,6 +15,15 @@ trait PermutationActionSyntax {
 
 }
 
+trait WidenSyntax {
+
+  implicit def widenKSyntax[F[_], N](narrow: F[N]) = new WidenKOps[F, N](narrow)
+
+  implicit def widenSyntax[N](narrow: N) = new WidenOps[N](narrow)
+
+}
+
 trait AllSyntax
     extends CheckSyntax
+    with WidenSyntax
     with PermutationActionSyntax

@@ -1,6 +1,6 @@
 package net.alasc.laws
 
-import spire.algebra.Group
+import spire.algebra.{Group, Ring}
 
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -13,9 +13,9 @@ case class WrSize(a: Int, h: Int) {
 
   def aPerm[A:PermutationBuilder] = Perm(0, a - 1).toPermutation[A]
 
-  def representation[A:Group:PermutationBuilder, H:PermutationBuilder]: FaithfulPermRep[Wr[A, H]] = {
+  def representation[A:Group:PermutationBuilder, H:PermutationBuilder, K:Ring]: FaithfulPermRep[Wr[A, H], K] = {
     val wrir = new WrFaithfulPermRepBuilder[A, H]
-    val aR = wrir.A.build(Seq(aPerm[A]))
+    val aR = wrir.A.build[K](Seq(aPerm[A]))
     wrir.R(h, aR)
   }
 

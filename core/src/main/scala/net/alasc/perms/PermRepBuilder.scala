@@ -2,11 +2,13 @@ package net.alasc.perms
 
 import scala.annotation.tailrec
 
+import spire.algebra.Ring
+
 import net.alasc.algebra.Permutation
 
 trait FaithfulPermRepBuilder[G] {
 
-  def build(generators: Iterable[G]): FaithfulPermRep[G]
+  def build[K:Ring](generators: Iterable[G]): FaithfulPermRep[G, K]
 
 }
 
@@ -16,7 +18,7 @@ object FaithfulPermRepBuilder {
     extends FaithfulPermRepBuilder[G] {
     self =>
 
-    final class MyRep(val dimension: Int) extends FaithfulPermRep[G] {
+    final class MyRep[K](val dimension: Int)(implicit val scalar: Ring[K]) extends FaithfulPermRep[G, K] {
 
       type F = permutation.type
       val permutationAction: F = permutation
@@ -30,7 +32,7 @@ object FaithfulPermRepBuilder {
         adequateSize(size.max(permutation.largestMovedPoint(iterator.next).getOrElseFast(-1) + 1), iterator)
       else size
 
-    def build(generators: Iterable[G]): MyRep = new MyRep(adequateSize(1, generators.iterator))
+    def build[K:Ring](generators: Iterable[G]): MyRep[K] = new MyRep[K](adequateSize(1, generators.iterator))
 
   }
 

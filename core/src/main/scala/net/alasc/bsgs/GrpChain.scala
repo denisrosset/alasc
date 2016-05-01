@@ -25,7 +25,7 @@ abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp
 
   def chainOpt: Opt[bsgs.Chain[G, F]]
 
-  def repOpt: Opt[FaithfulPermRep[G]]
+  def repOpt: Opt[FaithfulPermRep[G, _]]
 
 }
 

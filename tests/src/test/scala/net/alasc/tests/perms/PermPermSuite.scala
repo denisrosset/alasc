@@ -3,6 +3,7 @@ package perms
 
 import spire.algebra.Eq
 import spire.laws.{LatticePartialOrderLaws, Perm => _}
+import spire.math.SafeLong
 
 import org.scalacheck.Arbitrary
 
@@ -23,7 +24,7 @@ class PermPermSuite extends AlascSuite {
       } yield (g1, g2))
 
     implicit val permPermAction: PermutationAction[(Perm, Perm)] =
-      implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build(Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
+      implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build[SafeLong](Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
 
     checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
   }
@@ -31,8 +32,8 @@ class PermPermSuite extends AlascSuite {
   {
     import net.alasc.perms.default._
 
-    val rep: FaithfulPermRep[(Perm, Perm)] =
-      implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build(Seq((Perm(0,1,2), Perm(0,1,2))))
+    val rep: FaithfulPermRep[(Perm, Perm), SafeLong] =
+      implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build[SafeLong](Seq((Perm(0,1,2), Perm(0,1,2))))
 
     import Grps.arbGrp
 

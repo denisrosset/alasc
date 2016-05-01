@@ -1,10 +1,13 @@
 package net.alasc.std
 
+import spire.algebra.Ring
+
 import net.alasc.algebra._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 import net.alasc.util._
 
-final case class Product2FaithfulPermRep[A, B](A: FaithfulPermRep[A], B: FaithfulPermRep[B]) extends FaithfulPermRep[(A, B)] {
+final case class Product2FaithfulPermRep[A, B, K](A: FaithfulPermRep[A, K], B: FaithfulPermRep[B, K])
+                                                 (implicit val scalar: Ring[K]) extends FaithfulPermRep[(A, B), K] {
   def dimension = A.dimension + B.dimension
   def represents(x0: (A, B)) = A.represents(x0._1) && B.represents(x0._2)
   object _permutationAction extends PermutationAction[(A, B)] {
@@ -35,10 +38,10 @@ final case class Product2FaithfulPermRep[A, B](A: FaithfulPermRep[A], B: Faithfu
 final class Product2FaithfulPermRepBuilder[A:FaithfulPermRepBuilder, B:FaithfulPermRepBuilder]
   extends FaithfulPermRepBuilder[(A, B)] {
 
-  def build(generators: Iterable[(A, B)]): Product2FaithfulPermRep[A, B] =
+  def build[K:Ring](generators: Iterable[(A, B)]): Product2FaithfulPermRep[A, B, K] =
     Product2FaithfulPermRep(
-      implicitly[FaithfulPermRepBuilder[A]].build(generators.map(_._1)),
-      implicitly[FaithfulPermRepBuilder[B]].build(generators.map(_._2))
+      implicitly[FaithfulPermRepBuilder[A]].build[K](generators.map(_._1)),
+      implicitly[FaithfulPermRepBuilder[B]].build[K](generators.map(_._2))
     )
 
 }

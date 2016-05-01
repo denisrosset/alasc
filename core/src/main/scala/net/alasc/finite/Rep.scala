@@ -52,7 +52,7 @@ object Rep {
     implicit def group[G:Group, R <: Rep[G, _] with Singleton](implicit ev: NoImplicit[Permutation[Of[G, R]]]): Group[Of[G, R]] =
       Group[G].asInstanceOf[Group[Of[G, R]]]
 
-    implicit def permutationAction[G, R <: PermRep[G] with Singleton]
+    implicit def permutationAction[G, R <: PermRep[G, _] with Singleton]
     (implicit ev: NoImplicit[Permutation[Of[G, R]]], witness: shapeless.Witness.Aux[R]): PermutationAction[Of[G, R]] =
       witness.value.permutationAction.asInstanceOf[PermutationAction[Of[G, R]]]
 
@@ -60,7 +60,7 @@ object Rep {
 
   object syntax extends syntax0 {
 
-    implicit def permutation[G:Eq:Group, R <: FaithfulPermRep[G] with Singleton]
+    implicit def permutation[G:Eq:Group, R <: FaithfulPermRep[G, _] with Singleton]
     (implicit witness: shapeless.Witness.Aux[R]): Permutation[Of[G, R]] = {
       val permutationG = new Permutation[G] {
         private[this] val action = witness.value.permutationAction
@@ -109,14 +109,14 @@ object Rep {
 
   import scalin.immutable.Mat
 
-  def apply[G: ClassTag : Eq : Group : FaithfulPermRepBuilder, K, MK <: Mat[K]]
+  def apply[G:ClassTag:Eq:Group:FaithfulPermRepBuilder, K, MK <: Mat[K]]
   (generators: (G, Mat[K])*)(implicit K: scalin.algebra.MatField[K, MK],
                              baseChange: BaseChange, schreierSims: SchreierSims): Rep[G, K] = {
     import scalin.syntax.all._
     require(generators.nonEmpty)
     val d = generators.head._2.nRows
     val builder = implicitly[FaithfulPermRepBuilder[G]]
-    val rep = builder.build(generators.map(_._1))
+    val rep = builder.build[SafeLong](generators.map(_._1))
     import rep.permutationAction
 
     implicit object algebra extends Group[(G, Mat[K])] with Eq[(G, Mat[K])] with PermutationAction[(G, Mat[K])] {

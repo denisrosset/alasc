@@ -21,14 +21,14 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
 
   // builder methods
 
-  def trivial = new GrpChainExplicit[G, F](Term[G, F], Opt(Iterable.empty[G]), Opt.empty[FaithfulPermRep[G]])
+  def trivial = new GrpChainExplicit[G, F](Term[G, F], Opt(Iterable.empty[G]), Opt.empty[FaithfulPermRep[G, _]])
 
   def fromGenerators(generators: Iterable[G]): GG =
     fromGenerators(generators, Opt.empty[BaseGuide])
 
   def fromGenerators(generators: Iterable[G], baseGuideOpt: Opt[BaseGuide]): GG = {
     val chain = BuildChain.fromGenerators[G, F](generators, baseGuideOpt)
-    new GrpChainExplicit[G, F](chain, Opt(generators), Opt.empty[FaithfulPermRep[G]])
+    new GrpChainExplicit[G, F](chain, Opt(generators), Opt.empty[FaithfulPermRep[G, _]])
   }
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG =
@@ -36,7 +36,7 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
 
   def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong, baseGuideOpt: Opt[BaseGuide]): GG = {
     val chain = BuildChain.fromGeneratorsAndOrder[G, F](generators, order, baseGuideOpt)
-    new GrpChainExplicit(chain, Opt(generators), Opt.empty[FaithfulPermRep[G]])
+    new GrpChainExplicit(chain, Opt(generators), Opt.empty[FaithfulPermRep[G, _]])
   }
 
   def fromGrp(grp: Grp[G]): GG = grp match {
@@ -85,11 +85,11 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
     case conj1: GrpChainConjugated[G, _] if conj1.action eq permutation =>
       val conj = conj1.asInstanceOf[GrpChainConjugated[G, F]]
       new GrpChainConjugated[G, F](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv,
-        Opt(conj.originalGenerators), Opt.empty[FaithfulPermRep[G]])
+        Opt(conj.originalGenerators), Opt.empty[FaithfulPermRep[G, _]])
     case cg1: GrpChain[G, _] if cg1.action eq permutation =>
       val cg = cg1.asInstanceOf[GrpChain[G, F]]
       new GrpChainConjugated[G, F](cg.chain, h, h.inverse,
-        Opt(cg.generators), Opt.empty[FaithfulPermRep[G]])
+        Opt(cg.generators), Opt.empty[FaithfulPermRep[G, _]])
     case _ =>
       val hInv = h.inverse
       fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
@@ -121,7 +121,7 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
         BuildChain.fromGeneratorsAndOrder[G, F](grp.generators, grp.order, definition.baseGuideOpt)
     }
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new GrpChainExplicit[G, F](subChain, Opt.empty[Iterable[G]], Opt.empty[FaithfulPermRep[G]])
+    new GrpChainExplicit[G, F](subChain, Opt.empty[Iterable[G]], Opt.empty[FaithfulPermRep[G, _]])
   }
 
   def union(lhs: Grp[G], rhs: Grp[G]): GG =
