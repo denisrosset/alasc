@@ -39,7 +39,7 @@ object ARep {
   val gapCmd = "/home/rossetd0/software/gap3/bin/gap-static-linux-i686"
   val gapOptions = "-q"
 
-  def full[G, R <: FaithfulPermRep[G] with Singleton]
+  def full[G, R <: FaithfulPermRep[G, _] with Singleton]
   (grp: Grp[Rep.Of[G, R]])(implicit witness: shapeless.Witness.Aux[R], permutation: Permutation[Rep.Of[G, R]]): String = {
     val R = witness.value
     val n = R.dimension
@@ -58,7 +58,7 @@ object ARep {
     gapOutput
   }
 
-  def apply[G, R <: FaithfulPermRep[G] with Singleton]
+  def apply[G, R <: FaithfulPermRep[G, _] with Singleton]
     (grp: Grp[Rep.Of[G, R]])(implicit witness: shapeless.Witness.Aux[R], permutation: Permutation[Rep.Of[G, R]]): AMat = {
     val R = witness.value
     val n = R.dimension
@@ -134,35 +134,42 @@ case class NaturalARep[G:Permutation](grp: Grp[G], dimension: Int) extends ARep[
     res.result()
   }
 }*/
-/*
-trait ARepByImages[G, Image] extends ARep[G] {
+
+trait ARepByImages[G] extends ARep[G] {
+
+  require(grp.generators.size === list.size)
+
+  type Image
 
   def hint: Option[String]
 
   def list: Seq[Image]
 
-}*/
+}
+
+case class ARepByImagesMon[G](grp: Grp[G], list: Seq[Mon], dimension: Int, hint: Option[String] = None)
+  extends ARepByImages[G] {
+  type Image = Mon
+  def apply(g: G) = ???
+}
+
+case class ARepByImagesPerm[G](grp: Grp[G], list: Seq[Perm], dimension: Int, hint: Option[String] = None)
+  extends ARepByImages[G] {
+  type Image = Perm
+  def apply(g: G) = ???
+}
+
+
+case class ARepByImagesMat[G](grp: Grp[G], list: Seq[Mat[Cyclo]], dimension: Int, hint: Option[String] = None)
+  extends ARepByImages[G] {
+  type Image = Mat[Cyclo]
+  def apply(g: G) = ???
+}
 /*
-case class ARepByImagesMon[G](generators: Seq[G], list: Seq[Mon], dimension: Int, hint: Option[String] = None)
-  extends ARepByImages[G, Mon] {
-  def apply(g: G) = ???
-}
-
-case class ARepByImagesPerm[G](generators: Seq[G], list: Seq[Perm], dimension: Int, hint: Option[String] = None)
-  extends ARepByImages[G, Perm] {
-  def apply(g: G) = ???
-}
-
-case class ARepByImagesMat[G](generators: Seq[G], list: Seq[Mat[Cyclo]], dimension: Int, hint: Option[String] = None)
-  extends ARepByImages[G, Mat[Cyclo]] {
-  def apply(g: G) = ???
-}
-
 case class ARepByImagesAMat[G](generators: Seq[G], list: Seq[AMat], dimension: Int, hint: Option[String] = None)
   extends ARepByImages[G, AMat] {
   def apply(g: G) = ???
 }*/
-
 case class ConjugateARep[G](rep: ARep[G], a: AMat, hint: Option[String] = None) extends ARep[G] {
   import scalin.immutable.dense._
   lazy val aVal = a.value
@@ -175,7 +182,7 @@ case class ConjugateARep[G](rep: ARep[G], a: AMat, hint: Option[String] = None) 
 
 case class DirectSumARep[G](r: ARep[G]*) extends ARep[G] {
   require(r.nonEmpty)
-  require(r.tail.forall(rep => rep.grp == r.head.grp))
+  require(r.tail.forall(rep => rep.grp === r.head.grp))
   def grp = r.head.grp
   import scalin.immutable.dense._
   def dimensions = r.map(_.dimension)
