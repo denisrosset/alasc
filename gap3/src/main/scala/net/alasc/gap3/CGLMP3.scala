@@ -44,22 +44,22 @@ object CGLMP3 {
 
     val sym = tabulate(13, 13) { (r, c) =>
       val set = Set(r, c) - 0
-      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
+      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) 0 else {
         grpInRep.iterator.map(Set(r, c) <|+| _).reduce(spire.math.min(_, _)(SetIntOrder)).toSeq.sorted match {
-          case Seq(a, b) => a * 13 + b
-          case Seq(a) => a
-          case Seq() => 0
+          case Seq(a, b) => a * 13 + b + 1
+          case Seq(a) => a + 1
+          case Seq() => 1
         }
       }
     }
 
     val noSym = tabulate(13, 13) { (r, c) =>
       val set = Set(r, c) - 0
-      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) -1 else {
+      if (r > 0 && c > 0 && (r-1)/3 == (c-1)/3 && (r % 3 != c % 3)) 0 else {
         set.toSeq.sorted match {
-          case Seq(a, b) => a * 13 + b
-          case Seq(a) => a
-          case Seq() => 0
+          case Seq(a, b) => a * 13 + b + 1
+          case Seq(a) => a + 1
+          case Seq() => 1
         }
       }
     }
@@ -87,7 +87,7 @@ object CGLMP3 {
 
   }
 
-  object nonSigProj {
+  val nsProj = {
 
     val rec = rowMajor[Int](13, 9)(
       1,  0,0,  0,0,  0,0,  0,0,
@@ -110,6 +110,8 @@ object CGLMP3 {
       val diag = (ortho.t * ortho).inverse
       ortho*diag*ortho.t
     }
+
+    proj
 
   }
 
