@@ -178,4 +178,10 @@ object ChainRec {
     case _: Term[_, _] => acc
   }
 
+  @tailrec def kthStrongGenerator[G](chain: Chain[G, _ <: PermutationAction[G] with Singleton], k: Int): G = chain match {
+    case node: Node[G, _] if k < node.nOwnGenerators => node.ownGenerator(k)
+    case node: Node[G, _] => kthStrongGenerator(node.next, k - node.nOwnGenerators)
+    case _: Term[G, _] => throw new IndexOutOfBoundsException(s"Generator index out of bounds")
+  }
+
 }

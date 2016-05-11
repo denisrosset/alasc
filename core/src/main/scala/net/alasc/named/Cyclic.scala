@@ -10,6 +10,6 @@ object Cyclic {
 
   def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
     if (degree < 2) Grp.trivial[G] else
-      Grp.fromGeneratorsAndOrder(Seq(shift[G](degree)), degree)
+      Grp.fromGeneratorsAndOrder(IndexedSeq(shift[G](degree)), degree)
 
 }

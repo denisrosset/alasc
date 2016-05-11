@@ -21,17 +21,17 @@ final class GrpChainBuilder[G]
     val rep: FaithfulPermRep[G, SafeLong] = repBuilder.build[SafeLong](Nil)
     type F = rep.F
     implicit def F: F = rep.permutationAction
-    new GrpChainExplicit[G, F](Term[G, F], Opt(Iterable.empty[G]), Opt(rep))
+    new GrpChainExplicit[G, F](Term[G, F], Opt(IndexedSeq.empty[G]), Opt(rep))
   }
 
-  def fromGenerators(generators: Iterable[G]): GG = {
+  def fromGenerators(generators: IndexedSeq[G]): GG = {
     val rep: FaithfulPermRep[G, SafeLong] = repBuilder.build[SafeLong](generators)
     type F = rep.F
     implicit def F: F = rep.permutationAction
     new GrpChainExplicit[G, F](BuildChain.fromGenerators[G, F](generators), Opt(generators), Opt(rep))
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG = {
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG = {
     val rep: FaithfulPermRep[G, SafeLong] = repBuilder.build[SafeLong](generators)
     type F = rep.F
     implicit def F: F = rep.permutationAction

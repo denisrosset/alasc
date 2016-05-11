@@ -19,9 +19,9 @@ abstract class GrpBuilder[G] {
 
   def trivial: GG
 
-  def fromGenerators(generators: Iterable[G]): GG
+  def fromGenerators(generators: IndexedSeq[G]): GG
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG
 
   def fromGrp(grp: Grp[G]): GG
 
@@ -37,7 +37,7 @@ abstract class GrpBuilder[G] {
 
   def intersect(x: Grp[G], y: Grp[G]): GG
 
-  def smallGeneratingSet(grp: Grp[G]): Iterable[G] = grp.generators // TODO: real implementation
+  def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = grp.generators // TODO: real implementation
 
   /** Left cosets. */
   def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type]

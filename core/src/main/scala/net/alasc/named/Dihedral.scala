@@ -13,7 +13,7 @@ object Dihedral {
   def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
     if (degree < 2) Grp.trivial[G] else
       Grp.fromGeneratorsAndOrder(
-        Seq(shift[G](degree), reflection[G](degree)),
+        IndexedSeq(shift[G](degree), reflection[G](degree)),
         2 * degree)
 
 }

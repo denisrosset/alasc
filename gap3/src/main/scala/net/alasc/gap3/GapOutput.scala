@@ -174,7 +174,7 @@ class ParseARep[G:GrpBuilder](generator: fastparse.noApi.P[G]) {
   val generatorSeq: P[Seq[G]] = P("[" ~ generator.rep(sep = ",") ~ "]")
 
   val groupWithGenerators: P[Grp[G]] = P("GroupWithGenerators" ~/ "(" ~ generatorSeq ~ ")")
-    .map(Grp.fromGenerators(_))
+    .map(seq => Grp.fromGenerators(seq.toIndexedSeq))
 
   val trivialMonARep: P[TrivialMonARep[G]] = P("TrivialMonARep" ~/ "(" ~ groupWithGenerators ~ ")").map(TrivialMonARep(_))
 

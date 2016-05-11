@@ -4,8 +4,12 @@ import scala.annotation.tailrec
 
 import spire.syntax.cfor._
 
+import net.alasc.algebra.PermutationAction
+
 /** Iterable through the strong generators of a BSGS chain. */
-final class StrongGeneratingSetIterable[G](val chain: Chain[G, _]) extends Iterable[G] {
+final class StrongGeneratingSetIndexedSeq[G](val chain: Chain[G, _ <: PermutationAction[G] with Singleton]) extends IndexedSeq[G] {
+
+  def apply(k: Int): G = ChainRec.kthStrongGenerator[G](chain, k)
 
   override def foreach[U](f: G => U): Unit = {
     @tailrec def rec(current: Chain[G, _]): Unit = current match {
@@ -17,7 +21,7 @@ final class StrongGeneratingSetIterable[G](val chain: Chain[G, _]) extends Itera
     rec(chain)
   }
 
-  def iterator = new Iterator[G] {
+  override def iterator = new Iterator[G] {
 
     private[this] var current: Chain[G, _] = chain
     private[this] var index: Int = 0
@@ -43,6 +47,6 @@ final class StrongGeneratingSetIterable[G](val chain: Chain[G, _]) extends Itera
 
   override def isEmpty: Boolean = size == 0
 
-  override def size: Int = ChainRec.nStrongGenerators(chain)
+  def length: Int = ChainRec.nStrongGenerators(chain)
 
 }

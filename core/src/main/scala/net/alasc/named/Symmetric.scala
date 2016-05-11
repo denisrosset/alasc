@@ -23,7 +23,7 @@ object Symmetric {
   def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
     if (degree < 2) Grp.trivial[G] else
     Grp.fromGeneratorsAndOrder(
-      Seq(Cyclic.shift[G](degree), transposition[G](0, 1)),
+      IndexedSeq(Cyclic.shift[G](degree), transposition[G](0, 1)),
       order(degree)
     )
 
