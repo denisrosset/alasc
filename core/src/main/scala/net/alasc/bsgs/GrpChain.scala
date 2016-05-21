@@ -32,14 +32,11 @@ abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp
 object GrpChain {
 
   trait In[G, F <: PermutationAction[G] with Singleton] {
-
     def unapply(grp: Grp[G]): Option[GrpChain[G, F]]
-
   }
 
   /** Matches a `GrpChain[G, F]` with the requested action. */
   object In {
-
     def apply[G, PA[X] <: PermutationAction[X], F <: PermutationAction[G] with Singleton](action: F with PA[G]): In[G, F] =
       new In[G, F] {
         def unapply(grp: Grp[G]): Option[GrpChain[G, F]] = grp match {
@@ -47,21 +44,14 @@ object GrpChain {
           case _ => None // Opt.empty[GrpChain[G, F]]
         }
       }
-
   }
 
   trait Extracted[G] { self =>
-
     def isEmpty = action eq null
-
     type Action <: PermutationAction[G] with Singleton
-
     implicit val action: Action
-
     val grp: GrpChain[G, Action]
-
     def get = self
-
   }
 
   object ExtractedEmpty extends Extracted[Nothing] {
@@ -71,7 +61,6 @@ object GrpChain {
   }
 
   object AndAction {
-
     def unapply[G](lhs: Grp[G]): Extracted[G] = lhs match {
       case gc: GrpChain[G, _] =>
         new Extracted[G] {
@@ -81,7 +70,6 @@ object GrpChain {
         }
       case _ => ExtractedEmpty.asInstanceOf[Extracted[G]]
     }
-
   }
 
   /** Returns the subgroup of `grp` that obeys the subgroup definition `definition`. */

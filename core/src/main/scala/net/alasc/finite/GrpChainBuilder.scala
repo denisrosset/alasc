@@ -43,8 +43,8 @@ final class GrpChainBuilder[G]
     case _ => fromGeneratorsAndOrder(grp.generators, grp.order)
   }
 
-  protected def convertGrp[F <: PermutationAction[G] with Singleton]
-  (grp: Grp[G], repOpt: Opt[FaithfulPermRep[G, _]])(implicit F: F): GrpChain[G, F] = {
+  def convertGrp[F <: PermutationAction[G] with Singleton](grp: Grp[G], repOpt: Opt[FaithfulPermRep[G, _]])
+                                                          (implicit F: F): GrpChain[G, F] = {
     val GF = GrpChain.In(F)
     grp match {
       case GF(gc) => gc
