@@ -10,7 +10,7 @@ import net.alasc.finite.{Grp, Rep}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, Perm}
 import net.alasc.perms._
 import net.alasc.perms.default._
-import Rep.syntax._
+import Rep.algebra._
 import scalin.immutable.dense._
 import scalin.immutable.{DenseMat, DenseVec, Mat, Vec}
 import spire.std.int._

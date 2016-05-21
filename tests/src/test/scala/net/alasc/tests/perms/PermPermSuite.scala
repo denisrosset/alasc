@@ -37,11 +37,11 @@ class PermPermSuite extends AlascSuite {
 
     import Grps.arbGrp
 
-    import net.alasc.finite.Rep.syntax._
+    import net.alasc.finite.Rep.algebra._
 
     type R = Rep.Of[(Perm, Perm), rep.type]
     implicitly[Eq[(Perm, Perm)]]
-    Rep.syntax.permutation[(Perm, Perm), rep.type]
+    Rep.algebra.permutation[(Perm, Perm), rep.type]
     implicitly[Permutation[R]]
     implicit val permTupleArbitrary: Arbitrary[R] =
       Arbitrary(for {

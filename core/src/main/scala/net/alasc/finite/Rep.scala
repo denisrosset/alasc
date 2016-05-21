@@ -42,9 +42,23 @@ object Rep {
 
   def Of[G](g: G, rep: Rep[G, _]): Of[G, rep.type] = g.asInstanceOf[Of[G, rep.type]]
 
-  implicit def convertBack[G](of: Of[G, _]): G = of.asInstanceOf[G]
+  def OfGrp[G](grp: Grp[G], rep: Rep[G, _]): Grp[Of[G, rep.type]] = {
+    require(grp.generators.forall(rep.represents))
+    grp.asInstanceOf[Grp[Of[G, rep.type]]]
+  }
 
-  abstract class syntax0 {
+  object convert {
+
+    implicit def convertRep[G, R <: Rep[G, _] with Singleton](of: Of[G, R]): G = of.asInstanceOf[G]
+
+    implicit def convertGrp[G, R <: Rep[G, _] with Singleton](of: Grp[Of[G, R]]): Grp[G] = of.asInstanceOf[Grp[G]]
+
+    implicit def convertPredicate[G, R <: Rep[G, _] with Singleton](p: G => Boolean): (Rep.Of[G, R] => Boolean) =
+      p.asInstanceOf[Rep.Of[G, R] => Boolean]
+
+  }
+
+  abstract class algebra0 {
 
     implicit def equ[G:Eq, R <: Rep[G, _] with Singleton](implicit ev: NoImplicit[Permutation[Of[G, R]]]): Eq[Of[G, R]] =
       Eq[G].asInstanceOf[Eq[Of[G, R]]]
@@ -58,7 +72,7 @@ object Rep {
 
   }
 
-  object syntax extends syntax0 {
+  object algebra extends algebra0 {
 
     implicit def permutation[G:Eq:Group, R <: FaithfulPermRep[G, _] with Singleton]
     (implicit witness: shapeless.Witness.Aux[R]): Permutation[Of[G, R]] = {
