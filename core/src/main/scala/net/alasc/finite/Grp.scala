@@ -28,6 +28,8 @@ abstract class Grp[G] { lhs =>
 
   override def hashCode = sys.error("Object.hashCode not defined for Grp")
 
+  override def equals(rhs: Any) = sys.error("Object.equals not defined for Grp")
+
   /** Group operations on type `G`. */
   implicit def group: Group[G]
 
