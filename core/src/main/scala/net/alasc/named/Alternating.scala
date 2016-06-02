@@ -22,7 +22,7 @@ object Alternating {
   def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
     if (degree < 3) Grp.trivial[G] else
       Grp.fromGeneratorsAndOrder(
-        Seq(shift[G](degree), PermutationBuilder[G].fromImages(Seq(1,2,0))),
+        IndexedSeq(shift[G](degree), PermutationBuilder[G].fromImages(Seq(1,2,0))),
         order(degree)
       )
 

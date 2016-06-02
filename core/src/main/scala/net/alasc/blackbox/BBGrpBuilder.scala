@@ -15,9 +15,9 @@ class BBGrpBuilder[G](implicit
 
   type GG = BBGrp[G]
 
-  def trivial: GG = new BBGrp(Iterable.empty[G], Set(group.id))
+  def trivial: GG = new BBGrp(IndexedSeq.empty[G], Set(group.id))
 
-  def fromGenerators(generators: Iterable[G]): GG = {
+  def fromGenerators(generators: IndexedSeq[G]): GG = {
     @tailrec def rec(elements: Set[G]): Set[G] = {
       val newElements = generators
         .flatMap(g1 => elements.map(g2 => g1 |+| g2))
@@ -27,7 +27,7 @@ class BBGrpBuilder[G](implicit
     new BBGrp(generators, rec(generators.toSet))
   }
 
-  def fromGeneratorsAndOrder(generators: Iterable[G], order: SafeLong): GG =
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG =
     fromGenerators(generators)
 
   def fromGrp(grp: Grp[G]): GG = grp match {
@@ -39,7 +39,7 @@ class BBGrpBuilder[G](implicit
 
   def intersect(x: Grp[G], y: Grp[G]): GG = {
     val newElements = fromGrp(x).elements intersect fromGrp(y).elements
-    new BBGrp[G](newElements.filterNot(_.isId), newElements)
+    new BBGrp[G](newElements.filterNot(_.isId).toIndexedSeq, newElements)
   }
 
   def leftCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): LeftCosets[G, subgrp0.type] = {

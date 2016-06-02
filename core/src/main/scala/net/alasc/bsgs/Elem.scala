@@ -101,7 +101,7 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
     * @note The strong generating set is stored piece by piece by having each
     *       node storing explicitly only the generators appearing at its level.
     */
-  def strongGeneratingSet: Iterable[G] = new StrongGeneratingSetIterable[G](chain)
+  def strongGeneratingSet: IndexedSeq[G] = new StrongGeneratingSetIndexedSeq[G](chain)
 
   def elementsIterator(implicit group: Group[G]): Iterator[G]
 

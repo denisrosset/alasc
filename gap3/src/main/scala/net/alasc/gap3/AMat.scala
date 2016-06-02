@@ -29,17 +29,12 @@ case class ProductAMat(a: AMat*) extends AMat {
 
 trait AMatPermType extends AMat {
   def p: Perm
-  def value = DenseMat.tabulate[Cyclo](dimension, dimension) { (i, j) =>
-    if ((i <|+| p) === j)
-      Cyclo.one
-    else
-      Cyclo.zero
-  }
+  def value = permMat[Cyclo](p, dimension)
 }
 
 trait AMatMonType extends AMat {
   def mon: Mon
-  def value = AMatPerm(mon.perm, mon.diag.length).value * DiagonalAMat(mon.diag).value
+  def value = mon.mat
 }
 
 case class IdentityPermAMat(dimension: Int) extends AMatPermType {

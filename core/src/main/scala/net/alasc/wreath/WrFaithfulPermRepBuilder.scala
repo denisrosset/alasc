@@ -14,13 +14,13 @@ import net.alasc.util._
 
 class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A, H]] {
 
-  def build(generators: Iterable[Wr[A, H]]) = {
+  def build[K:Ring](generators: Iterable[Wr[A, H]]) = {
     val n = (1 /: generators) { case (m, g) => spire.math.max(spire.math.max(m, g.aSeq.size), g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
     val aRep = A.build(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
 
-  case class R(n: Int, aRep: FaithfulPermRep[A]) extends FaithfulPermRep[Wr[A, H]] {
+  case class R[K](n: Int, aRep: FaithfulPermRep[A, K])(implicit val scalar: Ring[K]) extends FaithfulPermRep[Wr[A, H], K] {
     val aSize = aRep.dimension
     val dimension = n * aSize
     val aDiv = Divisor(dimension - 1, aSize)

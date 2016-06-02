@@ -5,14 +5,13 @@ import spire.math.{Rational, SafeLong}
 
 import cyclo.Cyclo
 import fastparse.WhitespaceApi
-import scalin.immutable.Vec
+import scalin.Subscript
+import scalin.immutable.{Mat, Vec}
 
-import net.alasc.finite.Grp
+import net.alasc.finite.{Grp, GrpBuilder}
 import net.alasc.perms.{Cycle, Cycles, Perm}
-
 import net.alasc.syntax.all._
 import net.alasc.perms.default._
-
 import scalin.immutable.dense._
 import scalin.syntax.all._
 
@@ -86,18 +85,18 @@ object GapOutput {
 
   val cycles: P[Cycles] = P(cycle.rep(1)).map(seq => Group[Cycles].combine(seq.map(cycle => cycle: Cycles)))
 
-  val perm: P[Perm] = cycles.map(_.toPermutation[Perm])
+  val permId: P[Perm] = P("(" ~ ")").map( unit => Perm.id )
+
+  val perm: P[Perm] = permId | cycles.map(_.toPermutation[Perm])
 
   val permSeq: P[Seq[Perm]] = P("[" ~ perm.rep(sep =",") ~ "]")
 
   val cycloVec: P[Vec[Cyclo]] = P("[" ~ cyclo.rep(sep =",") ~ "]")
     .map( seq => vec(seq: _*) )
 
-  val mon: P[Mon] = P("Mon(" ~ perm ~ "," ~ cycloVec ~ ")")
-    .map { case (p, v) => Mon(p, v) }
-
-  val groupWithGenerators: P[Grp[Perm]] = P("GroupWithGenerators" ~/ "(" ~ permSeq ~ ")")
-    .map( seq => Grp(seq: _*) )
+  val dimensionAsVec: P[Vec[Cyclo]] = positiveInt.map( d => ones[Cyclo](d) )
+  val mon: P[Mon] = P("Mon(" ~ ( perm ~ ",").? ~ (dimensionAsVec | cycloVec) ~ ")")
+    .map { case (pOpt, v) => Mon(pOpt.getOrElse(Perm.id), v) }
 
   val productAMat: P[ProductAMat] = P(aMat ~ "*" ~ aMat).map { case (lhs, rhs) => ProductAMat(lhs, rhs) }
 
@@ -148,9 +147,11 @@ object GapOutput {
     AMatMat(rowMajor[Cyclo](nRows, nCols)(raw: _*))
   }
 
+  val parenMat: P[AMat] = P("(" ~/ aMat ~ ")")
+
   val aMatSimple: P[AMat] = P(identityPermAMat | aMatMat | aMatPerm | aMatMon | allOneAMat |
     nullAMat | diagonalAMat | dftaMat | soraMat | scalarMultipleAMat | powerAMat |
-    conjugateAMat | directSumAMat | tensorProductAMat | galoisConjugateAMat)
+    conjugateAMat | directSumAMat | tensorProductAMat | galoisConjugateAMat | parenMat)
 
   val aMatFactor: P[AMat] = P(aMatSimple ~ ("^" ~/ int).?).map {
     case (a, None) => a
@@ -161,5 +162,58 @@ object GapOutput {
     case (hd, Seq()) => hd
     case (hd, tl) => ProductAMat((hd +: tl): _*)
   }
+
+}
+
+class ParseARep[G:GrpBuilder](generator: fastparse.noApi.P[G]) {
+
+  import fastparse.noApi._
+  import GapOutput.White._
+  import GapOutput._
+
+  val generatorSeq: P[Seq[G]] = P("[" ~ generator.rep(sep = ",") ~ "]")
+
+  val groupWithGenerators: P[Grp[G]] = P("GroupWithGenerators" ~/ "(" ~ generatorSeq ~ ")")
+    .map(seq => Grp.fromGenerators(seq.toIndexedSeq))
+
+  val trivialMonARep: P[TrivialMonARep[G]] = P("TrivialMonARep" ~/ "(" ~ groupWithGenerators ~ ")").map(TrivialMonARep(_))
+
+  val trivialPermARep: P[TrivialPermARep[G]] = P("TrivialPermARep" ~/ "(" ~ groupWithGenerators ~ ")").map(TrivialPermARep(_))
+
+  val directSumARep: P[DirectSumARep[G]] = P("DirectSumARep" ~/ "(" ~ aRep.rep(sep = ",") ~ ")").map(DirectSumARep(_: _*))
+
+  val imagesMon: P[Seq[Mon]] = P("[" ~ mon.rep(min = 1, sep = ",") ~ "]")
+
+  val imagesPerm: P[Seq[Perm]] = P("[" ~ perm.rep(sep = ",") ~ "]")
+
+  def parseVec[Scalar](scalar: P[Scalar]): P[Vec[Scalar]] = P("[" ~ scalar.rep(sep = ",") ~ "]")
+    .map( (seq: Seq[Scalar]) => vec[Scalar](seq: _*) )
+
+  def parseMat[Scalar](scalar: P[Scalar]): P[Mat[Scalar]] = P("[" ~ parseVec(scalar).rep(min = 1, sep = ",") ~ "]")
+    .map { rows =>
+      val nRows: Int = rows.size
+      val nCols: Int = rows(0).length
+      tabulate[Scalar](nRows, nCols)( (r, c) => rows(r)(c) )
+    }
+
+  val imagesMat: P[Seq[Mat[Cyclo]]] = P("[" ~ parseMat[Cyclo](cyclo).rep(sep = ",") ~ "]")
+
+  val aRepByImagesMat: P[ARepByImagesMat[G]] =
+    P("ARepByImages" ~ "(" ~ groupWithGenerators ~ "," ~ imagesMat ~ ("," ~ "\"hom\"".!).? ~ ")")
+    .map { case (grp, images, hint) => ARepByImagesMat(grp, images, images(0).nRows, hint) }
+  val aRepByImagesMon: P[ARepByImagesMon[G]] =
+    P("ARepByImages" ~ "(" ~ groupWithGenerators ~ "," ~ imagesMon ~ ("," ~ "\"hom\"".!).? ~ ")")
+    .map { case (grp, images, hint) => ARepByImagesMon(grp, images, images(0).diag.length, hint) }
+
+  val aRepByImagesPerm: P[ARepByImagesPerm[G]] =
+    P("ARepByImages" ~ "(" ~ groupWithGenerators ~ "," ~ imagesPerm ~ "," ~ positiveInt ~ ("," ~ "\"hom\"".!).? ~ ")")
+    .map { case (grp, images, dimension, hint) => ARepByImagesPerm(grp, images, dimension, hint) }
+
+  val aRepByImages: P[ARepByImages[G]] = NoCut(aRepByImagesMon) | NoCut(aRepByImagesPerm) | NoCut(aRepByImagesMat)
+
+  val conjugateARep: P[ConjugateARep[G]] = P("ConjugateARep" ~/ "(" ~ aRep ~ "," ~ aMat ~ ")")
+    .map { case (r, a) => ConjugateARep(r, a) }
+
+  val aRep = trivialMonARep | trivialPermARep | directSumARep | aRepByImages | conjugateARep
 
 }

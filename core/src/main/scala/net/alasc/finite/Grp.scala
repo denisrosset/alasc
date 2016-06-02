@@ -41,7 +41,7 @@ abstract class Grp[G] { lhs =>
   def contains(g: G): Boolean
 
   /** Generators of the group, does not contain the identity. */
-  def generators: Iterable[G]
+  def generators: IndexedSeq[G]
 
   /** Group order. */
   def order: SafeLong
@@ -84,7 +84,7 @@ abstract class Grp[G] { lhs =>
     builder.rightCosetsBy(lhs, subgrp)
 
   /** Simplifies the description current group.*/
-  def smallGeneratingSet(implicit builder: GrpBuilder[G]): Iterable[G] = builder.smallGeneratingSet(lhs)
+  def smallGeneratingSet(implicit builder: GrpBuilder[G]): IndexedSeq[G] = builder.smallGeneratingSet(lhs)
 
   /** Sequence of the group elements, ordered lexicographically by their images. */
   def lexElements(implicit builder: PermGrpBuilder[G]): BigIndexedSeq[G] = builder.lexElements(lhs)
@@ -195,15 +195,15 @@ object Grp {
 
   def apply[G](generators: G*)(implicit builder: GrpBuilder[G]): Grp[G] = {
     import builder.{equ, group}
-    builder.fromGenerators(generators.filterNot(_.isId))
+    builder.fromGenerators(generators.filterNot(_.isId).toIndexedSeq)
   }
 
   def trivial[G](implicit builder: GrpBuilder[G]): Grp[G] = builder.trivial
 
-  def fromGenerators[G](generators: Iterable[G])(implicit builder: GrpBuilder[G]): Grp[G] =
+  def fromGenerators[G](generators: IndexedSeq[G])(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGenerators(generators)
 
-  def fromGeneratorsAndOrder[G](generators: Iterable[G], order: SafeLong)(implicit builder: GrpBuilder[G]): Grp[G] =
+  def fromGeneratorsAndOrder[G](generators: IndexedSeq[G], order: SafeLong)(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGeneratorsAndOrder(generators, order)
 
 }

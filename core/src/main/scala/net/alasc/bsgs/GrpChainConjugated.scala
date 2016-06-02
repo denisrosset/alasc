@@ -16,8 +16,8 @@ import net.alasc.perms.FaithfulPermRep
   */
 final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
   (val originalChain: Chain[G, F], val g: G, val gInv: G,
-   originalGeneratorsOpt: Opt[Iterable[G]],
-   val repOpt: Opt[FaithfulPermRep[G]])
+   originalGeneratorsOpt: Opt[IndexedSeq[G]],
+   val repOpt: Opt[FaithfulPermRep[G, _]])
   (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
 
   def originalGenerators = originalGeneratorsOpt match {

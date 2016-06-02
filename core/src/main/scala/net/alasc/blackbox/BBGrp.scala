@@ -7,7 +7,7 @@ import spire.algebra.{Eq, Group}
 import net.alasc.finite._
 
 class BBGrp[G](
-    val generators: Iterable[G],
+    val generators: IndexedSeq[G],
     val elements: Set[G]
   )(implicit
     val equ: Eq[G],

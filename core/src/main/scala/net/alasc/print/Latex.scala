@@ -8,7 +8,7 @@ import scalin.Vec
 
 object Latex extends Format {
 
-  type Inner = String
+  type Internal = String
 
   type Output = String
 

@@ -1,6 +1,7 @@
 package net.alasc.gap3
 
 import spire.algebra.Order
+import spire.math.SafeLong
 
 import cyclo.Cyclo
 import scalin.algebra.MatEngine
@@ -9,11 +10,13 @@ import net.alasc.finite.{Grp, Rep}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, Perm}
 import net.alasc.perms._
 import net.alasc.perms.default._
-import Rep.syntax._
+import Rep.algebra._
 import scalin.immutable.dense._
 import scalin.immutable.{DenseMat, DenseVec, Mat, Vec}
 import spire.std.int._
+
 import scalin.syntax.all._
+
 import net.alasc.std.set._
 import spire.syntax.action._
 
@@ -26,7 +29,7 @@ object CGLMP3 {
   val generators = Seq(permParties, cyclicOutputPerm, complicated)
   //assert(Grp(generators: _*).order == 24)
 
-  val rep: FaithfulPermRep[Perm] = implicitly[FaithfulPermRepBuilder[Perm]].build(Seq(Perm(0,12)))
+  val rep: FaithfulPermRep[Perm, SafeLong] = implicitly[FaithfulPermRepBuilder[Perm]].build[SafeLong](Seq(Perm(0,12)))
   val grpInRep = Grp(generators.map(Rep.Of(_, rep)): _*)
 
   implicit object SetIntOrder extends Order[Set[Int]] {

@@ -19,11 +19,11 @@ class OptionTuple2NN(val encoding: Long) extends AnyVal {
   import OptionTuple2NN._
   def _1: Int = {
     assert(encoding >= 0)
-      (encoding & rightMask).toInt
+    (encoding & rightMask).toInt
   }
   def _2: Int = {
     assert(encoding >= 0)
-      ((encoding & leftMask) >> 32).toInt
+    ((encoding & leftMask) >> 32).toInt
   }
   def isEmpty: Boolean = encoding < 0
   def nonEmpty: Boolean = encoding >= 0

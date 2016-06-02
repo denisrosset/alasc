@@ -3,7 +3,7 @@ package net.alasc.finite
 import spire.math.SafeLong
 import spire.util.Opt
 
-case class GrpDef[G](generators: Iterable[G], orderOpt: Opt[SafeLong] = Opt.empty[SafeLong])
+case class GrpDef[G](generators: IndexedSeq[G], orderOpt: Opt[SafeLong] = Opt.empty[SafeLong])
 
 object GrpDef {
 
