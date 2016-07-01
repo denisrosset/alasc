@@ -84,7 +84,7 @@ object CGLMP3 {
 
   object transform {
 
-    val structured = ARep(grpInRep)
+    val structured = ARep.conjugation(grpInRep)
 
     val value = structured.value
 

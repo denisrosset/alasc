@@ -58,7 +58,7 @@ object ARep {
     gapOutput
   }
 
-  def apply[G, R <: FaithfulPermRep[G, _] with Singleton]
+  def conjugation[G, R <: FaithfulPermRep[G, _] with Singleton]
     (grp: Grp[Rep.Of[G, R]])(implicit witness: shapeless.Witness.Aux[R], permutation: Permutation[Rep.Of[G, R]]): AMat = {
     val R = witness.value
     val n = R.dimension
