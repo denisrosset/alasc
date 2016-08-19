@@ -54,7 +54,7 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
         }
       def movedPointsUpperBound(w: Wr[A, H]) = NNSome(dimension - 1)
       override def movedPoints(w: Wr[A, H]) = {
-        val bitset = metal.mutable.BitSet.empty
+        val bitset = metal.mutable.ResizableBitSet.empty
         val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
         var block = 0
         var offset = 0

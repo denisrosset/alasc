@@ -188,7 +188,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
   }
 
   protected[bsgs] def updateTransversal(newGen: G, newGenInv: G)(implicit group: Group[G], classTag: ClassTag[G]) = {
-    var toCheck = metal.mutable.BitSet.empty
+    var toCheck = metal.mutable.ResizableBitSet.empty
     val toAddBeta = metal.mutable.Buffer.empty[Int]
     val toAddU = metal.mutable.Buffer.empty[G]
     val toAddUInv = metal.mutable.Buffer.empty[G]
@@ -208,7 +208,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
     toAddU.clear()
     toAddUInv.clear()
     while (!toCheck.isEmpty) {
-      val newAdded = metal.mutable.BitSet.empty
+      val newAdded = metal.mutable.ResizableBitSet.empty
       val iter = toCheck
       @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
@@ -246,7 +246,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
 
   protected[bsgs] def updateTransversal(newGen: Iterable[G], newGenInv: Iterable[G])
                                        (implicit group: Group[G], classTag: ClassTag[G]) = {
-    var toCheck = metal.mutable.BitSet.empty
+    var toCheck = metal.mutable.ResizableBitSet.empty
     val toAddBeta = metal.mutable.Buffer.empty[Int]
     val toAddU = metal.mutable.Buffer.empty[G]
     val toAddUInv = metal.mutable.Buffer.empty[G]
@@ -272,7 +272,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
     toAddU.clear
     toAddUInv.clear
     while (!toCheck.isEmpty) {
-      val newAdded = metal.mutable.BitSet.empty
+      val newAdded = metal.mutable.ResizableBitSet.empty
       val iter = toCheck
       @inline @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>

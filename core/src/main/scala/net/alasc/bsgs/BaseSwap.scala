@@ -7,10 +7,13 @@ import spire.algebra.{Eq, Group}
 import spire.syntax.action._
 import spire.syntax.order._
 import spire.syntax.group._
+import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.perms.MutableOrbit
+import metal.syntax._
 
-import net.alasc.domains.MutableOrbit
+import net.alasc.perms.orbits
 
 abstract class BaseSwap {
 
@@ -39,22 +42,26 @@ final class BaseSwapDeterministic extends BaseSwap {
   def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
     implicit def action: F = mutableChain.start.action
-    val gammaSet = scala.collection.mutable.BitSet.empty ++= node1.orbit
-    val n = PermutationAction.largestMovedPoint(node1.strongGeneratingSet).getOrElseFast(0) + 1
-    val mutableOrbit = MutableOrbit.forSize(n)
+    val gammaSet = metal.mutable.FixedBitSet.fromIterable(node1.orbit)
+    var gamma = -1
+    val mutableOrbit = MutableOrbit.empty
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
     require(newNode1.next eq newNode2)
     gammaSet -= newNode1.beta
     gammaSet -= newNode2.beta
     while (newNode2.orbitSize < sizeGoal2) {
-      val gamma = gammaSet.head
+      gamma = gammaSet.findOrNextAfter(gamma + 1).get.key // assume that the set is always nonempty
       val x = node1.u(gamma)
       val xInv = node1.uInv(gamma)
 //      assert((newNode2.beta <|+| x) == gamma)
       val b = newNode1.beta <|+| xInv
       if (!node2.inOrbit(b)) {
-        val bm = MutableOrbit.orbitBitMask(n, gamma, newNode2.strongGeneratingSet, mutableOrbit)
-        gammaSet &~= scala.collection.mutable.BitSet.fromBitMaskNoCopy(bm)
+        //        val bm = Orbits.orbitBitMask(gamma, newNode2.strongGeneratingSet, Opt(mutableOrbit))
+        //        gammaSet &~= scala.collection.mutable.BitSet.fromBitMaskNoCopy(bm)
+        mutableOrbit.addNew(gamma)
+        orbits.Points.iterateOrbit(mutableOrbit, gamma, newNode2.strongGeneratingSet)
+        MutableOrbit.&~=(gammaSet, mutableOrbit)
+        mutableOrbit.clear()
       } else {
         val y = node2.u(b)
         val yInv = node2.uInv(b)
@@ -63,7 +70,7 @@ final class BaseSwapDeterministic extends BaseSwap {
         if (!newNode2.inOrbit(node2.beta <|+| yx)) {
           newNode2.addToOwnGenerators(yx, yxInv)
           newNode2.updateTransversal(yx, yxInv)
-          gammaSet --= newNode2.orbitSet
+          newNode2.foreachOrbit( gammaSet -= _ )
         }
       }
     }

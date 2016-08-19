@@ -172,7 +172,7 @@ abstract class Grp[G] { lhs =>
     */
   def movedPoints(implicit permutation: Permutation[G]): Set[Int] =
     if (isTrivial) Set.empty[Int] else {
-      val b = metal.mutable.BitSet.empty
+      val b = metal.mutable.ResizableBitSet.empty
       generators.foreach { g =>
         cforRange(g.smallestMovedPoint.get until g.largestMovedPoint.get + 1) { i =>
           if (i <|+| g != i)

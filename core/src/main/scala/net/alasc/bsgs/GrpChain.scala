@@ -11,9 +11,10 @@ import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs
-import net.alasc.domains.{MutableOrbit, Partition}
+import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
-import net.alasc.perms.FaithfulPermRep
+import net.alasc.perms.orbits
+import net.alasc.perms.{FaithfulPermRep, MutableOrbit}
 
 abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
@@ -304,20 +305,18 @@ object GrpChain {
 
       val chainSubgrp = chainSubgrp0
 
-      private[this] val n = PermutationAction.largestMovedPoint(grp.generators).getOrElse(0) + 1
-
       def iterator: Iterator[LeftCoset[G, subgrp0.type]] = {
-        import grp.{action, group}
+        import grp.{action, classTag, group}
         val myBase = grp.chain.base
         val bo = BaseOrder[G, F](myBase)
         val bordering = Order.ordering(bo)
-        val orbit = MutableOrbit.forSize(n)
+        val orbit = MutableOrbit.empty
         import spire.std.int.IntAlgebra
         def rec(g: G, chain: Chain[G, F], subSubgrp: GrpChain[G, F]): Iterator[LeftCoset[G, subgrp0.type]] = chain match {
           case node: Node[G, F] =>
             for {
               b <- node.orbit.iterator
-              bg = b <|+| g if MutableOrbit.isSmallestPointInOrbit(n, bg, subSubgrp.generators, orbit)
+              bg = b <|+| g if orbits.Points.isSmallest(bg, subSubgrp.generators, Opt(orbit))
               nextSubSubgrp = stabilizer[G, F](subSubgrp, bg)
               nextG = node.u(b) |+| g
               element <- rec(nextG, node.next, nextSubSubgrp)

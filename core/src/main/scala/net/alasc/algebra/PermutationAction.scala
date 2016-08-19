@@ -40,7 +40,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     */
   def movedPoints(g: G): Set[Int] = {
     val n = movedPointsUpperBound(g).getOrElseFast(-1) + 1
-    val bitset = metal.mutable.BitSet.fixedSize(largestMovedPoint(g).getOrElse(-1) + 1)
+    val bitset = metal.mutable.FixedBitSet.reservedSize(largestMovedPoint(g).getOrElse(-1) + 1)
     var k: Int = 0
     while (k < n) {
       if (movesPoint(g, k))
@@ -79,7 +79,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the sign of the permutation `g`. */
   def signPerm(g: G): Int = {
-    val rest = metal.mutable.BitSet.fromIterable(movedPoints(g))
+    val rest = metal.mutable.FixedBitSet.fromIterable(movedPoints(g))
     var sign = 1
     while (rest.nonEmpty) {
       val h = rest.min
@@ -98,7 +98,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the cycle structure of the permutation `g`. */
   def cycleStructure(g: G): Map[Int, Int] = {
-    val rest = metal.mutable.BitSet.fromIterable(movedPoints(g))
+    val rest = metal.mutable.FixedBitSet.fromIterable(movedPoints(g))
     val cs = metal.mutable.HashMap.empty[Int, Int]
     while (rest.nonEmpty) {
       val h = rest.min
@@ -122,7 +122,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the orbit of the domain element `i` under the action of `g`. */
   def orbit(g: G, i: Int): Set[Int] = {
-    val mut = metal.mutable.BitSet(i)
+    val mut = metal.mutable.ResizableBitSet(i)
     @tailrec def rec(k: Int): Unit =
       if (k != i) {
         mut += k

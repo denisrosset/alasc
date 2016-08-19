@@ -14,9 +14,11 @@ import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
-import net.alasc.domains.MutableOrbit
 import net.alasc.util._
 import metal.mutable.Buffer
+
+import net.alasc.perms.MutableOrbit
+import net.alasc.perms.orbits
 
 final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
@@ -205,7 +207,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
           val u = chain.u(b)
           val g = candidates(c)
           val bg = b <|+| g
-          if (MutableOrbit.isSmallestPointInOrbit(n, bg, symGrps(c).generators, sOrbit)(implicitly, spire.std.int.IntAlgebra)) {
+          if (orbits.Points.isSmallest(bg, symGrps(c).generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
             val nextSym = GrpChain.stabilizer(symGrps(c), bg)
             newBlockCandidates += u |+| g
             newBlockSymGrps += nextSym
@@ -276,7 +278,7 @@ object Representatives {
                 j += 1
               }
               if (!disagree) {
-                if (MutableOrbit.isSmallestPointInOrbit(n, bg, chainSym.generators, sOrbit)(implicitly, bo)) {
+                if (orbits.Points.isSmallest(bg, chainSym.generators, Opt(sOrbit))(implicitly, bo)) {
                   val nextSym = GrpChain.stabilizer(chainSym, bg)
                   val res = rec(level + 1, nextG, node.next, nextSym, sOrbit)
                   if (res.nonEmpty)
@@ -355,7 +357,7 @@ object Representatives {
           cforRange(0 until candidates.length.toInt) { i =>
             val b = candidates(i)
             val bg = b <|+| curG
-            if (MutableOrbit.isSmallestPointInOrbit(n, bg, curSymGrp.generators, sOrbit)(implicitly, spire.std.int.IntAlgebra)) {
+            if (orbits.Points.isSmallest(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
               val nextG = node.u(b) |+| curG
               rec(level + 1, toLevel, nextG, node.next, GrpChain.stabilizer(curSymGrp, bg), sOrbit)
             }

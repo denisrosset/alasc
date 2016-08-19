@@ -57,7 +57,7 @@ final class PermArray(val images: Array[Int]) extends PermBase { lhs =>
   }
 
   def movedPoints = {
-    val bitset = metal.mutable.BitSet.empty
+    val bitset = metal.mutable.ResizableBitSet.empty
     var k = largestMovedPoint.getOrElseFast(-1)
     while (k >= 0) {
       if (image(k) != k)

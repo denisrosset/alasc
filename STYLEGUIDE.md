@@ -11,6 +11,14 @@ Style guide
   value of `argX`, the order of parameters is `argX` then `argY`
 
 
+Performance
+===========
+
+- when a method accepts a `Set[Int]`, a `collection.BitSet` can be provided for performance
+
+- when a method accepts a `Iterable[G]`, and the iterable size is quite small, a fast path
+  is provided for `WrappedArray[G]`
+
 Singleton types
 ===============
 

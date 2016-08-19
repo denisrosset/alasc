@@ -153,7 +153,7 @@ object SubgroupSearch {
     * The considered domain is `0 ... domainSize - 1`.
     */
   def basePointGroups[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F], domainSize: Int): Array[Array[Int]] = {
-    val remaining = metal.mutable.BitSet((0 until domainSize): _*)
+    val remaining = metal.mutable.FixedBitSet.zeroUntil(domainSize)
     val groups = metal.mutable.Buffer.empty[Array[Int]]
     @tailrec def rec(current: Chain[G, F]): Array[Array[Int]] = current match {
       case node: Node[G, F] =>
