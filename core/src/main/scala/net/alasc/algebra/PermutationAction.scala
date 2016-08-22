@@ -145,18 +145,14 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   def toPermutation[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
 
-}
-
-object PermutationAction {
-
-  def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
-
   /** Return the smallest element of the domain moved by the given generators, or [[NNNone]]. */
-  def smallestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+  def smallestMovedPoint(generators: Iterable[G]): NNOption = {
     var mn = Int.MaxValue
     var moved = false
-    generators.foreach { g =>
-      action.smallestMovedPoint(g) match {
+    val it = generators.iterator
+    while (it.hasNext) {
+      val g = it.next()
+      smallestMovedPoint(g) match {
         case NNOption(i) =>
           mn = spire.math.min(mn, i)
           moved = true
@@ -167,12 +163,20 @@ object PermutationAction {
   }
 
   /** Return the largest element of the domain moved by the given generators, or [[NNNone]]. */
-  def largestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+  def largestMovedPoint(generators: Iterable[G]): NNOption = {
     var mx = -1
-    generators.foreach { g =>
-      mx = spire.math.max(action.largestMovedPoint(g).getOrElseFast(-1), mx)
+    val it = generators.iterator
+    while (it.hasNext) {
+      val g = it.next()
+      mx = spire.math.max(largestMovedPoint(g).getOrElseFast(-1), mx)
     }
     if (mx >= 0) NNOption(mx) else NNNone
   }
+
+}
+
+object PermutationAction {
+
+  def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
 
 }

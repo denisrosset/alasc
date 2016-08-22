@@ -140,22 +140,24 @@ abstract class Grp[G] { lhs =>
   def base(implicit builder: PermGrpBuilder[G]): Seq[Int] = builder.base(lhs)
 
   /** Return the smallest element of the domain moved by this group, or [[NNNone]]. */
-  def smallestMovedPoint(implicit permutation: Permutation[G]): NNOption = {
-    var mn = Int.MaxValue
-    generators.foreach { g =>
-      mn = spire.math.min(g.smallestMovedPoint.get, mn)
+  def smallestMovedPoint(implicit permutation: Permutation[G]): NNOption =
+    if (isTrivial) NNNone else {
+      var mn = Int.MaxValue
+      generators.foreach { g =>
+        mn = spire.math.min(g.smallestMovedPoint.get, mn)
+      }
+      NNOption(mn)
     }
-    NNOption(mn)
-  }
 
   /** Return the largest element of the domain moved by this group, or [[NNNone]]. */
-  def largestMovedPoint(implicit permutation: Permutation[G]): NNOption = {
-    var mx = 0
-    generators.foreach { g =>
-      mx = spire.math.max(g.largestMovedPoint.get, mx)
+  def largestMovedPoint(implicit permutation: Permutation[G]): NNOption =
+    if (isTrivial) NNNone else {
+      var mx = 0
+      generators.foreach { g =>
+        mx = spire.math.max(g.largestMovedPoint.get, mx)
+      }
+      NNOption(mx)
     }
-    NNOption(mx)
-  }
 
   /** Returns an arbitrary element moved by this group, or [[NNNone]]. */
   def findMovedPoint(implicit permutation: Permutation[G]): NNOption =

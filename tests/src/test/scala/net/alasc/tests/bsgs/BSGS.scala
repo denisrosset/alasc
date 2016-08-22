@@ -36,7 +36,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm, Perm.pe
 
   test("Base change guided by partition has base points corresponding to blocks of increasing size") {
     forAll(genChain) { chain =>
-      val n = PermutationAction.largestMovedPoint(chain.strongGeneratingSet).getOrElseFast(0) + 1
+      val n = F.largestMovedPoint(chain.strongGeneratingSet).getOrElseFast(0) + 1
       val domain = Domain(n)
       forAll(Partitions.forDomain(domain)) { partition =>
         val definition = FixingPartitionDef[Perm, F](partition)

@@ -1,7 +1,8 @@
-package net.alasc.optional
+package net.alasc.lexico
 
 import spire.algebra.{Eq, Group, Order}
 import spire.syntax.action._
+
 import net.alasc.algebra.PermutationAction
 import net.alasc.syntax.permutationAction._
 

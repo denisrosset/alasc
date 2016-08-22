@@ -337,7 +337,7 @@ object GrpChain {
     import grp.{action, classTag, equ, group}
 
     val lexChain: Chain[G, F] = if (grp.chain.hasLexicographicBase) grp.chain else {
-      val n = PermutationAction.largestMovedPoint(grp.generators).getOrElse(0) + 1
+      val n = action.largestMovedPoint(grp.generators).getOrElse(0) + 1
       BuildChain.fromChain(grp.chain, Opt(BaseGuideLex(n)))
     }
 

@@ -33,8 +33,7 @@ object BSGSs {
   def genNewBase[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Gen[Seq[Int]] = chain match {
     case _: Term[G, F] => Gen.const(Seq.empty[Int])
     case node: Node[G, F] =>
-      import node.action
-      val n = PermutationAction.largestMovedPoint(node.strongGeneratingSet).getOrElse(0) + 1
+      val n = node.action.largestMovedPoint(node.strongGeneratingSet).getOrElse(0) + 1
       genSwappedSeq(0 until n).flatMap(full => Gen.choose(0, n - 1).map(m => full.take(m)))
   }
 

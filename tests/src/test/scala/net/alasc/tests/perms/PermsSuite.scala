@@ -3,6 +3,7 @@ package perms
 
 import spire.math.SafeLong
 
+import net.alasc.lexico.lexPermutationOrder
 import net.alasc.named.Symmetric
 import net.alasc.perms.{Perm, Perms}
 import net.alasc.perms.default._
@@ -14,7 +15,7 @@ class PermsSuite extends AlascSuite {
       val sym = Symmetric[Perm](n)
       val perms = Perms(n)
       val seqFromPermsIterator = perms.iterator.toSeq
-      import net.alasc.optional.lexPermutationOrder._
+      import lexPermutationOrder._
       (seqFromPermsIterator.iterator zip seqFromPermsIterator.iterator.drop(1)).forall { case (x, y) => x < y } shouldBe true
       val seqFromPermsApply = (0 until perms.size.toInt).map(perms(_)).toSeq
       val setFromSym = sym.iterator.toSet

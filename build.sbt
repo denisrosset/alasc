@@ -2,7 +2,7 @@
 
 val disciplineVersion = "0.4"
 val cycloVersion = "0.11.0.4"
-val metalVersion = "0.11.0.8"
+val metalVersion = "0.11.0.9"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
 val scalinVersion = "0.11.0.8"

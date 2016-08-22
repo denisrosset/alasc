@@ -12,6 +12,7 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
+import net.alasc.lexico.lexPermutationOrder
 import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.syntax.all._
 
@@ -171,7 +172,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
 
       "lexElements" -> forAll { (grp: Grp[G]) =>
         (grp.order < 65536) ==> {
-          import net.alasc.optional.lexPermutationOrder._
+          import lexPermutationOrder._
           val lexSeq = grp.lexElements.iterator
             .map(g => g.toPermutation[Perm]).toSeq
           val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
@@ -254,6 +255,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
           (g.isId) == doesNotMoveBase
         }
       }
+
   )
 
 }
