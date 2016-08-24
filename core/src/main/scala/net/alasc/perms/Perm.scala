@@ -58,7 +58,7 @@ object Perm extends PermCompanion {
 
   implicit val permutationBuilder: PermutationBuilder[Perm] = new PermPermutationBuilder
 
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+  def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
       Perm32.fromImagesAndHighSupportMax(images, supportMax)
     else
@@ -77,6 +77,17 @@ trait PermCompanion {
     /** Maximal support element for this permutation type. */
   def movedPointsUpperBound: Int
 
+  /** Constructs a permutation from an array of images, along with
+    * the computed maximal support element.of the sequence, i.e. for
+    * k = supportMax + 1 ... images.length - 1, images(k) == k.
+    *
+    * The array is considered mutable and is copied if needed.
+    *
+    * @param images     Array of images representing the permutation
+    * @param supportMax Maximal support element, must be > `Perm16.supportMaxElement`.
+    */
+  def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm
+
   /** Constructs a permutation from a sequence of images, along with
     * the computed maximal support element.of the sequence, i.e. for
     * k = supportMax + 1 ... images.length - 1, images(k) == k.
@@ -84,10 +95,13 @@ trait PermCompanion {
     * @param images     Sequence of images representing the permutation
     * @param supportMax Maximal support element, must be > `Perm16.supportMaxElement`.
     */
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm
+  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm = images match {
+    case wa: collection.mutable.WrappedArray[Int] => fromImagesAndHighSupportMax(wa.array, supportMax)
+    case _ => fromImagesAndHighSupportMax(images.toArray, supportMax)
+  }
 
   /** Constructs a permutation from a sequence of images. */
-  def fromImages(images: Seq[Int]): Perm = {
+  def fromImages(images: Array[Int]): Perm = {
     var k = images.length - 1
     while (k >= 0 && images(k) == k)
       k -= 1
@@ -161,7 +175,7 @@ object Perm16 extends PermCompanion {
   def tooBig(supportMax: Int) = sys.error(s"Permutation too big (supportMax = $supportMax) to be encoded in Perm16.")
   def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): Perm =
     tooBig(supportMax)
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm =
+  def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm =
     tooBig(supportMax)
 }
 
@@ -310,7 +324,7 @@ object Perm32 extends PermCompanion {
 
   def movedPointsUpperBound = Perm32Encoding.supportMaxElement
 
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): Perm32 =
+  def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm32 =
     Perm32Encoding.fromImages(images, supportMax)
 
   def fromHighSupportAndImageFun(support: Set[Int], imageFun: Int => Int, supportMax: Int): Perm32 =

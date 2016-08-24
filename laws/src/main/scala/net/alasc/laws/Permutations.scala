@@ -17,35 +17,23 @@ import net.alasc.syntax.permutationAction._
   * should be resized.
   */
 object Permutations {
-  /** Returns an array of images representing a permutation. */
-  def randomImages(domainSize: Int, rng: scala.util.Random): Array[Int] = {
-    // uses the Fisher-Yates shuffle, inside out variant
-    val array = new Array[Int](domainSize)
-    cforRange(0 until domainSize) { i =>
-      val j = rng.nextInt(i + 1)
-      array(i) = array(j)
-      array(j) = i
+
+  def forSize[P:PermutationBuilder](domainSize: Int): Gen[P] =
+    Gen.containerOfN[Array, Int](domainSize, implicitly[Arbitrary[Int]].arbitrary) flatMap { randomValues =>
+      import spire.std.long.LongAlgebra
+      val images = new Array[Int](domainSize)
+      val toSort = new Array[Long](domainSize) // bits 63..32 are random, 31..0 represents a domain element
+      cforRange(0 until domainSize) { k =>
+        toSort(k) = (randomValues(k).toLong << 32) + k.toLong
+      }
+      spire.math.Sorting.sort(toSort) // sort, basically on the bits 63 .. 32
+      cforRange(0 until domainSize)( k => images(k) = toSort(k).toInt )
+      PermutationBuilder[P].fromImages(images)
     }
-    array
-  }
 
-  def sized[P:PermutationBuilder]: Gen[P] = Gen.parameterized { parameters =>
-    val images = randomImages(parameters.size, parameters.rng)
-    PermutationBuilder[P].fromImages(images)
-  }
-
-  def forSize[P:PermutationBuilder](domainSize: Int) = Gen.parameterized { parameters =>
-    val images = randomImages(domainSize, parameters.rng)
-    PermutationBuilder[P].fromImages(images)
-  }
-
-  def domSized: Gen[Dom] = Gen.posNum[Int].map(Dom(_))
-
-  def domForSize(size: Int): Gen[Dom] = Gen.choose(0, size - 1).map(Dom(_))
+  def sized[P:PermutationBuilder]: Gen[P] = Gen.parameterized( parameters => forSize[P](parameters.size) )
 
   implicit def arbPermutation[P:PermutationBuilder]: Arbitrary[P] = Arbitrary(sized[P])
-
-  implicit def arbDom: Arbitrary[Dom] = Arbitrary(domSized)
 
   implicit def permutationInstances[P](implicit P: PermutationBuilder[P]): Instances[P] =
     Instances[P](Seq(Perm(0,1).toPermutation[P], P.id))

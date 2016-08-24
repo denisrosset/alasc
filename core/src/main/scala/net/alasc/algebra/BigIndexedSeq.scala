@@ -26,7 +26,6 @@ trait BigIndexedSeq[A] extends PartialFunction[SafeLong, A] with Iterable[A] { s
     }
     Opt.empty[SafeLong]
   }
-  def map[B](f: A => B): BigIndexedSeq[B] = new MappedBigIndexedSeq[A, B](self, f)
   override def toIndexedSeq: scala.collection.immutable.IndexedSeq[A] = {
     require(length.isValidInt)
     new scala.collection.immutable.IndexedSeq[A] {
@@ -34,11 +33,4 @@ trait BigIndexedSeq[A] extends PartialFunction[SafeLong, A] with Iterable[A] { s
       def length: Int = self.length.toInt
     }
   }
-}
-
-final class MappedBigIndexedSeq[A, B](original: BigIndexedSeq[A], f: A => B) extends BigIndexedSeq[B] {
-  def length = original.length
-  def iterator = original.iterator.map(f)
-  def apply(idx: SafeLong): B = f(original(idx))
-  override def map[C](g: B => C): BigIndexedSeq[C] = new MappedBigIndexedSeq(original, f andThen g)
 }

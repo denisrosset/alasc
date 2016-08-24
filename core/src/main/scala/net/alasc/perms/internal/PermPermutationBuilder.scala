@@ -59,7 +59,12 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
 
   def movedPointsUpperBound(p: Perm) = largestMovedPoint(p)
 
-  def fromImages(images: Seq[Int]): Perm = Perm.fromImages(images)
+  def fromImages(images: Array[Int]): Perm = Perm.fromImages(images)
+
+  def fromImages(images: Seq[Int]): Perm = images match {
+    case wa: scala.collection.mutable.WrappedArray[Int] => fromImages(wa.array)
+    case _ => fromImages(images.toArray)
+  }
 
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
     Perm.fromSupportAndImageFun(support, image)

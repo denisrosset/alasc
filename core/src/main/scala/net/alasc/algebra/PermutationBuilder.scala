@@ -15,6 +15,9 @@ trait PermutationBuilder[P] extends Permutation[P] {
 
   def fromImages(images: Seq[Int]): P
 
+  /** Returns a permutation from the given image array (the array is considered mutable and is copied if needed). */
+  def fromImages(images: Array[Int]): P
+
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): P
 
   def fromImageFun(n: Int, image: Int => Int): P =

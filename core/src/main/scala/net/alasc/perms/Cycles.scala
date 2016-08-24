@@ -53,6 +53,8 @@ class CyclesPermutationBuilder extends PermutationBuilder[Cycles] {
     fromSupportAndImageFun(support, images(_))
   }
 
+  def fromImages(images: Array[Int]): Cycles = fromImages(images: Seq[Int])
+
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Cycles = {
     @scala.annotation.tailrec def rec(cycles: List[Cycle], remSupport: Set[Int]): Cycles = 
       remSupport.isEmpty match {

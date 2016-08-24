@@ -1,15 +1,19 @@
 package net.alasc.tests
 package perms
 
-import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
+import net.alasc.domains.Domain
+import net.alasc.laws.{AnyRefLaws, Doms, PermutationActionLaws, Permutations}
 import net.alasc.perms.{Cycle, Cycles, Perm, PermGrpChainBuilder}
 
 class PermSuite extends AlascSuite {
 
   import Permutations._
 
+  val domain = Domain(100)
+  import Doms.arbDomInDomain
+
   checkAll("Perm", AnyRefLaws[Perm]._eq)
-  checkAll("Perm", PermutationActionLaws[Perm].faithfulPermutationAction)
+  checkAll("Perm", PermutationActionLaws[Perm](domain).faithfulPermutationAction)
 
   test("For g = (1, 2, 3), 1 <* g = 2, 2 <* g = 3, 3 <* g = 1") {
     val g = Perm(1, 2, 3)

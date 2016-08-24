@@ -17,13 +17,10 @@ import metal.syntax._
 
 object OrderedSets {
 
+  @inline def booleanToInt(b: Boolean): Int = if (b) 1 else 0
+
   // we define true < false
-  def compareBoolean(lhs: Boolean, rhs: Boolean): Int =
-    if (lhs) {
-      if (rhs) 0 else -1
-    } else {
-      if (rhs) 1 else 0
-    }
+  def compareBoolean(lhs: Boolean, rhs: Boolean): Int = -(booleanToInt(lhs) - booleanToInt(rhs))
 
   /** Returns the minimal lexicographic representative of a set of integers under permutation.
     *

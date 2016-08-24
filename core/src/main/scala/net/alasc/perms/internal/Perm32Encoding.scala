@@ -185,7 +185,7 @@ object Perm32Encoding {
   // long2 contains indices 12..23, and the indices 12..15 occupy the right-most 20 bits of long1
   def isValidPerm16(long2: Long, long1: Long, long0: Long) = long2 == 0 && (long1 & leftFill(44)) == 0
 
-  def fromImages(images: Seq[Int], supportMax: Int = 31): Perm32 = {
+  def fromImages(images: Array[Int], supportMax: Int = 31): Perm32 = {
     assert(supportMax <= supportMaxElement)
     assert(supportMax > Perm16Encoding.movedPointsUpperBound)
     var k = supportMax

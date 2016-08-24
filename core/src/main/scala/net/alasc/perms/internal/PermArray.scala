@@ -105,8 +105,11 @@ final class PermArray(val images: Array[Int]) extends PermBase { lhs =>
 object PermArray extends PermCompanion {
   @inline def movedPointsUpperBound = Int.MaxValue - 1
 
-  def fromImagesAndHighSupportMax(images: Seq[Int], supportMax: Int): PermArray =
-    new PermArray(images.view.take(supportMax + 1).toArray)
+  def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): PermArray = {
+    val minimalSizeImages = new Array[Int](supportMax + 1)
+    Array.copy(images, 0, minimalSizeImages, 0, supportMax + 1)
+    new PermArray(minimalSizeImages)
+  }
 
   def fromHighSupportAndImageFun(support: Set[Int], image: Int => Int, supportMax: Int): PermArray =
     new PermArray(Array.tabulate(supportMax + 1)(k => if (support(k)) image(k) else k))

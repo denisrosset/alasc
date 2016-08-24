@@ -8,15 +8,17 @@ import spire.math.SafeLong
 import org.scalacheck.Arbitrary
 
 import net.alasc.algebra._
+import net.alasc.domains.Domain
 import net.alasc.finite.{Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._
 
 class PermPermSuite extends AlascSuite {
 
-  import Permutations.arbDom
+  import Doms.arbDomInDomain
 
   {
+    val domain = Domain(30)
     implicit val permTupleArbitrary: Arbitrary[(Perm, Perm)] =
       Arbitrary(for {
         g1 <- Permutations.forSize[Perm](16)
@@ -26,7 +28,7 @@ class PermPermSuite extends AlascSuite {
     implicit val permPermAction: PermutationAction[(Perm, Perm)] =
       implicitly[FaithfulPermRepBuilder[(Perm, Perm)]].build[SafeLong](Seq((Perm(0, 15), Perm(0, 4)))).permutationAction
 
-    checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
+    checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)](domain).faithfulPermutationAction)
   }
 
   {
