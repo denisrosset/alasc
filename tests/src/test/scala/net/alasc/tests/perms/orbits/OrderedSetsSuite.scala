@@ -21,7 +21,6 @@ import spire.compat._
 import net.alasc.std.set._
 import spire.std.boolean._
 
-
 class OrderedSetsSuite extends AlascSuite {
 
   import Permutations.permutationGrp
