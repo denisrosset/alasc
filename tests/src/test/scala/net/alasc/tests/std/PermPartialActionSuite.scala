@@ -4,6 +4,7 @@ import spire.laws.PartialActionLaws
 
 import org.scalacheck.{Arbitrary, Gen}
 
+import net.alasc.domains.Domain
 import net.alasc.laws.Permutations
 import net.alasc.perms.Perm
 import net.alasc.tests.AlascSuite
@@ -13,7 +14,7 @@ class PermPartialActionSuite extends AlascSuite {
   implicit def arbPermutation: Arbitrary[Perm] = Arbitrary {
     for {
       n <- Gen.choose(1, 10)
-      perm <- Permutations.forSize[Perm](n)
+      perm <- Permutations.forDomain[Perm](Domain(n))
     } yield perm
   }
 

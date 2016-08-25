@@ -55,7 +55,7 @@ object lexSetIntOrder {
             // whoever has the first bit set starting from the right is going to be greater in ULong compare, but is
             // actually smaller for the lexicographic order
             if (c != 0) -c else compareWords(x, y, xfnz)
-          } else if (xfnz > yfnz) -1 // x is smaller because it has the first word nonzero
+          } else if (xfnz < yfnz) -1 // x is smaller because it has the first word nonzero
           else 1 // y is smaller because it has the first word nonzero
         }
       }

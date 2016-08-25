@@ -7,7 +7,7 @@ import spire.util.Opt
 import org.scalacheck._
 
 import net.alasc.bsgs.BaseGuideLex
-import net.alasc.domains.Partition
+import net.alasc.domains.{Domain, Partition}
 import net.alasc.enum.Representatives
 import net.alasc.finite._
 import net.alasc.laws._
@@ -27,7 +27,7 @@ abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, 
 
   def genSetInt: Gen[Set[Int]] = Gen.containerOfN[Set, Int](10, Gen.choose(0, 10))
 
-  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.forSize[Perm](size))
+  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.forDomain[Perm](Domain(size)))
 
   implicit val noShrinkArrayInt = noShrink[Array[Int]]
   implicit val noShrinkPerm = noShrink[Perm]

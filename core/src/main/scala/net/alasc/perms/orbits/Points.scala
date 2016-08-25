@@ -11,17 +11,17 @@ import net.alasc.util.GenericArray
 
 object Points {
 
-  def isSmallest[G](point: Int, generators: Iterable[G])
-                   (implicit G: PermutationAction[G], order: Order[Int]): Boolean =
-    isSmallest(point, generators, Opt.empty[MutableOrbit])(G, order)
+  def isSmallestInOrbit[G](point: Int, generators: Iterable[G])
+                          (implicit G: PermutationAction[G], order: Order[Int]): Boolean =
+    isSmallestInOrbit(point, generators, Opt.empty[MutableOrbit])(G, order)
 
   /** Tests whether `point` is the smallest point in its orbit under `generators`. An optional
     * empty [[MutableOrbit]] can be provided; it will be cleared when the function returns.
     *
     * @param emptyMutableOrbit (Optional) Provided empty mutable orbit to avoid allocations
     */
-  def isSmallest[G](point: Int, generators: Iterable[G], emptyMutableOrbit: Opt[MutableOrbit])
-                   (implicit G: PermutationAction[G], order: Order[Int]): Boolean = {
+  def isSmallestInOrbit[G](point: Int, generators: Iterable[G], emptyMutableOrbit: Opt[MutableOrbit])
+                          (implicit G: PermutationAction[G], order: Order[Int]): Boolean = {
     val orbit = emptyMutableOrbit match {
       case Opt(o) => o
       case _ => MutableOrbit.empty

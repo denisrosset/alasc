@@ -4,6 +4,10 @@ import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.finite._
 
+import spire.math.max
+
+import Arbitrary.arbitrary
+
 object Grps {
 
   def genRandomElement[G](grp: Grp[G]): Gen[G] = Gen.parameterized { params => grp.randomElement(params.rng) }
@@ -18,17 +22,14 @@ object Grps {
       c <- elements
     } yield Grp(generators: _*).conjugatedBy(c)
 
-  implicit def arbGrp[G:Arbitrary:GrpBuilder]: Arbitrary[Grp[G]] = 
-    Arbitrary {
-      Gen.parameterized { parameters =>
-        val gSize = math.max(parameters.size / 10, 3)
-        val elements = Gen.resize(gSize, implicitly[Arbitrary[G]].arbitrary)
-        for {
-          c <- implicitly[Arbitrary[G]].arbitrary
-          grp <- fromElements(elements)
-        } yield grp.conjugatedBy(c)
-      }
-    }
+  def conjugatedFromElements[G:GrpBuilder](elements: Gen[G], conjugateBy: Gen[G]): Gen[Grp[G]] =
+    for {
+      grp <- fromElements(elements)
+      c <- conjugateBy
+    } yield grp.conjugatedBy(c)
+
+  implicit def arbGrp[G:Arbitrary:GrpBuilder](implicit arbSmallG: Arbitrary[Small[G]]): Arbitrary[Grp[G]] =
+    Arbitrary(conjugatedFromElements(arbSmallG.arbitrary.map(_.underlying), arbitrary[G]))
 
   def arbSubgrp[GG <: Grp[G] with Singleton, G:GrpBuilder](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =
     Arbitrary(genSubgrp(witness.value: GG))

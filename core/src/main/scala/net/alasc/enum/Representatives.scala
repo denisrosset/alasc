@@ -207,7 +207,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
           val u = chain.u(b)
           val g = candidates(c)
           val bg = b <|+| g
-          if (orbits.Points.isSmallest(bg, symGrps(c).generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
+          if (orbits.Points.isSmallestInOrbit(bg, symGrps(c).generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
             val nextSym = GrpChain.stabilizer(symGrps(c), bg)
             newBlockCandidates += u |+| g
             newBlockSymGrps += nextSym
@@ -278,7 +278,7 @@ object Representatives {
                 j += 1
               }
               if (!disagree) {
-                if (orbits.Points.isSmallest(bg, chainSym.generators, Opt(sOrbit))(implicitly, bo)) {
+                if (orbits.Points.isSmallestInOrbit(bg, chainSym.generators, Opt(sOrbit))(implicitly, bo)) {
                   val nextSym = GrpChain.stabilizer(chainSym, bg)
                   val res = rec(level + 1, nextG, node.next, nextSym, sOrbit)
                   if (res.nonEmpty)
@@ -357,7 +357,7 @@ object Representatives {
           cforRange(0 until candidates.length.toInt) { i =>
             val b = candidates(i)
             val bg = b <|+| curG
-            if (orbits.Points.isSmallest(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
+            if (orbits.Points.isSmallestInOrbit(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
               val nextG = node.u(b) |+| curG
               rec(level + 1, toLevel, nextG, node.next, GrpChain.stabilizer(curSymGrp, bg), sOrbit)
             }

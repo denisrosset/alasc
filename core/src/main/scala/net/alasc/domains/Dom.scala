@@ -7,7 +7,11 @@ import shapeless.Witness
 
 import net.alasc.domains.{Domain, Partition}
 
-class Dom[D <: Domain with Singleton](val value: Int) extends AnyVal
+class Dom[D <: Domain with Singleton](val value: Int) extends AnyVal {
+
+  override def toString = s"Dom($value)"
+
+}
 
 object Dom {
 
@@ -28,7 +32,5 @@ object Dom {
   }
 
   implicit def order[D <: Domain with Singleton]: Order[Dom[D]] = internalOrder.asInstanceOf[Order[Dom[D]]]
-
-  implicit def domToInt(d: Dom[_ <: Domain with Singleton]): Int = d.value
-
+  
 }

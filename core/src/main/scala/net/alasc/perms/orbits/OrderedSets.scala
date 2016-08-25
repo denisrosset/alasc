@@ -91,7 +91,7 @@ object OrderedSets {
           cforRange(0 until candidates.length.toInt) { i =>
             val b = candidates(i)
             val bg = b <|+| curG
-            if (orbits.Points.isSmallest(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
+            if (orbits.Points.isSmallestInOrbit(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
               val nextG = node.u(b) |+| curG
               rec(level + 1, toLevel, nextG, node.next, GrpChain.stabilizer(curSymGrp, bg), sOrbit)
             }
@@ -163,7 +163,7 @@ object OrderedSets {
           cforRange(0 until candidates.length.toInt) { i =>
             val b = candidates(i)
             val bg = b <|+| curG
-            if (orbits.Points.isSmallest(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
+            if (orbits.Points.isSmallestInOrbit(bg, curSymGrp.generators, Opt(sOrbit))(implicitly, spire.std.int.IntAlgebra)) {
               val nextG = node.u(b) |+| curG
               rec(level + 1, toLevel, nextG, node.next, GrpChain.stabilizer(curSymGrp, bg), sOrbit)
             }

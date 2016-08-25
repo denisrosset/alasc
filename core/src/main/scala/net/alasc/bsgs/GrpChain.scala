@@ -316,7 +316,7 @@ object GrpChain {
           case node: Node[G, F] =>
             for {
               b <- node.orbit.iterator
-              bg = b <|+| g if orbits.Points.isSmallest(bg, subSubgrp.generators, Opt(orbit))
+              bg = b <|+| g if orbits.Points.isSmallestInOrbit(bg, subSubgrp.generators, Opt(orbit))
               nextSubSubgrp = stabilizer[G, F](subSubgrp, bg)
               nextG = node.u(b) |+| g
               element <- rec(nextG, node.next, nextSubSubgrp)

@@ -19,8 +19,8 @@ object PermutationActionLaws {
 
   def apply[A:Eq:Arbitrary](domain0: Domain)(implicit da: Arbitrary[Dom[domain0.type]])  = new PermutationActionLaws[A] {
     val domain: domain0.type = domain0
-    def Equ = Eq[A]
-    def Arb = implicitly[Arbitrary[A]]
+    def Equ = implicitly
+    def Arb = implicitly
     def DomArb = da
   }
 
@@ -34,8 +34,8 @@ trait PermutationActionLaws[A] extends Laws {
 
   implicit def convertAction(implicit pa: Action[Int, A]): Action[D, A] =
     new Action[D, A] {
-      def actr(k: D, a: A): D = Dom(domain)(pa.actr(k, a))
-      def actl(a: A, k: D): D = Dom(domain)(pa.actl(a, k))
+      def actr(k: D, a: A): D = Dom(domain)(pa.actr(k.value, a))
+      def actl(a: A, k: D): D = Dom(domain)(pa.actl(a, k.value))
     }
 
   implicit def Equ: Eq[A]

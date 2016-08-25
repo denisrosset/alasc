@@ -164,8 +164,8 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
 
   implicit def convertAction(implicit pa: Action[Int, G]): Action[D, G] =
     new Action[D, G] {
-      def actr(k: D, g: G): D = Dom(domain)(pa.actr(k, g))
-      def actl(g: G, k: D): D = Dom(domain)(pa.actl(g, k))
+      def actr(k: D, g: G): D = Dom(domain)(pa.actr(k.value, g))
+      def actl(g: G, k: D): D = Dom(domain)(pa.actl(g, k.value))
     }
 
   implicit def arbDom: Arbitrary[D]

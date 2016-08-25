@@ -39,4 +39,6 @@ object FaithfulPermRepBuilder {
   implicit def fromPermutation[G](implicit permutation: Permutation[G]): FaithfulPermRepBuilder[G] =
     new FromPermutation[G]
 
+  def apply[G](implicit G: FaithfulPermRepBuilder[G]): FaithfulPermRepBuilder[G] = G
+
 }

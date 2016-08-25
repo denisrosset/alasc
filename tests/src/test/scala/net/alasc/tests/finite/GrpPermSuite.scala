@@ -26,6 +26,8 @@ class GrpPermSuite extends AlascSuite {
     PermGrpLaws[Perm](domain).permGrp
   }
 
-//    checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
+//  checkAll("Grp[Perm] laws", PermGrpLaws[Perm]()
+
+  checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
 
 }
