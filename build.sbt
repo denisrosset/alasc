@@ -1,11 +1,11 @@
 // inspired by Spire build.sbt file
 
 val disciplineVersion = "0.4"
-val cycloVersion = "0.11.0.4-SNAPSHOT"
-val metalVersion = "0.11.0.6"
+val cycloVersion = "0.11.0.4"
+val metalVersion = "0.11.0.9"
 val scalaCheckVersion = "1.12.4"
 val scalaTestVersion = "3.0.0-M7"
-val scalinVersion = "0.11.0.8-SNAPSHOT"
+val scalinVersion = "0.11.0.8"
 val shapelessVersion = "2.2.5"
 val spireVersion = "0.11.0"
 val fastParseVersion = "0.3.7"

@@ -135,9 +135,13 @@ object Partition extends PartitionLowPriority {
 
   type In[D0 <: Domain with Singleton] = Partition { type D = D0 }
 
-  implicit def boundedLatticeIn[D <: Domain with Singleton](implicit witness: shapeless.Witness.Aux[D]): BoundedLattice[Partition.In[D]] = new PartitionBoundedLatticeIn[D](witness.value)
+  implicit def boundedLatticeIn[D <: Domain with Singleton]
+  (implicit witness: shapeless.Witness.Aux[D]): BoundedLattice[Partition.In[D]] =
+    new PartitionBoundedLatticeIn[D](witness.value)
 
-  implicit def partialOrderIn[D <: Domain with Singleton](implicit witness: shapeless.Witness.Aux[D]): PartialOrder[Partition.In[D]] = new PartitionPartialOrderIn[D](witness.value)
+  implicit def partialOrderIn[D <: Domain with Singleton]
+  (implicit witness: shapeless.Witness.Aux[D]): PartialOrder[Partition.In[D]] =
+    new PartitionPartialOrderIn[D](witness.value)
 
   val empty: Partition.In[Domain.empty.type] = Partition(Domain.empty)()
 

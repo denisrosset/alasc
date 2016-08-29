@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.util.Random
 
 import spire.math.SafeLong
+import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
@@ -18,7 +19,16 @@ object Symmetric {
   
   def domainArray(degree: Int): Array[Int] = Array.tabulate[Int](degree)(identity)
 
-  def randomElement[G:PermutationBuilder](degree: Int, random: Random) = PermutationBuilder[G].fromImages(random.shuffle(domainArray(degree)))
+  def randomElement[G:PermutationBuilder](degree: Int, random: Random): G = {
+    // uses the Fisher-Yates shuffle, inside out variant
+    val array = new Array[Int](degree)
+    cforRange(0 until degree) { i =>
+      val j = random.nextInt(i + 1)
+      array(i) = array(j)
+      array(j) = i
+    }
+    PermutationBuilder[G].fromImages(array)
+  }
 
   def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
     if (degree < 2) Grp.trivial[G] else

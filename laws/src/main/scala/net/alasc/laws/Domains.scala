@@ -1,6 +1,9 @@
 package net.alasc.laws
 
+import spire.algebra.{Action, Eq}
+
 import org.scalacheck.{Arbitrary, Gen}
+import shapeless.Witness
 
 import net.alasc.domains._
 

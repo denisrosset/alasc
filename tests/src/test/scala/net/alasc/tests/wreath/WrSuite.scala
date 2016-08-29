@@ -3,6 +3,7 @@ package net.alasc.tests.wreath
 import spire.laws.{Perm => _}
 import spire.math.SafeLong
 
+import net.alasc.domains.Domain
 import net.alasc.finite.Grp
 import net.alasc.laws._
 import net.alasc.perms.Perm
@@ -11,15 +12,17 @@ import net.alasc.wreath.Wr
 
 class WrSuite extends AlascSuite {
 
-  import net.alasc.laws.Permutations.arbDom
-  import net.alasc.laws.Permutations.arbPermutation
-  import net.alasc.laws.Wrs.arbWr
+  import Doms.arbDomInDomain
+  import Permutations.arbPermutation
+  import Wrs.arbWr
 
   implicit val wrNoShrink = noShrink[Wr[Perm, Perm]]
 
+  val domain = Domain(100)
+
   nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
     implicit def action = wrSize.representation[Perm, Perm, SafeLong].permutationAction
-    PermutationActionLaws[Wr[Perm, Perm]].faithfulPermutationAction
+    PermutationActionLaws[Wr[Perm, Perm]](domain).faithfulPermutationAction
   }
 
   import net.alasc.perms.default._

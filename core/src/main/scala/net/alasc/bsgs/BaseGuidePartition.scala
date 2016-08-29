@@ -11,8 +11,8 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
 
   val blocks = partition.sizeIncreasing.reverse
   def fullBase = blocks.flatMap(identity)
-  def iterator = new Iter(metal.mutable.BitSet.empty,
-    metal.mutable.Buffer.fromIterable(blocks.map(block => metal.mutable.BitSet.fromIterable(block))),
+  def iterator = new Iter(metal.mutable.ResizableBitSet.empty,
+    metal.mutable.Buffer.fromIterable(blocks.map(block => metal.mutable.ResizableBitSet.fromIterable(block))),
     metal.mutable.Buffer.fromIterable(blocks.map(_.size)))
 
   final class Iter(val currentBlock: metal.mutable.BitSet, val remainingBlocks: metal.mutable.Buffer[metal.mutable.BitSet], val remainingBlockSizes: metal.mutable.Buffer[Int]) extends BaseGuideIterator {
@@ -31,7 +31,7 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
               var newNonFixed = nonFixed
               var easyNonFixed = NoneTuple2NN
               val block = remainingBlocks(index)
-              val toRemove = metal.mutable.BitSet.empty
+              val toRemove = metal.mutable.ResizableBitSet.empty
               block.foreach { k =>
                 if (isFixed(k))
                   toRemove += k
@@ -73,7 +73,7 @@ case class BaseGuidePartition(partition: Partition) extends BaseGuide {
         }
       } else {
         var nonFixed = NNNone
-        val toRemove = metal.mutable.BitSet.empty
+        val toRemove = metal.mutable.ResizableBitSet.empty
         currentBlock.foreach { k =>
           if (isFixed(k))
             toRemove += k

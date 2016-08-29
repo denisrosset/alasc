@@ -7,7 +7,7 @@ import spire.util.Opt
 import org.scalacheck._
 
 import net.alasc.bsgs.BaseGuideLex
-import net.alasc.domains.Partition
+import net.alasc.domains.{Domain, Partition}
 import net.alasc.enum.Representatives
 import net.alasc.finite._
 import net.alasc.laws._
@@ -25,7 +25,9 @@ abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, 
     array <- genSizedArrayInt(size)
   } yield array
 
-  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.forSize[Perm](size))
+  def genSetInt: Gen[Set[Int]] = Gen.containerOfN[Set, Int](10, Gen.choose(0, 10))
+
+  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.forDomain[Perm](Domain(size)))
 
   implicit val noShrinkArrayInt = noShrink[Array[Int]]
   implicit val noShrinkPerm = noShrink[Perm]
@@ -126,6 +128,18 @@ abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, 
       }
     }
   }
+/*
+  test("Minimal representative is found for sets") {
+    forAll(genSetInt) { set =>
+      forAll(genSizedGrp(10)) { grp =>
+        import net.alasc.std.set._
+        val bruteForceMinimal: Set[Int] = grp.iterator.map(g => set <|+| g).min
+        val minG = orbits.OrderedSets.toSmallest(set, grp)
+        val cleverMinimal: Set[Int] = set <|+| minG
+        cleverMinimal should ===(bruteForceMinimal)
+      }
+    }
+  }*/
 
 }
 

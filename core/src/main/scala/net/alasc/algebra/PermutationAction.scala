@@ -40,7 +40,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     */
   def movedPoints(g: G): Set[Int] = {
     val n = movedPointsUpperBound(g).getOrElseFast(-1) + 1
-    val bitset = metal.mutable.BitSet.fixedSize(largestMovedPoint(g).getOrElse(-1) + 1)
+    val bitset = metal.mutable.FixedBitSet.reservedSize(largestMovedPoint(g).getOrElse(-1) + 1)
     var k: Int = 0
     while (k < n) {
       if (movesPoint(g, k))
@@ -79,7 +79,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the sign of the permutation `g`. */
   def signPerm(g: G): Int = {
-    val rest = metal.mutable.BitSet.fromIterable(movedPoints(g))
+    val rest = metal.mutable.FixedBitSet.fromIterable(movedPoints(g))
     var sign = 1
     while (rest.nonEmpty) {
       val h = rest.min
@@ -98,7 +98,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the cycle structure of the permutation `g`. */
   def cycleStructure(g: G): Map[Int, Int] = {
-    val rest = metal.mutable.BitSet.fromIterable(movedPoints(g))
+    val rest = metal.mutable.FixedBitSet.fromIterable(movedPoints(g))
     val cs = metal.mutable.HashMap.empty[Int, Int]
     while (rest.nonEmpty) {
       val h = rest.min
@@ -122,7 +122,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
 
   /** Returns the orbit of the domain element `i` under the action of `g`. */
   def orbit(g: G, i: Int): Set[Int] = {
-    val mut = metal.mutable.BitSet(i)
+    val mut = metal.mutable.ResizableBitSet(i)
     @tailrec def rec(k: Int): Unit =
       if (k != i) {
         mut += k
@@ -145,18 +145,14 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   def toPermutation[P](g: G)(implicit evP: PermutationBuilder[P]): P =
     evP.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
 
-}
-
-object PermutationAction {
-
-  def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
-
   /** Return the smallest element of the domain moved by the given generators, or [[NNNone]]. */
-  def smallestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+  def smallestMovedPoint(generators: Iterable[G]): NNOption = {
     var mn = Int.MaxValue
     var moved = false
-    generators.foreach { g =>
-      action.smallestMovedPoint(g) match {
+    val it = generators.iterator
+    while (it.hasNext) {
+      val g = it.next()
+      smallestMovedPoint(g) match {
         case NNOption(i) =>
           mn = spire.math.min(mn, i)
           moved = true
@@ -167,12 +163,20 @@ object PermutationAction {
   }
 
   /** Return the largest element of the domain moved by the given generators, or [[NNNone]]. */
-  def largestMovedPoint[G](generators: Iterable[G])(implicit action: PermutationAction[G]): NNOption = {
+  def largestMovedPoint(generators: Iterable[G]): NNOption = {
     var mx = -1
-    generators.foreach { g =>
-      mx = spire.math.max(action.largestMovedPoint(g).getOrElseFast(-1), mx)
+    val it = generators.iterator
+    while (it.hasNext) {
+      val g = it.next()
+      mx = spire.math.max(largestMovedPoint(g).getOrElseFast(-1), mx)
     }
     if (mx >= 0) NNOption(mx) else NNNone
   }
+
+}
+
+object PermutationAction {
+
+  def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
 
 }

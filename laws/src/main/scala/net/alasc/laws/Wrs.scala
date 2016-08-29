@@ -3,8 +3,10 @@ package net.alasc.laws
 import spire.algebra.{Group, Ring}
 
 import org.scalacheck.{Arbitrary, Gen}
+import Arbitrary.arbitrary
 
 import net.alasc.algebra._
+import net.alasc.domains.Domain
 import net.alasc.perms._
 import net.alasc.syntax.permutationAction._
 import net.alasc.wreath._
@@ -37,15 +39,15 @@ object Wrs {
     Arbitrary(forSize(wrSize.a, wrSize.h))
 
   def forSize[A:PermutationBuilder, H:PermutationBuilder](aSize: Int, hSize: Int) = for {
-    aSeq <- Gen.containerOfN[Seq, A](hSize, Permutations.forSize[A](aSize))
-    h <- Permutations.forSize[H](hSize)
+    aSeq <- Gen.containerOfN[Seq, A](hSize, Permutations.forDomain[A](Domain(aSize)))
+    h <- Permutations.forDomain[H](Domain(hSize))
   } yield Wr(aSeq, h)
 
   def sized[A:Arbitrary, H:Arbitrary]: Gen[Wr[A, H]] =
     Gen.parameterized { parameters =>
       val size = math.max(parameters.size / 10, 3)
-      val aGen = Gen.resize(size, implicitly[Arbitrary[A]].arbitrary)
-      val hGen = Gen.resize(size, implicitly[Arbitrary[H]].arbitrary)
+      val aGen = Gen.resize(size, arbitrary[A])
+      val hGen = Gen.resize(size, arbitrary[H])
       for {
         n <- Gen.choose(0, size)
         aSeq <- Gen.containerOfN[Seq, A](n, aGen)

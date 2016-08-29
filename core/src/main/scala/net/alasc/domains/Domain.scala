@@ -1,6 +1,5 @@
 package net.alasc.domains
 
-
 import spire.util.Opt
 
 import net.alasc.util._

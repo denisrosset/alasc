@@ -118,7 +118,7 @@ object Perm16Encoding {
     res
   }
 
-  def imagesEncoding(images: Seq[Int], supportMax: Int = 15): Long = {
+  def imagesEncoding(images: Array[Int], supportMax: Int = 15): Long = {
     var encoding = 0L
     var k = supportMax
     assert(k <= movedPointsUpperBound)

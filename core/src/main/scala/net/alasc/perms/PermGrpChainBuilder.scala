@@ -147,7 +147,7 @@ class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
   // enumeration of subgroup elements
   def lexElements(grp: Grp[G]): BigIndexedSeq[G] = {
     val cg = fromGrp(grp)
-    val n = PermutationAction.largestMovedPoint(grp.generators).getOrElseFast(0) + 1
+    val n = permutation.largestMovedPoint(grp.generators).getOrElseFast(0) + 1
     new GrpChain.LexElements[G, F](convertGrp(grp, BaseGuideLex(n)))
   }
 

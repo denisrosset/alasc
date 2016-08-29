@@ -41,11 +41,11 @@ case class SetwiseStabilizer[G:Group, F <: PermutationAction[G] with Singleton]
     // not moved by the next subgroup in the stabilizer chain.
     // The points considered are those contained in `set`.
     val pointSetsToTest: Array[metal.generic.BitSet] = {
-      val remaining = metal.mutable.BitSet.fromIterable(set)
+      val remaining = metal.mutable.ResizableBitSet.fromIterable(set)
       val groups = metal.mutable.Buffer.empty[metal.generic.BitSet]
       @tailrec def rec(current: Chain[G, F]): Array[metal.generic.BitSet] = current match {
         case node: Node[G, F] if remaining.contains(node.beta) =>
-          val fixed = metal.mutable.BitSet(node.beta)
+          val fixed = metal.mutable.ResizableBitSet(node.beta)
           remaining -= node.beta
           remaining.foreach { k =>
             if (node.next.isFixed(k)) fixed += k

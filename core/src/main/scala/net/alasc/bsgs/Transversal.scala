@@ -48,7 +48,7 @@ trait Transversal[G, F <: PermutationAction[G] with Singleton] extends net.alasc
   }
 
   def orbitSet: Set[Int] = {
-    val bitset = metal.mutable.BitSet.empty
+    val bitset = metal.mutable.ResizableBitSet.empty
     foreachOrbit { bitset += _ }
     bitset.toScala
   }

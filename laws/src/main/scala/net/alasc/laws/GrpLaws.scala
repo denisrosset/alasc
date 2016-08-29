@@ -11,7 +11,9 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra._
+import net.alasc.domains.{Dom, Domain}
 import net.alasc.finite._
+import net.alasc.lexico.lexPermutationOrder
 import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.syntax.all._
 
@@ -28,8 +30,9 @@ object GrpLaws {
 
 object PermGrpLaws {
 
-  def apply[G:Arbitrary:Permutation](implicit gg: Arbitrary[Grp[G]], d: Arbitrary[Dom]) =
+  def apply[G:Arbitrary:Permutation](domain0: Domain)(implicit gg: Arbitrary[Grp[G]], d: Arbitrary[Dom[domain0.type]]) =
     new PermGrpLaws[G] {
+      val domain: domain0.type = domain0
       def permutation = implicitly
       def arbG = implicitly
       def arbGrpG = implicitly
@@ -155,7 +158,17 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
   def equ = permutation
   def group = permutation
 
-  implicit def arbDom: Arbitrary[Dom]
+  val domain: Domain
+
+  type D = Dom[domain.type]
+
+  implicit def convertAction(implicit pa: Action[Int, G]): Action[D, G] =
+    new Action[D, G] {
+      def actr(k: D, g: G): D = Dom(domain)(pa.actr(k.value, g))
+      def actl(g: G, k: D): D = Dom(domain)(pa.actl(g, k.value))
+    }
+
+  implicit def arbDom: Arbitrary[D]
 
   def permGrp(implicit builder: PermGrpBuilder[G]) =
     new GrpProperties(
@@ -171,7 +184,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
 
       "lexElements" -> forAll { (grp: Grp[G]) =>
         (grp.order < 65536) ==> {
-          import net.alasc.optional.lexPermutationOrder._
+          import lexPermutationOrder._
           val lexSeq = grp.lexElements.iterator
             .map(g => g.toPermutation[Perm]).toSeq
           val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
@@ -179,7 +192,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "stabilizer(b)" -> forAll { (grp: Grp[G], dom: Dom) =>
+      "stabilizer(b)" -> forAll { (grp: Grp[G], dom: D) =>
         (grp.order < 65536) ==> {
           val k = dom.value
           val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
@@ -188,7 +201,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "setwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[Dom]) =>
+      "setwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[D]) =>
         (grp.order < 65536) ==> {
           val setInt = set.map(_.value)
           def setStabilized(g: G) =
@@ -199,7 +212,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "pointwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[Dom]) =>
+      "pointwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[D]) =>
         (grp.order < 65536) ==> {
           val setInt = set.map(_.value)
           def setStabilized(g: G) =
@@ -225,7 +238,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "stabilizerTransversal" -> forAll { (grp: Grp[G], dom: Dom) =>
+      "stabilizerTransversal" -> forAll { (grp: Grp[G], dom: D) =>
         (grp.order < 65536) ==> {
           val k = dom.value
           val (subgrp, trv) = grp.stabilizerTransversal(k)
@@ -254,6 +267,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
           (g.isId) == doesNotMoveBase
         }
       }
+
   )
 
 }

@@ -19,8 +19,15 @@ trait AlascSuite extends FunSuite with Matchers
   with PropertyChecks
   with Discipline with NestedDiscipline
   with StrictAlascEquality
-  with spire.syntax.AllSyntax with spire.std.AnyInstances
-  with net.alasc.syntax.AllSyntax with net.alasc.std.AnyInstances
+  with spire.syntax.AllSyntax
+  with spire.std.ArrayInstances
+  with spire.std.IntInstances
+  with spire.std.LongInstances
+  with spire.std.StringInstances
+  with spire.std.ProductInstances
+  with spire.std.SeqInstances1
+  with net.alasc.syntax.AllSyntax
+  with net.alasc.std.AnyInstances
   with spire.syntax.GroupoidSyntax {
 
   // disable Eq syntax (by making `eqOps` not implicit), since it collides
