@@ -16,6 +16,7 @@ import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
 import net.alasc.perms.orbits
 import net.alasc.perms.{FaithfulPermRep, MutableOrbit}
 
+/** Group described a BSGS chain of elements `G` using the faithful permutation action `F` */
 abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
   implicit val action: F

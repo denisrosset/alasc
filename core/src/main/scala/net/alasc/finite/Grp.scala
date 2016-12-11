@@ -86,6 +86,7 @@ abstract class Grp[G] { lhs =>
   /** Simplifies the description current group.*/
   def smallGeneratingSet(implicit builder: GrpBuilder[G]): IndexedSeq[G] = builder.smallGeneratingSet(lhs)
 
+  // If `G` is a permutation
   /** Sequence of the group elements, ordered lexicographically by their images. */
   def lexElements(implicit builder: PermGrpBuilder[G]): BigIndexedSeq[G] = builder.lexElements(lhs)
 

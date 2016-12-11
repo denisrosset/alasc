@@ -14,18 +14,6 @@ final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
 
 }
 
-final class WidenOps[N](lhs: N) {
-
-  def widen[W](implicit ev: Widen[N, W]): W = macro Ops.unopWithEv[Widen[N, W], W]
-
-}
-
-final class WidenKOps[F[_], N](val lhs: F[N]) extends AnyVal {
-
-  def widenK[W](implicit ev: Widen[F[N], F[W]]): F[W] = ev.widen(lhs)
-
-}
-
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def movesPoint(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]

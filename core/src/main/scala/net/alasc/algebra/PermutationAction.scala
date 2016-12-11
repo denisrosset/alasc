@@ -74,7 +74,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   /** Returns an arbitrary element in the support of `g` or NNNone if support empty. */
   def findMovedPoint(g: G): NNOption = largestMovedPoint(g)
 
-  /** Returns a fast to compute upper bound on the maximal element in the support of `g`. */
+  /** Returns a fast-to-compute upper bound on the maximal element in the support of `g`. */
   def movedPointsUpperBound(g: G): NNOption
 
   /** Returns the sign of the permutation `g`. */
