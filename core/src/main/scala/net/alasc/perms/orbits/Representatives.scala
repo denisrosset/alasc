@@ -1,32 +1,30 @@
-package net.alasc.enum
+package net.alasc.perms.orbits
 
 import scala.annotation.tailrec
 
 import spire.algebra._
 import spire.math.SafeLong
 import spire.syntax.action._
-import spire.syntax.group._
 import spire.syntax.cfor._
+import spire.syntax.group._
 import spire.util.Opt
 
 import metal._
+import metal.mutable.Buffer
 import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
+import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.util._
-import metal.mutable.Buffer
-
-import net.alasc.perms.MutableOrbit
-import net.alasc.perms.orbits
 
 final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
-  import Representatives.toUnsignedLong
+  import grp.{action, equ, group}
 
-  import grp.{action, classTag, equ, group}
+  import Representatives.toUnsignedLong
 
   val n = seq.length
 
@@ -312,7 +310,7 @@ object Representatives {
   def findPermutationToMinimal[G, F <: PermutationAction[G] with Singleton]
     (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
-    import grp.{action, classTag, equ, group}
+    import grp.{action, equ, group}
     val n = array.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0
