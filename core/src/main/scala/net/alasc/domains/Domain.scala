@@ -51,4 +51,6 @@ object Domain extends UniquenessCache[Int, Domain] {
   protected def valueFromKey(size: Int): Domain = new Domain(size)
   protected def keyFromValue(domain: Domain): Option[Int] = Some(domain.size)
 
+  val alphabetMap = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".zipWithIndex.toMap
+
 }

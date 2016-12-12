@@ -1,5 +1,4 @@
-package net.alasc.tests
-package enum
+package net.alasc.tests.perms.orbits
 
 import spire.algebra.Order
 import spire.util.Opt
@@ -8,10 +7,11 @@ import org.scalacheck._
 
 import net.alasc.bsgs.BaseGuideLex
 import net.alasc.domains.{Domain, Partition}
-import net.alasc.enum.Representatives
 import net.alasc.finite._
 import net.alasc.laws._
+import net.alasc.perms.orbits.Representatives
 import net.alasc.perms.{PermGrpChainBuilder, _}
+import net.alasc.tests.AlascSuite
 import net.alasc.tests.perms.PermSuite
 
 abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {

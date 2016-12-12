@@ -1,5 +1,15 @@
 package net.alasc.perms.orbits
 
-class Seqs {
+object Seqs {
+
+  trait Representatives {
+
+    def iterator
+
+  }
+
+  trait OrderedRepresentatives extends Representatives {
+
+  }
 
 }
