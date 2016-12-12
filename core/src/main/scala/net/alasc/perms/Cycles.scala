@@ -1,7 +1,6 @@
 package net.alasc.perms
 
 import scala.language.implicitConversions
-
 import scala.collection.immutable.BitSet
 
 import spire.algebra._
@@ -9,7 +8,7 @@ import spire.syntax.eq._
 import spire.syntax.action._
 
 import net.alasc.algebra._
-import net.alasc.domains.DomainAlphabet
+import net.alasc.domains.Domain
 import net.alasc.util._
 
 /** Description of a permutation as a product of disjoint cycles in the canonical form.
@@ -38,7 +37,7 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
 
   def apply(cycle: Int*) = Cycles.permutationBuilder.op(this, Cycles(cycle: _*))
 
-  def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
+  def apply(cycle: String): Cycles = apply(cycle.map(Domain.alphabetMap(_)): _*)
 
 }
 
@@ -105,7 +104,7 @@ object Cycles {
     case _ => new Cycles(Seq(Cycle(seq: _*)))
   }
 
-  def apply(cycle: String): Cycles = apply(cycle.map(DomainAlphabet.map(_)): _*)
+  def apply(cycle: String): Cycles = apply(cycle.map(Domain.alphabetMap(_)): _*)
 
   implicit def cycleToCycles(c: Cycle): Cycles = new Cycles(Seq(c))
 
