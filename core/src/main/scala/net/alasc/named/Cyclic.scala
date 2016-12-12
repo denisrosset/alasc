@@ -2,14 +2,15 @@ package net.alasc.named
 
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.perms.Perm
 
 object Cyclic {
 
-  def shift[G:PermutationBuilder](n: Int): G =
-    PermutationBuilder[G].fromImageFun(n, i => (i + 1) % n)
+  def shift(n: Int): Perm =
+    PermutationBuilder[Perm].fromImageFun(n, i => (i + 1) % n)
 
-  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
-    if (degree < 2) Grp.trivial[G] else
-      Grp.fromGeneratorsAndOrder(IndexedSeq(shift[G](degree)), degree)
+  def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =
+    if (degree < 2) Grp.trivial[Perm] else
+      Grp.fromGeneratorsAndOrder(IndexedSeq(shift(degree)), degree)
 
 }

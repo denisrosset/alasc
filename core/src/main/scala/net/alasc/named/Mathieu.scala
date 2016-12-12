@@ -8,8 +8,6 @@ import net.alasc.perms._
 
 object Mathieu {
 
-  import NamedGroups.generate
-
   val generatorsAndOrders: Map[Int, (IndexedSeq[Perm], SafeLong)] =
     Map(
       10 -> ((IndexedSeq(Perm(1,2)(3,4), Perm(1,2,3,5)(4,6)), 360)),
@@ -44,9 +42,9 @@ object Mathieu {
 
   def notDefined: Nothing = throw new IllegalArgumentException("Mathieu groups are only defined for degrees " + generatorsAndOrders.keys.toSeq.sorted.mkString(", "))
 
-  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] = {
+  def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] = {
     val (generators, order) = generatorsAndOrders.getOrElse(degree, notDefined)
-    generate[G](generators, order)
+    Grp.fromGeneratorsAndOrder(generators, order)
   }
 
 }

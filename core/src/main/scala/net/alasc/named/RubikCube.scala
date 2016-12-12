@@ -9,8 +9,6 @@ import net.alasc.perms._
 // http://www.gap-system.org/Doc/Examples/rubik.html
 object RubikCube {
 
-  import NamedGroups.generate
-
   val colors = Seq(0,
       1,1,1,1,1,1,1,1,
       2,2,2,2,2,2,2,2,
@@ -29,6 +27,6 @@ object RubikCube {
 
   val order = SafeLong(BigInt("43252003274489856000"))
 
-  def apply[G:PermutationBuilder:GrpBuilder]: Grp[G] = generate(generators, order)
+  def apply(implicit gb: GrpBuilder[Perm]): Grp[Perm] = Grp.fromGeneratorsAndOrder(generators, order)
 
 }

@@ -2,18 +2,19 @@ package net.alasc.named
 
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.perms.Perm
 
 object Dihedral {
 
-  def shift[G:PermutationBuilder](n: Int): G = Cyclic.shift[G](n)
+  def shift(n: Int): Perm = Cyclic.shift(n)
 
-  def reflection[G:PermutationBuilder](n: Int) =
-    PermutationBuilder[G].fromImageFun(n, i => (n - 1) - i)
+  def reflection(n: Int) =
+    PermutationBuilder[Perm].fromImageFun(n, i => (n - 1) - i)
 
-  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
-    if (degree < 2) Grp.trivial[G] else
+  def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =
+    if (degree < 2) Grp.trivial[Perm] else
       Grp.fromGeneratorsAndOrder(
-        IndexedSeq(shift[G](degree), reflection[G](degree)),
+        IndexedSeq(shift(degree), reflection(degree)),
         2 * degree)
 
 }

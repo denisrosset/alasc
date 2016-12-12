@@ -2,24 +2,23 @@ package net.alasc.named
 
 import scala.annotation.tailrec
 import scala.util.Random
-
 import spire.math.SafeLong
 import spire.syntax.cfor._
-
 import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.perms.Perm
 
 object Symmetric {
 
   @tailrec def order(degree: Int, mul: SafeLong = 1): SafeLong =
     if (degree > 1) order(degree - 1, mul * degree) else mul
 
-  def transposition[G:PermutationBuilder](i: Int, j: Int): G =
-    PermutationBuilder[G].fromSupportAndImageFun(Set(i, j), x => if (x == i) j else (if (x == j) i else x))
+  def transposition(i: Int, j: Int): Perm =
+    PermutationBuilder[Perm].fromSupportAndImageFun(Set(i, j), x => if (x == i) j else (if (x == j) i else x))
   
   def domainArray(degree: Int): Array[Int] = Array.tabulate[Int](degree)(identity)
 
-  def randomElement[G:PermutationBuilder](degree: Int, random: Random): G = {
+  def randomElement(degree: Int, random: Random): Perm = {
     // uses the Fisher-Yates shuffle, inside out variant
     val array = new Array[Int](degree)
     cforRange(0 until degree) { i =>
@@ -27,13 +26,13 @@ object Symmetric {
       array(i) = array(j)
       array(j) = i
     }
-    PermutationBuilder[G].fromImages(array)
+    PermutationBuilder[Perm].fromImages(array)
   }
 
-  def apply[G:PermutationBuilder:GrpBuilder](degree: Int): Grp[G] =
-    if (degree < 2) Grp.trivial[G] else
+  def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =
+    if (degree < 2) Grp.trivial[Perm] else
     Grp.fromGeneratorsAndOrder(
-      IndexedSeq(Cyclic.shift[G](degree), transposition[G](0, 1)),
+      IndexedSeq(Cyclic.shift(degree), transposition(0, 1)),
       order(degree)
     )
 
