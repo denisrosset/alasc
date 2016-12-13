@@ -54,7 +54,7 @@ object Permutations {
     Cloner( (p: Perm) => Perm.fromImages(p.images(p.largestMovedPoint.fold(0)(_ + 1))) )
 
   implicit val cyclesCloner: Cloner[Cycles] = Cloner( (c: Cycles) => c.toPerm.toCycles )
-  
+
   implicit def permutationGrp(domain: Domain)(implicit ev: GrpBuilder[Perm]): Gen[Grp[Perm]] =
     Grps.fromElements(permForDomain(domain))
 
