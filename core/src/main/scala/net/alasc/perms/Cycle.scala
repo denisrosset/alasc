@@ -41,6 +41,7 @@ class Cycle private[alasc](val seq: Seq[Int]) {
 }
 
 class CyclePermutationAction extends PermutationAction[Cycle] {
+  override def movesAnyPoint(c: Cycle): Boolean = c.seq.nonEmpty
   override def movedPoints(c: Cycle): BitSet = BitSet(c.seq: _*)
   override def largestMovedPoint(c: Cycle) = NNSome(c.seq.max)
   override def smallestMovedPoint(c: Cycle) = NNSome(c.seq.min)

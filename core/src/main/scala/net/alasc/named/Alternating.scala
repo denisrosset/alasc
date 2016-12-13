@@ -11,7 +11,7 @@ object Alternating {
 
   def shift(n: Int): Perm =
     if (n % 2 == 1) Cyclic.shift(n) else
-      PermutationBuilder[Perm].fromImageFun(n, i => if (i == 0) 0 else (i  % (n - 1)) + 1)
+      Perm.fromImageFun(n, i => if (i == 0) 0 else (i  % (n - 1)) + 1)
 
   /** Generates the alternating group on `degree` elements.
     * 
@@ -22,7 +22,7 @@ object Alternating {
   def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =
     if (degree < 3) Grp.trivial[Perm] else
       Grp.fromGeneratorsAndOrder(
-        IndexedSeq(shift(degree), PermutationBuilder[Perm].fromImages(Seq(1,2,0))),
+        IndexedSeq(shift(degree), Perm.fromImages(Seq(1,2,0))),
         order(degree)
       )
 

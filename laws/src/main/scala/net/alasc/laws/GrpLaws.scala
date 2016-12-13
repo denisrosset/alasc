@@ -30,10 +30,9 @@ object GrpLaws {
 
 object PermGrpLaws {
 
-  def apply[G:Arbitrary:Permutation](domain0: Domain)(implicit gg: Arbitrary[Grp[G]], d: Arbitrary[Dom[domain0.type]]) =
-    new PermGrpLaws[G] {
+  def apply(domain0: Domain)(implicit gg: Arbitrary[Grp[Perm]], p: Arbitrary[Perm], d: Arbitrary[Dom[domain0.type]]) =
+    new PermGrpLaws {
       val domain: domain0.type = domain0
-      def permutation = implicitly
       def arbG = implicitly
       def arbGrpG = implicitly
       def arbDom = implicitly
@@ -152,47 +151,45 @@ trait GrpLaws[G] extends Laws {
 
 }
 
-trait PermGrpLaws[G] extends GrpLaws[G] {
+trait PermGrpLaws extends GrpLaws[Perm] {
 
-  implicit def permutation: Permutation[G]
-  def equ = permutation
-  def group = permutation
+  def equ = Perm.algebra
+  def group = Perm.algebra
 
   val domain: Domain
 
   type D = Dom[domain.type]
 
-  implicit def convertAction(implicit pa: Action[Int, G]): Action[D, G] =
-    new Action[D, G] {
-      def actr(k: D, g: G): D = Dom(domain)(pa.actr(k.value, g))
-      def actl(g: G, k: D): D = Dom(domain)(pa.actl(g, k.value))
+  implicit def convertAction(implicit pa: Action[Int, Perm]): Action[D, Perm] =
+    new Action[D, Perm] {
+      def actr(k: D, g: Perm): D = Dom(domain)(pa.actr(k.value, g))
+      def actl(g: Perm, k: D): D = Dom(domain)(pa.actl(g, k.value))
     }
 
   implicit def arbDom: Arbitrary[D]
 
-  def permGrp(implicit builder: PermGrpBuilder[G]) =
+  def permGrp(implicit builder: PermGrpBuilder) =
     new GrpProperties(
       name = "permGrp",
       parent = Some(grp(builder)),
 
-      "find" -> forAll { (grp: Grp[G]) =>
+      "find" -> forAll { (grp: Grp[Perm]) =>
         forAll(Grps.genRandomElement(grp)) { g =>
-          val Opt(recov) = grp.find(permutation.toPermutation[Perm](g))
+          val Opt(recov) = grp.find[Perm](g)
           recov === g
         }
       },
 
-      "lexElements" -> forAll { (grp: Grp[G]) =>
+      "lexElements" -> forAll { (grp: Grp[Perm]) =>
         (grp.order < 65536) ==> {
           import lexPermutationOrder._
-          val lexSeq = grp.lexElements.iterator
-            .map(g => g.toPermutation[Perm]).toSeq
-          val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1.toPermutation[Perm] < g2.toPermutation[Perm] }
+          val lexSeq = grp.lexElements.iterator.toSeq
+          val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1 < g2 }
           (lexSeq.size == grp.order) && ordered
         }
       },
 
-      "stabilizer(b)" -> forAll { (grp: Grp[G], dom: D) =>
+      "stabilizer(b)" -> forAll { (grp: Grp[Perm], dom: D) =>
         (grp.order < 65536) ==> {
           val k = dom.value
           val stabEls1 = grp.iterator.filter(g => (k <|+| g) == k).toSet
@@ -201,10 +198,10 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "setwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[D]) =>
+      "setwiseStabilizer" -> forAll { (grp: Grp[Perm], set: Set[D]) =>
         (grp.order < 65536) ==> {
           val setInt = set.map(_.value)
-          def setStabilized(g: G) =
+          def setStabilized(g: Perm) =
             setInt.forall(i => setInt.contains(i <|+| g))
           val stabEls1 = grp.iterator.filter(setStabilized(_)).toSet
           val stabEls2 = grp.setwiseStabilizer(setInt).iterator.toSet
@@ -212,10 +209,10 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "pointwiseStabilizer" -> forAll { (grp: Grp[G], set: Set[D]) =>
+      "pointwiseStabilizer" -> forAll { (grp: Grp[Perm], set: Set[D]) =>
         (grp.order < 65536) ==> {
           val setInt = set.map(_.value)
-          def setStabilized(g: G) =
+          def setStabilized(g: Perm) =
             setInt.forall(i => i == (i <|+| g))
           val stabEls1 = grp.iterator.filter(setStabilized(_)).toSet
           val stabEls2 = grp.pointwiseStabilizer(setInt).iterator.toSet
@@ -223,7 +220,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "someStabilizerTransversal" -> forAll { (grp: Grp[G]) =>
+      "someStabilizerTransversal" -> forAll { (grp: Grp[Perm]) =>
         (grp.order < 65536) ==> {
           grp.someStabilizerTransversal match {
             case Opt(subgrp, trv) =>
@@ -238,7 +235,7 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "stabilizerTransversal" -> forAll { (grp: Grp[G], dom: D) =>
+      "stabilizerTransversal" -> forAll { (grp: Grp[Perm], dom: D) =>
         (grp.order < 65536) ==> {
           val k = dom.value
           val (subgrp, trv) = grp.stabilizerTransversal(k)
@@ -253,15 +250,14 @@ trait PermGrpLaws[G] extends GrpLaws[G] {
         }
       },
 
-      "find" -> forAll { (grp: Grp[G], g: G) =>
-        val permEl = g.toPermutation[Perm]
-        grp.find(permEl) match {
+      "find" -> forAll { (grp: Grp[Perm], g: Perm) =>
+        grp.find(g) match {
           case Opt(h) => g === h
           case _ => !grp.contains(g)
         }
       },
 
-      "base" -> forAll { (grp: Grp[G]) =>
+      "base" -> forAll { (grp: Grp[Perm]) =>
         forAll(Grps.genRandomElement(grp)) { g =>
           val doesNotMoveBase = grp.base.forall(!g.movesPoint(_))
           (g.isId) == doesNotMoveBase

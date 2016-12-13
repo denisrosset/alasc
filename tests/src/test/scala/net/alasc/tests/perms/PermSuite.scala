@@ -24,7 +24,7 @@ class PermSuite extends AlascSuite {
 
   test("Perm conversion and Cycle.orbit") {
     val g = Perm(1, 2, 3)
-    (Cycle.orbit(2, _ <|+| g).get.toCycles === g.toPermutation[Cycles]) shouldBe true
+    (Cycle.orbit(2, _ <|+| g).get.toCycles === g.toCycles) shouldBe true
   }
 
   test("g1 = (1,2,3), g2 = (1,2), g1 g2 = (2,3), g2 g1 = (1,3) -- Holt 2.1.5") {
@@ -41,18 +41,29 @@ class PermSuite extends AlascSuite {
 
 }
 
+/* TODO
+  def permutationBuilder(implicit A: PermutationBuilder[A]) = new PermutationActionProperties(
+    name = "permutation",
+    parent = Some(faithfulPermutationAction),
+    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, D].groupAction),
+
+    "images/fromImages" -> forAll((x: A) =>
+      A.fromImages(x.images(x.largestMovedPoint.getOrElseFast(-1) + 1)) === x
+    )
+  )
+
+ */
+
 object PermSuite {
 
   val deterministic = {
     import net.alasc.perms.deterministic._
-    implicitly[PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]]
+    implicitly[PermGrpChainBuilder]
   }
 
   val randomized = {
     import net.alasc.perms.default._
-    implicitly[PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]]
+    implicitly[PermGrpChainBuilder]
   }
-
-
 
 }

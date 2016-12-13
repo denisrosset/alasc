@@ -8,11 +8,11 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
-import net.alasc.perms.FaithfulPermRepBuilder
+import net.alasc.perms.{FaithfulPermRepBuilder, Perm}
 import net.alasc.syntax.permutationAction._
 
 /** Describes the wreath product of two objects. */
-case class Wr[A, H](aSeq: Seq[A], h: H) {
+case class Wr[A](aSeq: Seq[A], h: Perm) {
 
   override def toString = s"Wr($aSeq, $h)"
 
@@ -25,20 +25,20 @@ case class Wr[A, H](aSeq: Seq[A], h: H) {
 /** Default wreath product object and type classes for wreath products. */
 object Wr {
 
-  implicit def wrFaithfulPermRepBuilder[A:Eq:Group:FaithfulPermRepBuilder, H:Permutation]: FaithfulPermRepBuilder[Wr[A, H]] =
-    new WrFaithfulPermRepBuilder[A, H]
+  implicit def wrFaithfulPermRepBuilder[A:Eq:Group:FaithfulPermRepBuilder]: FaithfulPermRepBuilder[Wr[A]] =
+    new WrFaithfulPermRepBuilder[A]
 
-  class WrEqGroup[A:Eq:Group, H:Eq:Permutation] extends Eq[Wr[A, H]] with Group[Wr[A, H]] {
+  class WrEqGroup[A:Eq:Group] extends Eq[Wr[A]] with Group[Wr[A]] {
 
     val aSeqEqFiniteGroup = new SeqEqGroup[Seq[A], A]
-    def eqv(x: Wr[A, H], y: Wr[A, H]): Boolean = (x.h === y.h) && aSeqEqFiniteGroup.eqv(x.aSeq, y.aSeq)
-    def id = Wr(Seq.empty[A], Group[H].id)
-    def inverse(w: Wr[A, H]): Wr[A, H] = {
+    def eqv(x: Wr[A], y: Wr[A]): Boolean = (x.h === y.h) && aSeqEqFiniteGroup.eqv(x.aSeq, y.aSeq)
+    def id = Wr(Seq.empty[A], Perm.id)
+    def inverse(w: Wr[A]): Wr[A] = {
       val hInv = w.h.inverse
       val n = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
       Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => Group[A].id).inverse), hInv)
     }
-    def op(x: Wr[A, H], y: Wr[A, H]): Wr[A, H] = {
+    def op(x: Wr[A], y: Wr[A]): Wr[A] = {
       val newH = x.h |+| y.h
       val n = x.aSeq.size.max(y.aSeq.size).max(x.h.largestMovedPoint.getOrElseFast(-1) + 1)
       Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => Group[A].id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => Group[A].id) ), newH)
@@ -46,13 +46,13 @@ object Wr {
 
   }
 
-  implicit def wrEqGroup[A:Eq:Group, H:Eq:Permutation]: Eq[Wr[A, H]] with Group[Wr[A, H]] = new WrEqGroup[A, H]
+  implicit def wrEqGroup[A:Eq:Group]: Eq[Wr[A]] with Group[Wr[A]] = new WrEqGroup[A]
 
-  def grpDef[A:Eq:Group:FaithfulPermRepBuilder, H:Eq:Permutation](n: Int, ga: Grp[A], gh: Grp[H]): GrpDef[Wr[A, H]] = {
+  def grpDef[A:Eq:Group:FaithfulPermRepBuilder](n: Int, ga: Grp[A], gh: Grp[Perm]): GrpDef[Wr[A]] = {
     val aGenerators = for {
       k <- 0 until n
       a <- ga.generators
-    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else Group[A].id ), Group[H].id)
+    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else Group[A].id ), Perm.id)
     val hGenerators = for {
       h <- gh.generators
     } yield Wr(Seq.empty[A], h)

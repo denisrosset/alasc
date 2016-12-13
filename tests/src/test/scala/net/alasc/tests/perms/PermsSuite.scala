@@ -12,7 +12,7 @@ class PermsSuite extends AlascSuite {
 
   test("Perms(n).iterator, Perms(n).apply(...) and Sym(n).elements.toSet return the same elements for n = 2,3,4,5,6") {
     for (n <- 2 to 6) {
-      val sym = Symmetric[Perm](n)
+      val sym = Symmetric(n)
       val perms = Perms(n)
       val seqFromPermsIterator = perms.iterator.toSeq
       import lexPermutationOrder._

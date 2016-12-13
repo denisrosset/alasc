@@ -11,14 +11,14 @@ object GrpFixingPartition {
 
   def blockOrder(block: Partition#Block): SafeLong = Symmetric.order(block.size)
 
-  def blockGenerators[G:PermutationBuilder](block: Partition#Block): IndexedSeq[G] =
+  def blockGenerators(block: Partition#Block): IndexedSeq[Perm] =
     if (block.size <= 1) IndexedSeq.empty else {
-      val builder = IndexedSeq.newBuilder[G]
+      val builder = IndexedSeq.newBuilder[Perm]
       builder.sizeHint(block.size - 1)
       var k = block.start
       while (block.hasNext(k)) {
         val k1 = block.next(k)
-        builder += PermutationBuilder[G].transposition(k, k1)
+        builder += Perm.transposition(k, k1)
         k = k1
       }
       builder.result()
@@ -27,10 +27,10 @@ object GrpFixingPartition {
   def order(partition: Partition): SafeLong =
     (SafeLong.one /: partition.blocks) { case (o, block) => o * blockOrder(block) }
 
-  def generators[G:PermutationBuilder](partition: Partition): IndexedSeq[G] =
-    partition.blocks.flatMap(blockGenerators[G](_)).toIndexedSeq
+  def generators(partition: Partition): IndexedSeq[Perm] =
+    partition.blocks.flatMap(blockGenerators(_)).toIndexedSeq
 
-  def apply[G:PermutationBuilder:PermGrpBuilder](partition: Partition): Grp[G] =
-    Grp.fromGeneratorsAndOrder(generators[G](partition), order(partition))
+  def apply(partition: Partition)(implicit ev: PermGrpBuilder): Grp[Perm] =
+    Grp.fromGeneratorsAndOrder(generators(partition), order(partition))
 
 }

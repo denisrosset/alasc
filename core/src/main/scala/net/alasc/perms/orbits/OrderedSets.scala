@@ -5,7 +5,7 @@ import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.util.Opt
 
-import net.alasc.algebra.{Permutation, PermutationAction}
+import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSwap, BuildChain, Chain, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.finite.Grp
 import net.alasc.perms.{MutableOrbit, PermGrpBuilder, PermGrpChainBuilder, orbits}
@@ -22,6 +22,8 @@ object OrderedSets {
   // we define true < false
   def compareBoolean(lhs: Boolean, rhs: Boolean): Int = -(booleanToInt(lhs) - booleanToInt(rhs))
 
+  //TODO: restore ordered sets
+/*
   /** Returns the minimal lexicographic representative of a set of integers under permutation.
     *
     * @param set       Set of nonnegative integers.
@@ -175,6 +177,6 @@ object OrderedSets {
       if (!isMinimal) return isMinimal
     }
     isMinimal
-  }
+  }*/
 
 }

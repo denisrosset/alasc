@@ -2,7 +2,7 @@ package net.alasc.tests
 package gap3
 
 import spire.math.SafeLong
-
+/*
 import net.alasc.gap3.GapOutput
 
 class GapOutputSuite extends AlascSuite {
@@ -95,3 +95,4 @@ class GapOutputSuite extends AlascSuite {
     val Parsed.Success(_, _) = (GapOutput.aMat ~ End).parse(str)
   }
 }
+*/

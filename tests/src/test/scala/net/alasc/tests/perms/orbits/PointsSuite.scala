@@ -33,13 +33,13 @@ class PointsSuite extends AlascSuite {
   }
 
   test("Compute orbit of points") {
-    forAll(Doms.inDomain(domain), permutationGrp[Perm](domain)) { (point, grp) =>
+    forAll(Doms.inDomain(domain), permutationGrp(domain)) { (point, grp) =>
       Points(point.value, grp.generators) should === (slowOrbit(Set(point.value), grp.generators))
     }
   }
 
   test("isSmallest") {
-    forAll(Doms.inDomain(domain), permutationGrp[Perm](domain)) { (point, grp) =>
+    forAll(Doms.inDomain(domain), permutationGrp(domain)) { (point, grp) =>
       Points.isSmallestInOrbit(point.value, grp.generators) should === (point.value === slowOrbit(Set(point.value), grp.generators).min)
     }
   }

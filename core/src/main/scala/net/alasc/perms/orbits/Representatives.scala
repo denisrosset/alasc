@@ -22,7 +22,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
-  import grp.{action, equ, group}
+  import grp.{action, classTag, equ, group}
 
   import Representatives.toUnsignedLong
 
@@ -310,7 +310,7 @@ object Representatives {
   def findPermutationToMinimal[G, F <: PermutationAction[G] with Singleton]
     (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
-    import grp.{action, equ, group}
+    import grp.{action, classTag, equ, group}
     val n = array.length
     val minimal = new Array[Int](n)
     var minimalCorrectBefore = 0

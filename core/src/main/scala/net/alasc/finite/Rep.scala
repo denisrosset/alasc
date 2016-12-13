@@ -11,7 +11,7 @@ import spire.util.Opt
 
 import scalin.algebra.MatField
 
-import net.alasc.algebra.{Permutation, PermutationAction, PermutationBuilder}
+import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BuildChain, SchreierSims}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, PermRep}
 import net.alasc.util._

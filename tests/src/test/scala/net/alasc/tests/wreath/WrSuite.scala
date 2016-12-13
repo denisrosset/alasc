@@ -13,16 +13,16 @@ import net.alasc.wreath.Wr
 class WrSuite extends AlascSuite {
 
   import Doms.arbDomInDomain
-  import Permutations.arbPermutation
+  import Permutations.arbPerm
   import Wrs.arbWr
 
-  implicit val wrNoShrink = noShrink[Wr[Perm, Perm]]
+  implicit val wrNoShrink = noShrink[Wr[Perm]]
 
   val domain = Domain(100)
 
   nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
-    implicit def action = wrSize.representation[Perm, Perm, SafeLong].permutationAction
-    PermutationActionLaws[Wr[Perm, Perm]](domain).faithfulPermutationAction
+    implicit def action = wrSize.representation[SafeLong].permutationAction
+    PermutationActionLaws[Wr[Perm]](domain).faithfulPermutationAction
   }
 
   import net.alasc.perms.default._
@@ -30,7 +30,7 @@ class WrSuite extends AlascSuite {
   import Grps.arbGrp
 
   nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
-    GrpLaws[Wr[Perm, Perm]].grpWithoutHashCodeEquals
+    GrpLaws[Wr[Perm]].grpWithoutHashCodeEquals
   }
 
   test("Bug discovered by random testing") {

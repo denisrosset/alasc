@@ -10,6 +10,7 @@ final class UnitPermutationAction extends PermutationAction[Unit] {
   override def largestMovedPoint(g: Unit) = NNNone
   override def smallestMovedPoint(g: Unit) = NNNone
   def movedPointsUpperBound(g: Unit) = NNNone
+  override def movesAnyPoint(g: Unit) = false
   override def nMovedPoints(g: Unit) = 0
 }
 

@@ -14,7 +14,7 @@ class PermPartialActionSuite extends AlascSuite {
   implicit def arbPermutation: Arbitrary[Perm] = Arbitrary {
     for {
       n <- Gen.choose(1, 10)
-      perm <- Permutations.forDomain[Perm](Domain(n))
+      perm <- Permutations.permForDomain(Domain(n))
     } yield perm
   }
 

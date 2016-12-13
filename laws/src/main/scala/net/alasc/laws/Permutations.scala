@@ -21,7 +21,7 @@ import net.alasc.syntax.permutationAction._
   */
 object Permutations {
 
-  def forDomain[P:PermutationBuilder](domain: Domain): Gen[P] =
+  def permForDomain(domain: Domain): Gen[Perm] =
     Gen.containerOfN[Array, Int](domain.size, arbitrary[Int]) flatMap { randomValues =>
       import spire.std.long.LongAlgebra
       val images = new Array[Int](domain.size)
@@ -31,20 +31,31 @@ object Permutations {
       }
       spire.math.Sorting.sort(toSort) // sort, basically on the bits 63 .. 32
       cforRange(0 until domain.size)( k => images(k) = toSort(k).toInt )
-      PermutationBuilder[P].fromImages(images)
+      Perm.fromImages(images)
     }
 
-  def sized[P:PermutationBuilder]: Gen[P] = Gen.parameterized( parameters => forDomain[P](Domain(parameters.size)) )
+  def cyclesForDomain(domain: Domain): Gen[Cycles] = permForDomain(domain).map(_.toCycles)
 
-  implicit def arbPermutation[P:PermutationBuilder]: Arbitrary[P] = Arbitrary(sized[P])
+  val sizedPerm: Gen[Perm] = Gen.parameterized( parameters => permForDomain(Domain(parameters.size)) )
 
-  implicit def permutationInstances[P](implicit P: PermutationBuilder[P]): Instances[P] =
-    Instances[P](Seq(Perm(0,1).toPermutation[P], P.id))
+  val sizedCycles: Gen[Cycles] = sizedPerm.map(_.toCycles)
 
-  implicit def permutationCloner[P](implicit P: PermutationBuilder[P]): Cloner[P] =
-    Cloner( (p: P) => P.fromImages(p.images(p.largestMovedPoint.fold(0)(_ + 1))) )
+  implicit val arbPerm: Arbitrary[Perm] = Arbitrary(sizedPerm)
 
-  implicit def permutationGrp[P:GrpBuilder:PermutationBuilder](domain: Domain): Gen[Grp[P]] =
-    Grps.fromElements(forDomain(domain))
+  implicit val arbCycles: Arbitrary[Cycles] = Arbitrary(sizedCycles)
+
+  implicit val permInstances: Instances[Perm] =
+    Instances[Perm](Seq(Perm(0,1), Perm.id))
+
+  implicit val cyclesInstances: Instances[Cycles] =
+    Instances[Cycles](Seq(Cycles(0,1), Cycles.id))
+
+  implicit val permCloner: Cloner[Perm] =
+    Cloner( (p: Perm) => Perm.fromImages(p.images(p.largestMovedPoint.fold(0)(_ + 1))) )
+
+  implicit val cyclesCloner: Cloner[Cycles] = Cloner( (c: Cycles) => c.toPerm.toCycles )
+  
+  implicit def permutationGrp(domain: Domain)(implicit ev: GrpBuilder[Perm]): Gen[Grp[Perm]] =
+    Grps.fromElements(permForDomain(domain))
 
 }

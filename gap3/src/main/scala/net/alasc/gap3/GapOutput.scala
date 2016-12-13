@@ -14,7 +14,7 @@ import net.alasc.syntax.all._
 import net.alasc.perms.default._
 import scalin.immutable.dense._
 import scalin.syntax.all._
-
+/*
 object GapOutput {
 
   val White = WhitespaceApi.Wrapper{
@@ -217,3 +217,4 @@ class ParseARep[G:GrpBuilder](generator: fastparse.noApi.P[G]) {
   val aRep = trivialMonARep | trivialPermARep | directSumARep | aRepByImages | conjugateARep
 
 }
+*/

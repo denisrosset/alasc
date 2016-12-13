@@ -13,11 +13,11 @@ import net.alasc.wreath._
 
 case class WrSize(a: Int, h: Int) {
 
-  def aPerm[A:PermutationBuilder] = Perm(0, a - 1).toPermutation[A]
+  def aPerm = Perm(0, a - 1)
 
-  def representation[A:Group:PermutationBuilder, H:PermutationBuilder, K:Ring]: FaithfulPermRep[Wr[A, H], K] = {
-    val wrir = new WrFaithfulPermRepBuilder[A, H]
-    val aR = wrir.A.build[K](Seq(aPerm[A]))
+  def representation[K:Ring]: FaithfulPermRep[Wr[Perm], K] = {
+    val wrir = new WrFaithfulPermRepBuilder[Perm]
+    val aR = wrir.A.build[K](Seq(aPerm))
     wrir.R(h, aR)
   }
 
@@ -35,22 +35,22 @@ object WrSize {
 
 object Wrs {
 
-  implicit def arbWr[A:PermutationBuilder, H:PermutationBuilder](implicit wrSize: WrSize): Arbitrary[Wr[A, H]] =
+  implicit def arbWr(implicit wrSize: WrSize): Arbitrary[Wr[Perm]] =
     Arbitrary(forSize(wrSize.a, wrSize.h))
 
-  def forSize[A:PermutationBuilder, H:PermutationBuilder](aSize: Int, hSize: Int) = for {
-    aSeq <- Gen.containerOfN[Seq, A](hSize, Permutations.forDomain[A](Domain(aSize)))
-    h <- Permutations.forDomain[H](Domain(hSize))
+  def forSize(aSize: Int, hSize: Int) = for {
+    aSeq <- Gen.containerOfN[Seq, Perm](hSize, Permutations.permForDomain(Domain(aSize)))
+    h <- Permutations.permForDomain(Domain(hSize))
   } yield Wr(aSeq, h)
 
-  def sized[A:Arbitrary, H:Arbitrary]: Gen[Wr[A, H]] =
+  def sized(implicit ev: Arbitrary[Perm]): Gen[Wr[Perm]] =
     Gen.parameterized { parameters =>
       val size = math.max(parameters.size / 10, 3)
-      val aGen = Gen.resize(size, arbitrary[A])
-      val hGen = Gen.resize(size, arbitrary[H])
+      val aGen = Gen.resize(size, arbitrary[Perm])
+      val hGen = Gen.resize(size, arbitrary[Perm])
       for {
         n <- Gen.choose(0, size)
-        aSeq <- Gen.containerOfN[Seq, A](n, aGen)
+        aSeq <- Gen.containerOfN[Seq, Perm](n, aGen)
         h <- hGen
       } yield Wr(aSeq, h)
     }

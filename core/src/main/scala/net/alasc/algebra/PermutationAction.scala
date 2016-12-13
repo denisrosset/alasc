@@ -8,6 +8,7 @@ import spire.std.int._
 
 import metal.syntax._
 
+import net.alasc.perms.Perm
 import net.alasc.util._
 
 /** Permutation action: a group action on non-negative integers.
@@ -18,6 +19,9 @@ import net.alasc.util._
   *
   */
 trait PermutationAction[G] extends Action[Int, G] { self =>
+
+  /** Tests if `g` moves any point. */
+  def movesAnyPoint(g: G): Boolean
 
   /** Tests if the point `i` is in the support of `g`. */
   def movesPoint(g: G, i: Int): Boolean = actr(i, g) != i
@@ -141,9 +145,9 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     def apply(idx: Int) = actr(idx, g)
   }
 
-  /** Returns a permutation of type `P` with the same images as the action of `g`. */
-  def toPermutation[P](g: G)(implicit evP: PermutationBuilder[P]): P =
-    evP.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
+  /** Returns a permutation with the same images as the action of `g`. */
+  def toPerm(g: G): Perm =
+    Perm.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
 
   /** Return the smallest element of the domain moved by the given generators, or [[NNNone]]. */
   def smallestMovedPoint(generators: Iterable[G]): NNOption = {

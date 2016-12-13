@@ -12,27 +12,28 @@ import spire.syntax.group._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 
-class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A, H]] {
+class WrFaithfulPermRepBuilder[A:Eq:Group](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A]] {
 
-  def build[K:Ring](generators: Iterable[Wr[A, H]]) = {
+  def build[K:Ring](generators: Iterable[Wr[A]]) = {
     val n = (1 /: generators) { case (m, g) => spire.math.max(spire.math.max(m, g.aSeq.size), g.h.largestMovedPoint.getOrElseFast(-1) + 1) }
     val aRep = A.build(generators.flatMap(_.aSeq))
     R(n, aRep)
   }
 
-  case class R[K](n: Int, aRep: FaithfulPermRep[A, K])(implicit val scalar: Ring[K]) extends FaithfulPermRep[Wr[A, H], K] {
+  case class R[K](n: Int, aRep: FaithfulPermRep[A, K])(implicit val scalar: Ring[K]) extends FaithfulPermRep[Wr[A], K] {
     val aSize = aRep.dimension
     val dimension = n * aSize
     val aDiv = Divisor(dimension - 1, aSize)
-    def represents(w: Wr[A, H]) = {
+    def represents(w: Wr[A]) = {
       var lastNotId = -1
       cforRange(0 until w.aSeq.size) { k => if (!w.aSeq(k).isId) lastNotId = k }
       lastNotId < n && w.h.largestMovedPoint.getOrElseFast(-1) < n && w.aSeq.forall(aRep.represents(_))
     }
     type F = _permutationAction.type
     def permutationAction: F = _permutationAction
-    object _permutationAction extends PermutationAction[Wr[A, H]] {
-      def actr(k: Int, w: Wr[A, H]): Int =
+    object _permutationAction extends PermutationAction[Wr[A]] {
+      override def movesAnyPoint(w: Wr[A]) = !w.h.isId
+      def actr(k: Int, w: Wr[A]): Int =
         if (k >= dimension) k else {
           val block = aDiv.divide(k)
           val sub = k - block * aSize
@@ -42,7 +43,7 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
           else
             newBlock * aSize + aRep.permutationAction.actr(sub, w.aSeq(block))
         }
-      def actl(w: Wr[A, H], k: Int): Int =
+      def actl(w: Wr[A], k: Int): Int =
         if (k >= dimension) k else {
           val block = aDiv.divide(k)
           val sub = k - block * aSize
@@ -52,8 +53,8 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
           else
             newBlock * aSize + aRep.permutationAction.actl(w.aSeq(newBlock), sub)
         }
-      def movedPointsUpperBound(w: Wr[A, H]) = NNSome(dimension - 1)
-      override def movedPoints(w: Wr[A, H]) = {
+      def movedPointsUpperBound(w: Wr[A]) = NNSome(dimension - 1)
+      override def movedPoints(w: Wr[A]) = {
         val bitset = metal.mutable.ResizableBitSet.empty
         val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
         var block = 0
@@ -72,8 +73,8 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
         }
         bitset.toScala
       }
-      override def nMovedPoints(w: Wr[A, H]) = movedPoints(w).size
-      override def smallestMovedPoint(w: Wr[A, H]): NNOption = {
+      override def nMovedPoints(w: Wr[A]) = movedPoints(w).size
+      override def smallestMovedPoint(w: Wr[A]): NNOption = {
         var block = 0
         var offset = 0
         val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
@@ -92,7 +93,7 @@ class WrFaithfulPermRepBuilder[A:Eq:Group, H:Permutation](implicit val A: Faithf
         }
         NNNone
       }
-      override def largestMovedPoint(w: Wr[A, H]): NNOption = {
+      override def largestMovedPoint(w: Wr[A]): NNOption = {
         val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
         var block = m - 1
         val s = aRep.dimension

@@ -2,7 +2,7 @@ package net.alasc.gap3
 
 import java.io.{ByteArrayInputStream, File}
 
-import net.alasc.algebra.{Permutation, PermutationAction}
+import net.alasc.algebra.{PermutationAction}
 import net.alasc.finite.{Grp, GrpBuilder, Rep}
 import net.alasc.perms.{Cycles, FaithfulPermRep, Perm, PermRep}
 import net.alasc.syntax.all._
@@ -33,6 +33,7 @@ trait ARep[G] extends Rep[G, Cyclo] {
 
 }
 
+/*
 object ARep {
 
   val gapDir = new File("/home/rossetd0/software/gap3")
@@ -199,4 +200,5 @@ case class InnerTensorProductARep[G](r: ARep[G]*) extends ARep[G] {
   def dimension = r.foldLeft(1) { (d, r) => d * r.dimension }
   def apply(g: G) = r.map(_.apply(g)).foldLeft(eye[Cyclo](1)) { (pd, m) => pd kron m }
 }
+*/
 */

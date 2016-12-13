@@ -1,10 +1,12 @@
 package net.alasc.perms
 package internal
 
+import spire.algebra.{Eq, Group}
+
 import net.alasc.algebra._
 import net.alasc.util._
 
-final class PermPermutationBuilder extends PermutationBuilder[Perm] {
+final class PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm] {
 
   def eqv(x: Perm, y: Perm): Boolean = x match {
     case lhs16: Perm16 => y match {
@@ -41,6 +43,11 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
     }
   }
 
+  def movesAnyPoint(p: Perm): Boolean = p match {
+    case p16: Perm16 => !p16.isId
+    case _ => true
+  }
+
   override def movedPoints(p: Perm): Set[Int] = p.movedPoints
 
   override def nMovedPoints(p: Perm): Int = p.nMovedPoints
@@ -58,15 +65,5 @@ final class PermPermutationBuilder extends PermutationBuilder[Perm] {
   val id = Perm16Encoding.id
 
   def movedPointsUpperBound(p: Perm) = largestMovedPoint(p)
-
-  def fromImages(images: Array[Int]): Perm = Perm.fromImages(images)
-
-  def fromImages(images: Seq[Int]): Perm = images match {
-    case wa: scala.collection.mutable.WrappedArray[Int] => fromImages(wa.array)
-    case _ => fromImages(images.toArray)
-  }
-
-  def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm =
-    Perm.fromSupportAndImageFun(support, image)
 
 }

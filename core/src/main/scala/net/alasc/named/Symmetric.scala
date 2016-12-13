@@ -14,7 +14,7 @@ object Symmetric {
     if (degree > 1) order(degree - 1, mul * degree) else mul
 
   def transposition(i: Int, j: Int): Perm =
-    PermutationBuilder[Perm].fromSupportAndImageFun(Set(i, j), x => if (x == i) j else (if (x == j) i else x))
+    Perm.fromSupportAndImageFun(Set(i, j), x => if (x == i) j else (if (x == j) i else x))
   
   def domainArray(degree: Int): Array[Int] = Array.tabulate[Int](degree)(identity)
 
@@ -26,7 +26,7 @@ object Symmetric {
       array(i) = array(j)
       array(j) = i
     }
-    PermutationBuilder[Perm].fromImages(array)
+    Perm.fromImages(array)
   }
 
   def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =

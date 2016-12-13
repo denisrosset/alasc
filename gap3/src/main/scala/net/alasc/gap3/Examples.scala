@@ -4,8 +4,8 @@ import net.alasc.finite.{Grp, Rep}
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, Perm}
 import spire.math.SafeLong
 import net.alasc.perms.default._
-import Rep.algebra._
-
+//import Rep.algebra._
+/*
 object Examples {
 
   val g1 = Perm(0, 1, 2)
@@ -21,3 +21,4 @@ object Examples {
   val conj = ARep.conjugation(grpInRep)
 
 }
+*/

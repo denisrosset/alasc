@@ -6,6 +6,7 @@ import scala.language.experimental.macros
 import spire.macros.Ops
 
 import net.alasc.algebra._
+import net.alasc.perms.Perm
 import net.alasc.util._
 
 final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
@@ -36,6 +37,6 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 
-  def toPermutation[Q](implicit evQ: PermutationBuilder[Q]): Q = ev.toPermutation[Q](lhs)
+  def toPerm: Perm = ev.toPerm(lhs)
 
 }

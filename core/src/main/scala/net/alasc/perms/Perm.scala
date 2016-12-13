@@ -2,6 +2,7 @@ package net.alasc.perms
 
 import scala.collection.immutable
 
+import spire.algebra.{Eq, Group, Order}
 import spire.syntax.group._
 
 import net.alasc.algebra._
@@ -27,7 +28,7 @@ import net.alasc.domains.Domain
 sealed trait Perm extends Any {
 
   override def toString =
-    if (isId) "Perm.id" else "Perm" + this.toPermutation[Cycles].string
+    if (isId) "Perm.id" else "Perm" + toCycles.string
 
   protected final def pairHash(preimage: Int) = PermHash.pairHash(preimage, image(preimage))
 
@@ -42,11 +43,12 @@ sealed trait Perm extends Any {
   def movedPoints: Set[Int]
   def nMovedPoints: Int
 
-  def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).toPermutation[Perm]
+  def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).toPerm
   def apply(cycle: String): Perm = apply(cycle.map(Domain.alphabetMap(_)): _*)
 
   def isValidPerm32: Boolean
   def toPerm32: Perm32
+  def toCycles: Cycles = Cycles.fromPerm(this)
 
 }
 
@@ -56,7 +58,7 @@ object Perm extends PermCompanion {
 
   def movedPointsUpperBound = PermArray.movedPointsUpperBound
 
-  implicit val permutationBuilder: PermutationBuilder[Perm] = new PermPermutationBuilder
+  implicit val algebra: Eq[Perm] with Group[Perm] with PermutationAction[Perm] = new PermAlgebra
 
   def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)
@@ -69,6 +71,31 @@ object Perm extends PermCompanion {
       Perm32.fromHighSupportAndImageFun(support, imageFun, supportMax)
     else
       PermArray.fromHighSupportAndImageFun(support, imageFun, supportMax)
+
+  def fromMap(map: Map[Int, Int]): Perm =
+    fromSupportAndImageFun(map.keySet, k => map.getOrElse(k, k))
+
+  def fromImageFun(n: Int, image: Int => Int): Perm =
+    fromSupportAndImageFun(Set(0 until n:_*), image)
+
+  def fromImages(images: Seq[Int]): Perm = images match {
+    case wa: scala.collection.mutable.WrappedArray[Int] => fromImages(wa.array)
+    case _ => fromImages(images.toArray)
+  }
+
+  def transposition(i: Int, j: Int): Perm =
+    fromMap(Map(i -> j, j -> i))
+
+  def sorting[T:Order](seq: Seq[T]): Perm = {
+    import spire.compat._
+    fromImages(seq.zipWithIndex.sortBy(_._1).map(_._2))
+  }
+
+  def random(size: Int)(implicit gen: scala.util.Random): Perm = {
+    import spire.std.int._
+    sorting(Seq.tabulate(size)(k => gen.nextInt))
+  }
+
 
 }
 
@@ -100,7 +127,8 @@ trait PermCompanion {
     case _ => fromImagesAndHighSupportMax(images.toArray, supportMax)
   }
 
-  /** Constructs a permutation from a sequence of images. */
+  /** Returns a permutation from the given image array
+    * (the array is considered mutable and is copied if needed). */
   def fromImages(images: Array[Int]): Perm = {
     var k = images.length - 1
     while (k >= 0 && images(k) == k)
@@ -117,7 +145,7 @@ trait PermCompanion {
     * supportMax = support.max (given as not to compute it twice).
     *
     * @param support    Support of the permutation
-    * @param image      Image function
+    * @param imageFun   Image function
     * @param supportMax `= support.max`, must be > `Perm16Encoding.supportMaxElement`
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
@@ -126,7 +154,7 @@ trait PermCompanion {
   /** Constructs a permutation from its support and an image function.
     *
     * @param support    Support of the permutation
-    * @param image      Image function
+    * @param imageFun   Image function
     * @note The following must hold for all `k` in `support`: `image(k) != k`.
     */
   def fromSupportAndImageFun(support: Set[Int], imageFun: Int => Int): Perm =
@@ -193,7 +221,7 @@ protected sealed abstract class AbstractPerm extends Perm { lhs =>
     PermHash.hash(this: Perm)
 
   override def equals(any: Any): Boolean = any match {
-    case rhs: Perm => Perm.permutationBuilder.eqv(lhs, rhs)
+    case rhs: Perm => Perm.algebra.eqv(lhs, rhs)
     case _ => false
   }
 

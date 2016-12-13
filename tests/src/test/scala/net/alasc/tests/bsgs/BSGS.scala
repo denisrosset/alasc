@@ -11,22 +11,23 @@ import net.alasc.laws.{BSGSs, Partitions}
 import net.alasc.named._
 import net.alasc.perms.{PermGrpChainBuilder, _}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
+import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
 
-abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {
+abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder) extends AlascSuite {
 
   import BSGSs._
 
   import builder.{baseChange, baseSwap, schreierSims}
 
-  type F = Perm.permutationBuilder.type
-  implicit def F: F = Perm.permutationBuilder
+  type F = Perm.algebra.type
+  implicit def F: F = Perm.algebra
 
-  val groups = Seq(
-    RubikCube[Perm], Dihedral[Perm](8),
-    Symmetric[Perm](5), Alternating[Perm](7),
-    Mathieu[Perm](10), Mathieu[Perm](11),
-    Mathieu[Perm](12), Mathieu[Perm](20)
+  val groups: Seq[Grp[Perm]] = Seq(
+    RubikCube(), Dihedral(8),
+    Symmetric(5), Alternating(7),
+    Mathieu(10), Mathieu(11),
+    Mathieu(12), Mathieu(20)
   )
 
   val genChain: Gen[Chain[Perm, F]] =

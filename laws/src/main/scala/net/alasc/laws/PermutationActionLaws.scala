@@ -102,16 +102,6 @@ trait PermutationActionLaws[A] extends Laws {
       )
     )
 
-  def permutationBuilder(implicit A: PermutationBuilder[A]) = new PermutationActionProperties(
-    name = "permutation",
-    parent = Some(faithfulPermutationAction),
-    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, D].groupAction),
-
-    "images/fromImages" -> forAll((x: A) =>
-      A.fromImages(x.images(x.largestMovedPoint.getOrElseFast(-1) + 1)) === x
-    )
-  )
-
   class PermutationActionProperties(
     val name: String,
     val parent: Option[PermutationActionProperties],

@@ -151,8 +151,8 @@ object ChainRec {
           siftOther(node.next, gInv |+| node.uInv(b), q)
       case _: Term[G, F] =>
         val g = gInv.inverse
-        val gPerm = PermutationAction[G].toPermutation[Perm](g)
-        val qPerm = PermutationAction[Q].toPermutation[Perm](q)
+        val gPerm = PermutationAction[G].toPerm(g)
+        val qPerm = PermutationAction[Q].toPerm(q)
         if (gPerm === qPerm) Opt(g) else Opt.empty[G]
     }
 

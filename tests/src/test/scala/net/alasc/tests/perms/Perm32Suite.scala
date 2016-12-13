@@ -12,8 +12,8 @@ class Perm32Suite extends AlascSuite {
     n <- Gen.choose(17, 32)
     seq <- Gen.containerOfN[Seq, Int](n - 1, Gen.choose(1, 10000))
     k <- Gen.choose(0, n - 2)
-    cycles = Cycles.permutationBuilder.sorting(seq) |+| Cycles(k, n - 1)
-  } yield Perm32.fromHighSupportAndImageFun(cycles.movedPoints, k => k <|+| cycles, cycles.largestMovedPoint.get)
+    res = Perm.sorting(seq) |+| Cycles(k, n - 1).toPerm
+  } yield Perm32.fromHighSupportAndImageFun(res.movedPoints, k => k <|+| res, res.largestMovedPoint.get)
 
   test("Perm32 and PermArray have the same images") {
     forAll(genPerm32) { p =>

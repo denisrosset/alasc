@@ -14,7 +14,7 @@ import net.alasc.perms.{PermGrpChainBuilder, _}
 import net.alasc.tests.AlascSuite
 import net.alasc.tests.perms.PermSuite
 
-abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, Perm.permutationBuilder.type]) extends AlascSuite {
+abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder) extends AlascSuite {
 
   import builder.{baseChange, baseSwap, schreierSims}
 
@@ -27,7 +27,7 @@ abstract class RepresentativesSuite(implicit builder: PermGrpChainBuilder[Perm, 
 
   def genSetInt: Gen[Set[Int]] = Gen.containerOfN[Set, Int](10, Gen.choose(0, 10))
 
-  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.forDomain[Perm](Domain(size)))
+  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.permForDomain(Domain(size)))
 
   implicit val noShrinkArrayInt = noShrink[Array[Int]]
   implicit val noShrinkPerm = noShrink[Perm]

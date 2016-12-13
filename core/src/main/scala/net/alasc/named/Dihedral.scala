@@ -9,7 +9,7 @@ object Dihedral {
   def shift(n: Int): Perm = Cyclic.shift(n)
 
   def reflection(n: Int) =
-    PermutationBuilder[Perm].fromImageFun(n, i => (n - 1) - i)
+    Perm.fromImageFun(n, i => (n - 1) - i)
 
   def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] =
     if (degree < 2) Grp.trivial[Perm] else

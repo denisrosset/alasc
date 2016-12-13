@@ -27,6 +27,6 @@ object RubikCube {
 
   val order = SafeLong(BigInt("43252003274489856000"))
 
-  def apply(implicit gb: GrpBuilder[Perm]): Grp[Perm] = Grp.fromGeneratorsAndOrder(generators, order)
+  def apply()(implicit gb: GrpBuilder[Perm]): Grp[Perm] = Grp.fromGeneratorsAndOrder(generators, order)
 
 }

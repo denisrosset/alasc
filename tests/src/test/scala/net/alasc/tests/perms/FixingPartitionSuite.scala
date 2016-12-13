@@ -22,8 +22,8 @@ final class FixingPartitionSuite extends AlascSuite {
   test("creation") {
     forAll(genSeq) { seq =>
       val partition = Partition.fromSeq(seq)
-      val subgroup1 = GrpFixingPartition[Perm](Partition.fromSeq(seq))
-      val subgroup2 = Symmetric[Perm](seq.size).fixingPartition(partition)
+      val subgroup1 = GrpFixingPartition(Partition.fromSeq(seq))
+      val subgroup2 = Symmetric(seq.size).fixingPartition(partition)
       (subgroup1: Grp[Perm]) should === (subgroup2: Grp[Perm])
       subgroup1.generators.forall(g => (seq <|+|? g).get.sameElements(seq)) shouldBe true
     }

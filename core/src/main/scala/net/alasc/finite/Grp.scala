@@ -10,9 +10,9 @@ import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, PermutationAction, Permutation, PermutationBuilder}
+import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.domains.Partition
-import net.alasc.perms.PermGrpBuilder
+import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
@@ -86,42 +86,45 @@ abstract class Grp[G] { lhs =>
   /** Simplifies the description current group.*/
   def smallGeneratingSet(implicit builder: GrpBuilder[G]): IndexedSeq[G] = builder.smallGeneratingSet(lhs)
 
-  // If `G` is a permutation
+}
+
+class PermGrpSyntax(val lhs: Grp[Perm]) extends AnyVal {
+
   /** Sequence of the group elements, ordered lexicographically by their images. */
-  def lexElements(implicit builder: PermGrpBuilder[G]): BigIndexedSeq[G] = builder.lexElements(lhs)
+  def lexElements(implicit builder: PermGrpBuilder): BigIndexedSeq[Perm] = builder.lexElements(lhs)
 
   /** Returns the subgroup that fixes the given partition. */
-  def fixingPartition(partition: Partition)(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def fixingPartition(partition: Partition)(implicit builder: PermGrpBuilder): Grp[Perm] =
     builder.fixingPartition(lhs, partition)
 
   /** Returns the subgroup that stabilizes `b`. */
-  def stabilizer(b: Int)(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def stabilizer(b: Int)(implicit builder: PermGrpBuilder): Grp[Perm] =
     builder.stabilizer(lhs, b)
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */
-  def someStabilizerTransversal(implicit builder: PermGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G, _ <: PermutationAction[G] with Singleton])] =
+  def someStabilizerTransversal(implicit builder: PermGrpBuilder): Opt[(Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type])] =
     builder.someStabilizerTransversal(lhs)
 
   /** Returns the subgroup that stabilizes `b` and the associated transversal. */
-  def stabilizerTransversal(b: Int)(implicit builder: PermGrpBuilder[G]): (Grp[G], bsgs.Transversal[G, _ <: PermutationAction[G] with Singleton]) =
+  def stabilizerTransversal(b: Int)(implicit builder: PermGrpBuilder): (Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type]) =
     builder.stabilizerTransversal(lhs, b)
 
-  def pointwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def pointwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder): Grp[Perm] =
     builder.pointwiseStabilizer(lhs, set)
 
-  def pointwiseStabilizer(points: Int*)(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def pointwiseStabilizer(points: Int*)(implicit builder: PermGrpBuilder): Grp[Perm] =
     pointwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
-  def setwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def setwiseStabilizer(set: Set[Int])(implicit builder: PermGrpBuilder): Grp[Perm] =
     builder.setwiseStabilizer(lhs, set)
 
-  def setwiseStabilizer(points: Int *)(implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def setwiseStabilizer(points: Int *)(implicit builder: PermGrpBuilder): Grp[Perm] =
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
   /** Finds an element of this group with the image as `q`, if it exists. */
-  def find[Q:Eq:Group:PermutationAction](q: Q)(implicit builder: PermGrpBuilder[G]): Opt[G] = builder.find(lhs, q)
+  def find[Q:Eq:Group:PermutationAction](q: Q)(implicit builder: PermGrpBuilder): Opt[Perm] = builder.find(lhs, q)
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.
@@ -131,52 +134,52 @@ abstract class Grp[G] { lhs =>
     * @param predicate Tests if an element is member of the subgroup
     * @return the subgroup satisfying `predicate`
     */
-  def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: G => Boolean)
-                                   (implicit builder: PermGrpBuilder[G]): Grp[G] =
+  def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
+                 (implicit builder: PermGrpBuilder): Grp[Perm] =
     builder.subgroupFor(lhs, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
     * the identity fixes all the points in the sequence.
     */
-  def base(implicit builder: PermGrpBuilder[G]): Seq[Int] = builder.base(lhs)
+  def base(implicit builder: PermGrpBuilder): Seq[Int] = builder.base(lhs)
 
   /** Return the smallest element of the domain moved by this group, or [[NNNone]]. */
-  def smallestMovedPoint(implicit permutation: Permutation[G]): NNOption =
-    if (isTrivial) NNNone else {
+  def smallestMovedPoint: NNOption =
+    if (lhs.isTrivial) NNNone else {
       var mn = Int.MaxValue
-      generators.foreach { g =>
+      lhs.generators.foreach { g =>
         mn = spire.math.min(g.smallestMovedPoint.get, mn)
       }
       NNOption(mn)
     }
 
   /** Return the largest element of the domain moved by this group, or [[NNNone]]. */
-  def largestMovedPoint(implicit permutation: Permutation[G]): NNOption =
-    if (isTrivial) NNNone else {
+  def largestMovedPoint: NNOption =
+    if (lhs.isTrivial) NNNone else {
       var mx = 0
-      generators.foreach { g =>
+      lhs.generators.foreach { g =>
         mx = spire.math.max(g.largestMovedPoint.get, mx)
       }
       NNOption(mx)
     }
 
   /** Returns an arbitrary element moved by this group, or [[NNNone]]. */
-  def findMovedPoint(implicit permutation: Permutation[G]): NNOption =
-    if (isTrivial) NNNone else generators.head.findMovedPoint // non-empty because generator cannot be the identity
+  def findMovedPoint: NNOption =
+    if (lhs.isTrivial) NNNone else lhs.generators.head.findMovedPoint // non-empty because generator cannot be the identity
 
   /** Tests if the point `i` is in the support of `g`. */
-  def movesPoint(i: Int)(implicit permutation: Permutation[G]): Boolean = generators.exists(g => i <|+| g != g)
+  def movesPoint(i: Int): Boolean = lhs.generators.exists(g => i <|+| g != g)
 
   /** Number of non-negative integers moved by the permutations in this group. */
-  def nMovedPoints(implicit permutation: Permutation[G]): Int = movedPoints.size
+  def nMovedPoints: Int = movedPoints.size
 
   /** Returns a bit set of all non-negative integers k that are moved by the action of this group,
     * i.e. `S = { k | exists g in this group s.t. k <|+| g != k }`.
     */
-  def movedPoints(implicit permutation: Permutation[G]): Set[Int] =
-    if (isTrivial) Set.empty[Int] else {
+  def movedPoints: Set[Int] =
+    if (lhs.isTrivial) Set.empty[Int] else {
       val b = metal.mutable.ResizableBitSet.empty
-      generators.foreach { g =>
+      lhs.generators.foreach { g =>
         cforRange(g.smallestMovedPoint.get until g.largestMovedPoint.get + 1) { i =>
           if (i <|+| g != i)
             b += i
@@ -185,9 +188,9 @@ abstract class Grp[G] { lhs =>
       b.toScala
     }
 
-  def toPermutation[Q:PermutationBuilder:GrpBuilder](implicit permutation: Permutation[G]): Grp[Q] =
+/* TODO  def toPerm(implicit ev: PermutationAction[G]): Grp[Q] =
     Grp.fromGeneratorsAndOrder(generators.map(_.toPermutation[Q]), order)
-
+*/
 }
 
 object Grp {
@@ -208,6 +211,8 @@ object Grp {
 
   def fromGeneratorsAndOrder[G](generators: IndexedSeq[G], order: SafeLong)(implicit builder: GrpBuilder[G]): Grp[G] =
     builder.fromGeneratorsAndOrder(generators, order)
+
+  implicit def permGrpSyntax(pg: Grp[Perm]): PermGrpSyntax = new PermGrpSyntax(pg)
 
 }
 

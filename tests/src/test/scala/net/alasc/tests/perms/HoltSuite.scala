@@ -6,7 +6,7 @@ import spire.math.SafeLong
 import net.alasc.finite._
 import net.alasc.perms.{Perm, PermGrpBuilder}
 
-abstract class HoltSuite(implicit builder: PermGrpBuilder[Perm]) extends AlascSuite {
+abstract class HoltSuite(implicit builder: PermGrpBuilder) extends AlascSuite {
 /*
   test("Example 4.4 page 111") {
     val alg = algorithms.BasicAlgorithms.randomized[Perm]()
