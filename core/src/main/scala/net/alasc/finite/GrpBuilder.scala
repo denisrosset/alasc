@@ -5,7 +5,7 @@ import spire.math.SafeLong
 import spire.syntax.group._
 
 /** Builder for groups composed of elements of type `G`. */
-abstract class GrpBuilder[G] {
+trait GrpBuilder[G] {
 
   type GG <: Grp[G]
 

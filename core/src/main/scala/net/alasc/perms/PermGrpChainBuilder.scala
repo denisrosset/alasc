@@ -157,8 +157,8 @@ class PermGrpChainBuilder(implicit val baseChange: BaseChange, val baseSwap: Bas
     case cg => cg.chain.base
   }
 
-  def find[Q:Eq:Group:PermutationAction](grp: Grp[Perm], q: Q): Opt[Perm] =
-    convertGrp(grp).chain.siftOther(q)
+  def find[Q:Eq:Group](grp: Grp[Perm], actionQ: PermutationAction[Q], q: Q): Opt[Perm] =
+    convertGrp(grp).chain.siftOther(q)(implicitly, implicitly, actionQ, implicitly, implicitly)
 
 }
 

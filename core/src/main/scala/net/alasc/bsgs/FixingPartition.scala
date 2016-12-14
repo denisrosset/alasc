@@ -1,6 +1,7 @@
 package net.alasc.bsgs
 
 import spire.algebra.Group
+import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
@@ -12,15 +13,7 @@ case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
 
   val n = partition.size
 
-  def inSubgroup(g: G): Boolean = {
-    var i = 0
-    while (i < n) {
-      if (partition.representative(action.actr(i, g)) != partition.representative(i))
-        return false
-      i += 1
-    }
-    true
-  }
+  def inSubgroup(g: G): Boolean = FixingPartition.partitionInvariantUnder(partition, action, g)
 
   def baseGuideOpt = Opt(BaseGuidePartition(partition))
 
@@ -49,6 +42,18 @@ case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
     val pointSetsToTest: Array[Array[Int]] =
       SubgroupSearch.basePointGroups(guidedChain, n)
     new Test(0, pointSetsToTest)
+  }
+
+}
+
+object FixingPartition {
+
+  @inline def partitionInvariantUnder[G](partition: Partition, action: PermutationAction[G], g: G): Boolean = {
+    cforRange(0 until partition.size) { i =>
+      if (partition.representative(action.actr(i, g)) != partition.representative(i))
+        return false
+    }
+    true
   }
 
 }

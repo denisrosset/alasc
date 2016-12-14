@@ -12,7 +12,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.domains.Partition
-import net.alasc.perms.{Perm, PermGrpBuilder, PermutationActionGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpBuilder}
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
@@ -86,39 +86,52 @@ abstract class Grp[G] { lhs =>
   /** Simplifies the description current group.*/
   def smallGeneratingSet(implicit builder: GrpBuilder[G]): IndexedSeq[G] = builder.smallGeneratingSet(lhs)
 
+  /** Find the kernel of the given action, as a normal subgroup of this group. */
+  def kernel(action: PermutationAction[G])(implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.kernel(this, action)
+
   /** Sequence of the group elements, ordered lexicographically by their images.
     * Returns a value only if the action is faithful. */
   def lexElements(action: PermutationAction[G])(implicit builder: PermutationActionGrpBuilder[G]): Opt[BigIndexedSeq[G]]
+    = builder.lexElements(this, action)
 
   /** Returns the subgroup that fixes the given partition under the given action. */
   def fixingPartition(action: PermutationAction[G], partition: Partition)(implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.fixingPartition(this, action, partition)
 
   /** Returns the subgroup that stabilizes `b` by the given action. */
   def stabilizer(action: PermutationAction[G], b: Int)(implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.stabilizer(this, action, b)
 
   /** If the action of this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */
   def someStabilizerTransversal(action: PermutationAction[G])(implicit builder: PermutationActionGrpBuilder[G]): Opt[(Grp[G], bsgs.Transversal[G, action.type])]
+    = builder.someStabilizerTransversal(this, action)
 
   /** Returns the subgroup that stabilizes `b` under the given action and the associated transversal. */
   def stabilizerTransversal(action: PermutationAction[G], b: Int)(implicit builder: PermutationActionGrpBuilder[G]): (Grp[G], bsgs.Transversal[G, action.type])
+    = builder.stabilizerTransversal(this, action, b)
 
   def pointwiseStabilizer(action: PermutationAction[G], set: Set[Int])(implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.pointwiseStabilizer(this, action, set)
 
   def pointwiseStabilizer(action: PermutationAction[G], points: Int*)(implicit builder: PermutationActionGrpBuilder[G]): Grp[G] =
     pointwiseStabilizer(action, scala.collection.immutable.BitSet(points: _*))
 
   def setwiseStabilizer(action: PermutationAction[G], set: Set[Int])(implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.setwiseStabilizer(this, action, set)
 
   def setwiseStabilizer(action: PermutationAction[G], points: Int *)(implicit builder: PermutationActionGrpBuilder[G]): Grp[G] =
     setwiseStabilizer(action, scala.collection.immutable.BitSet(points: _*))
 
   /** Finds an element of this group under `actionG` with the same image as `q` under `actionQ`, if it exists. */
   def find[Q:Eq:Group](actionG: PermutationAction[G], actionQ: PermutationAction[Q], q: Q)(implicit builder: PermutationActionGrpBuilder[G]): Opt[G]
+    = builder.find(this, actionG, actionQ, q)
 
   /** Finds an element of this group under `actionG` with the same image as the given permutation, if it exists. */
   def find(actionG: PermutationAction[G], p: Perm)(implicit builder: PermutationActionGrpBuilder[G]): Opt[G]
+    = builder.find(this, actionG, p)
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.
@@ -131,12 +144,17 @@ abstract class Grp[G] { lhs =>
     */
   def subgroupFor(action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
                  (implicit builder: PermutationActionGrpBuilder[G]): Grp[G]
+    = builder.subgroupFor(this, action, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
     * the identity fixes all the points in the sequence.
     * Returns a value if and only if the action is faithful.
     */
   def base(action: PermutationAction[G])(implicit builder: PermutationActionGrpBuilder[G]): Opt[Seq[Int]]
+    = builder.base(this, action)
+
+  def toPerm(action: PermutationAction[G])(implicit builderG: PermutationActionGrpBuilder[G], builder: PermGrpBuilder): Grp[Perm]
+    = builderG.toPerm(this, action)
 
   /** Return the smallest element of the domain moved by this group under the given action, or [[NNNone]]. */
   def smallestMovedPoint(action: PermutationAction[G]): NNOption =
@@ -202,9 +220,6 @@ abstract class Grp[G] { lhs =>
       b.toScala
     }
 
-  def toPerm(action: PermutationAction[G])(implicit builder: PermGrpBuilder): Grp[Perm]
-// TODO if action is not faithful    Grp.fromGeneratorsAndOrder(generators.map(action.toPerm(_)), order)
-
 }
 
 class PermGrpSyntax(val lhs: Grp[Perm]) extends AnyVal {
@@ -243,7 +258,7 @@ class PermGrpSyntax(val lhs: Grp[Perm]) extends AnyVal {
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
   /** Finds an element of this group with the image as `q`, if it exists. */
-  def find[Q:Eq:Group:PermutationAction](q: Q)(implicit builder: PermGrpBuilder): Opt[Perm] = builder.find(lhs, q)
+  def find[Q:Eq:Group](actionQ: PermutationAction[Q], q: Q)(implicit builder: PermGrpBuilder): Opt[Perm] = builder.find(lhs, actionQ, q)
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.

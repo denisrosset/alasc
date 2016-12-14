@@ -8,14 +8,20 @@ import spire.util.Opt
   * methods of IndexedSeq are defined as of now.
   */ 
 trait BigIndexedSeq[A] extends PartialFunction[SafeLong, A] with Iterable[A] { self =>
+
   override def toString = s"BigIndexedSeq($head, ... total of $length elements)"
+
   def length: SafeLong
+
   override def size: Int = {
     val l = length
     if (l.isValidInt) l.toInt else sys.error(s"$l is too big to be a valid Int")
   }
+
   def apply(idx: SafeLong): A
+
   def isDefinedAt(idx: SafeLong): Boolean = (idx >= 0 && idx < length)
+
   def indexOf(a: A): Opt[SafeLong] = {
     var idx = SafeLong.zero
     val it = iterator
@@ -26,6 +32,7 @@ trait BigIndexedSeq[A] extends PartialFunction[SafeLong, A] with Iterable[A] { s
     }
     Opt.empty[SafeLong]
   }
+
   override def toIndexedSeq: scala.collection.immutable.IndexedSeq[A] = {
     require(length.isValidInt)
     new scala.collection.immutable.IndexedSeq[A] {
@@ -33,4 +40,18 @@ trait BigIndexedSeq[A] extends PartialFunction[SafeLong, A] with Iterable[A] { s
       def length: Int = self.length.toInt
     }
   }
+
+}
+
+object BigIndexedSeq {
+
+  def wrap[A](wrapped: scala.collection.immutable.IndexedSeq[A]): BigIndexedSeq[A] = new BigIndexedSeq[A] {
+    def length = SafeLong(wrapped.size)
+    override def size = wrapped.size
+    def apply(idx: SafeLong) =
+      if (idx.isValidInt) wrapped(idx.toInt) else throw new IndexOutOfBoundsException(idx.toString)
+    def iterator = wrapped.iterator
+    override def toIndexedSeq = wrapped
+  }
+
 }

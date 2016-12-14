@@ -9,7 +9,7 @@ import spire.util.Opt
 
 import net.alasc.bsgs.Transversal
 
-abstract class PermGrpBuilder extends GrpBuilder[Perm] {
+trait PermGrpBuilder extends GrpBuilder[Perm] {
 
   def group: Group[Perm] = Perm.algebra
 
@@ -33,6 +33,6 @@ abstract class PermGrpBuilder extends GrpBuilder[Perm] {
 
   def base(grp: Grp[Perm]): Seq[Int]
 
-  def find[Q:Eq:Group:PermutationAction](grp: Grp[Perm], q: Q): Opt[Perm]
+  def find[Q:Eq:Group](grp: Grp[Perm], actionQ: PermutationAction[Q], q: Q): Opt[Perm]
 
 }
