@@ -7,9 +7,9 @@ import spire.util.Opt
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs
 import net.alasc.domains.Partition
-import net.alasc.perms.{Perm, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpAlgos}
 
-trait PermutationActionGrpBuilder[G] {
+trait PermutationActionGrpAlgos[G] extends GrpAlgos[G] {
 
   type GG <: Grp[G]
 
@@ -37,7 +37,7 @@ trait PermutationActionGrpBuilder[G] {
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]]
 
-  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: PermGrpBuilder): Grp[Perm]
+  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: PermGrpAlgos): Grp[Perm]
   // TODO if action is not faithful    Grp.fromGeneratorsAndOrder(generators.map(action.toPerm(_)), order)
 
 }

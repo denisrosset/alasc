@@ -4,8 +4,8 @@ import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.group._
 
-/** Builder for groups composed of elements of type `G`. */
-trait GrpBuilder[G] {
+/** Algorithms for groups composed of elements of type `G`. */
+trait GrpAlgos[G] {
 
   type GG <: Grp[G]
 
@@ -44,5 +44,10 @@ trait GrpBuilder[G] {
 
   /** Right cosets. */
   def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type]
+
+}
+
+trait GrpAlgosImpl[G, GG <: Grp[G]] {
+
 
 }

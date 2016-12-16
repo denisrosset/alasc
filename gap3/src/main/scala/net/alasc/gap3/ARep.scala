@@ -3,7 +3,7 @@ package net.alasc.gap3
 import java.io.{ByteArrayInputStream, File}
 
 import net.alasc.algebra.{PermutationAction}
-import net.alasc.finite.{Grp, GrpBuilder, Rep}
+import net.alasc.finite.{Grp, GrpAlgos, Rep}
 import net.alasc.perms.{Cycles, FaithfulPermRep, Perm, PermRep}
 import net.alasc.syntax.all._
 import cyclo.Cyclo

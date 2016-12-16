@@ -3,7 +3,7 @@ package net.alasc.named
 import spire.math.SafeLong
 
 import net.alasc.algebra._
-import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.finite.{Grp, GrpAlgos}
 import net.alasc.perms._
 
 object Mathieu {
@@ -42,7 +42,7 @@ object Mathieu {
 
   def notDefined: Nothing = throw new IllegalArgumentException("Mathieu groups are only defined for degrees " + generatorsAndOrders.keys.toSeq.sorted.mkString(", "))
 
-  def apply(degree: Int)(implicit gb: GrpBuilder[Perm]): Grp[Perm] = {
+  def apply(degree: Int)(implicit gb: GrpAlgos[Perm]): Grp[Perm] = {
     val (generators, order) = generatorsAndOrders.getOrElse(degree, notDefined)
     Grp.fromGeneratorsAndOrder(generators, order)
   }

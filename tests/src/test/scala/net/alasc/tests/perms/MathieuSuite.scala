@@ -4,9 +4,9 @@ package perms
 import spire.math.SafeLong
 
 import net.alasc.named.Mathieu
-import net.alasc.perms.{Perm, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpAlgos}
 
-class MathieuSuite(implicit builder: PermGrpBuilder) extends AlascSuite {
+class MathieuSuite(implicit builder: PermGrpAlgos) extends AlascSuite {
 
   test("Mathieu group constructions have correct order") {
     Mathieu.generatorsAndOrders.foreach {

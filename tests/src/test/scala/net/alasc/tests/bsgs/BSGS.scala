@@ -9,12 +9,12 @@ import net.alasc.bsgs.{BuildChain, Chain}
 import net.alasc.domains._
 import net.alasc.laws.{BSGSs, Partitions}
 import net.alasc.named._
-import net.alasc.perms.{PermGrpChainBuilder, _}
+import net.alasc.perms.{PermGrpChainAlgos, _}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
 import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
 
-abstract class BSGSSuite(implicit val builder: PermGrpChainBuilder) extends AlascSuite {
+abstract class BSGSSuite(implicit val builder: PermGrpChainAlgos) extends AlascSuite {
 
   import BSGSs._
 

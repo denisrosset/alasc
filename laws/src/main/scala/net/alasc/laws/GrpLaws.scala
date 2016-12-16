@@ -14,7 +14,7 @@ import net.alasc.algebra._
 import net.alasc.domains.{Dom, Domain}
 import net.alasc.finite._
 import net.alasc.lexico.lexPermutationOrder
-import net.alasc.perms.{Perm, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpAlgos}
 import net.alasc.syntax.all._
 
 object GrpLaws {
@@ -47,7 +47,7 @@ trait GrpLaws[G] extends Laws {
   implicit def arbG: Arbitrary[G]
   implicit def arbGrpG: Arbitrary[Grp[G]]
 
-  def grpWithoutHashCodeEquals(implicit builder: GrpBuilder[G]) =
+  def grpWithoutHashCodeEquals(implicit builder: GrpAlgos[G]) =
     new GrpProperties(
       name = "grpBase",
       parent = None,
@@ -104,7 +104,7 @@ trait GrpLaws[G] extends Laws {
 
     )
 
-  def grp(implicit builder: GrpBuilder[G]) =
+  def grp(implicit builder: GrpAlgos[G]) =
     new GrpProperties(
       name = "grp",
       parent = Some(grpWithoutHashCodeEquals),
@@ -168,14 +168,14 @@ trait PermGrpLaws extends GrpLaws[Perm] {
 
   implicit def arbDom: Arbitrary[D]
 
-  def permGrp(implicit builder: PermGrpBuilder) =
+  def permGrp(implicit builder: PermGrpAlgos) =
     new GrpProperties(
       name = "permGrp",
       parent = Some(grp(builder)),
 
       "find" -> forAll { (grp: Grp[Perm]) =>
         forAll(Grps.genRandomElement(grp)) { g =>
-          val Opt(recov) = grp.find[Perm](g)
+          val Opt(recov) = grp.find[Perm](Perm.algebra, g)
           recov === g
         }
       },
@@ -251,7 +251,7 @@ trait PermGrpLaws extends GrpLaws[Perm] {
       },
 
       "find" -> forAll { (grp: Grp[Perm], g: Perm) =>
-        grp.find(g) match {
+        grp.find(Perm.algebra, g) match {
           case Opt(h) => g === h
           case _ => !grp.contains(g)
         }

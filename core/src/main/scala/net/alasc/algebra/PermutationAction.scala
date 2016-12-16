@@ -13,7 +13,7 @@ import net.alasc.util._
 
 /** Permutation action: a group action on non-negative integers.
   *
-  * The domain on which the permutation acts starts at 0.
+  * The domain on which the permutation acts starts at 0, negative integers should be left invariant.
   *
   * The standard action, whose speed should be optimized, is the right action.
   *

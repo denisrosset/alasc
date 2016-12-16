@@ -12,12 +12,12 @@ import net.alasc.bsgs.{FixingPartition, Transversal}
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.Perm.algebra
-import net.alasc.perms.{Perm, PermGrpBuilder}
+import net.alasc.perms.{Perm, PermGrpAlgos}
 
-class BBGrpBuilder[G](implicit
-    val group: Group[G],
-    val equ: Eq[G]
-  ) extends GrpBuilder[G] with PermutationActionGrpBuilder[G] {
+class BBGrpAlgos[G](implicit
+                    val group: Group[G],
+                    val equ: Eq[G]
+  ) extends GrpAlgos[G] with PermutationActionGrpAlgos[G] {
 
   type GG = BBGrp[G]
 
@@ -147,12 +147,12 @@ class BBGrpBuilder[G](implicit
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ???
 
-  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: PermGrpBuilder): Grp[Perm] =
+  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: PermGrpAlgos): Grp[Perm] =
     builder.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
 
 }
 
-class PermBBGrpBuilder extends BBGrpBuilder[Perm] with PermGrpBuilder {
+class PermBBGrpAlgos extends BBGrpAlgos[Perm] with PermGrpAlgos {
 
   override val equ = Perm.algebra
 

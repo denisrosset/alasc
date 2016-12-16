@@ -13,7 +13,7 @@ import net.alasc.bsgs._
 import net.alasc.domains.Partition
 import net.alasc.finite.{Grp, LeftCosets, RightCosets}
 
-class PermGrpChainBuilder(implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val schreierSims: SchreierSims) extends PermGrpBuilder {
+class PermGrpChainAlgos(implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val schreierSims: SchreierSims) extends PermGrpAlgos {
 
   implicit def action: Perm.algebra.type = Perm.algebra
 
@@ -163,9 +163,9 @@ class PermGrpChainBuilder(implicit val baseChange: BaseChange, val baseSwap: Bas
 }
 
 /*
-class PermGrpChainBuilder[G, F <: Permutation[G] with Singleton]
+class PermGrpChainAlgos[G, F <: Permutation[G] with Singleton]
   (implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val classTag: ClassTag[G],
-   val permutation: F, val schreierSims: SchreierSims) extends PermGrpBuilder[G] {
+   val permutation: F, val schreierSims: SchreierSims) extends PermGrpAlgos[G] {
 
   type GG = GrpChain[G, F]
 

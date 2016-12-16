@@ -3,7 +3,7 @@ package net.alasc.named
 import spire.math.SafeLong
 
 import net.alasc.algebra._
-import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.finite.{Grp, GrpAlgos}
 import net.alasc.perms._
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
@@ -27,6 +27,6 @@ object RubikCube {
 
   val order = SafeLong(BigInt("43252003274489856000"))
 
-  def apply()(implicit gb: GrpBuilder[Perm]): Grp[Perm] = Grp.fromGeneratorsAndOrder(generators, order)
+  def apply()(implicit gb: GrpAlgos[Perm]): Grp[Perm] = Grp.fromGeneratorsAndOrder(generators, order)
 
 }

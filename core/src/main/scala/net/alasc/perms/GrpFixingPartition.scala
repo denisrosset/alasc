@@ -30,7 +30,7 @@ object GrpFixingPartition {
   def generators(partition: Partition): IndexedSeq[Perm] =
     partition.blocks.flatMap(blockGenerators(_)).toIndexedSeq
 
-  def apply(partition: Partition)(implicit ev: PermGrpBuilder): Grp[Perm] =
+  def apply(partition: Partition)(implicit ev: PermGrpAlgos): Grp[Perm] =
     Grp.fromGeneratorsAndOrder(generators(partition), order(partition))
 
 }

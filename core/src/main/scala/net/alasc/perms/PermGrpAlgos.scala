@@ -4,12 +4,12 @@ import spire.algebra.{Eq, Group}
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.domains.Partition
-import net.alasc.finite.{Grp, GrpBuilder}
+import net.alasc.finite.{Grp, GrpAlgos, GrpPermutationActionAlgos}
 import spire.util.Opt
 
 import net.alasc.bsgs.Transversal
 
-trait PermGrpBuilder extends GrpBuilder[Perm] {
+trait PermGrpAlgos extends GrpAlgos[Perm] /*with GrpPermutationActionAlgos[Perm, Perm.algebra.type]*/ {
 
   def group: Group[Perm] = Perm.algebra
 
