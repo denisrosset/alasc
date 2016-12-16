@@ -15,19 +15,19 @@ trait PermGrpAlgos extends GrpAlgos[Perm] /*with GrpPermutationActionAlgos[Perm,
 
   def equ: Eq[Perm] = Perm.algebra
 
-  def setwiseStabilizer(grp: Grp[Perm], set: Set[Int]): GG
+  def setwiseStabilizer(grp: Grp[Perm], set: Set[Int]): Grp[Perm]
 
-  def pointwiseStabilizer(grp: Grp[Perm], set: Set[Int]): GG
+  def pointwiseStabilizer(grp: Grp[Perm], set: Set[Int]): Grp[Perm]
 
-  def stabilizerTransversal(grp: Grp[Perm], b: Int): (GG, Transversal[Perm, Perm.algebra.type])
+  def stabilizerTransversal(grp: Grp[Perm], b: Int): (Grp[Perm], Transversal[Perm, Perm.algebra.type])
 
-  def someStabilizerTransversal(grp: Grp[Perm]): Opt[(GG, Transversal[Perm, Perm.algebra.type])]
+  def someStabilizerTransversal(grp: Grp[Perm]): Opt[(Grp[Perm], Transversal[Perm, Perm.algebra.type])]
 
-  def stabilizer(grp: Grp[Perm], b: Int): GG
+  def stabilizer(grp: Grp[Perm], b: Int): Grp[Perm]
 
-  def fixingPartition(grp: Grp[Perm], partition: Partition): GG
+  def fixingPartition(grp: Grp[Perm], partition: Partition): Grp[Perm]
 
-  def subgroupFor(grp: Grp[Perm], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): GG
+  def subgroupFor(grp: Grp[Perm], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): Grp[Perm]
 
   def lexElements(grp: Grp[Perm]): BigIndexedSeq[Perm]
 

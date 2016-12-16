@@ -31,12 +31,17 @@ trait GrpPermutationActionAlgos[G, A <: PermutationAction[G]] extends GrpActionA
 
   def base(grp: Grp[G], action: A): Opt[Seq[Int]]
 
-  def find[Q:Eq:Group](grp: Grp[G], action: A, actionQ: PermutationAction[Q], q: Q): Opt[G]
-
-  def find(grp: Grp[G], action: A, p: Perm): Opt[G]
-
   def subgroupFor(grp: Grp[G], action: A, backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): Grp[G]
 
   def toPerm(grp: Grp[G], action: A)(implicit builder: GrpAlgos[Perm]): Grp[Perm]
+
+}
+
+trait GrpFaithfulPermutationActionAlgosImpl[G, A <: PermutationAction[G]] extends GrpPermutationActionAlgos[G, A] with GrpAlgosImpl[G] {
+
+  def toPerm(grp: Grp[G], action: A)(implicit builder: GrpAlgos[Perm]): Grp[Perm] =
+    builder.fromGeneratorsAndOrder(grp.generators.map(action.toPerm), grp.order)
+
+  def kernel(grp: Grp[G], action: A): Grp[G] = trivial
 
 }

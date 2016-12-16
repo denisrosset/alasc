@@ -11,14 +11,16 @@ import spire.util.Opt
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs._
 import net.alasc.domains.Partition
-import net.alasc.finite.{Grp, LeftCosets, RightCosets}
+import net.alasc.finite.{Grp, GrpAlgosImpl, LeftCosets, RightCosets}
 
-class PermGrpChainAlgos(implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val schreierSims: SchreierSims) extends PermGrpAlgos {
+class PermGrpChainAlgos(implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val schreierSims: SchreierSims) extends PermGrpAlgos with GrpAlgosImpl[Perm] {
 
   implicit def action: Perm.algebra.type = Perm.algebra
 
   type F = Perm.algebra.type
   type GG = GrpChain[Perm, Perm.algebra.type]
+
+  def smallGeneratingSet(grp: Grp[Perm]): IndexedSeq[Perm] = grp.generators // TODO better impl
 
   // builder methods
 

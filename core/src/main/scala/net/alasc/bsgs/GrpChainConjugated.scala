@@ -20,6 +20,10 @@ final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
    val repOpt: Opt[FaithfulPermRep[G, _]])
   (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
 
+  def this(originalChain: Chain[G, F], g: G, gInv: G, originalGeneratorsOpt: Opt[IndexedSeq[G]])
+          (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G], action: F) =
+    this(originalChain, g, gInv, originalGeneratorsOpt, Opt.empty[FaithfulPermRep[G, _]])
+
   def originalGenerators = originalGeneratorsOpt match {
     case Opt(gen) => gen
     case _ => originalChain.strongGeneratingSet

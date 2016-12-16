@@ -14,6 +14,10 @@ final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
   (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val repOpt: Opt[FaithfulPermRep[G, _]])
   (implicit val classTag: ClassTag[G], val equ: Eq[G], val group: Group[G], val action: F) extends GrpChain[G, F] {
 
+  def this(chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]])
+          (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G], action: F) =
+    this(chain, generatorsOpt, Opt.empty[FaithfulPermRep[G, _]])
+
   def chainOpt = Opt(chain)
 
   def generators = generatorsOpt match {

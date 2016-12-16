@@ -7,13 +7,13 @@ import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.finite.{Grp, GrpAlgos, LeftCosets, RightCosets}
+import net.alasc.finite._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 
 final class GrpChainAlgos[G]
   (implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val classTag: ClassTag[G],
   val equ: Eq[G], val group: Group[G], val repBuilder: FaithfulPermRepBuilder[G],
-  val schreierSims: SchreierSims) extends GrpAlgos[G] {
+  val schreierSims: SchreierSims) extends GrpAlgosImpl[G] {
 
   type GG = GrpChain[G, F] forSome { type F <: PermutationAction[G] with Singleton }
 
@@ -97,7 +97,7 @@ final class GrpChainAlgos[G]
       }
     }
 
-  override def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] = grp match {
+  def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type] = grp match {
     case GrpChain.AndAction(pair) =>
       GrpChain.leftCosetsBy[G, pair.Action](pair.grp, subgrp, convertGrp[pair.Action](subgrp, pair.grp.repOpt)(pair.action))
     case _ =>

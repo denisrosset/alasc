@@ -17,11 +17,13 @@ import net.alasc.perms.{Perm, PermGrpAlgos}
 class BBGrpAlgos[G](implicit
                     val group: Group[G],
                     val equ: Eq[G]
-  ) extends GrpAlgos[G] with PermutationActionGrpAlgos[G] {
+  ) extends GrpAlgosImpl[G] with PermutationActionGrpAlgos[G] {
 
   type GG = BBGrp[G]
 
   def trivial: GG = new BBGrp(IndexedSeq.empty[G], Set(group.id))
+
+  def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = fromElements(grp.iterator.toSet).generators.toIndexedSeq
 
   def fromElements(elements: Set[G]): GG = {
     import scala.collection.mutable.{HashSet, Stack}

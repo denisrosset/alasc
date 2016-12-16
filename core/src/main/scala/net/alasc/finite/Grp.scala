@@ -340,10 +340,8 @@ object Grp {
 
   implicit def lattice[G](implicit builder: GrpAlgos[G]): Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] = new GrpLattice[G]
 
-  def apply[G](generators: G*)(implicit builder: GrpAlgos[G]): Grp[G] = {
-    import builder.{equ, group}
+  def apply[G:Eq:Group](generators: G*)(implicit builder: GrpAlgos[G]): Grp[G] =
     builder.fromGenerators(generators.filterNot(_.isId).toIndexedSeq)
-  }
 
   def trivial[G](implicit builder: GrpAlgos[G]): Grp[G] = builder.trivial
 
