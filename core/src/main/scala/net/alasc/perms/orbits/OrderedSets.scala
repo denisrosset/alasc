@@ -8,7 +8,7 @@ import spire.util.Opt
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSwap, BuildChain, Chain, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.finite.Grp
-import net.alasc.perms.{MutableOrbit, PermGrpAlgos, PermGrpChainAlgos, orbits}
+import net.alasc.perms.{MutableOrbit, PermGrpChainAlgos, orbits}
 import net.alasc.syntax.permutationAction._
 import spire.syntax.group._
 import net.alasc.util.NNOption

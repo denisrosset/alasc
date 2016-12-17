@@ -1,7 +1,6 @@
 package net.alasc.finite
 
 import scala.util.Random
-
 import spire.algebra.{Eq, Group, PartialOrder}
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.math.SafeLong
@@ -9,15 +8,14 @@ import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
-
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.domains.Partition
-import net.alasc.perms.{Perm, PermGrpAlgos}
+import net.alasc.perms.Perm
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
-
 import net.alasc.bsgs
+import net.alasc.bsgs.GrpChainFaithfulPermutationAction
 
 /** Finite group base class. */
 abstract class Grp[G] { lhs =>
@@ -157,7 +155,7 @@ class PermutationActionGrpSyntax[G](val lhs: Grp[G]) extends AnyVal {
   def base(action: PermutationAction[G])(implicit builder: PermutationActionGrpAlgos[G]): Opt[Seq[Int]]
   = builder.base(lhs, action)
 
-  def toPerm(action: PermutationAction[G])(implicit builderG: PermutationActionGrpAlgos[G], builder: PermGrpAlgos): Grp[Perm]
+  def toPerm(action: PermutationAction[G])(implicit builderG: PermutationActionGrpAlgos[G], builder: GrpAlgos[Perm]): Grp[Perm]
   = builderG.toPerm(lhs, action)
 
   /** Return the smallest element of the domain moved by this group under the given action, or [[NNNone]]. */
@@ -228,42 +226,40 @@ class PermutationActionGrpSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
 class PermGrpSyntax(val lhs: Grp[Perm]) extends AnyVal {
 
+  type A = GrpChainFaithfulPermutationAction[Perm, Perm.algebra.type]
   /** Sequence of the group elements, ordered lexicographically by their images. */
-  def lexElements(implicit builder: PermGrpAlgos): BigIndexedSeq[Perm] = builder.lexElements(lhs)
+  def lexElements(implicit algos: A): BigIndexedSeq[Perm] = builder.lexElements(grp)
 
   /** Returns the subgroup that fixes the given partition. */
-  def fixingPartition(partition: Partition)(implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.fixingPartition(lhs, partition)
+  def fixingPartition(partition: Partition)(implicit algos: A): Grp[Perm] =
+    algos.fixingPartition(lhs, Perm.algebra, partition)
 
   /** Returns the subgroup that stabilizes `b`. */
-  def stabilizer(b: Int)(implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.stabilizer(lhs, b)
+  def stabilizer(b: Int)(implicit algos: A): Grp[Perm] =
+    algos.stabilizer(lhs, Perm.algebra, b)
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */
-  def someStabilizerTransversal(implicit builder: PermGrpAlgos): Opt[(Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type])] =
-    builder.someStabilizerTransversal(lhs)
+  def someStabilizerTransversal(implicit algos: A): Opt[(Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type])] =
+    algos.someStabilizerTransversal(lhs, Perm.algebra)
 
   /** Returns the subgroup that stabilizes `b` and the associated transversal. */
-  def stabilizerTransversal(b: Int)(implicit builder: PermGrpAlgos): (Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type]) =
-    builder.stabilizerTransversal(lhs, b)
+  def stabilizerTransversal(b: Int)(implicit algos: A): (Grp[Perm], bsgs.Transversal[Perm, Perm.algebra.type]) =
+    algos.stabilizerTransversal(lhs, Perm.algebra, b)
 
-  def pointwiseStabilizer(set: Set[Int])(implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.pointwiseStabilizer(lhs, set)
+  def pointwiseStabilizer(set: Set[Int])(implicit algos: A): Grp[Perm] =
+    algos.pointwiseStabilizer(lhs, Perm.algebra, set)
 
-  def pointwiseStabilizer(points: Int*)(implicit builder: PermGrpAlgos): Grp[Perm] =
+  def pointwiseStabilizer(points: Int*)(implicit algos: A): Grp[Perm] =
     pointwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
-  def setwiseStabilizer(set: Set[Int])(implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.setwiseStabilizer(lhs, set)
+  def setwiseStabilizer(set: Set[Int])(implicit algos: A): Grp[Perm] =
+    algos.setwiseStabilizer(lhs, Perm.algebra, set)
 
-  def setwiseStabilizer(points: Int *)(implicit builder: PermGrpAlgos): Grp[Perm] =
+  def setwiseStabilizer(points: Int *)(implicit algos: A): Grp[Perm] =
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
-
-  /** Finds an element of this group with the image as `q`, if it exists. */
-  def find[Q:Eq:Group](actionQ: PermutationAction[Q], q: Q)(implicit builder: PermGrpAlgos): Opt[Perm] = builder.find(lhs, actionQ, q)
-
+  
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
     * prune the search tree.
     *
@@ -273,13 +269,13 @@ class PermGrpSyntax(val lhs: Grp[Perm]) extends AnyVal {
     * @return the subgroup satisfying `predicate`
     */
   def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
-                 (implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.subgroupFor(lhs, backtrackTest, predicate)
+                 (implicit algos: A): Grp[Perm] =
+    algos.subgroupFor(lhs, Perm.algebra, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
     * the identity fixes all the points in the sequence.
     */
-  def base(implicit builder: PermGrpAlgos): Seq[Int] = builder.base(lhs)
+  def base(implicit algos: A): Seq[Int] = algos.base(lhs, Perm.algebra)
 
   /** Return the smallest element of the domain moved by this group, or [[NNNone]]. */
   def smallestMovedPoint: NNOption =

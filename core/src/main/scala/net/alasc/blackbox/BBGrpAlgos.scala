@@ -12,7 +12,7 @@ import net.alasc.bsgs.{FixingPartition, Transversal}
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.Perm.algebra
-import net.alasc.perms.{Perm, PermGrpAlgos}
+import net.alasc.perms.Perm
 
 class BBGrpAlgos[G](implicit
                     val group: Group[G],
@@ -149,8 +149,8 @@ class BBGrpAlgos[G](implicit
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ???
 
-  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: PermGrpAlgos): Grp[Perm] =
-    builder.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
+  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit algos: GrpAlgos[Perm]): Grp[Perm] =
+    algos.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
 
 }
 

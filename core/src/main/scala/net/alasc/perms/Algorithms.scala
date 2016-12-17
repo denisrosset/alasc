@@ -43,7 +43,7 @@ class Algorithms(
     else
       BaseChange.swap
 
-  implicit def permGrpChainBuilder: PermGrpChainAlgos =
+  implicit def permGrpChainAlgos: PermGrpChainAlgos =
     new PermGrpChainAlgos
 
 
