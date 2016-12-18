@@ -33,6 +33,23 @@ abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp
 
 object GrpChain {
 
+  @inline final def extractGrpChain[G](grp: Grp[G], action: PermutationAction[G]): Opt[GrpChain[G, action.type]] =
+    grp match {
+      case gc: GrpChain[G, _] if gc.action eq action => Opt(gc.asInstanceOf[GrpChain[G, action.type]])
+      case _ => Opt.empty[GrpChain[G, action.type]]
+    }
+
+  @inline final def commonAction[G](lhs: Grp[G], rhs: Grp[G]): Opt[PermutationAction[G]] =
+    lhs match {
+      case lhs1: GrpChain[G, _] => rhs match {
+        case rhs1: GrpChain[G, _] if lhs1.action eq rhs1.action => Opt(lhs1.action)
+        case _ => Opt.empty[PermutationAction[G]]
+      }
+      case _ => Opt.empty[PermutationAction[G]]
+    }
+
+  @inline final def forceAction[G](lhs: Grp[G], action: PermutationAction[G]): GrpChain[G, action.type] = lhs.asInstanceOf[GrpChain[G, action.type]]
+
   trait In[G, F <: PermutationAction[G] with Singleton] {
     def unapply(grp: Grp[G]): Option[GrpChain[G, F]]
   }

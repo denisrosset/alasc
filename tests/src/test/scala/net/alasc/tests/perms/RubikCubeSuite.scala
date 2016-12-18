@@ -1,12 +1,13 @@
 package net.alasc.tests
 package perms
 
+import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.domains._
 import net.alasc.named.RubikCube
-import net.alasc.perms.{Perm, PermGrpAlgos}
+import net.alasc.perms.Perm
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
-abstract class RubikCubeSuite(implicit builder: PermGrpAlgos) extends AlascSuite {
+abstract class RubikCubeSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
 
   import RubikCube.{colors, order}
 

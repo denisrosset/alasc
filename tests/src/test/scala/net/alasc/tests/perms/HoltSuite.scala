@@ -3,10 +3,11 @@ package perms
 
 import spire.math.SafeLong
 
+import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.finite._
-import net.alasc.perms.{Perm, PermGrpAlgos}
+import net.alasc.perms.Perm
 
-abstract class HoltSuite(implicit builder: PermGrpAlgos) extends AlascSuite {
+abstract class HoltSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
 /*
   test("Example 4.4 page 111") {
     val alg = algorithms.BasicAlgorithms.randomized[Perm]()

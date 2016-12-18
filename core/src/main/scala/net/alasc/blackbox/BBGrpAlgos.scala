@@ -11,13 +11,12 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.{FixingPartition, Transversal}
 import net.alasc.domains.Partition
 import net.alasc.finite._
-import net.alasc.perms.Perm.algebra
 import net.alasc.perms.Perm
 
 class BBGrpAlgos[G](implicit
                     val group: Group[G],
                     val equ: Eq[G]
-  ) extends GrpAlgosImpl[G] with PermutationActionGrpAlgos[G] {
+  ) extends GrpGroup[G] with GrpPermutationAction[G, PermutationAction[G]] {
 
   type GG = BBGrp[G]
 
@@ -149,36 +148,9 @@ class BBGrpAlgos[G](implicit
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ???
 
-  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit algos: GrpAlgos[Perm]): Grp[Perm] =
+  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit algos: GrpGroup[Perm]): Grp[Perm] =
     algos.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
 
-}
-
-class PermBBGrpAlgos extends BBGrpAlgos[Perm] with PermGrpAlgos {
-
-  override val equ = Perm.algebra
-
-  override val group = Perm.algebra
-
-  def setwiseStabilizer(grp: Grp[Perm], set: Set[Int]): BBGrp[Perm] = setwiseStabilizer(grp, Perm.algebra, set)
-
-  def pointwiseStabilizer(grp: Grp[Perm], set: Set[Int]): BBGrp[Perm] = pointwiseStabilizer(grp, Perm.algebra, set)
-
-  def stabilizerTransversal(grp: Grp[Perm], b: Int): (BBGrp[Perm], Transversal[Perm, Perm.algebra.type]) = stabilizerTransversal(grp, Perm.algebra, b)
-
-  def someStabilizerTransversal(grp: Grp[Perm]): Opt[(BBGrp[Perm], Transversal[Perm, Perm.algebra.type])] = someStabilizerTransversal(grp, Perm.algebra)
-
-  def stabilizer(grp: Grp[Perm], b: Int): BBGrp[Perm] = stabilizer(grp, Perm.algebra, b)
-
-  def fixingPartition(grp: Grp[Perm], partition: Partition): BBGrp[Perm] = fixingPartition(grp, Perm.algebra, partition)
-
-  def subgroupFor(grp: Grp[Perm], backtrackTest: (Int, Int) => Boolean, predicate: (Perm) => Boolean): BBGrp[Perm] =
-    subgroupFor(grp, Perm.algebra, backtrackTest, predicate)
-
-  def lexElements(grp: Grp[Perm]): BigIndexedSeq[Perm] = lexElements(grp, Perm.algebra).get
-
-  def base(grp: Grp[Perm]): Seq[Int] = base(grp, Perm.algebra).get
-
-  def find[Q:Eq:Group](grp: Grp[Perm], actionQ: PermutationAction[Q], q: Q): Opt[Perm] = find(grp, Perm.algebra, actionQ, q)
+  def conjugatedBy(grp: Grp[G], h: G): Grp[G] = GrpGroup.defaultConjugatedBy(grp, h)
 
 }

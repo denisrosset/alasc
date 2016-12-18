@@ -7,7 +7,7 @@ import spire.syntax.cfor._
 
 import net.alasc.algebra._
 import net.alasc.domains.Domain
-import net.alasc.finite.{Grp, GrpAlgos}
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms._
 import net.alasc.syntax.permutationAction._
 
@@ -55,7 +55,7 @@ object Permutations {
 
   implicit val cyclesCloner: Cloner[Cycles] = Cloner( (c: Cycles) => c.toPerm.toCycles )
 
-  implicit def permutationGrp(domain: Domain)(implicit ev: GrpAlgos[Perm]): Gen[Grp[Perm]] =
+  implicit def permutationGrp(domain: Domain)(implicit ev: GrpGroup[Perm]): Gen[Grp[Perm]] =
     Grps.fromElements(permForDomain(domain))
 
 }

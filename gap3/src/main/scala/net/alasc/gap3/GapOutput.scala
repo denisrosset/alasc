@@ -8,7 +8,7 @@ import fastparse.WhitespaceApi
 import scalin.Subscript
 import scalin.immutable.{Mat, Vec}
 
-import net.alasc.finite.{Grp, GrpAlgos}
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms.{Cycle, Cycles, Perm}
 import net.alasc.syntax.all._
 import net.alasc.perms.default._
@@ -165,7 +165,7 @@ object GapOutput {
 
 }
 
-class ParseARep[G:GrpAlgos](generator: fastparse.noApi.P[G]) {
+class ParseARep[G:GrpGroup](generator: fastparse.noApi.P[G]) {
 
   import fastparse.noApi._
   import GapOutput.White._

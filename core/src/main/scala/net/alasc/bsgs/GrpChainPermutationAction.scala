@@ -10,10 +10,24 @@ import net.alasc.algebra.PermutationAction
 import net.alasc.finite._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 
-final class GrpChainAlgos[G]
+trait GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G, PermutationAction[G]] {
+
+  import GrpChain.{commonAction, extractGrpChain, forceAction}
+
+  implicit def baseChange: BaseChange
+  implicit def baseSwap: BaseSwap
+  implicit def equ: Eq[G]
+  implicit def classTag: ClassTag[G]
+  implicit def group: Group[G]
+  implicit def schreierSims: SchreierSims
+
+}
+/*
+
+final class GrpChainPermutationAction[G]
   (implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val classTag: ClassTag[G],
   val equ: Eq[G], val group: Group[G], val repBuilder: FaithfulPermRepBuilder[G],
-  val schreierSims: SchreierSims) extends GrpAlgosImpl[G] {
+  val schreierSims: SchreierSims) extends GrpGroup[G] {
 
   type GG = GrpChain[G, F] forSome { type F <: PermutationAction[G] with Singleton }
 
@@ -109,3 +123,4 @@ final class GrpChainAlgos[G]
   def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type] = leftCosetsBy(grp, subgrp).inverse
 
 }
+*/

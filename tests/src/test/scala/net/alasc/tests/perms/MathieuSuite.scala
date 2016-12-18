@@ -3,10 +3,11 @@ package perms
 
 import spire.math.SafeLong
 
+import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.named.Mathieu
-import net.alasc.perms.{Perm, PermGrpAlgos}
+import net.alasc.perms.Perm
 
-class MathieuSuite(implicit builder: PermGrpAlgos) extends AlascSuite {
+class MathieuSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
 
   test("Mathieu group constructions have correct order") {
     Mathieu.generatorsAndOrders.foreach {

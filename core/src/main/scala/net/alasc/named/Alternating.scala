@@ -2,7 +2,7 @@ package net.alasc.named
 
 import spire.math.SafeLong
 import net.alasc.algebra._
-import net.alasc.finite.{Grp, GrpAlgos}
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms.Perm
 
 object Alternating {
@@ -19,7 +19,7 @@ object Alternating {
     * - (0 1 2), (0 1 2 ... n-1) for n odd and
     * - (0 1 2), (1 2 ... n-1) for n even.
     */
-  def apply(degree: Int)(implicit gb: GrpAlgos[Perm]): Grp[Perm] =
+  def apply(degree: Int)(implicit gb: GrpGroup[Perm]): Grp[Perm] =
     if (degree < 3) Grp.trivial[Perm] else
       Grp.fromGeneratorsAndOrder(
         IndexedSeq(shift(degree), Perm.fromImages(Seq(1,2,0))),

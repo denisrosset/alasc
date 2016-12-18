@@ -1,9 +1,10 @@
 package net.alasc.tests
 package perms
 
+import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.domains.Domain
 import net.alasc.laws.{AnyRefLaws, Doms, PermutationActionLaws, Permutations}
-import net.alasc.perms.{Cycle, Cycles, Perm, PermGrpChainAlgos}
+import net.alasc.perms.{Cycle, Cycles, Perm}
 
 class PermSuite extends AlascSuite {
 
@@ -58,12 +59,12 @@ object PermSuite {
 
   val deterministic = {
     import net.alasc.perms.deterministic._
-    implicitly[PermGrpChainAlgos]
+    implicitly[GrpPermAlgorithms]
   }
 
   val randomized = {
     import net.alasc.perms.default._
-    implicitly[PermGrpChainAlgos]
+    implicitly[GrpPermAlgorithms]
   }
 
 }

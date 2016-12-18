@@ -9,12 +9,12 @@ import net.alasc.bsgs.{BuildChain, Chain}
 import net.alasc.domains._
 import net.alasc.laws.{BSGSs, Partitions}
 import net.alasc.named._
-import net.alasc.perms.{PermGrpChainAlgos, _}
+import net.alasc.perms.{_}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
 import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
 
-abstract class BSGSSuite(implicit val builder: PermGrpChainAlgos) extends AlascSuite {
+abstract class BSGSSuite(implicit val builder: GrpPermAlgorithms) extends AlascSuite {
 
   import BSGSs._
 
@@ -30,7 +30,7 @@ abstract class BSGSSuite(implicit val builder: PermGrpChainAlgos) extends AlascS
     Mathieu(12), Mathieu(20)
   )
 
-  val genChain: Gen[Chain[Perm, F]] =
+  val genChain: Gen[Chain[Perm, Perm.algebra.type]] =
     Gen.oneOf(groups).map(grp => builder.fromGrp(grp).chain)
 
   implicit val noShrinkChain = noShrink[Chain[Perm, F]]

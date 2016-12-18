@@ -8,7 +8,7 @@ import spire.util.Opt
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSwap, BuildChain, Chain, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.finite.Grp
-import net.alasc.perms.{MutableOrbit, PermGrpChainAlgos, orbits}
+import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.syntax.permutationAction._
 import spire.syntax.group._
 import net.alasc.util.NNOption
@@ -33,7 +33,7 @@ object OrderedSets {
     * @return the permutation `g` in `grp` such that `set <|+| g` is the lexicographic minimal ordered set.
     */
   def toSmallest[G, F <: Permutation[G] with Singleton](set: Set[Int], grp: Grp[G], symGrpOpt: Opt[Grp[G]] = Opt.empty[Grp[G]])
-                                                       (implicit builder: PermGrpChainAlgos[G, F]): G = {
+                                                       (implicit builder: GrpPermAlgorithms[G, F]): G = {
     import builder.{baseChange, baseSwap, schreierSims}
     import builder.{classTag, permutation}
     import spire.std.int._
@@ -115,7 +115,7 @@ object OrderedSets {
     * @return whether set is lexicographically minimal compared to all set <|+| g for g in grp.
     */
   def isSmallestInOrbit[G, F <: Permutation[G] with Singleton](set: Set[Int], grp: Grp[G], symGrpOpt: Opt[Grp[G]] = Opt.empty[Grp[G]])
-                                                              (implicit builder: PermGrpChainAlgos[G, F]): Boolean = {
+                                                              (implicit builder: GrpPermAlgorithms[G, F]): Boolean = {
     import builder.{baseChange, baseSwap, schreierSims}
     import builder.{classTag, permutation}
     import spire.std.int._

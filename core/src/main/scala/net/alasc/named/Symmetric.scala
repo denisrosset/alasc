@@ -4,8 +4,7 @@ import scala.annotation.tailrec
 import scala.util.Random
 import spire.math.SafeLong
 import spire.syntax.cfor._
-import net.alasc.algebra._
-import net.alasc.finite.{Grp, GrpAlgos}
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms.Perm
 
 object Symmetric {
@@ -29,7 +28,7 @@ object Symmetric {
     Perm.fromImages(array)
   }
 
-  def apply(degree: Int)(implicit gb: GrpAlgos[Perm]): Grp[Perm] =
+  def apply(degree: Int)(implicit gb: GrpGroup[Perm]): Grp[Perm] =
     if (degree < 2) Grp.trivial[Perm] else
     Grp.fromGeneratorsAndOrder(
       IndexedSeq(Cyclic.shift(degree), transposition(0, 1)),

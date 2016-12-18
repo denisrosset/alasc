@@ -3,7 +3,7 @@ package net.alasc.perms
 import spire.math.SafeLong
 import net.alasc.algebra._
 import net.alasc.domains.Partition
-import net.alasc.finite.{Grp, GrpAlgos}
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.named.Symmetric
 
 object GrpFixingPartition {
@@ -29,7 +29,7 @@ object GrpFixingPartition {
   def generators(partition: Partition): IndexedSeq[Perm] =
     partition.blocks.flatMap(blockGenerators(_)).toIndexedSeq
 
-  def apply(partition: Partition)(implicit ev: GrpAlgos[Perm]): Grp[Perm] =
+  def apply(partition: Partition)(implicit ev: GrpGroup[Perm]): Grp[Perm] =
     Grp.fromGeneratorsAndOrder(generators(partition), order(partition))
 
 }
