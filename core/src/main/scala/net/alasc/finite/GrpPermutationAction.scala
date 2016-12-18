@@ -69,10 +69,16 @@ object GrpPermutationAction {
     }
 
   /** Tests if the point `i` is in the support of `g` under the given action. */
-  @inline final def movesPoint[G:PermutationAction](grp: Grp[G], i: Int): Boolean = grp.generators.exists(g => (i <|+| g) != i)
+  @inline final def movesPoint[G:PermutationAction](grp: Grp[G], i: Int): Boolean =
+    if (grp.isTrivial) false else grp.generators.exists(g => (i <|+| g) != i)
+
+  /** Tests if the point `i` is in the support of `g` under the given action. */
+  @inline final def movesAnyPoint[G:PermutationAction](grp: Grp[G]): Boolean =
+    if (grp.isTrivial) false else grp.generators.exists(PermutationAction[G].movesAnyPoint)
 
   /** Number of non-negative integers moved by the permutations in this group. */
-  @inline final def nMovedPoints[G:PermutationAction](grp: Grp[G]): Int = movedPoints(grp).size
+  @inline final def nMovedPoints[G:PermutationAction](grp: Grp[G]): Int =
+    if (grp.isTrivial) 0 else movedPoints(grp).size
 
   /** Returns a bit set of all non-negative integers k that are moved by the action of this group,
     * i.e. `S = { k | exists g in this group s.t. k <|+| g != k }`.
@@ -180,6 +186,9 @@ class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
   /** Tests if the point `i` is in the support of `g` under the given action. */
   def movesPoint(action: PermutationAction[G], i: Int): Boolean = GrpPermutationAction.movesPoint(lhs, i)(action)
+
+  /** Tests if the group moves any point under the given action. */
+  def movesAnyPoint(action: PermutationAction[G]): Boolean = GrpPermutationAction.movesAnyPoint(lhs)(action)
 
   /** Number of non-negative integers moved by the permutations in this group. */
   def nMovedPoints(action: PermutationAction[G]): Int = GrpPermutationAction.nMovedPoints(lhs)(action)

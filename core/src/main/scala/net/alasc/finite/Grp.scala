@@ -66,6 +66,20 @@ abstract class Grp[G] { lhs =>
 
 }
 
+case class GrpTrivial[G](implicit val equ: Eq[G], val group: Group[G]) extends Grp[G] {
+
+  def iterator: Iterator[G] = Iterator(group.id)
+
+  def contains(g: G): Boolean = g.isId
+
+  def generators: IndexedSeq[G] = IndexedSeq.empty
+
+  def order: SafeLong = SafeLong.one
+
+  def randomElement(random: Random): G = group.id
+
+}
+
 abstract class Grp0 {
 
   implicit def permutationActionGrpSyntax[G](grp: Grp[G]): GrpPermutationActionSyntax[G] = new GrpPermutationActionSyntax[G](grp)
