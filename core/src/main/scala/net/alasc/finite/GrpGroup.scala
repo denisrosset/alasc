@@ -44,3 +44,25 @@ object GrpGroup {
   }
 
 }
+
+class GrpGroupSyntax[G](val lhs: Grp[G]) extends AnyVal {
+
+  /** Returns the group H = hInv G h, where G is this group. */
+  def conjugatedBy(h: G)(implicit ev: GrpGroup[G]): Grp[G] = ev.conjugatedBy(lhs, h)
+
+  /** Union (closure) of groups. */
+  def union(rhs: Grp[G])(implicit ev: GrpGroup[G]): Grp[G] = ev.union(lhs, rhs)
+
+  /** Intersection of groups. */
+  def intersect(rhs: Grp[G])(implicit ev: GrpGroup[G]): Grp[G] = ev.intersect(lhs, rhs)
+
+  /** Left cosets. */
+  def leftCosetsBy(subgrp: Grp[G])(implicit ev: GrpGroup[G]): LeftCosets[G, subgrp.type] = ev.leftCosetsBy(lhs, subgrp)
+
+  /** Right cosets. */
+  def rightCosetsBy(subgrp: Grp[G])(implicit ev: GrpGroup[G]): RightCosets[G, subgrp.type] = ev.rightCosetsBy(lhs, subgrp)
+
+  /** Simplifies the description current group.*/
+  def smallGeneratingSet(implicit ev: GrpGroup[G]): IndexedSeq[G] = ev.smallGeneratingSet(lhs)
+
+}

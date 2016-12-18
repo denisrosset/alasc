@@ -28,11 +28,21 @@ trait SchreierSims {
     (generators: Iterable[G], randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F]
 
   /** Deterministic Schreier-Sims algorithm. */
-  def deterministicSchreierSims[G:ClassTag:Eq:PermutationAction:Group, F <: PermutationAction[G] with Singleton]
+  def deterministicSchreierSims[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
     (generators: Iterable[G], givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = MutableChain.incompleteWithGenerators(generators, givenBase)
     mutableChain.completeStrongGenerators()
     mutableChain
+  }
+
+  def siftAndAddStrongGenerator[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, F], element: G)(implicit action: F): Unit = {
+    val siftResult = mutableChain.siftAndUpdateBaseFrom(mutableChain.start, element)
+    siftResult match {
+      case Opt((nodeForGenerator, generator)) =>
+        mutableChain.addStrongGeneratorHere(nodeForGenerator, generator, generator.inverse)
+      case _ =>
+    }
   }
 
 }
@@ -82,12 +92,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
     (randomElement: Random => G, order: SafeLong, givenBase: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = MutableChain.emptyWithBase[G, F](givenBase)
     while (mutableChain.start.next.order < order) {
-      val siftResult = mutableChain.siftAndUpdateBaseFrom(mutableChain.start, randomElement(random))
-      siftResult match {
-        case Opt((nodeForGenerator, generator)) =>
-          mutableChain.addStrongGeneratorHere(nodeForGenerator, generator, generator.inverse)
-        case _ =>
-      }
+      siftAndAddStrongGenerator(mutableChain, randomElement(random))
     }
     // TODO removeRedundantGenerators(mutableChain)
     mutableChain

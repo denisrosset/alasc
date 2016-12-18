@@ -8,6 +8,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.finite.Grp
 import net.alasc.perms.FaithfulPermRep
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`)
@@ -16,13 +17,12 @@ import net.alasc.perms.FaithfulPermRep
   */
 final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
   (val originalChain: Chain[G, F], val g: G, val gInv: G,
-   originalGeneratorsOpt: Opt[IndexedSeq[G]],
-   val repOpt: Opt[FaithfulPermRep[G, _]])
+   originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernelOpt: Opt[Grp[G]])
   (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
 
   def this(originalChain: Chain[G, F], g: G, gInv: G, originalGeneratorsOpt: Opt[IndexedSeq[G]])
-          (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G], action: F) =
-    this(originalChain, g, gInv, originalGeneratorsOpt, Opt.empty[FaithfulPermRep[G, _]])
+          (implicit classTag: ClassTag[G], group: Group[G], equ: Eq[G], action: F)
+  = this(originalChain, g, gInv, originalGeneratorsOpt, Opt.empty[Grp[G]])
 
   def originalGenerators = originalGeneratorsOpt match {
     case Opt(gen) => gen

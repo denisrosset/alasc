@@ -15,7 +15,14 @@ import net.alasc.finite._
 import net.alasc.perms.{FaithfulPermRep, Perm}
 
 /** Algorithms for a group with a (family of) faithful permutation actions, of type A. */
-trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends GrpChainGroup[G] with GrpPermutationAction[G, A] {
+trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends GrpGroup[G] with GrpPermutationAction[G, A] {
+
+  implicit def baseChange: BaseChange
+  implicit def baseSwap: BaseSwap
+  implicit def equ: Eq[G]
+  implicit def classTag: ClassTag[G]
+  implicit def group: Group[G]
+  implicit def schreierSims: SchreierSims
 
   import GrpChain.{commonAction, extractGrpChain, forceAction}
 

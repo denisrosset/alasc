@@ -47,9 +47,6 @@ abstract class Grp[G] { lhs =>
   /** Returns whether this is the trivial group with a single identity element. */
   def isTrivial: Boolean = generators.isEmpty
 
-  /** Returns the group H = hInv G h, where G is this group. */
-  def conjugatedBy(h: G)(implicit builder: GrpGroup[G]): Grp[G] = builder.conjugatedBy(lhs, h)
-
   /** Generates a random element. */
   def randomElement(random: Random): G
 
@@ -66,23 +63,6 @@ abstract class Grp[G] { lhs =>
     val gInv = g.inverse
     rhs.generators.forall(u => rhs.contains(gInv |+| u |+| g))
   }
-
-  /** Union (closure) of groups. */
-  def union(rhs: Grp[G])(implicit builder: GrpGroup[G]): Grp[G] = builder.union(lhs, rhs)
-
-  /** Intersection of groups. */
-  def intersect(rhs: Grp[G])(implicit builder: GrpGroup[G]): Grp[G] = builder.intersect(lhs, rhs)
-
-  /** Left cosets. */
-  def leftCosetsBy(subgrp: Grp[G])(implicit builder: GrpGroup[G]): LeftCosets[G, subgrp.type] =
-    builder.leftCosetsBy(lhs, subgrp)
-
-  /** Right cosets. */
-  def rightCosetsBy(subgrp: Grp[G])(implicit builder: GrpGroup[G]): RightCosets[G, subgrp.type] =
-    builder.rightCosetsBy(lhs, subgrp)
-
-  /** Simplifies the description current group.*/
-  def smallGeneratingSet(implicit builder: GrpGroup[G]): IndexedSeq[G] = builder.smallGeneratingSet(lhs)
 
 }
 
@@ -110,6 +90,8 @@ object Grp {
     ev.fromGeneratorsAndOrder(generators, order)
 
   implicit def permGrpSyntax(pg: Grp[Perm]): GrpPermSyntax = new GrpPermSyntax(pg)
+
+  implicit def grpGroupSyntax[G](grp: Grp[G]): GrpGroupSyntax[G] = new GrpGroupSyntax[G](grp)
 
 }
 
