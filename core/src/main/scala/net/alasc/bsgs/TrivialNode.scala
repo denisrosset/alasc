@@ -7,8 +7,8 @@ import spire.algebra.Group
 
 import net.alasc.algebra._
 
-case class TrivialNode[G:ClassTag:Group, F <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, F])
-                                                            (implicit val action: F) extends Node[G, F] {
+case class TrivialNode[G:ClassTag:Group, A <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, A])
+                                                            (implicit val action: A) extends Node[G, A] {
 
   def elements = Iterable(Group[G].id)
   def elementFor(g: G) = Group[G].id

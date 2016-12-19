@@ -12,32 +12,34 @@ import spire.util.Opt
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs
 import net.alasc.domains.Partition
-import net.alasc.finite.{Grp, LeftCoset, LeftCosets, LeftCosetsImpl}
+import net.alasc.finite._
 import net.alasc.perms.orbits
 import net.alasc.perms.{FaithfulPermRep, MutableOrbit}
 
-/** Group described a BSGS chain of elements of type G using the permutation action F`.
+/** Group described a BSGS chain of elements of type G using the permutation action F.
   *
-  * If the action is faithful, then the group is fully described by the chain and kernelOpt is empty.
-  * If the action is not faithful, then kernelOpt contains the kernel normal subgroup K,
+  * If the action is faithful for the current group, then the group is fully described by the chain and kernelOpt is empty.
+  * If the action is not faithful, then kernel contains the nontrivial kernel normal subgroup K,
   * and the chain describes the quotient Group/K.
   *
   */
-abstract class GrpChain[G, F <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
+abstract class GrpChain[G, A <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 
-  implicit val action: F
+  implicit val action: A
 
   implicit def classTag: ClassTag[G]
 
-  def chain: bsgs.Chain[G, F]
+  def chain: Chain[G, A]
 
-  def chainOpt: Opt[bsgs.Chain[G, F]]
+  def chainOpt: Opt[Chain[G, A]]
 
-  def kernelOpt: Opt[Grp[G]]
+  def kernel: Chain.Generic[G]
 
 }
 
 object GrpChain {
+
+  type Generic[G] = GrpChain[G, _ <: PermutationAction[G] with Singleton]
 
   @inline final def extractGrpChain[G](grp: Grp[G], action: PermutationAction[G]): Opt[GrpChain[G, action.type]] =
     grp match {
@@ -56,47 +58,50 @@ object GrpChain {
 
   @inline final def forceAction[G](lhs: Grp[G], action: PermutationAction[G]): GrpChain[G, action.type] = lhs.asInstanceOf[GrpChain[G, action.type]]
 
-  trait In[G, F <: PermutationAction[G] with Singleton] {
-    def unapply(grp: Grp[G]): Option[GrpChain[G, F]]
+  /*
+  /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
+    * It is required that the permutation action `F` can describe the `rhs` generators.
+    *
+    * The kernel is also computed using Schreier-Sims algorithm.
+    */
+  def unionComputeKernel[G, F <: PermutationAction[G] with Singleton]
+  (lhs: GrpChain[G, F], rhs: Iterable[G], kernel: KernelBuilder[G])(implicit schreierSims: SchreierSims): GrpChain[G, F] = {
+    import lhs.{action, classTag, equ, group}
+    val mutableChain = lhs.chain.mutableChain
+    val newGenerators = rhs.filterNot(mutableChain.start.next.sifts)
+    mutableChain.insertGenerators(newGenerators)
+    schreierSims.completeStrongGenerators(mutableChain, kernel)
+    val newChain = mutableChain.toChain()
+    val generatorsOpt = if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
+        Opt(lhs.generators ++ newGenerators) else Opt.empty[IndexedSeq[G]]
+    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt, kernel.result(completeChain = true))
   }
 
-  /** Matches a `GrpChain[G, F]` with the requested action. */
-  object In {
-    def apply[G, PA[X] <: PermutationAction[X], F <: PermutationAction[G] with Singleton](action: F with PA[G]): In[G, F] =
-      new In[G, F] {
-        def unapply(grp: Grp[G]): Option[GrpChain[G, F]] = grp match {
-          case gc: GrpChain[G, _] if gc.action eq action => Some(gc.asInstanceOf[GrpChain[G, F]])
-          case _ => None // Opt.empty[GrpChain[G, F]]
-        }
-      }
+  /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
+    * It is required that the permutation action `F` can describe the `rhs` generators.
+    *
+    * The kernel is provided in argument.
+    */
+  def unionGivenKernel[G, F <: PermutationAction[G] with Singleton]
+  (lhs: GrpChain[G, F], rhs: Iterable[G], kernelOpt: Opt[Grp[G]])(implicit schreierSims: SchreierSims): GrpChain[G, F] = {
+    import lhs.{action, classTag, equ, group}
+    val mutableChain = lhs.chain.mutableChain
+    val newGenerators = rhs.filterNot(mutableChain.start.next.sifts)
+    mutableChain.insertGenerators(newGenerators)
+    schreierSims.completeStrongGenerators(mutableChain, KernelBuilder.BlackHole[G, F])
+    val newChain = mutableChain.toChain()
+    val generatorsOpt = if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
+      Opt(lhs.generators ++ newGenerators) else Opt.empty[IndexedSeq[G]]
+    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt, kernelOpt)
   }
 
-  trait Extracted[G] { self =>
-    def isEmpty = action eq null
-    type Action <: PermutationAction[G] with Singleton
-    implicit val action: Action
-    val grp: GrpChain[G, Action]
-    def get = self
+  def intersect[G, F <: PermutationAction[G] with Singleton](lhs: GrpChain[G, F], rhs: GrpChain[G, F])
+                                                            (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
+    import lhs.{action, classTag, equ, group}
+    subgroupFor(lhs, Intersection[G, F](rhs.chain))
   }
-
-  object ExtractedEmpty extends Extracted[Nothing] {
-    val action = null
-    val grp = null
-    type Action = Null
-  }
-
-  object AndAction {
-    def unapply[G](lhs: Grp[G]): Extracted[G] = lhs match {
-      case gc: GrpChain[G, _] =>
-        new Extracted[G] {
-          type Action = gc.action.type
-          val action: Action = gc.action
-          val grp = gc.asInstanceOf[GrpChain[G, Action]]
-        }
-      case _ => ExtractedEmpty.asInstanceOf[Extracted[G]]
-    }
-  }
-
+*/
+  /*
   /** Returns the subgroup of `grp` that obeys the subgroup definition `definition`. */
   def subgroupFor[G, F <: PermutationAction[G] with Singleton]
     (grp: GrpChain[G, F], definition: SubgroupDefinition[G, F])
@@ -113,36 +118,19 @@ object GrpChain {
         }
         mut.toChain()
       case _ =>
-        BuildChain.fromChain[G, F, F](grp.chain, definition.baseGuideOpt)
+        val chain = grp.chain
+        definition.baseGuideOpt match {
+          case Opt(baseGuide) if !baseGuide.isSatisfiedBy(chain) =>
+            val mut = chain.mutableChain
+            baseChange.changeBase(mut, baseGuide)
+            mut.toChain()
+          case _ => chain
+        }
     }
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain).toChain()
-    new GrpChainExplicit[G, F](subChain, Opt.empty[IndexedSeq[G]])
+    new GrpChainExplicit[G, F](subChain, Opt.empty[IndexedSeq[G]], grp.kernelOpt)
   }
 
-  /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
-    * It is required that the permutation action `F` can describe the `rhs` generators.
-    */
-  def union[G, F <: PermutationAction[G] with Singleton]
-    (lhs: GrpChain[G, F], rhs: Iterable[G]): GrpChain[G, F] = {
-    import lhs.{action, classTag, equ, group}
-    val mutableChain = lhs.chain.mutableChain
-    val newGenerators = rhs.filterNot(mutableChain.start.next.sifts)
-    mutableChain.insertGenerators(newGenerators)
-    mutableChain.completeStrongGenerators()
-    val newChain = mutableChain.toChain()
-    val generatorsOpt =
-      if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
-        Opt(lhs.generators ++ newGenerators)
-      else
-        Opt.empty[IndexedSeq[G]]
-    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt)
-  }
-
-  def intersect[G, F <: PermutationAction[G] with Singleton](lhs: GrpChain[G, F], rhs: GrpChain[G, F])
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, F] = {
-    import lhs.{action, classTag, equ, group}
-    subgroupFor(lhs, Intersection[G, F](rhs.chain))
-  }
 
   /** Returns the subgroup of `grp` that fixes the partition `partition`. */
   def fixingPartition[G, F <: PermutationAction[G] with Singleton]
@@ -399,6 +387,6 @@ object GrpChain {
       rec(lexChain, Group[G].id)
     }
 
-  }
+  }*/
 
 }

@@ -15,14 +15,14 @@ import metal.syntax._
 import net.alasc.algebra._
 import net.alasc.util._
 
-final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
+final class MutableNodeExplicit[G, A <: PermutationAction[G] with Singleton](
   var beta: Int,
   var transversal: metal.mutable.HashMap2[Int, G, G],
   var nOwnGenerators: Int,
   var ownGeneratorsArray: Array[G],
   var ownGeneratorsArrayInv: Array[G],
-  var prev: MutableStartOrNode[G, F] = null,
-  var next: Chain[G, F] = null)(implicit val action: F) extends MutableNode[G, F] {
+  var prev: MutableStartOrNode[G, A] = null,
+  var next: Chain[G, A] = null)(implicit val action: A) extends MutableNode[G, A] {
 
   def ownGenerator(i: Int): G = ownGeneratorsArray(i)
   def ownGeneratorInv(i: Int): G = ownGeneratorsArrayInv(i)
@@ -213,8 +213,8 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
       @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
           val b = vp.key
-          @tailrec def rec(current: Chain[G, F]): Unit = current match {
-            case node: Node[G, F] =>
+          @tailrec def rec(current: Chain[G, A]): Unit = current match {
+            case node: Node[G, A] =>
               cforRange(0 until node.nOwnGenerators) { i =>
                 val g = node.ownGenerator(i)
                 val gInv = node.ownGeneratorInv(i)
@@ -229,7 +229,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
                 }
               }
               rec(node.next)
-            case _: Term[G, F] =>
+            case _: Term[G, A] =>
           }
           rec(this)
           rec1(vp.next)
@@ -277,8 +277,8 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
       @inline @tailrec def rec1(ptr: Ptr[iter.type]): Unit = ptr match {
         case IsVPtr(vp) =>
           val b = vp.key
-          @inline @tailrec def rec(current: Chain[G, F]): Unit = current match {
-            case node: Node[G, F] =>
+          @inline @tailrec def rec(current: Chain[G, A]): Unit = current match {
+            case node: Node[G, A] =>
               cforRange(0 until node.nOwnGenerators) { i =>
                 val g = node.ownGenerator(i)
                 val gInv = node.ownGeneratorInv(i)
@@ -293,7 +293,7 @@ final class MutableNodeExplicit[G, F <: PermutationAction[G] with Singleton](
                 }
               }
               rec(node.next)
-            case _: Term[G, F] =>
+            case _: Term[G, A] =>
           }
           rec(this)
           rec1(vp.next)

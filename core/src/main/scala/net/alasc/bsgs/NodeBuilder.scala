@@ -12,15 +12,15 @@ trait NodeBuilder[G] {
     * 
     * @param node   Node to clone
     */
-  def standaloneClone[F <: PermutationAction[G] with Singleton](node: Node[G, F])
-                                                                       (implicit group: Group[G], classTag: ClassTag[G]): MutableNode[G, F]
+  def standaloneClone[A <: PermutationAction[G] with Singleton](node: Node[G, A])
+                                                                       (implicit group: Group[G], classTag: ClassTag[G]): MutableNode[G, A]
 
   /** Creates a new standalone BSGS node with a transversal of size 1.
     * 
     * @param beta  New node base point.
     */
-  def standalone[F <: PermutationAction[G] with Singleton](beta: Int)
-                                                                  (implicit action: F, group: Group[G], classTag: ClassTag[G]): MutableNode[G, F]
+  def standalone[A <: PermutationAction[G] with Singleton](beta: Int)
+                                                                  (implicit action: A, group: Group[G], classTag: ClassTag[G]): MutableNode[G, A]
 
 }
 

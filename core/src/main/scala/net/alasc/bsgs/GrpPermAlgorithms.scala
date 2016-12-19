@@ -9,7 +9,7 @@ import net.alasc.algebra.PermutationAction
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms.Perm
 import net.alasc.perms.Perm.algebra
-
+/* TODO
 class GrpPermAlgorithms(implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val schreierSims: SchreierSims) extends GrpChainFaithfulPermutationAction[Perm, Perm.algebra.type] {
 
   def equ: Eq[Perm] = Perm.algebra
@@ -31,3 +31,4 @@ class GrpPermAlgorithms(implicit val baseChange: BaseChange, val baseSwap: BaseS
   def toPerm(grp: Grp[Perm], action: algebra.type)(implicit builder: GrpGroup[Perm]): Grp[Perm] = grp
 
 }
+*/

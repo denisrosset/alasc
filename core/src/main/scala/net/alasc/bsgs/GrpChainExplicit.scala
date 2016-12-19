@@ -12,12 +12,8 @@ import net.alasc.finite.Grp
 import net.alasc.perms.FaithfulPermRep
 
 final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
-  (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val kernelOpt: Opt[Grp[G]])
+  (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
   (implicit val classTag: ClassTag[G], val equ: Eq[G], val group: Group[G], val action: F) extends GrpChain[G, F] {
-
-  def this(chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]])
-          (implicit classTag: ClassTag[G], equ: Eq[G], group: Group[G], action: F)
-  = this(chain, generatorsOpt, Opt.empty[Grp[G]])
 
   def chainOpt = Opt(chain)
 

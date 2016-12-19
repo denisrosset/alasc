@@ -32,6 +32,7 @@ class WrFaithfulPermRepBuilder[A:Eq:Group](implicit val A: FaithfulPermRepBuilde
     type F = _permutationAction.type
     def permutationAction: F = _permutationAction
     object _permutationAction extends PermutationAction[Wr[A]] {
+      def isFaithful = true
       override def movesAnyPoint(w: Wr[A]) = !w.h.isId
       def actr(k: Int, w: Wr[A]): Int =
         if (k >= dimension) k else {

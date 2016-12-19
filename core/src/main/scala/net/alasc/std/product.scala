@@ -11,6 +11,9 @@ final case class Product2FaithfulPermRep[A, B, K](A: FaithfulPermRep[A, K], B: F
   def dimension = A.dimension + B.dimension
   def represents(x0: (A, B)) = A.represents(x0._1) && B.represents(x0._2)
   object _permutationAction extends PermutationAction[(A, B)] {
+
+    def isFaithful = true
+
     @inline def action1 = A.permutationAction
     @inline def action2 = B.permutationAction
 

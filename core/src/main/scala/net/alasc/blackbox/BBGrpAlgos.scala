@@ -16,7 +16,7 @@ import net.alasc.perms.Perm
 class BBGrpAlgos[G](implicit
                     val group: Group[G],
                     val equ: Eq[G]
-  ) extends GrpGroup[G] with GrpPermutationAction[G, PermutationAction[G]] {
+  ) extends GrpGroup[G] with GrpPermutationAction[G] {
 
   type GG = BBGrp[G]
 

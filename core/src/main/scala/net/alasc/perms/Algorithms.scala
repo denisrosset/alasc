@@ -8,7 +8,7 @@ import spire.algebra.{Eq, Group}
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.bsgs.{BaseChange, BaseSwap, GrpChainPermutationAction, GrpPermAlgorithms, SchreierSims}
+import net.alasc.bsgs.{BaseChange, BaseSwap, GrpChainPermutationAction, SchreierSims}
 
 abstract class Algorithms0 {
 
@@ -42,10 +42,10 @@ class Algorithms(
       BaseChange.swapConjugation
     else
       BaseChange.swap
-
+/*
   implicit def permGrpChainAlgos: GrpPermAlgorithms =
     new GrpPermAlgorithms
-
+*/
 /*
   implicit def permRepGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermRepBuilder]
     (implicit np: NoImplicit[G =:= Perm]): GrpChainPermutationAction[G] = new GrpChainPermutationAction[G]

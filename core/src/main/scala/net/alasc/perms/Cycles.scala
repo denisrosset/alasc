@@ -43,6 +43,8 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
 
 class CyclesAlgebra extends PermutationAction[Cycles] with Group[Cycles] with Eq[Cycles] {
 
+  def isFaithful = true
+
   implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
 
   def movesAnyPoint(c: Cycles): Boolean = c.seq.nonEmpty

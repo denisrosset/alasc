@@ -25,7 +25,7 @@ trait BaseGuide {
 
   /** Returns an incomplete base for the given generators,
     * used when base has to be computed from scratch. */
-  def baseAnsatz[G, F <: PermutationAction[G] with Singleton](generators: Iterable[G])(implicit action: F): Seq[Int] = {
+  def baseAnsatz[G, A <: PermutationAction[G] with Singleton](generators: Iterable[G])(implicit action: A): Seq[Int] = {
     val base = mutable.ArrayBuffer.empty[Int]
     val it = iterator
     @tailrec def rec(remaining: Iterable[G]): Unit =

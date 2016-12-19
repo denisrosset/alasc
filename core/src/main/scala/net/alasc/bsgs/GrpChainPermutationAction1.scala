@@ -10,12 +10,13 @@ import spire.syntax.group._
 import spire.syntax.eq._
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
+import net.alasc.bsgs.MutableChain.Generic
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.{FaithfulPermRep, Perm}
 
-/** Algorithms for a group with a (family of) faithful permutation actions, of type A. */
-trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends GrpGroup[G] with GrpPermutationAction[G, A] {
+/** Algorithms for groups for which faithful permutation actions can be obtained. */
+abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G] {
 
   implicit def baseChange: BaseChange
   implicit def baseSwap: BaseSwap
@@ -26,27 +27,40 @@ trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends Gr
 
   import GrpChain.{commonAction, extractGrpChain, forceAction}
 
-  type GG = GrpChain[G, F] forSome { type F <: A with Singleton }
+  type GenericGC = GrpChain[G, _ <: PermutationAction[G] with Singleton]
+  type GC[A <: PermutationAction[G] with Singleton] = GrpChain[G, A]
 
   /** Returns a faithful permutation action for the group expressed by the given generators. */
-  def faithfulAction(generators: IndexedSeq[G]): A
+  def faithfulAction(generators: Iterable[G]): PermutationAction[G]
 
-  def trivial: GG = {
+  final class MyKernelBuilder(private[this] val generators: Iterable[G]) extends KernelBuilder[G] {
+
+    protected def makeMutableChain(): Generic[G] = {
+      val action = faithfulAction(generators)
+      MutableChain.empty[G, action.type](action)
+    }
+  }
+
+  def kernelBuilder(generators: Iterable[G]): KernelBuilder[G] = new MyKernelBuilder(generators)
+
+  /*
+  def trivial: GenericGC = {
     val action = faithfulAction(IndexedSeq.empty[G])
     implicit def ia: action.type = action
     new GrpChainExplicit[G, action.type](Term[G, action.type], Opt(IndexedSeq.empty[G]))
   }
 
-  def fromGenerators(generators: IndexedSeq[G], action: A, baseGuideOpt: Opt[BaseGuide]): GrpChain[G, action.type] = {
+  def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
-    val chain = BuildChain.fromGenerators[G, action.type](generators, baseGuideOpt)
-    new GrpChainExplicit[G, action.type](chain, Opt(generators))
+    val kernel = makeKernel(action)
+    val chain = BuildChain.fromGenerators[G, action.type](generators, kernel, baseGuideOpt)
+    new GrpChainExplicit[G, action.type](chain, Opt(generators), kernel.result(completeChain = true))
   }
 
-  def fromGenerators(generators: IndexedSeq[G], action: A): GrpChain[G, action.type] =
+  def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G]): GC[action.type] =
     fromGenerators(generators, action, Opt.empty[BaseGuide])
 
-  def fromGenerators(generators: IndexedSeq[G]): GG = {
+  def fromGenerators(generators: IndexedSeq[G]): GenericGC = {
     val action = faithfulAction(generators)
     fromGenerators(generators, action)
   }
@@ -54,42 +68,36 @@ trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends Gr
   // fromGeneratorsAndOrder
 
   def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong,
-                             action: A, baseGuideOpt: Opt[BaseGuide]): GrpChain[G, action.type] = {
+                             action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
-    val chain = BuildChain.fromGeneratorsAndOrder[G, action.type](generators, order, baseGuideOpt)
-    new GrpChainExplicit[G, action.type](chain, Opt(generators))
+    val kernel = makeKernel(action)
+    val chain = BuildChain.fromGeneratorsAndOrder[G, action.type](generators, order, kernel, baseGuideOpt)
+    new GrpChainExplicit[G, action.type](chain, Opt(generators), kernel.result(chain.order * kernel.order < order))
   }
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong, action: A): GrpChain[G, action.type] =
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong, action: PermutationAction[G]): GC[action.type] =
     fromGeneratorsAndOrder(generators, order, action, Opt.empty[BaseGuide])
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG = {
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GenericGC = {
     val action = faithfulAction(generators)
     fromGeneratorsAndOrder(generators, order, action)
   }
 
   // fromGrp
 
-  def compatibleAction(action: PermutationAction[G]): Opt[action.type <:< A]
-
-  def fromGrp(grp: Grp[G]): GG = grp match {
-    case gc: GrpChain[G, _] =>
-      val action = gc.action
-      compatibleAction(gc.action) match {
-        case Opt(sub) => grp.asInstanceOf[GG]
-        case _ => fromGeneratorsAndOrder(grp.generators, grp.order)
-      }
+  def fromGrp(grp: Grp[G]): GenericGC = grp match {
+    case gc: GrpChain[G, _] => grp.asInstanceOf[GenericGC]
     case _ => fromGeneratorsAndOrder(grp.generators, grp.order)
   }
 
-  def fromGrp(grp: Grp[G], action: A): GrpChain[G, action.type] = {
+  def fromGrp(grp: Grp[G], action: PermutationAction[G]): GC[action.type] = {
     extractGrpChain(grp, action) match {
       case Opt(gc) => gc
       case _ => fromGeneratorsAndOrder(grp.generators, grp.order, action)
     }
   }
 
-  def fromGrp(grp: Grp[G], action: A, baseGuideOpt: Opt[BaseGuide]): GrpChain[G, action.type] = baseGuideOpt match {
+  def fromGrp(grp: Grp[G], action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = baseGuideOpt match {
     case Opt(baseGuide) => extractGrpChain(grp, action) match {
       case Opt(gc) => gc.chainOpt match {
         case Opt(chain) if baseGuide.isSatisfiedBy(chain) => gc
@@ -103,21 +111,22 @@ trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends Gr
   /** Returns the given group as a BSGS chain using the given action; the given baseguide is used only
     * if the BSGS chain has to be fully recomputed.
     */
-  protected def fromGrpBaseHint(grp: Grp[G], action: A, baseGuideHintOpt: Opt[BaseGuide]): GrpChain[G, action.type] =
+  protected def fromGrpBaseHint(grp: Grp[G], action: PermutationAction[G], baseGuideHintOpt: Opt[BaseGuide]): GC[action.type] =
     extractGrpChain(grp, action) match {
       case Opt(gc) => gc
       case _ => fromGeneratorsAndOrder(grp.generators, grp.order, action, baseGuideHintOpt)
     }
 
-  override def conjugatedBy(grp: Grp[G], h: G): GG =
+  override def conjugatedBy(grp: Grp[G], h: G): GenericGC =
     if (grp.contains(h)) fromGrp(grp) else {
-      val action: A = faithfulAction(grp.generators :+ h)
+      val action: PermutationAction[G] = faithfulAction(grp.generators :+ h)
       implicit val ia: action.type = action
       extractGrpChain(grp, action) match {
         case Opt(conj: GrpChainConjugated[G, action.type]) =>
-          new GrpChainConjugated[G, action.type](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv,
-            Opt(conj.originalGenerators))
+          assert(conj.kernelOpt.isEmpty || conj.kernelOpt.get.isTrivial) // action is faithful
+          new GrpChainConjugated[G, action.type](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv, Opt(conj.originalGenerators))
         case Opt(cg: GrpChain[G, action.type]) =>
+          assert(cg.kernelOpt.isEmpty || cg.kernelOpt.get.isTrivial)
           new GrpChainConjugated[G, action.type](cg.chain, h, h.inverse, Opt(cg.generators))
         case _ =>
           val hInv = h.inverse
@@ -125,16 +134,27 @@ trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends Gr
       }
     }
 
-  def union(lhs: Grp[G], rhs: Grp[G]): GG =
+  def union(lhs: Grp[G], rhs: Grp[G]): GenericGC =
     if (rhs.order > lhs.order) union(rhs, lhs) // ensure that lhs.order >= rhs.order
     else if (lhs.hasSubgroup(rhs)) fromGrp(lhs)
     else commonAction(lhs, rhs) match {
-      case Opt(action) => fromGrp(GrpChain.union(forceAction(lhs, action), rhs.generators))
+      case Opt(action) =>
+        val lhs1 = forceAction(lhs, action)
+        val rhs1 = forceAction(rhs, action)
+        val newKernelOpt = lhs1.kernelOpt match {
+          case Opt(lk) => rhs1.kernelOpt match {
+            case Opt(rk) => Opt(union(lk, rk))
+            case _ => lhs1.kernelOpt
+          }
+          case _ => rhs1.kernelOpt
+        }
+        GrpChain.unionGivenKernel(lhs1, rhs.generators, newKernelOpt)
       case _ =>
         val action = faithfulAction(lhs.generators ++ rhs.generators)
-        GrpChain.union(fromGrp(lhs, action), rhs.generators)
-    }
+        GrpChain.unionComputeKernel(fromGrp(lhs, action), rhs.generators, makeKernel(action))
+    }*/
 
+  /*
   def intersect(lhs: Grp[G], rhs: Grp[G]): GG =
     if (rhs.order > lhs.order) intersect(rhs, lhs) // ensure lhs.order >= rhs.order
     else if (lhs.hasSubgroup(rhs)) fromGrp(rhs)
@@ -209,6 +229,6 @@ trait GrpChainFaithfulPermutationAction[G, A <: PermutationAction[G]] extends Gr
   def base(grp: Grp[G], action: A): Opt[Seq[Int]] = fromGrp(grp, action) match {
     case cj: GrpChainConjugated[G, action.type] => Opt(cj.originalChain.base.map(action.actr(_, cj.g)))
     case cg => Opt(cg.chain.base)
-  }
+  }*/
 
 }

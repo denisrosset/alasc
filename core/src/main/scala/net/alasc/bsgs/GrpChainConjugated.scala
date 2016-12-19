@@ -15,14 +15,10 @@ import net.alasc.perms.FaithfulPermRep
   * conjugated by g (with gInv == g.inverse).
   * The represented group is `H = gInv G g`.
   */
-final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
-  (val originalChain: Chain[G, F], val g: G, val gInv: G,
-   originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernelOpt: Opt[Grp[G]])
-  (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: F) extends GrpChain[G, F] {
-
-  def this(originalChain: Chain[G, F], g: G, gInv: G, originalGeneratorsOpt: Opt[IndexedSeq[G]])
-          (implicit classTag: ClassTag[G], group: Group[G], equ: Eq[G], action: F)
-  = this(originalChain, g, gInv, originalGeneratorsOpt, Opt.empty[Grp[G]])
+final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
+  (val originalChain: Chain[G, A], val g: G, val gInv: G,
+   originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
+  (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: A) extends GrpChain[G, A] {
 
   def originalGenerators = originalGeneratorsOpt match {
     case Opt(gen) => gen
@@ -31,18 +27,18 @@ final class GrpChainConjugated[G, F <: PermutationAction[G] with Singleton]
 
   def generators = originalGenerators.map(h => gInv |+| h |+| g)
 
-  private[this] var _chainOpt: Opt[Chain[G, F]] = Opt.empty[Chain[G, F]]
+  private[this] var _chainOpt: Opt[Chain[G, A]] = Opt.empty[Chain[G, A]]
 
   def chainOpt = _chainOpt
   def chain = _chainOpt match {
     case Opt(computed) => computed
     case _ =>
       val computed = originalChain match {
-        case node: Node[G, F] =>
-          val mut: MutableChain[G, F] = node.mutableChain
+        case node: Node[G, A] =>
+          val mut: MutableChain[G, A] = node.mutableChain
           mut.conjugate(g, gInv)
           mut.toChain()
-        case term: Term[G, F] => term
+        case term: Term[G, A] => term
       }
       _chainOpt = Opt(computed)
       computed

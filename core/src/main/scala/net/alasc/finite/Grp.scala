@@ -14,8 +14,6 @@ import net.alasc.perms.Perm
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
-import net.alasc.bsgs
-import net.alasc.bsgs.GrpChainFaithfulPermutationAction
 
 /** Finite group base class. */
 abstract class Grp[G] { lhs =>
@@ -66,7 +64,7 @@ abstract class Grp[G] { lhs =>
 
 }
 
-case class GrpTrivial[G](implicit val equ: Eq[G], val group: Group[G]) extends Grp[G] {
+case class GrpTrivial[G]()(implicit val equ: Eq[G], val group: Group[G]) extends Grp[G] {
 
   def iterator: Iterator[G] = Iterator(group.id)
 
@@ -95,7 +93,7 @@ object Grp {
   def apply[G:Eq:Group](generators: G*)(implicit ev: GrpGroup[G]): Grp[G] =
     ev.fromGenerators(generators.filterNot(_.isId).toIndexedSeq)
 
-  def trivial[G](implicit builder: GrpGroup[G]): Grp[G] = builder.trivial
+  def trivial[G:Eq:Group]: Grp[G] = GrpTrivial[G]()
 
   def fromGenerators[G](generators: IndexedSeq[G])(implicit ev: GrpGroup[G]): Grp[G] =
     ev.fromGenerators(generators)
@@ -111,7 +109,7 @@ object Grp {
 
 final class GrpLattice[G](implicit val builder: GrpGroup[G]) extends Lattice[Grp[G]] with BoundedJoinSemilattice[Grp[G]] {
 
-  def zero = Grp.trivial[G]
+  def zero = builder.trivial
 
   def join(x: Grp[G], y: Grp[G]) = x union y
 

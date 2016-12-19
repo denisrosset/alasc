@@ -17,9 +17,9 @@ import spire.syntax.group._
   * @note Straight-forward implementation of PRINITIALIZE and PRRANDOM of 
   *       section 3.2.2, pp. 70-71 of Holt
   */
-class RandomBag[G:Group] private (private var x0: G, private var x: ArraySeq[G]) {
+class RandomBag[G:Group] private (private var x0: G, private var x: ArraySeq[G]) extends Function1[Random, G] {
 
-  def randomElement(rand: Random) = {
+  def apply(rand: Random): G = {
     val r = x.length
     val s = rand.nextInt(r)
     @tailrec def genNotS: Int = {
@@ -59,7 +59,7 @@ object RandomBag {
     else
       Iterator.continually(xiterable).flatMap(identity).take(r).to[ArraySeq]
     val bag = new RandomBag(algebra.id, x)
-    for (i <- 0 until n) bag.randomElement(rand)
+    for (i <- 0 until n) bag(rand)
     bag
   }
 

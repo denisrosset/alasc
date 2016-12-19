@@ -9,7 +9,7 @@ import spire.util.Opt
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite._
 import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
-
+/*
 trait GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G, PermutationAction[G]] {
 
   import GrpChain.{commonAction, extractGrpChain, forceAction}
@@ -21,7 +21,7 @@ trait GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction
   implicit def group: Group[G]
   implicit def schreierSims: SchreierSims
 
-}
+}*/
 /*
 
 final class GrpChainPermutationAction[G]

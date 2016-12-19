@@ -17,7 +17,7 @@ import net.alasc.algebra._
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.util._
-
+/*
 final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
@@ -29,7 +29,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   val n = seq.length
 
   val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
-    BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideLex(n)))
+    BuildChain.withBase[G, F](grp.chain, BaseGuideLex(n))
 
   val arrayMaxInt = {
     var res = 0
@@ -372,3 +372,4 @@ object Representatives {
   }
 
 }
+*/

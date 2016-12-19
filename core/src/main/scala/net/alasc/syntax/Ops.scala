@@ -3,7 +3,9 @@ package syntax
 
 import scala.language.experimental.macros
 
+import spire.algebra.Group
 import spire.macros.Ops
+import spire.math.SafeLong
 
 import net.alasc.algebra._
 import net.alasc.perms.Perm
@@ -17,23 +19,31 @@ final class CheckOps[A](lhs: A)(implicit ev: Check[A]) {
 
 final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
+  def movesAnyPoint(): Boolean = macro Ops.unop[Boolean]
+
+  def sameActionAs(rhs: A)(implicit ev1: Group[A]): Boolean = ev.sameActionAs(lhs, rhs)(ev1) // TODO: add macro
+
   def movesPoint(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
 
-  def movedPoints(): Set[Int] = macro Ops.unop[Set[Int]]
-
   def nMovedPoints(): Int = macro Ops.unop[Int]
+
+  def movedPoints(): Set[Int] = macro Ops.unop[Set[Int]]
 
   def largestMovedPoint(): NNOption = macro Ops.unop[NNOption]
 
   def smallestMovedPoint(): NNOption = macro Ops.unop[NNOption]
 
-  def findMovedPoint(): NNOption = macro Ops.unop[NNOption]
+  def movedPointsUpperBound(): NNOption = macro Ops.unop[NNOption]
 
-  def orbit(rhs: Int): Set[Int] = macro Ops.binop[Int, Set[Int]]
+  def findMovedPoint(): NNOption = macro Ops.unop[NNOption]
 
   def signPerm(): Int = macro Ops.unop[Int]
 
   def cycleStructure(): Map[Int, Int] = macro Ops.unop[Map[Int, Int]]
+
+  def permutationOrder(): SafeLong = macro Ops.unop[SafeLong]
+
+  def orbit(rhs: Int): Set[Int] = macro Ops.binop[Int, Set[Int]]
 
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 

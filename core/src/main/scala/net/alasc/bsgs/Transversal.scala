@@ -11,7 +11,7 @@ import metal.syntax._
 import net.alasc.algebra._
 
 /** Contains information about a transversal in a BSGS chain. */  
-trait Transversal[G, F <: PermutationAction[G] with Singleton] extends net.alasc.finite.Transversal[G] {
+trait Transversal[G, A <: PermutationAction[G] with Singleton] extends net.alasc.finite.Transversal[G] {
 
   def beta: Int
 
@@ -62,13 +62,13 @@ trait Transversal[G, F <: PermutationAction[G] with Singleton] extends net.alasc
 
 object Transversal {
 
-  def empty[G:Group, F <: PermutationAction[G] with Singleton](beta: Int): Transversal[G, F] =
-    new EmptyTransversal[G, F](beta)
+  def empty[G:Group, A <: PermutationAction[G] with Singleton](beta: Int): Transversal[G, A] =
+    new EmptyTransversal[G, A](beta)
 
 }
 
-case class ConjugatedTransversal[G:Group, F <: PermutationAction[G] with Singleton]
-  (originalTransversal: Transversal[G, F], g: G, gInv: G)(implicit action: F) extends Transversal[G, F] {
+case class ConjugatedTransversal[G:Group, A <: PermutationAction[G] with Singleton]
+  (originalTransversal: Transversal[G, A], g: G, gInv: G)(implicit action: A) extends Transversal[G, A] {
 
   def elements = originalTransversal.elements.map(u => gInv |+| u |+| g)
   def elementFor(h: G) = gInv |+| originalTransversal.elementFor(g |+| h |+| gInv) |+| g
@@ -84,8 +84,8 @@ case class ConjugatedTransversal[G:Group, F <: PermutationAction[G] with Singlet
 
 }
 
-class EmptyTransversal[G:Group, F <: PermutationAction[G] with Singleton](val beta: Int)
-  extends Transversal[G, F] {
+class EmptyTransversal[G:Group, A <: PermutationAction[G] with Singleton](val beta: Int)
+  extends Transversal[G, A] {
 
   def elements = Iterable(Group[G].id)
   def elementFor(g: G) = Group[G].id

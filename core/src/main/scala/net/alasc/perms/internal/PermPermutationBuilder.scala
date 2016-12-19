@@ -8,6 +8,8 @@ import net.alasc.util._
 
 final class PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm] {
 
+  def isFaithful = true
+
   def eqv(x: Perm, y: Perm): Boolean = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => lhs16.encoding == rhs16.encoding

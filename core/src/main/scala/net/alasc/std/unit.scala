@@ -4,6 +4,7 @@ import net.alasc.algebra._
 import net.alasc.util._
 
 final class UnitPermutationAction extends PermutationAction[Unit] {
+  def isFaithful = true
   def actl(g: Unit, p: Int): Int = p
   override def actr(p: Int, g: Unit): Int = p
   override def movedPoints(g: Unit): Set[Int] = Set.empty[Int]

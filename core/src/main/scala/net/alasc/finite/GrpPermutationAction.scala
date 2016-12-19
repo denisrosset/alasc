@@ -13,17 +13,17 @@ import net.alasc.util.{NNNone, NNOption}
 import metal.syntax._
 
 /** Group methods that depend on a PermutationAction. */
-trait GrpPermutationAction[G, A <: PermutationAction[G]] extends GrpAction[G, Int, A] {
+trait GrpPermutationAction[G] extends GrpAction[G, Int, PermutationAction[G]] {
 
-  def lexElements(grp: Grp[G], action: A): Opt[BigIndexedSeq[G]]
+  def lexElements(grp: Grp[G], action: PermutationAction[G]): Opt[BigIndexedSeq[G]]
 
-  def fixingPartition(grp: Grp[G], action: A, partition: Partition): Grp[G]
+  def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): Grp[G]
 
-  def base(grp: Grp[G], action: A): Opt[Seq[Int]]
+  def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]]
 
-  def subgroupFor(grp: Grp[G], action: A, backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): Grp[G]
+  def subgroupFor(grp: Grp[G], action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): Grp[G]
 
-  def toPerm(grp: Grp[G], action: A)(implicit builder: GrpGroup[Perm]): Grp[Perm]
+  def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: GrpGroup[Perm]): Grp[Perm]
 
 }
 
@@ -104,42 +104,42 @@ object GrpPermutationAction {
 class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
   /** Find the kernel of the given action, as a normal subgroup of this group. */
-  def kernel[A <: PermutationAction[G]](action: A)(implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def kernel(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.kernel(lhs, action)
 
   /** Sequence of the group elements, ordered lexicographically by their images.
     * Returns a value only if the action is faithful. */
-  def lexElements[A <: PermutationAction[G]](action: A)(implicit algos: GrpPermutationAction[G, A]): BigIndexedSeq[G]
+  def lexElements(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): BigIndexedSeq[G]
   = algos.lexElements(lhs, action).get
 
   /** Returns the subgroup that fixes the given partition under the given action. */
-  def fixingPartition[A <: PermutationAction[G]](action: A, partition: Partition)(implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def fixingPartition(action: PermutationAction[G], partition: Partition)(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.fixingPartition(lhs, action, partition)
 
   /** Returns the subgroup that stabilizes `b` by the given action. */
-  def stabilizer[A <: PermutationAction[G]](action: A, b: Int)(implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def stabilizer(action: PermutationAction[G], b: Int)(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.stabilizer(lhs, action, b)
 
   /** If the action of this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */
-  def someStabilizerTransversal[A <: PermutationAction[G]](action: A)(implicit algos: GrpPermutationAction[G, A]): Opt[(Grp[G], Transversal[G])]
+  def someStabilizerTransversal(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): Opt[(Grp[G], Transversal[G])]
   = algos.someStabilizerTransversal(lhs, action)
 
   /** Returns the subgroup that stabilizes `b` under the given action and the associated transversal. */
-  def stabilizerTransversal[A <: PermutationAction[G]](action: A, b: Int)(implicit algos: GrpPermutationAction[G, A]): (Grp[G], Transversal[G])
+  def stabilizerTransversal(action: PermutationAction[G], b: Int)(implicit algos: GrpPermutationAction[G]): (Grp[G], Transversal[G])
   = algos.stabilizerTransversal(lhs, action, b)
 
-  def pointwiseStabilizer[A <: PermutationAction[G]](action: A, set: Set[Int])(implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def pointwiseStabilizer(action: PermutationAction[G], set: Set[Int])(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.pointwiseStabilizer(lhs, action, set)
 
-  def pointwiseStabilizer[A <: PermutationAction[G]](action: A, points: Int*)(implicit algos: GrpPermutationAction[G, A]): Grp[G] =
+  def pointwiseStabilizer(action: PermutationAction[G], points: Int*)(implicit algos: GrpPermutationAction[G]): Grp[G] =
     pointwiseStabilizer(action, scala.collection.immutable.BitSet(points: _*))
 
-  def setwiseStabilizer[A <: PermutationAction[G]](action: A, set: Set[Int])(implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def setwiseStabilizer(action: PermutationAction[G], set: Set[Int])(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.setwiseStabilizer(lhs, action, set)
 
-  def setwiseStabilizer[A <: PermutationAction[G]](action: A, points: Int *)(implicit algos: GrpPermutationAction[G, A]): Grp[G] =
+  def setwiseStabilizer(action: PermutationAction[G], points: Int *)(implicit algos: GrpPermutationAction[G]): Grp[G] =
     setwiseStabilizer(action, scala.collection.immutable.BitSet(points: _*))
 
   /*
@@ -161,18 +161,18 @@ class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
     * @param predicate Tests if an element is member of the subgroup
     * @return the subgroup satisfying `predicate`
     */
-  def subgroupFor[A <: PermutationAction[G]](action: A, backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
-                                            (implicit algos: GrpPermutationAction[G, A]): Grp[G]
+  def subgroupFor(action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
+                                            (implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.subgroupFor(lhs, action, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
     * the identity fixes all the points in the sequence.
     * Returns a value if and only if the action is faithful.
     */
-  def base[A <: PermutationAction[G]](action: A)(implicit algos: GrpPermutationAction[G, A]): Opt[Seq[Int]]
+  def base(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): Opt[Seq[Int]]
   = algos.base(lhs, action)
 
-  def toPerm[A <: PermutationAction[G]](action: A)(implicit algosG: GrpPermutationAction[G, A], builder: GrpGroup[Perm]): Grp[Perm]
+  def toPerm(action: PermutationAction[G])(implicit algosG: GrpPermutationAction[G], builder: GrpGroup[Perm]): Grp[Perm]
   = algosG.toPerm(lhs, action)
 
   /** Return the smallest element of the domain moved by this group under the given action, or [[NNNone]]. */
@@ -202,39 +202,37 @@ class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
 class GrpPermSyntax(val lhs: Grp[Perm]) extends AnyVal {
 
-  type A = GrpPermutationAction[Perm, Perm.algebra.type]
-
   /** Sequence of the group elements, ordered lexicographically by their images. */
-  def lexElements(implicit algos: A): BigIndexedSeq[Perm] = algos.lexElements(lhs, Perm.algebra).get
+  def lexElements(implicit ev: GrpPermutationAction[Perm]): BigIndexedSeq[Perm] = ev.lexElements(lhs, Perm.algebra).get
 
   /** Returns the subgroup that fixes the given partition. */
-  def fixingPartition(partition: Partition)(implicit algos: A): Grp[Perm] =
-    algos.fixingPartition(lhs, Perm.algebra, partition)
+  def fixingPartition(partition: Partition)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.fixingPartition(lhs, Perm.algebra, partition)
 
   /** Returns the subgroup that stabilizes `b`. */
-  def stabilizer(b: Int)(implicit algos: A): Grp[Perm] =
-    algos.stabilizer(lhs, Perm.algebra, b)
+  def stabilizer(b: Int)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.stabilizer(lhs, Perm.algebra, b)
 
   /** If this group is trivial, returns Opt.empty, otherwise, returns a subgroup that stabilizes some point,
     * and the associated transversal.
     */
-  def someStabilizerTransversal(implicit algos: A): Opt[(Grp[Perm], Transversal[Perm])] =
-    algos.someStabilizerTransversal(lhs, Perm.algebra)
+  def someStabilizerTransversal(implicit ev: GrpPermutationAction[Perm]): Opt[(Grp[Perm], Transversal[Perm])] =
+    ev.someStabilizerTransversal(lhs, Perm.algebra)
 
   /** Returns the subgroup that stabilizes `b` and the associated transversal. */
-  def stabilizerTransversal(b: Int)(implicit algos: A): (Grp[Perm], Transversal[Perm]) =
-    algos.stabilizerTransversal(lhs, Perm.algebra, b)
+  def stabilizerTransversal(b: Int)(implicit ev: GrpPermutationAction[Perm]): (Grp[Perm], Transversal[Perm]) =
+    ev.stabilizerTransversal(lhs, Perm.algebra, b)
 
-  def pointwiseStabilizer(set: Set[Int])(implicit algos: A): Grp[Perm] =
-    algos.pointwiseStabilizer(lhs, Perm.algebra, set)
+  def pointwiseStabilizer(set: Set[Int])(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.pointwiseStabilizer(lhs, Perm.algebra, set)
 
-  def pointwiseStabilizer(points: Int*)(implicit algos: A): Grp[Perm] =
+  def pointwiseStabilizer(points: Int*)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
     pointwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
-  def setwiseStabilizer(set: Set[Int])(implicit algos: A): Grp[Perm] =
-    algos.setwiseStabilizer(lhs, Perm.algebra, set)
+  def setwiseStabilizer(set: Set[Int])(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.setwiseStabilizer(lhs, Perm.algebra, set)
 
-  def setwiseStabilizer(points: Int *)(implicit algos: A): Grp[Perm] =
+  def setwiseStabilizer(points: Int *)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
     setwiseStabilizer(scala.collection.immutable.BitSet(points: _*))
 
   /** Returns the subgroup for which `predicate` is satisfied; the test `backtrackTest` is used to
@@ -246,13 +244,13 @@ class GrpPermSyntax(val lhs: Grp[Perm]) extends AnyVal {
     * @return the subgroup satisfying `predicate`
     */
   def subgroupFor(backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean)
-                 (implicit algos: A): Grp[Perm] =
-    algos.subgroupFor(lhs, Perm.algebra, backtrackTest, predicate)
+                 (implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.subgroupFor(lhs, Perm.algebra, backtrackTest, predicate)
 
   /** Returns a sequence of domain elements such that no element of this group apart from
     * the identity fixes all the points in the sequence.
     */
-  def base(implicit algos: A): Seq[Int] = algos.base(lhs, Perm.algebra).get
+  def base(implicit ev: GrpPermutationAction[Perm]): Seq[Int] = ev.base(lhs, Perm.algebra).get
 
   /** Return the smallest element of the domain moved by this group, or [[NNNone]]. */
   def smallestMovedPoint: NNOption = GrpPermutationAction.smallestMovedPoint(lhs)

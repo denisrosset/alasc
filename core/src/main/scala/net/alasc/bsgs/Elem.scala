@@ -13,40 +13,40 @@ import net.alasc.algebra._
 
 /** Generic element to describe BSGS data.
   * @tparam G Group element type
-  * @tparam F Faithful permutation action for `G`
+  * @tparam A Permutation action for `G`
   *  */
-sealed trait Elem[G, F <: PermutationAction[G] with Singleton]
+sealed trait Elem[G, A <: PermutationAction[G] with Singleton]
 
-sealed trait StartOrNode[G, F <: PermutationAction[G] with Singleton] extends Elem[G, F] {
+sealed trait StartOrNode[G, A <: PermutationAction[G] with Singleton] extends Elem[G, A] {
 
-  implicit def action: F
+  implicit def action: A
 
   /** Next element in this BSGS chain. */
-  def next: Chain[G, F]
+  def next: Chain[G, A]
 
 }
 
-sealed trait MutableStartOrNode[G, F <: PermutationAction[G] with Singleton] extends StartOrNode[G, F] {
+sealed trait MutableStartOrNode[G, A <: PermutationAction[G] with Singleton] extends StartOrNode[G, A] {
 
-  protected[bsgs] def next_= (value: Chain[G, F]): Unit
+  protected[bsgs] def next_= (value: Chain[G, A]): Unit
 
 }
 
-final class Start[G, F <: PermutationAction[G] with Singleton](var next: Chain[G, F])
-                                                       (implicit val action: F) extends MutableStartOrNode[G, F] {
+final class Start[G, A <: PermutationAction[G] with Singleton](var next: Chain[G, A])
+                                                       (implicit val action: A) extends MutableStartOrNode[G, A] {
   /** Pretty prints the builder, while doing basic chain consistency checks. */
   override def toString = {
     import scala.collection.mutable.StringBuilder
     var sb = new StringBuilder
     sb ++= "()"
-    @tailrec def rec(chain: Chain[G, F]): Unit = chain match {
+    @tailrec def rec(chain: Chain[G, A]): Unit = chain match {
       case IsMutableNode(mn) =>
         sb ++= s" <-> ${mn.beta}(${mn.orbitSize})"
         rec(mn.next)
-      case node: Node[G, F] =>
+      case node: Node[G, A] =>
         sb ++= s" -> ${node.beta}(${node.orbitSize})"
         rec(node.next)
-      case _: Term[G, F] =>
+      case _: Term[G, A] =>
         sb ++= " -> ()"
     }
     rec(next)
@@ -58,7 +58,7 @@ final class Start[G, F <: PermutationAction[G] with Singleton](var next: Chain[G
 /** Base class for elements in a BSGS chain, i.e. nodes or terminal elements, implementing
   * the chain as a single-linked list, with a double-linked list for mutable elements.
   */
-sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, F] {
+sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, A] {
   chain =>
 
   override def toString = nodesIterator.map { node => s"${node.beta}(${node.orbitSize})" }.mkString(" -> ")
@@ -76,11 +76,11 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
   def isTrivial: Boolean = ChainRec.isTrivial(chain)
 
   /** Iterator through the nodes of this chain, including the current one if applicable. */
-  def nodesIterator: Iterator[Node[G, F]] = new Iterator[Node[G, F]] {
-    private var cursor: Chain[G, F] = chain
+  def nodesIterator: Iterator[Node[G, A]] = new Iterator[Node[G, A]] {
+    private var cursor: Chain[G, A] = chain
     def hasNext = !cursor.isTerminal
     def next = cursor match {
-      case node: Node[G, F] =>
+      case node: Node[G, A] =>
         cursor = node.next
         node
       case _ => Iterator.empty.next
@@ -88,8 +88,8 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
   }
 
   /** Maps the function `f` is this chain element is a node, or returns the default value. */
-  def mapOrElse[A](f: Node[G, F] => A, default: => A): A = chain match {
-    case node: Node[G, F] => f(node)
+  def mapOrElse[B](f: Node[G, A] => B, default: => B): B = chain match {
+    case node: Node[G, A] => f(node)
     case _ => default
   }
 
@@ -125,10 +125,10 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
   def basicSift(g: G)(implicit group: Group[G], equ: Eq[G]): (Seq[Int], G) = ChainRec.basicSift(chain, g)
 
   def siftOther[Q:Eq:Group:PermutationAction](q: Q)(implicit group: Group[G], equ: Eq[G]): Opt[G] = chain match {
-    case node: Node[G, F] =>
-      implicit def action: F = node.action
+    case node: Node[G, A] =>
+      implicit def action: A = node.action
       ChainRec.siftOther(chain, group.id, q)
-    case _: Term[G, F] => if (q.isId) Opt(group.id) else Opt.empty
+    case _: Term[G, A] => if (q.isId) Opt(group.id) else Opt.empty
   }
 
   def sifts(g: G)(implicit group: Group[G], equ: Eq[G]): Boolean = ChainRec.sifts(chain, g)
@@ -137,16 +137,19 @@ sealed trait Chain[G, F <: PermutationAction[G] with Singleton] extends Elem[G, 
     * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with
     * base point `beta`.
     */
-  def detach(beta: => Int)(implicit group: Group[G]): (Chain[G, F], Transversal[G, F]) = chain match {
-    case node: Node[G, F] => (node.next, node)
-    case term: Term[G, F] => (term, Transversal.empty(beta))
+  def detach(beta: => Int)(implicit group: Group[G]): (Chain[G, A], Transversal[G, A]) = chain match {
+    case node: Node[G, A] => (node.next, node)
+    case term: Term[G, A] => (term, Transversal.empty(beta))
   }
+
 }
 
 object Chain {
 
-  implicit def ChainCheck[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]: Check[Chain[G, F]] =
-    new ChainCheck[G, F]
+  type Generic[G] = Chain[G, _ <: PermutationAction[G] with Singleton]
+
+  implicit def ChainCheck[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]: Check[Chain[G, A]] =
+    new ChainCheck[G, A]
 
 }
 
@@ -163,16 +166,16 @@ object Chain {
   * The set of strong generators is represented by storing with each node only the strong generators that stabilize
   * the previous base points, but not the current base point.
   */
-trait Node[G, F <: PermutationAction[G] with Singleton]
-  extends Chain[G, F] with StartOrNode[G, F] with Transversal[G, F] {
+trait Node[G, A <: PermutationAction[G] with Singleton]
+  extends Chain[G, A] with StartOrNode[G, A] with Transversal[G, A] {
   node =>
   /** Permutation action for the type `P`. */
-  implicit def action: F
+  implicit def action: A
 
   def isTerminal = false
   def isStandalone: Boolean
 
-  def next: Chain[G, F]
+  def next: Chain[G, A]
   def beta: Int
 
   /** If the base is beta(1) -> ... -> beta(m-1) -> beta(m) current base -> tail.beta,
@@ -206,20 +209,22 @@ trait Node[G, F <: PermutationAction[G] with Singleton]
 
 object Node {
 
-  def trivial[G:ClassTag:Group, F <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, F] = Term[G, F])
-                                                                         (implicit action: F): Node[G, F] =
-    new TrivialNode[G, F](beta, next)
+  type Generic[G] = Node[G, _ <: PermutationAction[G] with Singleton]
+
+  def trivial[G:ClassTag:Group, A <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, A] = Term[G, A])
+                                                                         (implicit action: A): Node[G, A] =
+    new TrivialNode[G, A](beta, next)
 
   /** Extractor for `Node` from `Elem`. */
-  def unapply[G, F <: PermutationAction[G] with Singleton](elem: Elem[G, F]): Option[Node[G, F]] = elem match {
-    case node: Node[G, F] => Some(node)
+  def unapply[G, A <: PermutationAction[G] with Singleton](elem: Elem[G, A]): Option[Node[G, A]] = elem match {
+    case node: Node[G, A] => Some(node)
     case _ => None
   }
 
 }
 
 /** Represents the end of a BSGS chain, or, when viewed as a group, the trivial group (). */
-class Term[G, F <: PermutationAction[G] with Singleton] extends Chain[G, F] {
+class Term[G, A <: PermutationAction[G] with Singleton] extends Chain[G, A] {
 
   def isTerminal = true
   def isImmutable = true
@@ -233,13 +238,17 @@ class Term[G, F <: PermutationAction[G] with Singleton] extends Chain[G, F] {
 
 object Term {
 
+  type Generic[G] = Term[G, _ <: PermutationAction[G] with Singleton]
+
   val instance = new Term[Nothing, Null]
-  def apply[G, F <: PermutationAction[G] with Singleton] = instance.asInstanceOf[Term[G, F]]
+  def apply[G, A <: PermutationAction[G] with Singleton] = instance.asInstanceOf[Term[G, A]]
+
+  def generic[G]: Generic[G] = instance.asInstanceOf[Term.Generic[G]]
 
 }
 
-trait MutableNode[G, F <: PermutationAction[G] with Singleton]
-  extends Node[G, F] with MutableStartOrNode[G, F] {
+trait MutableNode[G, A <: PermutationAction[G] with Singleton]
+  extends Node[G, A] with MutableStartOrNode[G, A] {
 
   override def toString = if (isStandalone) s"Node ($beta) orbit $orbit" else super.toString
 
@@ -247,8 +256,8 @@ trait MutableNode[G, F <: PermutationAction[G] with Singleton]
   def isStandalone = (prev eq null) && (next eq null)
   def isMutable = (prev ne null)
 
-  def prev: MutableStartOrNode[G, F]
-  protected[bsgs] def prev_= (value: MutableStartOrNode[G, F]): Unit
+  def prev: MutableStartOrNode[G, A]
+  protected[bsgs] def prev_= (value: MutableStartOrNode[G, A]): Unit
 
   /** Makes the current node immutable. */
   protected[bsgs] def makeImmutable(): Unit = {
@@ -282,5 +291,11 @@ trait MutableNode[G, F <: PermutationAction[G] with Singleton]
     */
   protected[bsgs] def conjugate(g: G, gInv: G)
                                (implicit group: Group[G], classTag: ClassTag[G]): Unit
+
+}
+
+object MutableNode {
+
+  type Generic[G] = MutableNode[G, _ <: PermutationAction[G] with Singleton]
 
 }

@@ -8,8 +8,8 @@ import spire.util.Opt
 import net.alasc.algebra.PermutationAction
 import net.alasc.domains.Partition
 
-case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
-  (partition: Partition)(implicit val action: F) extends SubgroupDefinition[G, F] {
+case class FixingPartition[G:Group, A <: PermutationAction[G] with Singleton]
+  (partition: Partition)(implicit val action: A) extends SubgroupDefinition[G, A] {
 
   val n = partition.size
 
@@ -18,9 +18,9 @@ case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
   def baseGuideOpt = Opt(BaseGuidePartition(partition))
 
     // TODO: change pointSetsToTest to bitsets
-  class Test(level: Int, pointSetsToTest: Array[Array[Int]]) extends SubgroupTest[G, F] {
+  class Test(level: Int, pointSetsToTest: Array[Array[Int]]) extends SubgroupTest[G, A] {
 
-    def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, F]): Opt[Test] = {
+    def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, A]): Opt[Test] = {
       val pointSet = pointSetsToTest(level)
       if (partition.representative(pointSet(0)) != partition.representative(orbitImage))
         return Opt.empty[Test]
@@ -38,7 +38,7 @@ case class FixingPartition[G:Group, F <: PermutationAction[G] with Singleton]
     }
   }
 
-  def firstLevelTest(guidedChain: Chain[G, F]): Test = {
+  def firstLevelTest(guidedChain: Chain[G, A]): Test = {
     val pointSetsToTest: Array[Array[Int]] =
       SubgroupSearch.basePointGroups(guidedChain, n)
     new Test(0, pointSetsToTest)

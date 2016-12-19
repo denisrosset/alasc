@@ -21,8 +21,8 @@ abstract class BaseSwap {
     * 
     * @return the two swapped mutable nodes.
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F]
+  def baseSwap[G:ClassTag:Group, A <: PermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, A], node1: MutableNode[G, A], node2: MutableNode[G, A]): MutableNodeAndNext[G, A]
 
 
 }
@@ -39,9 +39,9 @@ final class BaseSwapDeterministic extends BaseSwap {
     * See also http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf 
     * for an alternate implementation.
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
-    implicit def action: F = mutableChain.start.action
+  def baseSwap[G:ClassTag:Group, A <: PermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, A], node1: MutableNode[G, A], node2: MutableNode[G, A]): MutableNodeAndNext[G, A] = {
+    implicit def action: A = mutableChain.start.action
     val gammaSet = metal.mutable.FixedBitSet.fromIterable(node1.orbit)
     var gamma = -1
     val mutableOrbit = MutableOrbit.empty
@@ -88,8 +88,8 @@ final class BaseSwapRandom(val random: Random) extends BaseSwap {
     * Based on algorithm 2.8 of 
     * http://www.math.uni-rostock.de/~rehn/docs/diploma-thesis-cs-rehn.pdf .
     */
-  def baseSwap[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (mutableChain: MutableChain[G, F], node1: MutableNode[G, F], node2: MutableNode[G, F]): MutableNodeAndNext[G, F] = {
+  def baseSwap[G:ClassTag:Group, A <: PermutationAction[G] with Singleton]
+    (mutableChain: MutableChain[G, A], node1: MutableNode[G, A], node2: MutableNode[G, A]): MutableNodeAndNext[G, A] = {
     implicit def action: PermutationAction[G] = mutableChain.start.action
     val node2next = node2.next
     val (newNode1, newNode2, sizeGoal2) = mutableChain.prepareSwap(node1.prev, node1, node2, node2.next)
