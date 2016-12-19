@@ -52,9 +52,9 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
 
   def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
-    val kernel = makeKernel(action)
-    val chain = BuildChain.fromGenerators[G, action.type](generators, kernel, baseGuideOpt)
-    new GrpChainExplicit[G, action.type](chain, Opt(generators), kernel.result(completeChain = true))
+    val kb = makeKernel(action)
+    val chain = BuildChain.fromGenerators[G, action.type](generators, kb, baseGuideOpt)
+    new GrpChainExplicit[G, action.type](chain, Opt(generators), kb.result(completeChain = true))
   }
 
   def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G]): GC[action.type] =
@@ -70,9 +70,9 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
   def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong,
                              action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
-    val kernel = makeKernel(action)
-    val chain = BuildChain.fromGeneratorsAndOrder[G, action.type](generators, order, kernel, baseGuideOpt)
-    new GrpChainExplicit[G, action.type](chain, Opt(generators), kernel.result(chain.order * kernel.order < order))
+    val kb = makeKernel(action)
+    val chain = BuildChain.fromGeneratorsAndOrder[G, action.type](generators, order, kb, baseGuideOpt)
+    new GrpChainExplicit[G, action.type](chain, Opt(generators), kb.result(chain.order * kb.order < order))
   }
 
   def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong, action: PermutationAction[G]): GC[action.type] =

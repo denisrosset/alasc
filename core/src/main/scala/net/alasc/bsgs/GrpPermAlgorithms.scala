@@ -24,7 +24,7 @@ class GrpPermAlgorithms(implicit val baseChange: BaseChange, val baseSwap: BaseS
   else
     Opt.empty[<:<[action.type, Perm.algebra.type]]
 
-  def kernel(grp: Grp[Perm], action: algebra.type): Grp[Perm] = trivial
+  def kb(grp: Grp[Perm], action: algebra.type): Grp[Perm] = trivial
 
   def smallGeneratingSet(grp: Grp[Perm]): IndexedSeq[Perm] = grp.generators // TODO: implement
 

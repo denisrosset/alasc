@@ -5,6 +5,7 @@ import scala.util.Random
 
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
+import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
@@ -19,15 +20,37 @@ final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
 
   def generators = generatorsOpt match {
     case Opt(g) => g
-    case _ => chain.strongGeneratingSet
+    case _ => kernel match {
+      case _: Term[_, _] => chain.strongGeneratingSet
+      case _: Node[G, _] => chain.strongGeneratingSet ++ kernel.strongGeneratingSet
+    }
   }
 
-  def iterator = chain.elementsIterator
+  def iterator = kernel match {
+    case _: Term[_, _] => chain.elementsIterator
+    case _: Node[G, _] =>
+      for (g <- chain.elementsIterator; k <- kernel.elementsIterator) yield g |+| k
+  }
 
-  def contains(g: G) = chain.sifts(g)
+  def contains(g: G) = kernel match {
+    case _: Term[_, _] => chain.sift(g) match {
+      case Opt(sifted) => sifted.isId
+      case _ => false
+    }
+    case _: Node[G, _] => chain.sift(g) match {
+      case Opt(sifted) => kernel.sift(sifted) match {
+        case Opt(kernelSifted) => kernelSifted.isId
+        case _ => false
+      }
+      case _ => false
+    }
+  }
 
-  def order: SafeLong = chain.order
+  def order: SafeLong = chain.order * kernel.order
 
-  def randomElement(random: Random): G = chain.randomElement(random)
+  def randomElement(random: Random): G = kernel match {
+    case _: Term[_, _] => chain.randomElement(random)
+    case _: Node[G, _] => chain.randomElement(random) |+| kernel.randomElement(random)
+  }
 
 }

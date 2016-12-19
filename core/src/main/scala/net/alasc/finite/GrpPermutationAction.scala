@@ -103,7 +103,7 @@ object GrpPermutationAction {
 
 class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
-  /** Find the kernel of the given action, as a normal subgroup of this group. */
+  /** Find the kb of the given action, as a normal subgroup of this group. */
   def kernel(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.kernel(lhs, action)
 

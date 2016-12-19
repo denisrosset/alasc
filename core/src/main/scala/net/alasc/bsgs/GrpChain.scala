@@ -19,7 +19,7 @@ import net.alasc.perms.{FaithfulPermRep, MutableOrbit}
 /** Group described a BSGS chain of elements of type G using the permutation action F.
   *
   * If the action is faithful for the current group, then the group is fully described by the chain and kernelOpt is empty.
-  * If the action is not faithful, then kernel contains the nontrivial kernel normal subgroup K,
+  * If the action is not faithful, then kb contains the nontrivial kb normal subgroup K,
   * and the chain describes the quotient Group/K.
   *
   */
@@ -62,25 +62,25 @@ object GrpChain {
   /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
     * It is required that the permutation action `F` can describe the `rhs` generators.
     *
-    * The kernel is also computed using Schreier-Sims algorithm.
+    * The kb is also computed using Schreier-Sims algorithm.
     */
   def unionComputeKernel[G, F <: PermutationAction[G] with Singleton]
-  (lhs: GrpChain[G, F], rhs: Iterable[G], kernel: KernelBuilder[G])(implicit schreierSims: SchreierSims): GrpChain[G, F] = {
+  (lhs: GrpChain[G, F], rhs: Iterable[G], kb: KernelBuilder[G])(implicit schreierSims: SchreierSims): GrpChain[G, F] = {
     import lhs.{action, classTag, equ, group}
     val mutableChain = lhs.chain.mutableChain
     val newGenerators = rhs.filterNot(mutableChain.start.next.sifts)
     mutableChain.insertGenerators(newGenerators)
-    schreierSims.completeStrongGenerators(mutableChain, kernel)
+    schreierSims.completeStrongGenerators(mutableChain, kb)
     val newChain = mutableChain.toChain()
     val generatorsOpt = if (newChain.strongGeneratingSet.size >= lhs.generators.size + newGenerators.size)
         Opt(lhs.generators ++ newGenerators) else Opt.empty[IndexedSeq[G]]
-    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt, kernel.result(completeChain = true))
+    new GrpChainExplicit(mutableChain.toChain(), generatorsOpt, kb.result(completeChain = true))
   }
 
   /** Returns the union of the group `lhs` with the group defined by the generators `rhs`.
     * It is required that the permutation action `F` can describe the `rhs` generators.
     *
-    * The kernel is provided in argument.
+    * The kb is provided in argument.
     */
   def unionGivenKernel[G, F <: PermutationAction[G] with Singleton]
   (lhs: GrpChain[G, F], rhs: Iterable[G], kernelOpt: Opt[Grp[G]])(implicit schreierSims: SchreierSims): GrpChain[G, F] = {

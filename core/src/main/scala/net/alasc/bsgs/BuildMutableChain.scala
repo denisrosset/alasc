@@ -13,91 +13,89 @@ import net.alasc.finite.Grp
 
 object BuildMutableChain {
 
-  /*
-  def fromChainAndKernel[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (from: Chain[G, _ <: PermutationAction[G] with Singleton], oldKernel: Grp[G], kernel: KernelBuilder[G], baseStart: Seq[Int] = Seq.empty[Int])
-    (implicit newAction: F, schreierSims: SchreierSims): MutableChain[G, F] = {
-    val generators = from.strongGeneratingSet ++ oldKernel.generators
+  def recomputeChain[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+  (from: Chain.Generic[G], oldKernel: Chain.Generic[G], kb: KernelBuilder[G], baseStart: Seq[Int])(implicit newAction: A, schreierSims: SchreierSims): MutableChain[G, A] = {
+    val generators = from.strongGeneratingSet ++ oldKernel.strongGeneratingSet
     def randomElement(rand: Random): G = from.randomElement(rand) |+| oldKernel.randomElement(rand)
     val order = from.order * oldKernel.order
-    schreierSims.completeChainFromGeneratorsRandomElementsAndOrder[G, F](generators, randomElement, order, kernel, baseStart)
+    schreierSims.mutableChain[G, A](generators, randomElement(_), order, kb, baseStart)
   }
 
-  def fromChain[G:ClassTag:Eq:Group, F1 <: PermutationAction[G] with Singleton, F2 <: PermutationAction[G] with Singleton]
-  (from: Chain[G, F1], oldKernel: Grp[G], kernel: KernelBuilder[G])(implicit newAction: F2, schreierSims: SchreierSims): MutableChain[G, F2] =
+  def fromChain[G:ClassTag:Eq:Group, A1 <: PermutationAction[G] with Singleton, A2 <: PermutationAction[G] with Singleton]
+  (from: Chain[G, A1], oldKernel: Chain.Generic[G], kb: KernelBuilder[G])(implicit newAction: A2, schreierSims: SchreierSims): MutableChain[G, A2] =
     from match {
-      case node: Node[G, F1] if node.action eq newAction =>
-        kernel.absorb(oldKernel)
-        node.asInstanceOf[Node[G, F2]].mutableChain
-      case term: Term[G, F1] if oldKernel.generators.forall(!newAction.movesAnyPoint(_)) =>
-        // kernel group is the same under the new action
-        kernel.absorb(oldKernel)
-        MutableChain.empty[G, F2]
+      case node: Node[G, A1] if node.action eq newAction =>
+        kb.replaceChain(oldKernel)
+        node.asInstanceOf[Node[G, A2]].mutableChain
+      case term: Term[G, A1] if oldKernel.strongGeneratingSet.forall(!newAction.movesAnyPoint(_)) =>
+        // kb group is the same under the new action
+        kb.replaceChain(oldKernel)
+        MutableChain.empty[G, A2]
       case _ => // different action
-        fromChainAndKernel[G, F2](from, oldKernel, kernel)
+        recomputeChain[G, A2](from, oldKernel, kb, Seq.empty)
     }
 
-  def fromChain[G:ClassTag:Eq:Group, F1 <: PermutationAction[G] with Singleton, F2 <: PermutationAction[G] with Singleton]
-  (from: Chain[G, F1], oldKernel: Grp[G], kernel: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
-  (implicit newAction: F2, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F2] = {
+  def fromChain[G:ClassTag:Eq:Group, A1 <: PermutationAction[G] with Singleton, A2 <: PermutationAction[G] with Singleton]
+  (from: Chain[G, A1], oldKernel: Chain.Generic[G], kb: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
+  (implicit newAction: A2, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, A2] = {
     val baseGuide = baseGuideOpt.getOrElseFast(BaseGuide.Empty)
     val mutableChain = from match {
-      case node: Node[G, F1] if node.action eq newAction =>
-        kernel.absorb(oldKernel)
-        node.asInstanceOf[Node[G, F2]].mutableChain
-      case term: Term[G, F1] if oldKernel.generators.forall(!newAction.movesAnyPoint(_)) =>
-        // kernel group is the same under the new action
-        kernel.absorb(oldKernel)
-        MutableChain.empty[G, F2]
+      case node: Node[G, A1] if node.action eq newAction =>
+        kb.replaceChain(oldKernel)
+        node.asInstanceOf[Node[G, A2]].mutableChain
+      case term: Term[G, A1] if oldKernel.strongGeneratingSet.forall(!newAction.movesAnyPoint(_)) =>
+        // kb group is the same under the new action
+        kb.replaceChain(oldKernel)
+        MutableChain.empty[G, A2]
       case _ => // different action
-        val baseStart = baseGuide.baseAnsatz[G, F2](from.strongGeneratingSet ++ oldKernel.generators)
-        fromChainAndKernel[G, F2](from, oldKernel, kernel, baseStart)
+        val baseStart = baseGuide.baseAnsatz[G, A2](from.strongGeneratingSet ++ oldKernel.strongGeneratingSet)
+        recomputeChain[G, A2](from, oldKernel, kb, baseStart)
     }
-    baseChange.changeBase(mutableChain, baseGuide)
+    val kernelChain = kb.toChain()
+    baseChange.changeBase[G, A2](mutableChain, kernelChain, baseGuide)
     mutableChain
   }
 
-  def fromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-  (generators: Iterable[G], kernel: KernelBuilder[G])(implicit action: F, schreierSims: SchreierSims): MutableChain[G, F] =
-    schreierSims.completeChainFromGenerators[G, F](generators, kernel)
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton](generators: Iterable[G], kb: KernelBuilder[G])(implicit action: A, schreierSims: SchreierSims): MutableChain[G, A] =
+    schreierSims.mutableChain[G, A](generators, kb, Seq.empty)
 
-  def fromGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-  (generators: Iterable[G], kernel: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
-  (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton](generators: Iterable[G], kb: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
+  (implicit action: A, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, A] = {
     val baseGuide = baseGuideOpt.getOrElseFast(BaseGuide.Empty)
-    val ansatz = baseGuide.baseAnsatz[G, F](generators)
-    val mutableChain = schreierSims.completeChainFromGenerators[G, F](generators, kernel, ansatz)
-    baseChange.changeBase(mutableChain, baseGuide)
+    val ansatz = baseGuide.baseAnsatz[G, A](generators)
+    val mutableChain = schreierSims.mutableChain[G, A](generators, kb, ansatz)
+    baseChange.changeBase(mutableChain, kb.toChain(), baseGuide)
     mutableChain
   }
 
-  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-  (generators: Iterable[G], order: SafeLong, kernel: KernelBuilder[G])(implicit action: F, schreierSims: SchreierSims): MutableChain[G, F] =
-    schreierSims.completeChainFromGeneratorsAndOrder[G, F](generators, order, kernel)
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+  (generators: Iterable[G], order: SafeLong, kb: KernelBuilder[G])(implicit action: A, schreierSims: SchreierSims): MutableChain[G, A] =
+    schreierSims.mutableChain[G, A](generators, order, kb, Seq.empty)
 
-  def fromGeneratorsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (generators: Iterable[G], order: SafeLong, kernel: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-    (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+    (generators: Iterable[G], order: SafeLong, kb: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
+    (implicit action: A, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, A] = {
     val baseGuide = baseGuideOpt.getOrElseFast(BaseGuide.Empty)
-    val ansatz = baseGuide.baseAnsatz[G, F](generators)
-    val mutableChain = schreierSims.completeChainFromGeneratorsAndOrder[G, F](generators, order, kernel, ansatz)
-    baseChange.changeBase(mutableChain, baseGuide)
+    val ansatz = baseGuide.baseAnsatz[G, A](generators)
+    val mutableChain = schreierSims.mutableChain[G, A](generators, order, kb, ansatz)
+    baseChange.changeBase(mutableChain, kb.toChain(), baseGuide)
     mutableChain
   }
 
-  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-  (generators: Iterable[G], randomElement: Random => G, order: SafeLong, kernel: KernelBuilder[G])(implicit action: F, schreierSims: SchreierSims): MutableChain[G, F] =
-    schreierSims.completeChainFromGeneratorsRandomElementsAndOrder[G, F](generators, randomElement, order, kernel)
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+  (generators: Iterable[G], randomElement: Random => G, order: SafeLong, kb: KernelBuilder[G])(implicit action: A, schreierSims: SchreierSims): MutableChain[G, A] =
+    schreierSims.mutableChain[G, A](generators, randomElement, order, kb, Seq.empty)
 
 
-  def fromGeneratorsRandomElementsAndOrder[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton]
-    (generators: Iterable[G], randomElement: Random => G, order: SafeLong, kernel: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide] = Opt.empty[BaseGuide])
-    (implicit action: F, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, F] = {
+  def apply[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+    (generators: Iterable[G], randomElement: Random => G, order: SafeLong, kb: KernelBuilder[G], baseGuideOpt: Opt[BaseGuide])
+    (implicit action: A, baseChange: BaseChange, schreierSims: SchreierSims): MutableChain[G, A] = {
     val baseGuide = baseGuideOpt.getOrElseFast(BaseGuide.Empty)
-    val ansatz = baseGuide.baseAnsatz[G, F](generators)
-    val mutableChain = schreierSims.completeChainFromGeneratorsRandomElementsAndOrder[G, F](generators, randomElement, order, kernel, ansatz)
-    baseChange.changeBase(mutableChain, baseGuide)
+    val ansatz = baseGuide.baseAnsatz[G, A](generators)
+    val mutableChain = schreierSims.mutableChain[G, A](generators, randomElement, order, kb, ansatz)
+    baseChange.changeBase(mutableChain, kb.toChain(), baseGuide)
     mutableChain
-  }*/
+  }
 
 }

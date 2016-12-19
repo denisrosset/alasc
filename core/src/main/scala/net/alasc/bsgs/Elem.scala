@@ -124,14 +124,15 @@ sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, 
 
   def basicSift(g: G)(implicit group: Group[G], equ: Eq[G]): (Seq[Int], G) = ChainRec.basicSift(chain, g)
 
+  /*
   def siftOther[Q:Eq:Group:PermutationAction](q: Q)(implicit group: Group[G], equ: Eq[G]): Opt[G] = chain match {
     case node: Node[G, A] =>
       implicit def action: A = node.action
       ChainRec.siftOther(chain, group.id, q)
     case _: Term[G, A] => if (q.isId) Opt(group.id) else Opt.empty
-  }
+  }*/
 
-  def sifts(g: G)(implicit group: Group[G], equ: Eq[G]): Boolean = ChainRec.sifts(chain, g)
+  def sift(g: G)(implicit group: Group[G]): Opt[G] = ChainRec.sift(chain, g)
 
   /** If the current element is a node, returns the next stabilizer group in chain and the current node
     * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with

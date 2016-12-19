@@ -3,16 +3,13 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, Group}
+import spire.algebra.Group
 import spire.syntax.action._
-import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.perms.Perm
 import net.alasc.syntax.permutationAction._
-import net.alasc.util._
 
 // note: some tail recursive methods were moved to the RichMutableChain companion
 // object, due to an elusive bug in the Scala compiler

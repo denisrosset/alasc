@@ -128,18 +128,19 @@ object ChainRec {
     case _: Term[_, _] => baseToCheck.isEmpty
   }
 
-  @tailrec def sifts[G:Eq:Group, A <: PermutationAction[G] with Singleton]
-    (chain: Chain[G, A], remaining: G): Boolean = chain match {
+  @tailrec def sift[G:Group, A <: PermutationAction[G] with Singleton]
+  (chain: Chain[G, A], remaining: G): Opt[G] = chain match {
     case node: Node[G, A] =>
       implicit def action: A = node.action
       val b = node.beta <|+| remaining
       if (!node.inOrbit(b))
-        false
+        Opt.empty[G]
       else
-        sifts(node.next, remaining |+| node.uInv(b))
-    case _: Term[G, A] => remaining.isId
+        sift(node.next, remaining |+| node.uInv(b))
+    case _: Term[G, A] => Opt(remaining)
   }
 
+  /*
   @tailrec def siftOther[G:Eq:Group, A <: PermutationAction[G] with Singleton, Q:Eq:Group:PermutationAction]
     (chain: Chain[G, A], gInv: G, q: Q)(implicit action: A): Opt[G] =
     chain match {
@@ -154,7 +155,7 @@ object ChainRec {
         val gPerm = PermutationAction[G].toPerm(g)
         val qPerm = PermutationAction[Q].toPerm(q)
         if (gPerm === qPerm) Opt(g) else Opt.empty[G]
-    }
+    }*/
 
   @tailrec def basicSift[G:Group, A <: PermutationAction[G] with Singleton]
     (chain: Chain[G, A], remaining: G,
