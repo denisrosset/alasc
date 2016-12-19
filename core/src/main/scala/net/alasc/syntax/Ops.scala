@@ -21,8 +21,6 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def movesAnyPoint(): Boolean = macro Ops.unop[Boolean]
 
-  def sameActionAs(rhs: A)(implicit ev1: Group[A]): Boolean = ev.sameActionAs(lhs, rhs)(ev1) // TODO: add macro
-
   def movesPoint(rhs: Int): Boolean = macro Ops.binop[Int, Boolean]
 
   def nMovedPoints(): Int = macro Ops.unop[Int]

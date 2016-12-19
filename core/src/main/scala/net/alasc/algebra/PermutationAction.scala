@@ -28,9 +28,6 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   /** Tests if `g` moves any point. */
   def movesAnyPoint(g: G): Boolean
 
-  def sameActionAs(lhs: G, rhs: G)(implicit ev: Group[G]): Boolean =
-    !movesAnyPoint(ev.opInverse(lhs, rhs))
-
   /** Tests if the point `i` is in the support of `g`. */
   def movesPoint(g: G, i: Int): Boolean = actr(i, g) != i
 
