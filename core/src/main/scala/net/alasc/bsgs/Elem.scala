@@ -132,7 +132,24 @@ sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, 
     case _: Term[G, A] => if (q.isId) Opt(group.id) else Opt.empty
   }*/
 
+  /** Sifts an element through the chain.
+    *
+    * @param g Element to sift through the chain.
+    * @return  Opt(remainder) if the element can be sifted through the whole chain, otherwise Opt.empty.
+    */
   def sift(g: G)(implicit group: Group[G]): Opt[G] = ChainRec.sift(chain, g)
+
+  def siftsFaithful(g: G)(implicit group: Group[G], equ: Eq[G]): Boolean =
+    ChainRec.sift(chain, g) match {
+      case Opt(remainder) => remainder.isId
+      case _ => false
+    }
+
+  def sifts(g: G, kernel: Chain.Generic[G])(implicit group: Group[G], equ: Eq[G]): Boolean =
+    ChainRec.sift(chain, g) match {
+      case Opt(rem1) => kernel.siftsFaithful(rem1)
+      case _ => false
+    }
 
   /** If the current element is a node, returns the next stabilizer group in chain and the current node
     * viewed as a transversal. If the current element is a terminal, creates and returns an empty transversal with
@@ -147,10 +164,39 @@ sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, 
 
 object Chain {
 
-  type Generic[G] = Chain[G, _ <: PermutationAction[G] with Singleton]
+  type Generic[G] = Chain[G, A] forSome { type A <: PermutationAction[G] with Singleton }
 
   implicit def ChainCheck[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]: Check[Chain[G, A]] =
     new ChainCheck[G, A]
+
+  /** Returns a `Chain[G, action.type]` if it can be shown that the provided Chain.Generic[G] is of that type.
+    *
+    * @param chainGen Chain to check the action of.
+    * @param action   Action to match
+    * @return         Opt(chain) if the chain is a Node with the given action, or a Term.
+    */
+  @inline final def extractGrpChain[G](chainGen: Chain.Generic[G], action: PermutationAction[G]): Opt[Chain[G, action.type]] =
+  chainGen match {
+    case node: Node[G, _] if node.action eq action => Opt(node.asInstanceOf[Node[G, action.type]])
+    case term: Term[G, _] => Opt(term.asInstanceOf[Term[G, action.type]])
+  }
+
+  /** Returns the action that the given node and chain have in common, if any.
+    *
+    * @param lhs Node to test
+    * @param rhs Chain to test
+    * @return    Opt(action) if both the node and chain share it, otherwise Opt.empty.
+    */
+  @inline final def commonAction[G](lhs: Node.Generic[G], rhs: Chain.Generic[G]): Opt[PermutationAction[G]] =
+  rhs match {
+    case term: Term[G, _] => Opt(lhs.action)
+    case node: Node[G, _] if node.action eq lhs.action => Opt(lhs.action)
+    case _ => Opt.empty[PermutationAction[G]]
+  }
+
+  /** Casts the provided Chain.Generic[G] into Chain[G, action.type] for the provided action. The safety of the operation
+    * is not verified. */
+  @inline final def inActionUnsafe[G](lhs: Chain.Generic[G], action: PermutationAction[G]): Chain[G, action.type] = lhs.asInstanceOf[Chain[G, action.type]]
 
 }
 
@@ -209,6 +255,10 @@ trait Node[G, A <: PermutationAction[G] with Singleton]
 }
 
 object Node {
+
+  /** Casts the provided Node.Generic[G] into Node[G, action.type] for the provided action. The safety of the operation
+    * is not verified. */
+  @inline final def inActionUnsafe[G](lhs: Node.Generic[G], action: PermutationAction[G]): Node[G, action.type] = lhs.asInstanceOf[Node[G, action.type]]
 
   type Generic[G] = Node[G, _ <: PermutationAction[G] with Singleton]
 

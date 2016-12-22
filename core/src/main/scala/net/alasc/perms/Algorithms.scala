@@ -5,6 +5,7 @@ import scala.util.Random
 
 import spire.NoImplicit
 import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
@@ -46,8 +47,14 @@ class Algorithms(
   implicit def permGrpChainAlgos: GrpPermAlgorithms =
     new GrpPermAlgorithms
 */
-/*
-  implicit def permRepGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermRepBuilder]
-    (implicit np: NoImplicit[G =:= Perm]): GrpChainPermutationAction[G] = new GrpChainPermutationAction[G]
-*/
+
+  class PRGB[G:FaithfulPermRepBuilder](implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val equ: Eq[G],
+                                       val classTag: ClassTag[G], val group: Group[G], val schreierSims: SchreierSims) extends GrpChainPermutationAction[G] {
+
+    def faithfulAction(generators: Iterable[G]): PermutationAction[G] = FaithfulPermRepBuilder[G].build[SafeLong](generators).permutationAction
+
+  }
+
+  implicit def permRepGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermRepBuilder]: GrpChainPermutationAction[G] = new PRGB[G]
+
 }

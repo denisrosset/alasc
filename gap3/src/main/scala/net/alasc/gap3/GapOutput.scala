@@ -98,7 +98,7 @@ object GapOutput {
   val mon: P[Mon] = P("Mon(" ~ ( perm ~ ",").? ~ (dimensionAsVec | cycloVec) ~ ")")
     .map { case (pOpt, v) => Mon(pOpt.getOrElse(Perm.id), v) }
 
-  val productAMat: P[ProductAMat] = P(aMat ~ "*" ~ aMat).map { case (lhs, rhs) => ProductAMat(lhs, rhs) }
+  val productAMat: P[ProductAMat] = P(aMat ~ "*" ~ aMat).map { case (lhs, rhsGenerators) => ProductAMat(lhs, rhsGenerators) }
 
   val identityPermAMat: P[IdentityPermAMat] = P("IdentityPermAMat" ~/ "(" ~ dimension ~ ")")
     .map( d => IdentityPermAMat(d) )

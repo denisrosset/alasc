@@ -14,12 +14,14 @@ import metal.syntax._
 import net.alasc.algebra.PermutationAction
 import net.alasc.util._
 
+/** Defines a subgroup (in the sense of the coset group obtained from the action kernel). */
 trait SubgroupDefinition[G, A <: PermutationAction[G] with Singleton] {
 
   implicit def action: A
 
   def baseGuideOpt: Opt[BaseGuide]
 
+  /** Returns whether the coset described by the element `g` is in the group. */
   def inSubgroup(g: G): Boolean
 
   /** Returns the test for the first level of `guidedChain`.
@@ -74,6 +76,12 @@ trait SubgroupTest[G, A <: PermutationAction[G] with Singleton] {
 
 object SubgroupSearch {
 
+  /** Iterates through the subgroup described by the given definition. If the action is not faithful, the iteration
+    * is done in the sense of coset elements.
+    * @param definition  Subgroup definition
+    * @param guidedChain BSGS chain whose base is guided by the subgroup definition
+    * @return An iterator through the subgroup elements (or their coset representatives if the action is not faithful)
+    */
   def generalSearch[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
     (definition: SubgroupDefinition[G, A], guidedChain: Chain[G, A]): Iterator[G] = {
     import definition.action
@@ -97,7 +105,7 @@ object SubgroupSearch {
   }
 
   def subgroupSearch[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
-    (definition: SubgroupDefinition[G, A], guidedChain: Chain[G, A]): MutableChain[G, A] = {
+    (definition: SubgroupDefinition[G, A], guidedChain: Chain[G, A], kernel: Chain.Generic[G]): MutableChain[G, A] = {
     implicit def action: A = definition.action
     val bo = BaseOrder[G, A](guidedChain.base)
     val orbits = guidedChain.nodesIterator.map(_.orbit.toArray).toArray
@@ -107,7 +115,7 @@ object SubgroupSearch {
     // Tuple2Int contains (restartFrom, levelCompleted)
     def rec(level: Int, levelCompleted: Int, currentChain: Chain[G, A], currentSubgroup: Chain[G, A], currentG: G, currentTest: SubgroupTest[G, A]): Tuple2Int = currentChain match {
       case _: Term[G, A] =>
-        if (definition.inSubgroup(currentG) && !currentG.isId) {
+        if (definition.inSubgroup(currentG) && !kernel.siftsFaithful(currentG)) {
           subgroupChain.insertGenerators(Iterable(currentG))
           Tuple2Int(levelCompleted - 1, levelCompleted)
         } else

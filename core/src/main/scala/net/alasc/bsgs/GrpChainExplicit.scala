@@ -53,4 +53,6 @@ final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
     case _: Node[G, _] => chain.randomElement(random) |+| kernel.randomElement(random)
   }
 
+  def enlargeKernel(newKernel: Chain.Generic[G]) = new GrpChainExplicit(chain, generatorsOpt, newKernel)
+
 }

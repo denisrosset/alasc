@@ -243,7 +243,7 @@ abstract class PermBase extends AbstractPerm {
   def genOpLargeDefault(lhs: Perm, rhs: Perm, givenSupportMax: Int): Perm =
     new PermArray(Array.tabulate(givenSupportMax + 1)( k => rhs.image(lhs.image(k)) ))
 
-  /** Computes `this |+| rhs`, while the maximal element of the result support
+  /** Computes `this |+| rhsGenerators`, while the maximal element of the result support
     * has already been computed by `genOp` and is greater than `Perm32.supportMaxElement`.
     */
   def genOpLarge(rhs: Perm, givenSupportMax: Int): Perm =
@@ -255,7 +255,7 @@ abstract class PermBase extends AbstractPerm {
   def genRevOpLarge(lhs: Perm, givenSupportMax: Int): Perm =
     genOpLargeDefault(lhs, this, givenSupportMax)
 
-  /** Default `lhs |+| rhs` product implementation, which constructs a `Perm16` or `Perm32` if possible,
+  /** Default `lhs |+| rhsGenerators` product implementation, which constructs a `Perm16` or `Perm32` if possible,
     * and delegates to `genOpLarge` or `genRevOpLarge` otherwise.
     */
   def genOpDefaultImpl(lhs: Perm, rhs: Perm, isRev: Boolean): Perm = {
@@ -294,8 +294,8 @@ abstract class PermBase extends AbstractPerm {
     Perm16Encoding.id
   }
 
-  /** Computes the product `this |+| rhs`, where `this` is an user-defined permutation type, and
-    * `rhs` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
+  /** Computes the product `this |+| rhsGenerators`, where `this` is an user-defined permutation type, and
+    * `rhsGenerators` can be either a small permutation type such as `Perm16`, `Perm32`, or an user-defined type.
     */
   def genOp(rhs: Perm): Perm = genOpDefaultImpl(this, rhs, false)
 
@@ -304,7 +304,7 @@ abstract class PermBase extends AbstractPerm {
     */
   def genRevOp(lhs: Perm): Perm = genOpDefaultImpl(lhs, this, true)
 
-  /** Tests for equivalency. Can be overriden for speed; note that `rhs` can be any large permutation type,
+  /** Tests for equivalency. Can be overriden for speed; note that `rhsGenerators` can be any large permutation type,
     * such as `PermArray` or `Perm32`, but not `Perm16`, as this possibility is already ruled out
     * in `PermPermutation.eqv` logic. */
   def genEqv(rhs: AbstractPerm): Boolean = {

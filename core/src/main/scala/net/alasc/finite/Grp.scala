@@ -48,14 +48,14 @@ abstract class Grp[G] { lhs =>
   /** Generates a random element. */
   def randomElement(random: Random): G
 
-  /** Tests whether `rhs` is a subgroup of this group. */
+  /** Tests whether `rhsGenerators` is a subgroup of this group. */
   def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(contains)
 
-  /** Tests whether this group is a subgroup of `rhs`. */
+  /** Tests whether this group is a subgroup of `rhsGenerators`. */
   def isSubgroupOf(rhs: Grp[G]): Boolean = generators.forall(rhs.contains)
 
-  /** This group `lhs` normalizes the group `rhs` if for every g in lhs and u in rhs, the element g^-1 u g is
-    * a member of rhs. Note that `rhs` needs not be a subgroup of `lhs`.
+  /** This group `lhs` normalizes the group `rhsGenerators` if for every g in lhs and u in rhsGenerators, the element g^-1 u g is
+    * a member of rhsGenerators. Note that `rhsGenerators` needs not be a subgroup of `lhs`.
     * */
   def normalizes(rhs: Grp[G]): Boolean = generators.forall { g =>
     val gInv = g.inverse
@@ -104,6 +104,8 @@ object Grp {
   implicit def permGrpSyntax(pg: Grp[Perm]): GrpPermSyntax = new GrpPermSyntax(pg)
 
   implicit def grpGroupSyntax[G](grp: Grp[G]): GrpGroupSyntax[G] = new GrpGroupSyntax[G](grp)
+
+  implicit def grpPermutationActionSyntax[G](grp: Grp[G]): GrpPermutationActionSyntax[G] = new GrpPermutationActionSyntax[G](grp)
 
 }
 
