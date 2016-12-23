@@ -47,7 +47,7 @@ class CyclesAlgebra extends PermutationAction[Cycles] with Group[Cycles] with Eq
 
   implicit val seqEq: Eq[Seq[Cycle]] = spire.std.seq.SeqEq[Cycle, Seq]
 
-  def movesAnyPoint(c: Cycles): Boolean = c.seq.nonEmpty
+  override def movesAnyPoint(c: Cycles): Boolean = c.seq.nonEmpty
 
   def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 

@@ -13,7 +13,7 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
 import net.alasc.domains.Partition
 import net.alasc.finite._
-import net.alasc.perms.{FaithfulPermRep, Perm}
+import net.alasc.perms.Perm
 
 /** Algorithms for groups for which faithful permutation actions can be obtained. */
 abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G] {

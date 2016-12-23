@@ -3,13 +3,12 @@ package net.alasc.perms
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.NoImplicit
 import spire.algebra.{Eq, Group}
-import spire.math.SafeLong
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{BaseChange, BaseSwap, GrpChainPermutationAction, SchreierSims}
+import net.alasc.finite.{FaithfulActionBuilder, FaithfulPermutationActionBuilder}
 
 abstract class Algorithms0 {
 
@@ -48,13 +47,13 @@ class Algorithms(
     new GrpPermAlgorithms
 */
 
-  class PRGB[G:FaithfulPermRepBuilder](implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val equ: Eq[G],
-                                       val classTag: ClassTag[G], val group: Group[G], val schreierSims: SchreierSims) extends GrpChainPermutationAction[G] {
+  class PRGB[G:FaithfulPermutationActionBuilder](implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val equ: Eq[G],
+                                                 val classTag: ClassTag[G], val group: Group[G], val schreierSims: SchreierSims) extends GrpChainPermutationAction[G] {
 
-    def faithfulAction(generators: Iterable[G]): PermutationAction[G] = FaithfulPermRepBuilder[G].build[SafeLong](generators).permutationAction
+    def faithfulAction(generators: Iterable[G]): PermutationAction[G] = FaithfulActionBuilder[G, Int, PermutationAction[G]].apply(generators)
 
   }
 
-  implicit def permRepGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermRepBuilder]: GrpChainPermutationAction[G] = new PRGB[G]
+  implicit def permRepGrpBuilder[G:ClassTag:Eq:Group:FaithfulPermutationActionBuilder]: GrpChainPermutationAction[G] = new PRGB[G]
 
 }

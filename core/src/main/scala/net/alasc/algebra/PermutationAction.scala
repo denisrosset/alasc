@@ -191,4 +191,26 @@ object PermutationAction {
 
   def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
 
+  def contramap[A, B](fa: PermutationAction[A])(f: B => A): PermutationAction[B] = new PermutationAction[B] {
+    def isFaithful: Boolean = false
+    def findMovedPoint(b: B): NNOption = fa.findMovedPoint(f(b))
+    def movedPointsUpperBound(b: B): NNOption = fa.movedPointsUpperBound(f(b))
+    def actr(p: Int, b: B): Int = fa.actr(p, f(b))
+    def actl(b: B, p: Int): Int = fa.actl(f(b), p)
+    override def movesAnyPoint(b: B): Boolean = fa.movesAnyPoint(f(b))
+    override def movesPoint(b: B, i: Int): Boolean = fa.movesPoint(f(b), i)
+    override def nMovedPoints(b: B): Int = fa.nMovedPoints(f(b))
+    override def movedPoints(b: B): Set[Int] = fa.movedPoints(f(b))
+    override def largestMovedPoint(b: B): NNOption = fa.largestMovedPoint(f(b))
+    override def smallestMovedPoint(b: B): NNOption = fa.smallestMovedPoint(f(b))
+    override def signPerm(b: B): Int = fa.signPerm(f(b))
+    override def cycleStructure(b: B): Map[Int, Int] = fa.cycleStructure(f(b))
+    override def permutationOrder(b: B): SafeLong = fa.permutationOrder(f(b))
+    override def orbit(b: B, i: Int): Set[Int] = fa.orbit(f(b), i)
+    override def images(b: B, n: Int): IndexedSeq[Int] = fa.images(f(b), n)
+    override def toPerm(b: B): Perm = fa.toPerm(f(b))
+    override def smallestMovedPoint(generators: Iterable[B]): NNOption = super.smallestMovedPoint(generators)
+    override def largestMovedPoint(generators: Iterable[B]): NNOption = super.largestMovedPoint(generators)
+  }
+
 }

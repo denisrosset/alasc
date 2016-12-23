@@ -13,7 +13,6 @@ import scalin.algebra.MatField
 
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BuildChain, SchreierSims}
-import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, PermRep}
 import net.alasc.util._
 
 /** Representation of group elements of type `G` on a vector of `dimension` over the field `K`. */

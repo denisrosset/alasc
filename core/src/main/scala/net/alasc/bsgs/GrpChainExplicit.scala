@@ -10,7 +10,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Grp
-import net.alasc.perms.FaithfulPermRep
+import net.alasc.rep.FaithfulPermRep
 
 final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
   (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])

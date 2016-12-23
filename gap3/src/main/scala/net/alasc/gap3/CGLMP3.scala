@@ -7,7 +7,7 @@ import cyclo.Cyclo
 import scalin.algebra.MatEngine
 
 import net.alasc.finite.{Grp, Rep}
-import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, Perm}
+import net.alasc.perms.Perm
 import net.alasc.perms._
 import net.alasc.perms.default._
 //import Rep.algebra._

@@ -1,7 +1,7 @@
 package net.alasc.gap3
 
 import net.alasc.finite.{Grp, Rep}
-import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder, Perm}
+import net.alasc.perms.Perm
 import spire.math.SafeLong
 import net.alasc.perms.default._
 //import Rep.algebra._

@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, File}
 
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.finite.{Grp, GrpGroup, Rep}
-import net.alasc.perms.{Cycles, FaithfulPermRep, Perm, PermRep}
+import net.alasc.perms.{Cycles, Perm}
 import net.alasc.syntax.all._
 import cyclo.Cyclo
 import scalin.immutable.{DenseMat, Mat, Vec}

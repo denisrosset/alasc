@@ -1,11 +1,8 @@
-package net.alasc.perms
+package net.alasc.rep
 
 import spire.algebra.Ring
-import spire.math.{Rational, SafeLong}
-import spire.syntax.cfor._
 import spire.syntax.action._
-
-import cyclo.Cyclo
+import spire.syntax.cfor._
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Rep
@@ -17,7 +14,7 @@ trait PermRep[G, K] extends Rep[G, K] {
   implicit def permutationAction: PermutationAction[G]
 
   def apply(g: G): scalin.immutable.Mat[K] = {
-    import scalin.mutable.dense._ // TODO: use sparse matrices
+    import scalin.mutable.dense._
     import scalin.syntax.all._
     val mat = zeros[K](dimension, dimension)
     cforRange(0 until dimension) { i =>

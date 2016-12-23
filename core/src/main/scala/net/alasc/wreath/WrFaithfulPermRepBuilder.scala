@@ -7,11 +7,12 @@ import spire.syntax.cfor._
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
 import spire.syntax.group._
+
+import net.alasc.rep.FaithfulPermRep
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
-
+/*
 class WrFaithfulPermRepBuilder[A:Eq:Group](implicit val A: FaithfulPermRepBuilder[A]) extends FaithfulPermRepBuilder[Wr[A]] {
 
   def build[K:Ring](generators: Iterable[Wr[A]]) = {
@@ -118,3 +119,4 @@ class WrFaithfulPermRepBuilder[A:Eq:Group](implicit val A: FaithfulPermRepBuilde
   }
 
 }
+*/

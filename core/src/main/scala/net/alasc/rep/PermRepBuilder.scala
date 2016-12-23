@@ -1,12 +1,10 @@
-package net.alasc.perms
+package net.alasc.rep
 
 import scala.annotation.tailrec
 
 import spire.algebra.Ring
 
-import net.alasc.algebra.PermutationAction
-
-import net.alasc.syntax.permutationAction._
+import net.alasc.perms.Perm
 
 trait FaithfulPermRepBuilder[G] {
 

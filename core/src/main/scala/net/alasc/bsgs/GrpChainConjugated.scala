@@ -4,13 +4,10 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 import spire.algebra.{Eq, Group}
-import spire.math.SafeLong
 import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.finite.Grp
-import net.alasc.perms.FaithfulPermRep
 
 /** Represents a conjugated group from an original group G (represented by `originalChain`)
   * conjugated by g (with gInv == g.inverse).

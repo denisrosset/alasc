@@ -8,7 +8,8 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
-import net.alasc.perms.{FaithfulPermRepBuilder, Perm}
+import net.alasc.perms.Perm
+import net.alasc.rep.FaithfulPermRepBuilder
 import net.alasc.syntax.permutationAction._
 
 /** Describes the wreath product of two objects. */
@@ -24,9 +25,9 @@ case class Wr[A](aSeq: Seq[A], h: Perm) {
 
 /** Default wreath product object and type classes for wreath products. */
 object Wr {
-
+/*
   implicit def wrFaithfulPermRepBuilder[A:Eq:Group:FaithfulPermRepBuilder]: FaithfulPermRepBuilder[Wr[A]] =
-    new WrFaithfulPermRepBuilder[A]
+    new WrFaithfulPermRepBuilder[A]*/
 
   class WrEqGroup[A:Eq:Group] extends Eq[Wr[A]] with Group[Wr[A]] {
 

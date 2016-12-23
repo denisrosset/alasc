@@ -1,59 +1,77 @@
 package net.alasc.std
 
 import spire.algebra.Ring
+import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.perms.{FaithfulPermRep, FaithfulPermRepBuilder}
+import net.alasc.finite.{FaithfulActionBuilder, FaithfulPermutationActionBuilder}
 import net.alasc.util._
 
-final case class Product2FaithfulPermRep[A, B, K](A: FaithfulPermRep[A, K], B: FaithfulPermRep[B, K])
-                                                 (implicit val scalar: Ring[K]) extends FaithfulPermRep[(A, B), K] {
-  def dimension = A.dimension + B.dimension
-  def represents(x0: (A, B)) = A.represents(x0._1) && B.represents(x0._2)
-  object _permutationAction extends PermutationAction[(A, B)] {
+final class Product2FaithfulPermutationAction[A, B](val A: PermutationAction[A], dimA: Int, B: PermutationAction[B], dimB: Int) extends PermutationAction[(A, B)] {
 
-    def isFaithful = true
+  def isFaithful: Boolean = true
 
-    @inline def action1 = A.permutationAction
-    @inline def action2 = B.permutationAction
+  def actr(p: Int, x0: (A, B)) =
+    if (p < dimA) A.actr(p, x0._1)
+    else if (p < dimA + dimB) B.actr(p - dimA, x0._2) + dimA
+    else p
 
-    def actr(p: Int, x0: (A, B)) =
-      if (p < A.dimension) action1.actr(p, x0._1)
-      else if (p < A.dimension + B.dimension) action2.actr(p - A.dimension, x0._2) + A.dimension
-      else p
-    def actl(x0: (A, B), p: Int) =
-      if (p < A.dimension) action1.actl(x0._1, p)
-      else if (p < A.dimension + B.dimension) action2.actl(x0._2, p - A.dimension) + A.dimension
-      else p
-    def movesAnyPoint(x0: (A, B)) = action1.movesAnyPoint(x0._1) || action2.movesAnyPoint(x0._2)
-    override def movedPoints(x0: (A, B)) =
-      action1.movedPoints(x0._1) ++ action2.movedPoints(x0._2).map(_ + A.dimension)
-    override def smallestMovedPoint(x0: (A, B)) =
-      action1.smallestMovedPoint(x0._1).orElseInt(action2.smallestMovedPoint(x0._2).mapInt(_ + A.dimension))
-    override def largestMovedPoint(x0: (A, B)) =
-      action2.largestMovedPoint(x0._2).mapInt(_ + A.dimension).orElseInt(action1.largestMovedPoint(x0._1))
-    def movedPointsUpperBound(x0: (A, B)) = NNSome(A.dimension + B.dimension)
-    override def nMovedPoints(x0: (A, B)): Int = action1.nMovedPoints(x0._1) + action2.nMovedPoints(x0._2)
-  }
-  type F = _permutationAction.type
-  def permutationAction: F = _permutationAction
+  def actl(x0: (A, B), p: Int) =
+    if (p < dimA) A.actl(x0._1, p)
+    else if (p < dimA + dimB) B.actl(x0._2, p - dimA) + dimA
+    else p
+
+  def findMovedPoint(x0: (A, B)): NNOption =
+    A.findMovedPoint(x0._1) match {
+      case NNOption(p) => NNOption(p)
+      case _ => B.findMovedPoint(x0._2) match {
+        case NNOption(p) => NNOption(p + dimA)
+        case _ => NNNone
+      }
+    }
+  override def smallestMovedPoint(x0: (A, B)) =
+    A.smallestMovedPoint(x0._1) match {
+      case NNOption(p) => NNOption(p)
+      case _ => B.smallestMovedPoint(x0._2) match {
+        case NNOption(p) => NNOption(p + dimA)
+        case _ => NNNone
+      }
+    }
+
+  override def largestMovedPoint(x0: (A, B)) =
+    B.largestMovedPoint(x0._2) match {
+      case NNOption(p) => NNOption(p + dimA)
+      case _ => A.largestMovedPoint(x0._1) match {
+        case NNOption(p) => NNOption(p)
+        case _ => NNNone
+      }
+    }
+  override def movesAnyPoint(x0: (A, B)) = A.movesAnyPoint(x0._1) || B.movesAnyPoint(x0._2)
+  override def movedPoints(x0: (A, B)) =
+    A.movedPoints(x0._1) ++ B.movedPoints(x0._2).map(_ + dimA)
+  def movedPointsUpperBound(x0: (A, B)) = if (dimA + dimB > 0) NNSome(dimA + dimB) else NNNone
+  override def nMovedPoints(x0: (A, B)): Int = A.nMovedPoints(x0._1) + B.nMovedPoints(x0._2)
 
 }
 
-final class Product2FaithfulPermRepBuilder[A:FaithfulPermRepBuilder, B:FaithfulPermRepBuilder]
-  extends FaithfulPermRepBuilder[(A, B)] {
+final class Product2FaithfulPermutationActionBuilder[A, B](implicit A: FaithfulPermutationActionBuilder[A], B: FaithfulPermutationActionBuilder[B])
+  extends FaithfulActionBuilder[(A, B), Int, PermutationAction[(A, B)]] {
 
-  def build[K:Ring](generators: Iterable[(A, B)]): Product2FaithfulPermRep[A, B, K] =
-    Product2FaithfulPermRep(
-      implicitly[FaithfulPermRepBuilder[A]].build[K](generators.map(_._1)),
-      implicitly[FaithfulPermRepBuilder[B]].build[K](generators.map(_._2))
-    )
+  def apply(generators: Iterable[(A, B)]): PermutationAction[(A, B)] = {
+    val generatorsA = generators.map(_._1)
+    val generatorsB = generators.map(_._2)
+    val fpaA: PermutationAction[A] = A.apply(generatorsA)
+    val fpaB: PermutationAction[B] = B.apply(generatorsB)
+    val dimA = fpaA.largestMovedPoint(generatorsA).getOrElseFast(-1) + 1
+    val dimB = fpaB.largestMovedPoint(generatorsB).getOrElseFast(-1) + 1
+    new Product2FaithfulPermutationAction[A, B](fpaA, dimA, fpaB, dimB)
+  }
 
 }
 
 trait ProductInstances {
 
-  implicit def product2FaithfulPermRepBuilder[A:FaithfulPermRepBuilder, B:FaithfulPermRepBuilder]: FaithfulPermRepBuilder[(A, B)] =
-    new Product2FaithfulPermRepBuilder[A, B]
+  implicit def product2FaithfulPermutationAction[A:FaithfulPermutationActionBuilder, B:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[(A, B)] =
+    new Product2FaithfulPermutationActionBuilder[A, B]
 
 }
