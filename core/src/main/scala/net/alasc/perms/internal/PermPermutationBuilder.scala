@@ -45,7 +45,9 @@ final class PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction
     }
   }
 
-  def movesAnyPoint(p: Perm): Boolean = p match {
+  def findMovedPoint(p: Perm): NNOption = p.largestMovedPoint
+
+  override def movesAnyPoint(p: Perm): Boolean = p match {
     case p16: Perm16 => !p16.isId
     case _ => true
   }

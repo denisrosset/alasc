@@ -10,6 +10,7 @@ import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import internal._
 import net.alasc.domains.Domain
+import net.alasc.finite.FaithfulPermutationActionBuilder
 
 /** Universal trait at the base of explicit permutation types.
   *
@@ -59,6 +60,10 @@ object Perm extends PermCompanion {
   def movedPointsUpperBound = PermArray.movedPointsUpperBound
 
   implicit val algebra: Eq[Perm] with Group[Perm] with PermutationAction[Perm] = new PermAlgebra
+
+  implicit object faithfulPermutationActionBuilder extends FaithfulPermutationActionBuilder[Perm] {
+    def apply(generators: Iterable[Perm]): PermutationAction[Perm] = algebra
+  }
 
   def fromImagesAndHighSupportMax(images: Array[Int], supportMax: Int): Perm =
     if (supportMax <= Perm32Encoding.supportMaxElement)

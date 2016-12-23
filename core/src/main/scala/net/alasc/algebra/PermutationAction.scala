@@ -25,8 +25,17 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     */
   def isFaithful: Boolean
 
+  /** Returns an arbitrary element in the support of `g` or NNNone if support empty.
+    *
+    * Widely used in the BSGS algorithms, needs to have a fast implementation.
+    */
+  def findMovedPoint(g: G): NNOption
+
+  /** Returns a fast-to-compute upper bound on the maximal element in the support of `g`. */
+  def movedPointsUpperBound(g: G): NNOption
+
   /** Tests if `g` moves any point. */
-  def movesAnyPoint(g: G): Boolean
+  def movesAnyPoint(g: G): Boolean = findMovedPoint(g).nonEmpty
 
   /** Tests if the point `i` is in the support of `g`. */
   def movesPoint(g: G, i: Int): Boolean = actr(i, g) != i
@@ -79,12 +88,6 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     }
     NNNone
   }
-
-  /** Returns an arbitrary element in the support of `g` or NNNone if support empty. */
-  def findMovedPoint(g: G): NNOption = largestMovedPoint(g)
-
-  /** Returns a fast-to-compute upper bound on the maximal element in the support of `g`. */
-  def movedPointsUpperBound(g: G): NNOption
 
   /** Returns the sign of the permutation `g`. */
   def signPerm(g: G): Int = {

@@ -33,7 +33,8 @@ class WrFaithfulPermRepBuilder[A:Eq:Group](implicit val A: FaithfulPermRepBuilde
     def permutationAction: F = _permutationAction
     object _permutationAction extends PermutationAction[Wr[A]] {
       def isFaithful = true
-      override def movesAnyPoint(w: Wr[A]) = !w.h.isId
+      override def movesAnyPoint(w: Wr[A]) = !w.h.isId || w.aSeq.exists(a => !a.isId)
+      def findMovedPoint(w: Wr[A]) = largestMovedPoint(w)
       def actr(k: Int, w: Wr[A]): Int =
         if (k >= dimension) k else {
           val block = aDiv.divide(k)
