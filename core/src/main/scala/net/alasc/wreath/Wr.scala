@@ -25,9 +25,9 @@ case class Wr[A](aSeq: Seq[A], h: Perm) {
 
 /** Default wreath product object and type classes for wreath products. */
 object Wr {
-/*
-  implicit def wrFaithfulPermRepBuilder[A:Eq:Group:FaithfulPermRepBuilder]: FaithfulPermRepBuilder[Wr[A]] =
-    new WrFaithfulPermRepBuilder[A]*/
+
+  implicit def wrFaithfulPermutationActoinBuilder[A:Eq:Group:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[Wr[A]] =
+    new WrFaithfulPermutationActionBuilder[A]
 
   class WrEqGroup[A:Eq:Group] extends Eq[Wr[A]] with Group[Wr[A]] {
 

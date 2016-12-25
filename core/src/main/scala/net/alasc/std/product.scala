@@ -71,7 +71,7 @@ final class Product2FaithfulPermutationActionBuilder[A, B](implicit A: FaithfulP
 
 trait ProductInstances {
 
-  implicit def product2FaithfulPermutationAction[A:FaithfulPermutationActionBuilder, B:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[(A, B)] =
+  implicit def product2FaithfulPermutationActionBuilder[A:FaithfulPermutationActionBuilder, B:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[(A, B)] =
     new Product2FaithfulPermutationActionBuilder[A, B]
 
 }

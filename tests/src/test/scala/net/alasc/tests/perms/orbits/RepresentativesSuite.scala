@@ -134,7 +134,7 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
       forAll(genSizedGrp(10)) { grp =>
         import net.alasc.std.set._
         val bruteForceMinimal: Set[Int] = grp.iterator.map(g => set <|+| g).min
-        val minG = orbits.OrderedSets.toSmallest(set, grp)
+        val minG = orbits.Sets.toSmallest(set, grp)
         val cleverMinimal: Set[Int] = set <|+| minG
         cleverMinimal should ===(bruteForceMinimal)
       }

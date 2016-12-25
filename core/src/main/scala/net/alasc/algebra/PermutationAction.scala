@@ -191,6 +191,7 @@ object PermutationAction {
 
   def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
 
+  // TODO: move to contravariant functor (cats)
   def contramap[A, B](fa: PermutationAction[A])(f: B => A): PermutationAction[B] = new PermutationAction[B] {
     def isFaithful: Boolean = false
     def findMovedPoint(b: B): NNOption = fa.findMovedPoint(f(b))
@@ -211,6 +212,43 @@ object PermutationAction {
     override def toPerm(b: B): Perm = fa.toPerm(f(b))
     override def smallestMovedPoint(generators: Iterable[B]): NNOption = super.smallestMovedPoint(generators)
     override def largestMovedPoint(generators: Iterable[B]): NNOption = super.largestMovedPoint(generators)
+  }
+
+  def trivial[G]: PermutationAction[G] = new PermutationAction[G] {
+    def isFaithful: Boolean = false
+    def findMovedPoint(g: G): NNOption = NNNone
+    def movedPointsUpperBound(g: G): NNOption = NNNone
+    def actr(p: Int, g: G): Int = p
+    def actl(g: G, p: Int): Int = p
+  }
+
+  def sign[G](G: PermutationAction[G]): PermutationAction[G] = new PermutationAction[G] {
+    def isFaithful: Boolean = false
+    def findMovedPoint(g: G): NNOption =
+      if (G.signPerm(g) == -1) NNOption(0) else NNNone
+    def movedPointsUpperBound(g: G): NNOption = NNOption(1)
+    def actr(p: Int, g: G): Int =
+      if (G.signPerm(g) == -1 && (p == 0 || p == 1)) 1 - p else p
+    def actl(g: G, p: Int): Int =
+      if (G.signPerm(g) == -1 && (p == 0 || p == 1)) 1 - p else p
+    override def movesAnyPoint(g: G): Boolean = G.signPerm(g) == -1
+    override def movesPoint(g: G, p: Int): Boolean = G.signPerm(g) == -1 && (p == 0 || p == 1)
+    override def nMovedPoints(g: G): Int =
+      if (G.signPerm(g) == -1) 2 else 0
+    override def movedPoints(g: G): Set[Int] =
+      if (G.signPerm(g) == -1) Set(0, 1) else Set.empty[Int]
+    override def largestMovedPoint(g: G): NNOption =
+      if (G.signPerm(g) == -1) NNOption(1) else NNNone
+    override def smallestMovedPoint(g: G): NNOption =
+      if (G.signPerm(g) == -1) NNOption(0) else NNNone
+    override def signPerm(g: G): Int = G.signPerm(g)
+    override def permutationOrder(g: G): SafeLong =
+    if (G.signPerm(g) == -1) 2 else 1
+    override def orbit(g: G, p: Int): Set[Int] =
+      if (G.signPerm(g) == -1 && (p == 0 || p == 1)) Set(0, 1) else Set(p)
+    /** Returns a permutation with the same images as the action of `g`. */
+    override def toPerm(g: G): Perm =
+    if (G.signPerm(g) == -1) Perm(0, 1) else Perm.id
   }
 
 }

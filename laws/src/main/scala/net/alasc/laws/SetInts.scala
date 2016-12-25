@@ -1,7 +1,5 @@
 package net.alasc.laws
 
-import scala.collection.immutable.BitSet
-
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 

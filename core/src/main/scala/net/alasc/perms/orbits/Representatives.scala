@@ -14,10 +14,10 @@ import metal.mutable.Buffer
 import metal.syntax._
 
 import net.alasc.algebra._
-import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, Node, SchreierSims, SubgroupSearch, Term}
+import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, KernelBuilder, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.util._
-/*
+
 final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
@@ -29,7 +29,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   val n = seq.length
 
   val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
-    BuildChain.withBase[G, F](grp.chain, BaseGuideLex(n))
+    BuildChain.withBase[G, F](grp.chain, BaseGuideLex(n), grp.kernel)
 
   val arrayMaxInt = {
     var res = 0
@@ -233,6 +233,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
 
 }
 
+
 object Representatives {
 
   @inline def toUnsignedLong(i: Int): Long = i & 0xFFFFFFFFL
@@ -246,19 +247,19 @@ object Representatives {
     *                 for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     */
 
-  def permutationTo[G, F <: PermutationAction[G] with Singleton]
-    (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+  def permutationTo[G, A <: PermutationAction[G] with Singleton]
+    (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, A], symGrp: GrpChain[G, A])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): Opt[G] = {
     import grp.{action, group}
     val chainGrp0 = grp.chain
     val n = seq.length
-    val bo = BaseOrder[G, F](chainGrp0.base)
+    val bo = BaseOrder[G, A](chainGrp0.base)
     val basePointGroups = SubgroupSearch.basePointGroups(chainGrp0, n)
     if (chainGrp0.isTrivial)
       return (if (seq.sameElements(repr)) Opt(Group[G].id) else Opt.empty[G])
-    def rec(level: Int, g: G, chainGrp: Chain[G, F], chainSym: GrpChain[G, F], sOrbit: MutableOrbit): Opt[G] =
+    def rec(level: Int, g: G, chainGrp: Chain[G, A], chainSym: GrpChain[G, A], sOrbit: MutableOrbit): Opt[G] =
       chainGrp match {
-        case node: Node[G, F] =>
+        case node: Node[G, A] =>
           val beta = node.beta
           val orbitIt = node.orbitIterator
           while (orbitIt.hasNext) {
@@ -286,13 +287,13 @@ object Representatives {
             }
           }
           Opt.empty[G]
-        case _: Term[G, F] => Opt(g.inverse)
+        case _: Term[G, A] => Opt(g.inverse)
       }
     rec(0, Group[G].id, chainGrp0, symGrp, MutableOrbit.forSize(n))
   }
 
-  def findPermutationToMaximal[G, F <: PermutationAction[G] with Singleton]
-    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+  def findPermutationToMaximal[G, A <: PermutationAction[G] with Singleton]
+    (array: Array[Int], grp: GrpChain[G, A], symGrp: GrpChain[G, A])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     val invArray = new Array[Int](array.length)
     cforRange(0 until array.length) { i => invArray(i) = Int.MaxValue - array(i) }
@@ -307,8 +308,8 @@ object Representatives {
     *               for all `h` in `symGrp`, `seq(i <|+| h) = seq(i)`
     * @return the permutation `g` in `chainGrp` such that `seq <|+| g` is the lexicographic minimal sequence.
     */
-  def findPermutationToMinimal[G, F <: PermutationAction[G] with Singleton]
-    (array: Array[Int], grp: GrpChain[G, F], symGrp: GrpChain[G, F])
+  def findPermutationToMinimal[G, A <: PermutationAction[G] with Singleton]
+    (array: Array[Int], grp: GrpChain[G, A], symGrp: GrpChain[G, A])
     (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): G = {
     import grp.{action, classTag, equ, group}
     val n = array.length
@@ -317,14 +318,14 @@ object Representatives {
     var minimalG = Group[G].id
     // Implements breadth-first search in the cosets `symGrp \ grp`, filtering elements that do not lead to a minimal
     // lexicographic representative at each step in the stabilizer chain.
-    def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G, F], curSymGrp: GrpChain[G, F], sOrbit: MutableOrbit): Unit =
+    def rec(level: Int, toLevel: Int, curG: G, curChainGrp: Chain[G, A], curSymGrp: GrpChain[G, A], sOrbit: MutableOrbit): Unit =
       curChainGrp match {
-        case node: Node[G, F] if level <= toLevel =>
+        case node: Node[G, A] if level <= toLevel =>
           val candidates = metal.mutable.Buffer.empty[Int]
           val beta = node.beta
           val nextBeta = node.next match {
-            case nextNode: Node[G, F] => nextNode.beta
-            case _: Term[G, F] => n
+            case nextNode: Node[G, A] => nextNode.beta
+            case _: Term[G, A] => n
           }
           if (nextBeta > minimalCorrectBefore) {
             cforRange(minimalCorrectBefore until nextBeta) { k =>
@@ -364,7 +365,7 @@ object Representatives {
       }
     val sOrbit = MutableOrbit.forSize(n)
     val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
-      BuildChain.fromChain[G, F, F](grp.chain, Opt(BaseGuideLex(n)))
+      BuildChain.fromChain[G, A, A](grp.chain, grp.kernel, KernelBuilder.fromChain(grp.kernel), Opt(BaseGuideLex(n)))
     cforRange(0 until lexChain.length) { i =>
       rec(0, i, Group[G].id, lexChain, symGrp, sOrbit)
     }
@@ -372,4 +373,3 @@ object Representatives {
   }
 
 }
-*/

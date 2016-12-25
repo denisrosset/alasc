@@ -14,11 +14,11 @@ import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
 import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
 
-abstract class BSGSSuite(implicit val builder: GrpPermAlgorithms) extends AlascSuite {
+abstract class BSGSSuite(implicit val gcpa: GrpChainPermutationAction[Perm]) extends AlascSuite {
 
   import BSGSs._
 
-  import builder.{baseChange, baseSwap, schreierSims}
+  import gcpa.{baseChange, baseSwap, schreierSims}
 
   type F = Perm.algebra.type
   implicit def F: F = Perm.algebra
@@ -31,7 +31,7 @@ abstract class BSGSSuite(implicit val builder: GrpPermAlgorithms) extends AlascS
   )
 
   val genChain: Gen[Chain[Perm, Perm.algebra.type]] =
-    Gen.oneOf(groups).map(grp => builder.fromGrp(grp).chain)
+    Gen.oneOf(groups).map(grp => gcpa.fromGrp(grp).chain)
 
   implicit val noShrinkChain = noShrink[Chain[Perm, F]]
 
@@ -41,7 +41,7 @@ abstract class BSGSSuite(implicit val builder: GrpPermAlgorithms) extends AlascS
       val domain = Domain(n)
       forAll(Partitions.forDomain(domain)) { partition =>
         val definition = FixingPartitionDef[Perm, F](partition)
-        val newChain = BuildChain.fromChain[Perm, F, F](chain, definition.baseGuideOpt)
+        val newChain = BuildChain.withBase[Perm, F](chain, definition.baseGuideOpt)
         val baseBlockSize = newChain.base.map(partition.blockFor(_).size)
         baseBlockSize should beWeaklyIncreasing[Int]
       }

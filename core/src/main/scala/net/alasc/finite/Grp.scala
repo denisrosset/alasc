@@ -1,13 +1,15 @@
 package net.alasc.finite
 
 import scala.util.Random
-import spire.algebra.{Eq, Group, PartialOrder}
+
+import spire.algebra.{Action, Eq, Group, PartialOrder}
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
+
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.domains.Partition
 import net.alasc.perms.Perm
@@ -106,6 +108,11 @@ object Grp {
   implicit def grpGroupSyntax[G](grp: Grp[G]): GrpGroupSyntax[G] = new GrpGroupSyntax[G](grp)
 
   implicit def grpPermutationActionSyntax[G](grp: Grp[G]): GrpPermutationActionSyntax[G] = new GrpPermutationActionSyntax[G](grp)
+
+  def conjugationAction[G:Group:GrpGroup]: Action[Grp[G], G] = new Action[Grp[G], G] {
+    def actr(grp: Grp[G], g: G): Grp[G] = GrpGroup[G].conjugatedBy(grp, g)
+    def actl(g: G, grp: Grp[G]): Grp[G] = GrpGroup[G].conjugatedBy(grp, g.inverse)
+  }
 
 }
 

@@ -16,11 +16,7 @@ case class WrSize(a: Int, h: Int) {
 
   def aPerm = Perm(0, a - 1)
 
-  def representation[K:Ring]: FaithfulPermRep[Wr[Perm], K] = {
-    val wrir = new WrFaithfulPermRepBuilder[Perm]
-    val aR = wrir.A.build[K](Seq(aPerm))
-    wrir.R(h, aR)
-  }
+  def faithfulAction: PermutationAction[Wr[Perm]] = new WrFaithfulPermutationAction[Perm](h, a)
 
 }
 
@@ -55,5 +51,5 @@ object Wrs {
         h <- hGen
       } yield Wr(aSeq, h)
     }
-  
+
 }

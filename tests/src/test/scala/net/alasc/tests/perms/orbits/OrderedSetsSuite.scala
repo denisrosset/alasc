@@ -12,7 +12,7 @@ import net.alasc.algebra.PermutationAction
 import net.alasc.domains.Domain
 import net.alasc.laws.{Doms, Grps, Permutations, SetInts}
 import net.alasc.perms.Perm
-import net.alasc.perms.orbits.OrderedSets
+import net.alasc.perms.orbits.Sets
 import net.alasc.perms.default._
 import spire.std.int._
 
@@ -39,14 +39,14 @@ class OrderedSetsSuite extends AlascSuite {
   }
     test("Compute smallest") {
       forAll(SetInts.inDomain(domain), permutationGrp[Perm](domain)) { (set, grp) =>
-        val g = OrderedSets.toSmallest(set, grp)
+        val g = Sets.toSmallest(set, grp)
         (set <|+| g) should === (slowOrbit(Set(set), grp.generators).min)
       }
     }
 
     test("isSmallest") {
       forAll(SetInts.inDomain(domain), permutationGrp[Perm](domain)) { (set, grp) =>
-        OrderedSets.isSmallestInOrbit(set, grp) should === (set === slowOrbit(Set(set), grp.generators).min)
+        Sets.isSmallestInOrbit(set, grp) should === (set === slowOrbit(Set(set), grp.generators).min)
       }
     }
 

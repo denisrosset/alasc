@@ -1,11 +1,14 @@
 package net.alasc.laws
 
+import scala.annotation.tailrec
+
 import spire.algebra.{Eq, Group}
 
 import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.finite._
-import spire.math.max
+import spire.math.{SafeLong, max}
+import spire.util.Opt
 
 import Arbitrary.arbitrary
 
@@ -22,6 +25,18 @@ object Grps {
       generators <- Gen.containerOfN[Seq, G](n, elements)
       c <- elements
     } yield Grp(generators: _*).conjugatedBy(c)
+
+  /** If the order of grp is bigger than maxOrder, removes generators until the order is <= maxOrder, or fails. */
+  def forceSmallGroup[G:Eq:Group:GrpGroup](grp: Grp[G], maxOrder: SafeLong): Gen[Grp[G]] = {
+    @tailrec def iter(smaller: Grp[G]): Opt[Grp[G]] =
+      if (smaller.order <= maxOrder) Opt(smaller)
+      else if (smaller.generators.length <= 1) Opt.empty[Grp[G]]
+      else iter(Grp.fromGenerators(grp.generators.tail))
+    iter(grp) match {
+      case Opt(smallerGrp) => Gen.const(smallerGrp)
+      case _ => Gen.fail[Grp[G]]
+    }
+  }
 
   def conjugatedFromElements[G:Eq:Group:GrpGroup](elements: Gen[G], conjugateBy: Gen[G]): Gen[Grp[G]] =
     for {
