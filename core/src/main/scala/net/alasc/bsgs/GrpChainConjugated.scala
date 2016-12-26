@@ -45,6 +45,8 @@ final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
       computed
   }
 
+  def quotientOrder = originalChain.order
+
   def order = originalChain.order * kernel.order
 
   // `h in gInv G g` if and only if `g h gInv in G`.

@@ -16,6 +16,8 @@ trait Cosets[G, Subgrp <: Grp[G] with Singleton] {
 
   def iterator: Iterator[Coset[G, Subgrp]]
 
+  def representativesIterator: Iterator[G] = iterator.map(_.representative) // TODO: optimize in implementations
+
 }
 
 trait LeftCosets[G, Subgrp <: Grp[G] with Singleton] extends Cosets[G, Subgrp] {

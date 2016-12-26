@@ -34,6 +34,9 @@ abstract class GrpChain[G, A <: PermutationAction[G] with Singleton] extends Grp
 
   def kernel: Chain.Generic[G]
 
+  /** Order of the quotient group G/K where G is this group and K is its kernel for its action. */
+  def quotientOrder: SafeLong
+
   /** Returns a new GrpChain[G, A] with the kernel substituted.
     *
     * @param newKernel Kernel to substitute, of which the current kernel must be a subgroup.

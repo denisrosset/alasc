@@ -19,6 +19,8 @@ trait Coset[G, Subgrp <: Grp[G] with Singleton] {
   /** Checks whether this coset contains the given element. */
   def contains(el: G): Boolean
 
+  def representative: G
+
 }
 
 class RightCoset[G, Subgrp <: Grp[G] with Singleton](val representative: G, val subgrp: Subgrp) extends Coset[G, Subgrp] { lhs =>

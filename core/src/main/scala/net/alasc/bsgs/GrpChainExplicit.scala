@@ -46,7 +46,9 @@ final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
     }
   }
 
-  def order: SafeLong = chain.order * kernel.order
+  def order = chain.order * kernel.order
+
+  def quotientOrder = chain.order
 
   def randomElement(random: Random): G = kernel match {
     case _: Term[_, _] => chain.randomElement(random)

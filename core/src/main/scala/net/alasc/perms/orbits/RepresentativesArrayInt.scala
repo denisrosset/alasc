@@ -18,18 +18,18 @@ import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain
 import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.util._
 
-final case class Representatives[G, F <: PermutationAction[G] with Singleton]
-  (val seq: Array[Int], val grp: GrpChain[G, F], val symGrp: GrpChain[G, F])
+final case class RepresentativesArrayInt[G, A <: PermutationAction[G] with Singleton]
+  (val seq: Array[Int], val grp: GrpChain[G, A], val symGrp: GrpChain[G, A])
   (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
 
   import grp.{action, classTag, equ, group}
 
-  import Representatives.toUnsignedLong
+  import RepresentativesArrayInt.toUnsignedLong
 
   val n = seq.length
 
   val lexChain = if (grp.chain.hasLexicographicBase) grp.chain else
-    BuildChain.withBase[G, F](grp.chain, BaseGuideLex(n), grp.kernel)
+    BuildChain.withBase[G, A](grp.chain, BaseGuideLex(n), grp.kernel)
 
   val arrayMaxInt = {
     var res = 0
@@ -40,7 +40,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
     res
   }
 
-  def size: SafeLong = grp.order / symGrp.order
+  def size: SafeLong = grp.quotientOrder / symGrp.quotientOrder
 
   val intBits = if (arrayMaxInt == 0) 1 else (32 - java.lang.Integer.numberOfLeadingZeros(arrayMaxInt))
   val maxSkip = 64 / intBits
@@ -79,7 +79,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
   }
 
   abstract class Block {
-    def chain: Chain[G, F]
+    def chain: Chain[G, A]
     def size: SafeLong
     def index: SafeLong
     def images: Long
@@ -88,24 +88,24 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
 
   object Block {
     def start = lexChain match {
-      case node: Node[G, F] => NodeBlock(0, node, 0L, SafeLong.zero, Buffer(Group[G].id), metal.mutable.Buffer(symGrp))
-      case term: Term[G, F] => TermBlock(0, term, 0L, SafeLong.zero, Group[G].id)
+      case node: Node[G, A] => NodeBlock(0, node, 0L, SafeLong.zero, Buffer(Group[G].id), metal.mutable.Buffer(symGrp))
+      case term: Term[G, A] => TermBlock(0, term, 0L, SafeLong.zero, Group[G].id)
     }
   }
 
-  case class TermBlock(level: Int, chain: Term[G, F], images: Long, index: SafeLong, gInverse: G) extends Block {
+  case class TermBlock(level: Int, chain: Term[G, A], images: Long, index: SafeLong, gInverse: G) extends Block {
     def size = SafeLong.one
     def element = gInverse.inverse
   }
 
-  case class NodeBlock(level: Int, chain: Node[G, F], images: Long, index: SafeLong, candidates: Buffer[G], symGrps: Buffer[GrpChain[G, F]]) extends Block {
+  case class NodeBlock(level: Int, chain: Node[G, A], images: Long, index: SafeLong, candidates: Buffer[G], symGrps: Buffer[GrpChain[G, A]]) extends Block {
 
     case class NextCandidate(b: Int, c: Int, tail: Opt[NextCandidate] = Opt.empty[NextCandidate])
 
     val beta = chain.beta
 
     val chainNextBeta = chain.next match {
-      case nextNode: Node[G, F] => nextNode.beta
+      case nextNode: Node[G, A] => nextNode.beta
       case _ => n
     }
     assert(beta < chainNextBeta)
@@ -149,9 +149,9 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
     }
 
     lazy val size: SafeLong = {
-      val co = ChainRec.order(chain: Chain[G, F], SafeLong.one)
+      val co = ChainRec.order(chain: Chain[G, A], SafeLong.one)
 
-      symGrps.foldLeft(SafeLong.zero) { case (sm, symGrp) => sm + co / symGrp.order }
+      symGrps.foldLeft(SafeLong.zero) { case (sm, symGrp) => sm + co / symGrp.quotientOrder }
     }
 
     def blockForIndex(idx: SafeLong): Opt[Block] = {
@@ -197,7 +197,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
       def next: Block = {
         val images = sortedImages(i)
         val newBlockCandidates = metal.mutable.Buffer.empty[G]
-        val newBlockSymGrps = metal.mutable.Buffer.empty[GrpChain[G, F]]
+        val newBlockSymGrps = metal.mutable.Buffer.empty[GrpChain[G, A]]
         var it = Opt(candidatesForImages(images.toLong))
         val sOrbit = MutableOrbit.forSize(n)
         while (it.nonEmpty) {
@@ -213,13 +213,13 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
           it = next
         }
         val block = chain.next match {
-          case nextNode: Node[G, F] if nextNode.beta == nextBeta =>
+          case nextNode: Node[G, A] if nextNode.beta == nextBeta =>
             NodeBlock(level + 1, nextNode, images, blockIndex, newBlockCandidates, newBlockSymGrps)
-          case nextNode: Node[G, F] =>
+          case nextNode: Node[G, A] =>
             assert(nextNode.beta < nextBeta)
             val nNode = Node.trivial(nextBeta, nextNode)
             NodeBlock(level + 1, nNode, images, blockIndex, newBlockCandidates, newBlockSymGrps)
-          case termNode: Term[G, F] =>
+          case termNode: Term[G, A] =>
             assert(newBlockCandidates.length == 1)
             TermBlock(level + 1, termNode, images, blockIndex, newBlockCandidates(0))
         }
@@ -234,7 +234,7 @@ final case class Representatives[G, F <: PermutationAction[G] with Singleton]
 }
 
 
-object Representatives {
+object RepresentativesArrayInt {
 
   @inline def toUnsignedLong(i: Int): Long = i & 0xFFFFFFFFL
 
