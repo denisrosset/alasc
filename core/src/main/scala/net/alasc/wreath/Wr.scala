@@ -1,5 +1,7 @@
 package net.alasc.wreath
 
+import scala.collection.immutable.SortedMap
+
 import spire.algebra._
 import spire.syntax.action._
 import spire.syntax.eq._
@@ -8,41 +10,61 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.finite._
-import net.alasc.perms.Perm
+import net.alasc.perms.{Cycle, Perm}
 import net.alasc.rep.FaithfulPermRepBuilder
 import net.alasc.syntax.permutationAction._
 
 /** Describes the wreath product of two objects. */
-case class Wr[A](aSeq: Seq[A], h: Perm) {
+class Wr[A] protected[wreath] (val aMap: SortedMap[Int, A], val h: Perm) {
 
-  override def toString = s"Wr($aSeq, $h)"
+  def a(index: Int)(implicit A: Group[A]) = aMap.getOrElse(index, A.id)
 
-  override def equals(that: Any) = sys.error("Not implemented")
+  def n: Int = spire.math.max(aMap.keys.fold(-1)(spire.math.max), h.largestMovedPoint.getOrElseFast(-1)) + 1
 
-  override def hashCode = sys.error("Not implemented")
+  override def toString = s"Wr(" + aMap.map { case (k ,v) => s"$k -> $v" }.mkString(", ") + ")" + h.toCycles.string
+
+  override def equals(any: Any) = any match {
+    case that: Wr[_] => this.aMap == that.aMap && this.h === that.h
+    case _ => false
+  }
+
+  override def hashCode = aMap.hashCode * 41 + h.hashCode()
+
+  def apply(cycle: Int*): Wr[A] = new Wr(aMap, h(cycle: _*))
 
 }
 
 /** Default wreath product object and type classes for wreath products. */
 object Wr {
 
+  def apply[A:Eq:Group](base: (Int, A)*)(cycle: Int*): Wr[A] = {
+    val aMap = SortedMap(base.filterNot(_._2.isId): _*)
+    new Wr(aMap, Perm(cycle: _*))
+  }
+
+  def fromPerm[A:Eq:Group](base: (Int, A)*)(perm: Perm): Wr[A] = {
+    val aMap = SortedMap(base.filterNot(_._2.isId): _*)
+    new Wr(aMap, perm)
+  }
+
   implicit def wrFaithfulPermutationActoinBuilder[A:Eq:Group:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[Wr[A]] =
     new WrFaithfulPermutationActionBuilder[A]
 
   class WrEqGroup[A:Eq:Group] extends Eq[Wr[A]] with Group[Wr[A]] {
 
-    val aSeqEqFiniteGroup = new SeqEqGroup[Seq[A], A]
-    def eqv(x: Wr[A], y: Wr[A]): Boolean = (x.h === y.h) && aSeqEqFiniteGroup.eqv(x.aSeq, y.aSeq)
-    def id = Wr(Seq.empty[A], Perm.id)
+    val aMapEq = spire.std.map.MapEq[Int, A]
+
+    def eqv(x: Wr[A], y: Wr[A]): Boolean = (x.h === y.h) && aMapEq.eqv(x.aMap, y.aMap)
+    def id = Wr[A]()()
     def inverse(w: Wr[A]): Wr[A] = {
       val hInv = w.h.inverse
-      val n = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
-      Wr(Seq.tabulate(n)( i => w.aSeq.applyOrElse(i <|+| hInv, (k: Int) => Group[A].id).inverse), hInv)
+      val n = w.aMap.keys.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
+      Wr.fromPerm(w.aMap.toSeq.map { case (i, a) => (i <|+| w.h, a.inverse) }: _*)(hInv)
     }
     def op(x: Wr[A], y: Wr[A]): Wr[A] = {
       val newH = x.h |+| y.h
-      val n = x.aSeq.size.max(y.aSeq.size).max(x.h.largestMovedPoint.getOrElseFast(-1) + 1)
-      Wr(Seq.tabulate(n)( i => x.aSeq.applyOrElse(i, (k: Int) => Group[A].id) |+| y.aSeq.applyOrElse(i <|+| x.h, (k: Int) => Group[A].id) ), newH)
+      val n = spire.math.max(x.n, y.n)
+      Wr.fromPerm(Seq.tabulate(n)( i => (i, x.a(i) |+| y.a(i <|+| x.h) )): _*)(newH)
     }
 
   }
@@ -53,10 +75,10 @@ object Wr {
     val aGenerators = for {
       k <- 0 until n
       a <- ga.generators
-    } yield Wr(Seq.tabulate(k + 1)( i => if (i == k) a else Group[A].id ), Perm.id)
+    } yield Wr(k -> a)()
     val hGenerators = for {
       h <- gh.generators
-    } yield Wr(Seq.empty[A], h)
+    } yield Wr.fromPerm[A]()(h)
     val order = ga.order.pow(n) * gh.order
     GrpDef(aGenerators ++ hGenerators, Opt(order))
   }

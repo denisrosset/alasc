@@ -17,32 +17,26 @@ class WrFaithfulPermutationAction[A:Eq:Group](val n: Int, val aSize: Int)(implic
   def isFaithful = true
   val dimension = n * aSize
   val aDiv = Divisor(dimension - 1, aSize)
-  override def movesAnyPoint(w: Wr[A]) = !w.h.isId || w.aSeq.exists(a => !a.isId)
+  override def movesAnyPoint(w: Wr[A]) = !w.h.isId || w.aMap.nonEmpty
   def findMovedPoint(w: Wr[A]) = largestMovedPoint(w)
   def actr(k: Int, w: Wr[A]): Int =
     if (k >= dimension) k else {
       val block = aDiv.divide(k)
       val sub = k - block * aSize
       val newBlock = block <|+| w.h
-      if (block >= w.aSeq.size)
-        newBlock * aSize + sub
-      else
-        newBlock * aSize + (sub <|+| w.aSeq(block))
+      newBlock * aSize + (sub <|+| w.a(block))
     }
   def actl(w: Wr[A], k: Int): Int =
     if (k >= dimension) k else {
       val block = aDiv.divide(k)
       val sub = k - block * aSize
       val newBlock = w.h |+|> block
-      if (newBlock >= w.aSeq.size)
-        newBlock * aSize + sub
-      else
-        newBlock * aSize + (w.aSeq(newBlock) |+|> sub)
+      newBlock * aSize + (w.a(newBlock) |+|> sub)
     }
   def movedPointsUpperBound(w: Wr[A]) = NNSome(dimension - 1)
   override def movedPoints(w: Wr[A]) = {
     val bitset = metal.mutable.ResizableBitSet.empty
-    val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
+    val m = w.n
     var block = 0
     var offset = 0
     val s = aSize
@@ -52,8 +46,7 @@ class WrFaithfulPermutationAction[A:Eq:Group](val n: Int, val aSize: Int)(implic
           bitset += k
         }
       }
-      else if (block < w.aSeq.size)
-        w.aSeq(block).movedPoints.foreach { sub => bitset += (offset + sub) }
+      else w.a(block).movedPoints.foreach { sub => bitset += (offset + sub) }
       block += 1
       offset += s
     }
@@ -63,16 +56,14 @@ class WrFaithfulPermutationAction[A:Eq:Group](val n: Int, val aSize: Int)(implic
   override def smallestMovedPoint(w: Wr[A]): NNOption = {
     var block = 0
     var offset = 0
-    val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
+    val m = w.n
     val s = aSize
     while (block < m) {
       if ((block <|+| w.h) != block)
         return NNSome(offset)
-      else if (block < w.aSeq.size) {
-        w.aSeq(block).smallestMovedPoint match {
+      else w.a(block).smallestMovedPoint match {
           case NNOption(sub) => return NNSome(offset + sub)
           case _ =>
-        }
       }
       block += 1
       offset += s
@@ -80,18 +71,16 @@ class WrFaithfulPermutationAction[A:Eq:Group](val n: Int, val aSize: Int)(implic
     NNNone
   }
   override def largestMovedPoint(w: Wr[A]): NNOption = {
-    val m = w.aSeq.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
+    val m = n
     var block = m - 1
     val s = aSize
     var offset = block * s
     while (block >= 0) {
       if ((block <|+| w.h) != block)
         return NNSome(offset + s - 1)
-      else if (block < w.aSeq.size) {
-        w.aSeq(block).largestMovedPoint match {
+      else w.a(block).largestMovedPoint match {
           case NNOption(sub) => return NNSome(offset + sub)
           case _ =>
-        }
       }
       block -= 1
       offset -= s
@@ -104,8 +93,8 @@ class WrFaithfulPermutationActionBuilder[A:Eq:FaithfulPermutationActionBuilder:G
 
   def apply(generators: Iterable[Wr[A]]) = {
     import MaxHelpers._
-    val aGenerators = generators.flatMap(_.aSeq)
-    val n = generators.mapMax(0)( g => spire.math.max(g.aSeq.size, g.h.largestMovedPoint.getOrElseFast(-1) + 1) )
+    val aGenerators = generators.flatMap(_.aMap.values)
+    val n = generators.mapMax(0)(_.n)
     implicit val actionA = FaithfulPermutationActionBuilder[A].apply(aGenerators)
     val aSize = aGenerators.mapMax(0)(a => a.largestMovedPoint.getOrElseFast(-1) + 1)
     new WrFaithfulPermutationAction[A](n, aSize)
