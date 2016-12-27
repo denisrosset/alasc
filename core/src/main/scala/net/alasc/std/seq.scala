@@ -28,7 +28,7 @@ class SeqPermutationAction[SA <: SeqLike[A, SA], A, P:Group:PermutationAction](
       cforRange(0 until s.length) { i =>
         b += s(i <|+| p)
       }
-      Opt(b.result)
+      Opt(b.result())
     }
 
   def partialActr(s: SA, p: P): Opt[SA] = partialActl(p.inverse, s)

@@ -312,3 +312,9 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
     }
 
 }
+
+object GrpChainPermutationAction {
+
+  @inline final def apply[G](implicit ev: GrpChainPermutationAction[G]): GrpChainPermutationAction[G] = ev
+
+}
