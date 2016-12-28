@@ -36,8 +36,8 @@ object Wrs {
     Arbitrary(forSize(wrSize.a, wrSize.h))
 
   def forSize(aSize: Int, hSize: Int) = for {
-    aSeq <- Gen.containerOfN[Seq, Perm](hSize, Permutations.permForDomain(Domain(aSize)))
-    h <- Permutations.permForDomain(Domain(hSize))
+    aSeq <- Gen.containerOfN[Seq, Perm](hSize, Permutations.permForSize(aSize))
+    h <- Permutations.permForSize(hSize)
   } yield Wr.fromPerm(aSeq.zipWithIndex.map(_.swap): _*)(h)
 
   def sized(implicit ev: Arbitrary[Perm]): Gen[Wr[Perm]] =

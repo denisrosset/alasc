@@ -4,7 +4,7 @@ import spire.algebra.Order
 import spire.util.Opt
 
 import org.scalacheck._
-
+/* TODO
 import net.alasc.bsgs.{BaseGuideLex, GrpPermAlgorithms}
 import net.alasc.domains.{Domain, Partition}
 import net.alasc.finite._
@@ -146,3 +146,4 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
 final class RepresentativesSuiteDeterministic extends RepresentativesSuite()(PermSuite.deterministic)
 
 final class RepresentativesSuiteRandomized extends RepresentativesSuite()(PermSuite.randomized)
+*/

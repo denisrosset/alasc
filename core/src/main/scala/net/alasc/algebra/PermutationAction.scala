@@ -192,7 +192,8 @@ object PermutationAction {
   def apply[G](implicit G: PermutationAction[G]): PermutationAction[G] = G
 
   // TODO: move to contravariant functor (cats)
-  def contramap[A, B](fa: PermutationAction[A])(f: B => A): PermutationAction[B] = new PermutationAction[B] {
+  def contramap[A, B](fa: PermutationAction[A], functionName: String = "f")(f: B => A): PermutationAction[B] = new PermutationAction[B] {
+    override def toString = s"$functionName($fa)"
     def isFaithful: Boolean = false
     def findMovedPoint(b: B): NNOption = fa.findMovedPoint(f(b))
     def movedPointsUpperBound(b: B): NNOption = fa.movedPointsUpperBound(f(b))
@@ -215,6 +216,7 @@ object PermutationAction {
   }
 
   def trivial[G]: PermutationAction[G] = new PermutationAction[G] {
+    override def toString = s"PermutationAction.trivial"
     def isFaithful: Boolean = false
     def findMovedPoint(g: G): NNOption = NNNone
     def movedPointsUpperBound(g: G): NNOption = NNNone
@@ -223,6 +225,7 @@ object PermutationAction {
   }
 
   def sign[G](G: PermutationAction[G]): PermutationAction[G] = new PermutationAction[G] {
+    override def toString = s"PermutationAction.sign($G)"
     def isFaithful: Boolean = false
     def findMovedPoint(g: G): NNOption =
       if (G.signPerm(g) == -1) NNOption(0) else NNNone

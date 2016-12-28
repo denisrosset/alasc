@@ -385,9 +385,11 @@ object MutableChain {
   }
 
   def incompleteWithGenerators[G:ClassTag:Group:NodeBuilder, F <: PermutationAction[G] with Singleton]
-    (generators: Iterable[G], base: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
+    (generators: Iterable[G], kb: KernelBuilder[G], base: Seq[Int] = Seq.empty)(implicit action: F): MutableChain[G, F] = {
     val mutableChain = emptyWithBase[G, F](base)
-    mutableChain.insertGenerators(generators)
+    val (forChain, forKernel) = generators.partition(action.movesAnyPoint)
+    mutableChain.insertGenerators(forChain)
+    kb.mutableChain.insertGenerators(forKernel)
     mutableChain
   }
 

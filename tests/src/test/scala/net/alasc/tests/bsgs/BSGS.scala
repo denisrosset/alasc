@@ -13,7 +13,7 @@ import net.alasc.perms.{_}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
 import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
-
+/* TODO
 abstract class BSGSSuite(implicit val gcpa: GrpChainPermutationAction[Perm]) extends AlascSuite {
 
   import BSGSs._
@@ -115,3 +115,4 @@ abstract class BSGSSuite(implicit val gcpa: GrpChainPermutationAction[Perm]) ext
 final class BSGSSuiteDeterministic extends BSGSSuite()(PermSuite.deterministic)
 
 final class BSGSSuiteRandomized extends BSGSSuite()(PermSuite.randomized)
+*/

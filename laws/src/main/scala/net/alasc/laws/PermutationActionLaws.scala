@@ -4,6 +4,7 @@ import spire.algebra._
 
 import org.typelevel.discipline.Laws
 import org.scalacheck.{Arbitrary, Prop}
+import Arbitrary.arbitrary
 import org.scalacheck.Prop._
 import spire.syntax.all._
 import spire.laws._
@@ -11,42 +12,29 @@ import spire.std.boolean._
 import spire.std.int._
 
 import net.alasc.algebra._
-import net.alasc.domains.{Dom, Domain}
 import net.alasc.syntax.all._
 import net.alasc.util._
 
 object PermutationActionLaws {
 
-  def apply[A:Eq:Arbitrary](domain0: Domain)(implicit da: Arbitrary[Dom[domain0.type]])  = new PermutationActionLaws[A] {
-    val domain: domain0.type = domain0
+  def apply[A:Eq:Arbitrary] = new PermutationActionLaws[A] {
     def Equ = implicitly
     def Arb = implicitly
-    def DomArb = da
   }
 
 }
 
 trait PermutationActionLaws[A] extends Laws {
 
-  val domain: Domain
-
-  type D = Dom[domain.type]
-
-  implicit def convertAction(implicit pa: Action[Int, A]): Action[D, A] =
-    new Action[D, A] {
-      def actr(k: D, a: A): D = Dom(domain)(pa.actr(k.value, a))
-      def actl(a: A, k: D): D = Dom(domain)(pa.actl(a, k.value))
-    }
-
   implicit def Equ: Eq[A]
   implicit def Arb: Arbitrary[A]
 
-  implicit def DomArb: Arbitrary[Dom[domain.type]]
+  def actionLaws: ActionLaws[A, Int] = ActionLaws[A, Int](implicitly, implicitly, implicitly, Arbitrary(arbitrary[Dom].map(_.value)))
 
   def permutationAction(implicit group: Group[A], A: PermutationAction[A]) = new PermutationActionProperties(
     name = "permutationAction",
     parent = None,
-    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, D].groupAction),
+    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> actionLaws.groupAction),
 
     "smallestMovedPoint" -> forAll((x: A) =>
       x.smallestMovedPoint match {
@@ -96,7 +84,7 @@ trait PermutationActionLaws[A] extends Laws {
   def faithfulPermutationAction(implicit group: Group[A], A: PermutationAction[A]) = new PermutationActionProperties(
       name = "faithfulPermutationAction",
       parent = Some(permutationAction),
-      bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, D].groupAction),
+      bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> actionLaws.groupAction),
       "support.isEmpty" -> forAll((x: A) =>
         (x.nMovedPoints == 0) === x.isId
       )

@@ -74,8 +74,8 @@ final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
   }
 
   def randomElement(random: Random): G = kernel match {
-    case _: Term[_, _] => gInv |+| chain.randomElement(random) |+| g
-    case _: Node[G, _] => gInv |+| chain.randomElement(random) |+| kernel.randomElement(random) |+| g
+    case _: Term[_, _] => gInv |+| originalChain.randomElement(random) |+| g
+    case _: Node[G, _] => gInv |+| originalChain.randomElement(random) |+| kernel.randomElement(random) |+| g
   }
 
   def enlargeKernel(newKernel: Chain.Generic[G]) = new GrpChainConjugated(originalChain, g, gInv, originalGeneratorsOpt, newKernel)

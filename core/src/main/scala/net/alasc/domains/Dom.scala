@@ -7,6 +7,7 @@ import shapeless.Witness
 
 import net.alasc.domains.{Domain, Partition}
 
+/* TODO: check if still used
 class Dom[D <: Domain with Singleton](val value: Int) extends AnyVal {
 
   override def toString = s"Dom($value)"
@@ -34,3 +35,4 @@ object Dom {
   implicit def order[D <: Domain with Singleton]: Order[Dom[D]] = internalOrder.asInstanceOf[Order[Dom[D]]]
   
 }
+*/

@@ -9,6 +9,8 @@ import net.alasc.util._
 
 final class Product2FaithfulPermutationAction[A, B](val A: PermutationAction[A], dimA: Int, B: PermutationAction[B], dimB: Int) extends PermutationAction[(A, B)] {
 
+  override def toString = s"Product($A, $B)"
+
   def isFaithful: Boolean = true
 
   def actr(p: Int, x0: (A, B)) =

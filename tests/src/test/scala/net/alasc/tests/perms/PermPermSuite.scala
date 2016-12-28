@@ -9,30 +9,27 @@ import org.scalacheck.Arbitrary
 
 import net.alasc.algebra._
 import net.alasc.domains.Domain
-import net.alasc.finite.{Grp, Rep}
+import net.alasc.finite.{FaithfulPermutationActionBuilder, Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._
 import net.alasc.rep.FaithfulPermRepBuilder
 
 class PermPermSuite extends AlascSuite {
 
-  import Doms.arbDomInDomain
-
   {
-    val domain = Domain(21)
-    val leftDomain = Domain(16)
-    val rightDomain = Domain(5)
+    val size = 21
+    val leftSize = 16
+    val rightSize = 5
     implicit val permTupleArbitrary: Arbitrary[(Perm, Perm)] =
       Arbitrary(for {
-        g1 <- Permutations.permForDomain(leftDomain)
-        g2 <- Permutations.permForDomain(rightDomain)
+        g1 <- Permutations.permForSize(leftSize)
+        g2 <- Permutations.permForSize(rightSize)
       } yield (g1, g2))
 
-    val coveringDomain = (Perm(0, leftDomain.size -1), Perm(0, rightDomain.size - 1))
-    implicit val permPermAction: PermutationAction[(Perm, Perm)] =
-      FaithfulPermRepBuilder[(Perm, Perm)].build[SafeLong](Seq(coveringDomain)).permutationAction
+    val coveringDomain = (Perm(0, leftSize -1), Perm(0, rightSize - 1))
+    implicit val permPermAction: PermutationAction[(Perm, Perm)] = FaithfulPermutationActionBuilder[(Perm, Perm)].apply(Seq(coveringDomain))
 
-    checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)](domain).faithfulPermutationAction)
+    checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
   }
 /* TODO
   {

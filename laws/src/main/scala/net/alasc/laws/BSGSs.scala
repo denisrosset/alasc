@@ -29,7 +29,7 @@ object BSGSs {
       Gen.choose(0, chain.length - 2).map(i => Opt(i))
 
   def genSwappedSeq[A](seq: Seq[A]): Gen[Seq[A]] =
-    Permutations.permForDomain(Domain(seq.size)).map( perm => (seq <|+|? perm).get )
+    Permutations.permForSize(seq.size).map( perm => (seq <|+|? perm).get )
 
   def genNewBase[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Gen[Seq[Int]] = chain match {
     case _: Term[G, F] => Gen.const(Seq.empty[Int])

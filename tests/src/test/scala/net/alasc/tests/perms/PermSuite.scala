@@ -1,20 +1,17 @@
 package net.alasc.tests
 package perms
 
-import net.alasc.bsgs.GrpPermAlgorithms
+import net.alasc.bsgs.{GrpChainPermutationAction}
 import net.alasc.domains.Domain
-import net.alasc.laws.{AnyRefLaws, Doms, PermutationActionLaws, Permutations}
+import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
 import net.alasc.perms.{Cycle, Cycles, Perm}
 
 class PermSuite extends AlascSuite {
 
   import Permutations._
 
-  val domain = Domain(100)
-  import Doms.arbDomInDomain
-
   checkAll("Perm", AnyRefLaws[Perm]._eq)
-  checkAll("Perm", PermutationActionLaws[Perm](domain).faithfulPermutationAction)
+  checkAll("Perm", PermutationActionLaws[Perm].faithfulPermutationAction)
 
   test("For g = (1, 2, 3), 1 <* g = 2, 2 <* g = 3, 3 <* g = 1") {
     val g = Perm(1, 2, 3)
@@ -57,14 +54,14 @@ class PermSuite extends AlascSuite {
 
 object PermSuite {
 
-  val deterministic = {
+  val deterministic: GrpChainPermutationAction[Perm] = {
     import net.alasc.perms.deterministic._
-    implicitly[GrpPermAlgorithms]
+    permRepGrpBuilder[Perm]
   }
 
-  val randomized = {
+  val randomized: GrpChainPermutationAction[Perm] = {
     import net.alasc.perms.default._
-    implicitly[GrpPermAlgorithms]
+    permRepGrpBuilder[Perm]
   }
 
 }

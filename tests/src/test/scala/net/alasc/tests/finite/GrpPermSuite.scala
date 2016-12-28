@@ -5,9 +5,8 @@ import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.domains.{Domain, Partition}
-import net.alasc.finite.Grp
+import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.laws._
 import net.alasc.perms.Perm
 import net.alasc.perms.default._
@@ -17,17 +16,11 @@ class GrpPermSuite extends AlascSuite {
   import Permutations.arbPerm
   import Grps.arbGrp
 
-  val build = implicitly[GrpPermAlgorithms]
+  val build = implicitly[GrpGroup[Perm]]
 
   implicit def arbDomain: Arbitrary[Domain] = Arbitrary( Gen.choose(0, 32).map(Domain(_)) )
 
-  nestedCheckAll[Domain]("Grp[Perm] laws", Domain(0)) { d =>
-    val domain: Domain = d
-    import Doms.arbDomInDomain
-    PermGrpLaws(domain).permGrp
-  }
-
-//  checkAll("Grp[Perm] laws", PermGrpLaws[Perm]()
+  checkAll("Grp[Perm] with permutation action", GrpLaws[Perm].grpPermutationAction)
 
   checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[Perm]].boundedBelowLatticePartialOrder)
 

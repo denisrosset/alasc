@@ -25,29 +25,30 @@ class BBGrpAlgos[G](implicit
   def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = fromElements(grp.iterator.toSet).generators.toIndexedSeq
 
   def fromElements(elements: Set[G]): GG = {
-    import scala.collection.mutable.{HashSet, Stack}
+    import scala.collection.mutable.Stack
     val order = elements.size
-    val remGenerators = elements.to[Stack]
-    var generators = HashSet.empty[G]
-    var checkElements = generateElements(generators)
+    val remGenerators = (elements - Group[G].id).to[Stack]
+    var generators = Set(Group[G].id)
+    var checkElements = Set(Group[G].id)
     while (checkElements.size < order) {
       val g = remGenerators.pop()
-      if (!elements.contains(g)) {
+      val newElements = recElements(generators + g, checkElements)
+      if (newElements.size != checkElements.size) {
         generators += g
-        checkElements = generateElements(generators)
+        checkElements = newElements
       }
     }
     new BBGrp(generators.toIndexedSeq, elements)
   }
 
+  @tailrec final protected def recElements(generatorsAndId: Set[G], elements: Set[G]): Set[G] = {
+    val newElements = elements.flatMap(e => generatorsAndId.map(g => e |+| g))
+    if (newElements.size == elements.size) elements else recElements(generatorsAndId, newElements)
+  }
+
   def generateElements(generators: Iterable[G]): Set[G] = {
-    @tailrec def rec(elements: Set[G]): Set[G] = {
-      val newElements = generators
-        .flatMap(g1 => elements.map(g2 => g1 |+| g2))
-        .filterNot(elements.contains(_))
-      if (newElements.isEmpty) elements else rec(elements ++ newElements)
-    }
-    rec(generators.toSet + Group[G].id)
+    val genAndId = generators.toSet + Group[G].id
+    recElements(genAndId, genAndId)
   }
 
   def fromGenerators(generators: IndexedSeq[G]): GG = {

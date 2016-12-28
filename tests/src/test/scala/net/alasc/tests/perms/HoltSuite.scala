@@ -3,6 +3,7 @@ package perms
 
 import spire.math.SafeLong
 
+/*TODO
 import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.finite._
 import net.alasc.perms.Perm
@@ -58,3 +59,4 @@ abstract class HoltSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite
 class HoltSuiteDeterministic extends HoltSuite()(PermSuite.deterministic)
 
 class HoltSuiteRandomized extends HoltSuite()(PermSuite.randomized)
+*/

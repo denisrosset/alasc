@@ -21,22 +21,22 @@ import net.alasc.syntax.permutationAction._
   */
 object Permutations {
 
-  def permForDomain(domain: Domain): Gen[Perm] =
-    Gen.containerOfN[Array, Int](domain.size, arbitrary[Int]) flatMap { randomValues =>
+  def permForSize(size: Int): Gen[Perm] =
+    Gen.containerOfN[Array, Int](size, arbitrary[Int]) flatMap { randomValues =>
       import spire.std.long.LongAlgebra
-      val images = new Array[Int](domain.size)
-      val toSort = new Array[Long](domain.size) // bits 63..32 are random, 31..0 represents a domain element
-      cforRange(0 until domain.size) { k =>
+      val images = new Array[Int](size)
+      val toSort = new Array[Long](size) // bits 63..32 are random, 31..0 represents a domain element
+      cforRange(0 until size) { k =>
         toSort(k) = (randomValues(k).toLong << 32) + k.toLong
       }
       spire.math.Sorting.sort(toSort) // sort, basically on the bits 63 .. 32
-      cforRange(0 until domain.size)( k => images(k) = toSort(k).toInt )
+      cforRange(0 until size)( k => images(k) = toSort(k).toInt )
       Perm.fromImages(images)
     }
 
-  def cyclesForDomain(domain: Domain): Gen[Cycles] = permForDomain(domain).map(_.toCycles)
+  def cyclesForSize(size: Int): Gen[Cycles] = permForSize(size).map(_.toCycles)
 
-  val sizedPerm: Gen[Perm] = Gen.parameterized( parameters => permForDomain(Domain(parameters.size)) )
+  val sizedPerm: Gen[Perm] = Gen.parameterized( parameters => permForSize(parameters.size) )
 
   val sizedCycles: Gen[Cycles] = sizedPerm.map(_.toCycles)
 
@@ -55,7 +55,7 @@ object Permutations {
 
   implicit val cyclesCloner: Cloner[Cycles] = Cloner( (c: Cycles) => c.toPerm.toCycles )
 
-  implicit def permutationGrp(domain: Domain)(implicit ev: GrpGroup[Perm]): Gen[Grp[Perm]] =
-    Grps.fromElements(permForDomain(domain))
+  implicit def permutationGrp(size: Int)(implicit ev: GrpGroup[Perm]): Gen[Grp[Perm]] =
+    Grps.fromElements(permForSize(size))
 
 }

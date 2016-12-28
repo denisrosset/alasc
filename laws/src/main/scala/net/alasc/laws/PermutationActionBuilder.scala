@@ -29,15 +29,18 @@ object PermutationActionBuilder extends PermutationActionBuilder0 {
   @inline final def apply[G](implicit ev: PermutationActionBuilder[G]): PermutationActionBuilder[G] = ev
 
   def trivial[G]: PermutationActionBuilder[G] = new PermutationActionBuilder[G] {
+    override def toString = "Trivial"
     def apply(generators: Iterable[G]) = PermutationAction.trivial[G]
   }
 
   def productSign[A:PermutationActionBuilder,B:PermutationActionBuilder]: PermutationActionBuilder[(A, B)] =
     new PermutationActionBuilder[(A, B)] {
+      override def toString = "ProductSign(" + PermutationActionBuilder[A] + ", " + PermutationActionBuilder[B] + ")"
       def apply(generators: Iterable[(A, B)]) = {
         val A = PermutationActionBuilder[A].apply(generators.map(_._1))
         val B = PermutationActionBuilder[B].apply(generators.map(_._2))
         new PermutationAction[(A, B)] {
+          override def toString = s"ProductSign($A, $B)"
           def isFaithful: Boolean = false
           def findMovedPoint(g: (A, B)): NNOption =
             if (A.signPerm(g._1) != B.signPerm(g._2)) NNOption(0) else NNNone
@@ -52,18 +55,21 @@ object PermutationActionBuilder extends PermutationActionBuilder0 {
 
   def product1[A:PermutationActionBuilder, B]: PermutationActionBuilder[(A, B)] =
     new PermutationActionBuilder[(A, B)] {
+      override def toString = "Left(" + PermutationActionBuilder[A] + ")"
       def apply(generators: Iterable[(A, B)]) =
-        PermutationAction.contramap(PermutationActionBuilder[A].apply(generators.map(_._1)))( (pair: (A, B)) => pair._1 )
+        PermutationAction.contramap(PermutationActionBuilder[A].apply(generators.map(_._1)), "left")( (pair: (A, B)) => pair._1 )
     }
 
   def product2[A, B:PermutationActionBuilder]: PermutationActionBuilder[(A, B)] =
     new PermutationActionBuilder[(A, B)] {
+      override def toString = "Right(" + PermutationActionBuilder[B] + ")"
       def apply(generators: Iterable[(A, B)]) =
-        PermutationAction.contramap(PermutationActionBuilder[B].apply(generators.map(_._2)))( (pair: (A, B)) => pair._2 )
+        PermutationAction.contramap(PermutationActionBuilder[B].apply(generators.map(_._2)), "right")( (pair: (A, B)) => pair._2 )
     }
 
   def fromFaithfulPermutationActionBuilder[G](implicit ev: FaithfulPermutationActionBuilder[G]): PermutationActionBuilder[G] =
     new PermutationActionBuilder[G] {
+      override def toString = ev.toString
       def apply(generators: Iterable[G]) = ev(generators)
     }
 
@@ -77,6 +83,7 @@ object PermutationActionBuilder extends PermutationActionBuilder0 {
     ))
 
   def sign[G:PermutationActionBuilder]: PermutationActionBuilder[G] = new PermutationActionBuilder[G] {
+    override def toString = "Sign(" + PermutationActionBuilder[G] + ")"
     def apply(generators: Iterable[G]) =
       PermutationAction.sign(PermutationActionBuilder[G].apply(generators))
   }

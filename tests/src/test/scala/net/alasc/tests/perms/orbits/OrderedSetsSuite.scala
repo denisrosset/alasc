@@ -10,7 +10,7 @@ import org.scalacheck.Gen
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.domains.Domain
-import net.alasc.laws.{Doms, Grps, Permutations, SetInts}
+import net.alasc.laws.{Grps, Permutations, SetInts}
 import net.alasc.perms.Perm
 import net.alasc.perms.orbits.Sets
 import net.alasc.perms.default._

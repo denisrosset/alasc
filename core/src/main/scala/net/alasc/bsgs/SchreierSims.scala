@@ -237,7 +237,7 @@ object SchreierSims {
     */
   def deterministicSchreierSims[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
   (generators: Iterable[G], kb: KernelBuilder[G], givenBase: Seq[Int] = Seq.empty)(implicit action: A): MutableChain[G, A] = {
-    val mutableChain = MutableChain.incompleteWithGenerators(generators, givenBase)
+    val mutableChain = MutableChain.incompleteWithGenerators(generators, kb, givenBase)
     completeStrongGenerators(mutableChain, kb)
     mutableChain
   }

@@ -1,13 +1,13 @@
 package net.alasc.tests
 package perms
 
-import net.alasc.bsgs.GrpPermAlgorithms
 import net.alasc.domains._
+import net.alasc.finite.{GrpGroup, GrpPermutationAction}
 import net.alasc.named.RubikCube
 import net.alasc.perms.Perm
 
 // http://www.gap-system.org/Doc/Examples/rubik.html
-abstract class RubikCubeSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
+abstract class RubikCubeSuite(implicit gg: GrpGroup[Perm], gpa: GrpPermutationAction[Perm]) extends AlascSuite {
 
   import RubikCube.{colors, order}
 
@@ -24,6 +24,6 @@ abstract class RubikCubeSuite(implicit builder: GrpPermAlgorithms) extends Alasc
 
 }
 
-class RubikCubeSuiteDeterministic extends RubikCubeSuite()(PermSuite.deterministic)
+class RubikCubeSuiteDeterministic extends RubikCubeSuite()(PermSuite.deterministic, PermSuite.deterministic)
 
-class RubikCubeSuiteRandomized extends RubikCubeSuite()(PermSuite.randomized)
+class RubikCubeSuiteRandomized extends RubikCubeSuite()(PermSuite.randomized, PermSuite.randomized)

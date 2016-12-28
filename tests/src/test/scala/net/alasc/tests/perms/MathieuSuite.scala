@@ -3,16 +3,16 @@ package perms
 
 import spire.math.SafeLong
 
-import net.alasc.bsgs.GrpPermAlgorithms
+import net.alasc.finite.{Grp, GrpGroup, GrpPermutationAction}
 import net.alasc.named.Mathieu
 import net.alasc.perms.Perm
 
-class MathieuSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
+class MathieuSuite(implicit gg: GrpGroup[Perm], ga: GrpPermutationAction[Perm]) extends AlascSuite {
 
   test("Mathieu group constructions have correct order") {
     Mathieu.generatorsAndOrders.foreach {
       case (degree, (generators, order)) =>
-        val grp = builder.fromGeneratorsAndOrder(generators, order)
+        val grp = Grp.fromGeneratorsAndOrder(generators, order)
         grp.order shouldBe order
     }
   }
@@ -37,6 +37,6 @@ class MathieuSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
 
 }
 
-class MathieuSuiteDeterministic extends MathieuSuite()(PermSuite.deterministic)
+class MathieuSuiteDeterministic extends MathieuSuite()(PermSuite.deterministic, PermSuite.deterministic)
 
-class MathieuSuiteRandomized extends MathieuSuite()(PermSuite.randomized)
+class MathieuSuiteRandomized extends MathieuSuite()(PermSuite.randomized, PermSuite.randomized)

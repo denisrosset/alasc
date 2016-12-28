@@ -62,6 +62,7 @@ object Perm extends PermCompanion {
   implicit val algebra: Eq[Perm] with Group[Perm] with PermutationAction[Perm] = new PermAlgebra
 
   implicit object faithfulPermutationActionBuilder extends FaithfulPermutationActionBuilder[Perm] {
+    override def toString = "Perm.faithfulPAB"
     def apply(generators: Iterable[Perm]): PermutationAction[Perm] = algebra
   }
 
