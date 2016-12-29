@@ -15,7 +15,7 @@ import spire.syntax.group._
   * The random number generator must not be changed during use.
   * 
   * @note Straight-forward implementation of PRINITIALIZE and PRRANDOM of 
-  *       section 3.2.2, pp. 70-71 of Holt
+  *       section 3.2.2, pp. 70-71 of Holt 2005 (Handbook of Computational Group Theory)
   */
 class RandomBag[G:Group] private (private var x0: G, private var x: ArraySeq[G]) extends Function1[Random, G] {
 
