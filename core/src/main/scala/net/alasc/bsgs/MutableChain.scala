@@ -389,7 +389,7 @@ object MutableChain {
     val mutableChain = emptyWithBase[G, F](base)
     val (forChain, forKernel) = generators.partition(action.movesAnyPoint)
     mutableChain.insertGenerators(forChain)
-    kb.mutableChain.insertGenerators(forKernel)
+    if (forKernel.nonEmpty) kb.mutableChain.insertGenerators(forKernel)
     mutableChain
   }
 

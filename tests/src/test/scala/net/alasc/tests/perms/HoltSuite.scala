@@ -2,17 +2,16 @@ package net.alasc.tests
 package perms
 
 import spire.math.SafeLong
+import spire.util.Opt
 
-/*TODO
-import net.alasc.bsgs.GrpPermAlgorithms
+import net.alasc.bsgs.{BaseGuide, BaseGuideLex, BaseOrder, Chain, GrpChainPermutationAction, KernelBuilder, Node, SchreierSims, SubgroupDefinition, SubgroupSearch, SubgroupTest}
 import net.alasc.finite._
-import net.alasc.perms.Perm
+import net.alasc.perms.{Perm, PermAlgebra}
 
-abstract class HoltSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
-/*
+abstract class HoltSuite(implicit builder: GrpChainPermutationAction[Perm]) extends AlascSuite {
+
   test("Example 4.4 page 111") {
-    val alg = algorithms.BasicAlgorithms.randomized[Perm]()
-    val mchain = alg.completeChainFromGenerators(Seq(Perm(1,2,3,4), Perm(2,4), Perm(5,6)), Seq(1, 2, 5))
+    val mchain = SchreierSims.deterministicSchreierSims[Perm, PermAlgebra.type](Seq(Perm(1,2,3,4), Perm(2,4), Perm(5,6)), KernelBuilder.trivial[Perm], Seq(1, 2, 5))
     assert(mchain.start.next.order == 16)
     val images = BaseOrder.orderedIterator(mchain).map(g => (1 to 6).map( k => k <|+| g).mkString).toSeq
     images should equal(Seq("123456", "123465", "143256", "143265", "214356", "214365", "234156", "234165",
@@ -20,24 +19,27 @@ abstract class HoltSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite
   }
 
   test("Example in 4.6.2") {
-    val alg = algorithms.BasicAlgorithms.randomized[Perm]()
-    val mchain = alg.completeChainFromGenerators(Seq(Perm(1,2,3,4), Perm(2,4), Perm(5,6)), Seq(1,2,3,4,5,6))
+    val mchain = SchreierSims.deterministicSchreierSims[Perm, PermAlgebra.type](Seq(Perm(1,2,3,4), Perm(2,4), Perm(5,6)), KernelBuilder.trivial[Perm], Seq(1,2,3,4,5,6))
     assert(mchain.start.next.order == 16)
-    class Test(level: Int) extends SubgroupTest[Perm] {
-      def test(b: Int, orbitImage: Int, currentG: Perm, node: Node[Perm])(
-        implicit action: FaithfulPermutationAction[Perm]): Opt[Test] =
-        (level, orbitImage) match {
-          case (0, 1) | (0, 3) | (1, 2) => Opt(new Test(level + 1))
-          case (0, _) | (1, _) => Opt.empty[Test]
-          case _ => Opt(new Test(level + 1))
-        }
-    }
-    def predicate(k: Perm) = ((1 <|+| k) == 1 || (1 <|+| k == 3)) && ((2 <|+| k) == 2)
-    val printed = List("123456", "123465", "321456", "321465")
-    val images = alg.generalSearch(mchain.start.next, predicate, new Test(0)).map(g => (1 to 6).map( k => k <|+| g).mkString).toSeq
 
+    object Definition extends SubgroupDefinition[Perm, PermAlgebra.type] {
+      implicit def action: PermAlgebra.type = PermAlgebra
+      def baseGuideOpt: Opt[BaseGuide] = Opt(BaseGuideLex(6))
+      def inSubgroup(k: Perm): Boolean = ((1 <|+| k) == 1 || (1 <|+| k == 3)) && ((2 <|+| k) == 2) // we don't do anything special
+      def firstLevelTest(guidedChain: Chain[Perm, PermAlgebra.type]): SubgroupTest[Perm, PermAlgebra.type] = new Test(0)
+      class Test(level: Int) extends SubgroupTest[Perm, PermAlgebra.type] {
+        def test(b: Int, orbitImage: Int, currentG: Perm, node: Node[Perm, PermAlgebra.type]): Opt[Test] =
+          (level, orbitImage) match {
+            case (0, 1) | (0, 3) | (1, 2) => Opt(new Test(level + 1))
+            case (0, _) | (1, _) => Opt.empty[Test]
+            case _ => Opt(new Test(level + 1))
+          }
+      }
+    }
+    val printed = List("123456", "123465", "321456", "321465")
+    val images = SubgroupSearch.generalSearch(Definition, mchain.start.next).map(g => (1 to 6).map( k => k <|+| g).mkString).toSeq
     images should equal(Seq("123456", "123465", "321456", "321465"))
-  }*/
+  }
 
   test("Example 4.6") {
     val g = Grp(Perm(1,2,3), Perm(4,5,6), Perm(1,4)(2,5)(3,6)(7,8))
@@ -59,4 +61,3 @@ abstract class HoltSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite
 class HoltSuiteDeterministic extends HoltSuite()(PermSuite.deterministic)
 
 class HoltSuiteRandomized extends HoltSuite()(PermSuite.randomized)
-*/

@@ -212,7 +212,6 @@ trait GrpLaws[G] extends Laws {
 
       "setwiseStabilizer bb test" -> forAll(smallGrp) { grp =>
         forAll { (pab: PermutationActionBuilder[G], domSet: Set[Dom]) =>
-          println(grp)
           val action = pab(grp)
           val set = domSet.map(_.value)
           testBBEquals[Set[G], GrpPermutationAction[G]]( _.setwiseStabilizer(grp, action, set).iterator.toSet )

@@ -39,19 +39,6 @@ class PermSuite extends AlascSuite {
 
 }
 
-/* TODO
-  def permutationBuilder(implicit A: PermutationBuilder[A]) = new PermutationActionProperties(
-    name = "permutation",
-    parent = Some(faithfulPermutationAction),
-    bases = Seq("group" -> GroupLaws[A].group, "groupAction" -> ActionLaws[A, D].groupAction),
-
-    "images/fromImages" -> forAll((x: A) =>
-      A.fromImages(x.images(x.largestMovedPoint.getOrElseFast(-1) + 1)) === x
-    )
-  )
-
- */
-
 object PermSuite {
 
   val deterministic: GrpChainPermutationAction[Perm] = {
