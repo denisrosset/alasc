@@ -17,14 +17,18 @@ import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
 import metal.syntax._
 
+import net.alasc.attributes.{Attributable, Attributes}
+
 /** Finite group base class. */
-abstract class Grp[G] { lhs =>
+abstract class Grp[G] extends Attributable { lhs =>
 
   def ===(rhs: Grp[G])(implicit equ1: Eq[Grp[G]]): Boolean = equ1.eqv(lhs, rhs)
 
   override def toString = generators.mkString("Grp(", ", ", ")")
 
   override def hashCode = sys.error("Object.hashCode not defined for Grp")
+
+  override def equals(that: Any) = sys.error("Object.equals not defined for Grp, use typesafe operator === instead")
 
   /** Group operations on type `G`. */
   implicit def group: Group[G]
@@ -66,27 +70,18 @@ abstract class Grp[G] { lhs =>
 
 }
 
-case class GrpTrivial[G]()(implicit val equ: Eq[G], val group: Group[G]) extends Grp[G] {
-
-  def iterator: Iterator[G] = Iterator(group.id)
-
-  def contains(g: G): Boolean = g.isId
-
-  def generators: IndexedSeq[G] = IndexedSeq.empty
-
-  def order: SafeLong = SafeLong.one
-
-  def randomElement(random: Random): G = group.id
-
-}
-
-abstract class Grp0 {
-
-  implicit def permutationActionGrpSyntax[G](grp: Grp[G]): GrpPermutationActionSyntax[G] = new GrpPermutationActionSyntax[G](grp)
-
-}
-
 object Grp {
+
+  object Attributes extends Attributes("Grp") {
+    object DerivedSubgroup extends Attribute("DerivedSubgroup") {
+      implicit def forGrp[G]: For[Grp[G], Grp[G]] = For
+    }
+    object SmallGeneratingSet extends Attribute("SmallGeneratingSet") {
+      implicit def forGrp[G]: For[Grp[G], IndexedSeq[G]] = For
+    }
+    object IsAbelian extends Attribute.Property("IsAbelian")
+    object IsCyclic extends Attribute.Property("IsCyclic")
+  }
 
   implicit def partialOrder[G]: PartialOrder[Grp[G]] = new GrpPartialOrder[G]
 
@@ -109,10 +104,28 @@ object Grp {
 
   implicit def grpPermutationActionSyntax[G](grp: Grp[G]): GrpPermutationActionSyntax[G] = new GrpPermutationActionSyntax[G](grp)
 
+  implicit def grpStructureSyntax[G](grp: Grp[G]): GrpStructureSyntax[G] = new GrpStructureSyntax[G](grp)
+
   def conjugationAction[G:Group:GrpGroup]: Action[Grp[G], G] = new Action[Grp[G], G] {
     def actr(grp: Grp[G], g: G): Grp[G] = GrpGroup[G].conjugatedBy(grp, g)
     def actl(g: G, grp: Grp[G]): Grp[G] = GrpGroup[G].conjugatedBy(grp, g.inverse)
   }
+
+  def commutator[G](grp1: Grp[G], grp2: Grp[G])(implicit ev: GrpStructure[G]): Grp[G] = ev.commutator(grp1, grp2)
+
+}
+
+case class GrpTrivial[G]()(implicit val equ: Eq[G], val group: Group[G]) extends Grp[G] {
+
+  def iterator: Iterator[G] = Iterator(group.id)
+
+  def contains(g: G): Boolean = g.isId
+
+  def generators: IndexedSeq[G] = IndexedSeq.empty
+
+  def order: SafeLong = SafeLong.one
+
+  def randomElement(random: Random): G = group.id
 
 }
 

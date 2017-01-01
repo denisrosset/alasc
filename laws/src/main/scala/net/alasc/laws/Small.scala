@@ -11,7 +11,7 @@ case class Small[G](val underlying: G) extends AnyVal
 object Small {
 
   implicit def resized[G:Arbitrary]: Arbitrary[Small[G]] = Arbitrary {
-    Gen.parameterized( p => Gen.resize(max(p.size / 10, 3), arbitrary[G]).map(Small(_)) )
+    Gen.parameterized( p => Gen.resize(min(max(p.size / 10, 3), 6), arbitrary[G]).map(Small(_)) )
   }
 
 }

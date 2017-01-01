@@ -1,5 +1,6 @@
 // inspired by Spire build.sbt file
 
+val attributesVersion = "0.30"
 val disciplineVersion = "0.4"
 val cycloVersion = "0.11.0.4"
 val metalVersion = "0.11.0.9"
@@ -87,6 +88,7 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("releases")
   ),
   libraryDependencies ++= Seq(
+    "net.alasc" %% "attributes" % attributesVersion,
     "net.alasc" %% "spire-cyclo" % cycloVersion,
     "org.spire-math" %% "spire" % spireVersion,
     "org.spire-math" %% "spire-laws" % spireVersion,

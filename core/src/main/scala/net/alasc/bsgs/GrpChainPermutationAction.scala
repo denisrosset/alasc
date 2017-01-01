@@ -13,10 +13,10 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
 import net.alasc.domains.Partition
 import net.alasc.finite._
-import net.alasc.perms.Perm
+import net.alasc.perms.{FilterOrders, Perm}
 
 /** Algorithms for groups for which faithful permutation actions can be obtained. */
-abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G] {
+abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G] with GrpStructure[G] {
 
   implicit def baseChange: BaseChange
   implicit def baseSwap: BaseSwap
@@ -215,6 +215,35 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
         GrpChain.intersect[G, action.type](fromGrp(lhs, action), fromGrp(rhs, action).chain)
     }
 
+  // GrpStructure
+
+  implicit def grpGroup: GrpGroup[G] = this
+
+  override def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] =
+    if (grp.isTrivial) IndexedSeq.empty[G] else {
+      val grpChain = fromGrp(grp)
+      val fAction = if (grpChain.kernel.isTrivial)
+        grpChain.action // the current action is faithful for this particular group
+      else
+        faithfulAction(grp.generators)
+      // if not, create a faithful action
+      // TODO: solvable group methods
+      val filteredGenerators = FilterOrders(grp.generators, fAction)
+      if (filteredGenerators.length <= 1) filteredGenerators else {
+        import spire.math.prime.factor
+        val abelianizationOrder = grp.order / derivedSubgroup(grp).order
+        val min = factor(abelianizationOrder).factors.values.foldLeft(1)(spire.math.max)
+        val smallerOpt = fromGrp(grpChain, fAction).chain match {
+          case node: Node[G, fAction.type] => schreierSims.reduceGenerators(node, grp.generators, min)
+          case term: Term[G, fAction.type] => sys.error("Group has been verified nontrivial above")
+        }
+        smallerOpt.getOrElseFast(grp.generators)
+      }
+    }
+
+  // GrpPermutationAction
+
+
   def subgroupFor[A <: PermutationAction[G] with Singleton](grp: Grp[G], action: A, definition: SubgroupDefinition[G, A]): GC[A] = {
     implicit def ia: A = action
     val (guidedChain, kernel) = extractGrpChain(grp, action: A) match {
@@ -290,8 +319,6 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       }
     } else Opt.empty[Seq[Int]]
   }
-
-  def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = grp.generators // TODO: better strategy
 
   def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit builder: GrpGroup[Perm]): Grp[Perm] = {
     val gc = fromGrp(grp, action)

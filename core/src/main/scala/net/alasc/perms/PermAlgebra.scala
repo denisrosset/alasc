@@ -1,12 +1,12 @@
 package net.alasc.perms
-package internal
 
 import spire.algebra.{Eq, Group}
 
 import net.alasc.algebra._
+import net.alasc.perms.internal.{Perm16Encoding, Perm32Encoding}
 import net.alasc.util._
 
-final class PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm] {
+object PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm] {
 
   override def toString = "Perm.algebra"
 

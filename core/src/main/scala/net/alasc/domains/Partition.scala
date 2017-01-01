@@ -31,9 +31,9 @@ abstract class Partition extends InDomain {
   val startArray: Array[Int]
 
   /** Returns the minimal representative of the block in which `k` is contained.
-    * Must have `0 <= k`, for `k >= size` returns k.
+    * Must have `0 <= k`, for `k >= size` returns size.
     */
-  def representative(k: Int): Int = if (k < size) startArray(indexArray(k)) else k
+  def representative(k: Int): Int = if (k < size) startArray(indexArray(k)) else size
 
   override def toString = blocks.map(_.mkString("[", " ", "]")).mkString
 

@@ -9,6 +9,7 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FunSuite, Matchers}
 import org.typelevel.discipline.scalatest.Discipline
 
+import net.alasc.finite.Grp
 import net.alasc.laws.NestedDiscipline
 
 /**
@@ -37,5 +38,7 @@ trait AlascSuite extends FunSuite with Matchers
   def discardEvaluation(): Nothing = throw new DiscardedEvaluationException
 
   def noShrink[T] = Shrink[T](_ => Stream.empty)
+
+  implicit def noShrinkGrp[G]: Shrink[Grp[G]] = noShrink[Grp[G]]
 
 }

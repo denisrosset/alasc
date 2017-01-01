@@ -1,11 +1,22 @@
 package net.alasc.finite
 
+import scala.util.Random
+
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
+import spire.syntax.eq._
 import spire.syntax.group._
+import spire.util.Opt
 
-/** Methods for groups composed of elements of type `G`, which only depend on the group standard operations. */
+/** Methods for groups composed of elements of type `G`, which only depend on the group standard operations.
+  *
+  * See [[GrpGroupSyntax]] for documentation of the methods.
+  */
 trait GrpGroup[G] {
+
+  protected implicit def equ: Eq[G]
+
+  protected implicit def group: Group[G]
 
   // With no Grp[G] argument
 
@@ -17,38 +28,38 @@ trait GrpGroup[G] {
 
   // with a single Grp[G] argument
 
-  /** Returns the group H = h.inverse grp h. */
-  def conjugatedBy(grp: Grp[G], h: G): Grp[G]
+  def conjugatedBy(grp: Grp[G], h: G): Grp[G]  = {
+    val hInv = h.inverse
+    fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
+  }
+
+  // with two Grp[G] arguments
 
   def union(x: Grp[G], y: Grp[G]): Grp[G]
 
   def intersect(x: Grp[G], y: Grp[G]): Grp[G]
 
-  def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G]
-
-  /** Left cosets. */
   def leftCosetsBy(grp: Grp[G], subgrp: Grp[G]): LeftCosets[G, subgrp.type]
 
-  /** Right cosets. */
   def rightCosetsBy(grp: Grp[G], subgrp: Grp[G]): RightCosets[G, subgrp.type]
 
 }
+
 
 object GrpGroup {
 
   @inline final def apply[G](implicit ev: GrpGroup[G]): GrpGroup[G] = ev
 
-  def defaultConjugatedBy[G:Group:GrpGroup](grp: Grp[G], h: G): Grp[G] = {
-    val hInv = h.inverse
-    GrpGroup[G].fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
-  }
-
 }
 
 class GrpGroupSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
+  // with a single Grp[G] argument
+
   /** Returns the group H = hInv G h, where G is this group. */
   def conjugatedBy(h: G)(implicit ev: GrpGroup[G]): Grp[G] = ev.conjugatedBy(lhs, h)
+
+  // with two Grp[G] arguments
 
   /** Union (closure) of groups. */
   def union(rhs: Grp[G])(implicit ev: GrpGroup[G]): Grp[G] = ev.union(lhs, rhs)
@@ -61,8 +72,5 @@ class GrpGroupSyntax[G](val lhs: Grp[G]) extends AnyVal {
 
   /** Right cosets. */
   def rightCosetsBy(subgrp: Grp[G])(implicit ev: GrpGroup[G]): RightCosets[G, subgrp.type] = ev.rightCosetsBy(lhs, subgrp)
-
-  /** Simplifies the description current group.*/
-  def smallGeneratingSet(implicit ev: GrpGroup[G]): IndexedSeq[G] = ev.smallGeneratingSet(lhs)
 
 }

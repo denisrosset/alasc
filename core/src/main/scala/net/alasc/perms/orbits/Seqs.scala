@@ -15,7 +15,7 @@ import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{BaseGuideLex, GrpChain, GrpChainPermutationAction}
 import net.alasc.domains.Partition
 import net.alasc.finite.Grp
-import net.alasc.perms.Perm
+import net.alasc.perms.{Perm, PermAlgebra}
 import net.alasc.util.{NNNone, NNOption}
 
 object Seqs {
@@ -123,10 +123,10 @@ object Seqs {
 
   object Representatives {
 
-    def unordered[CC[T] <: SeqLike[T, CC[T]], T](grp: Grp[Perm], seq: Seq[T])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): Representatives[CC[T], Perm, T, Perm.algebra.type] =
+    def unordered[CC[T] <: SeqLike[T, CC[T]], T](grp: Grp[Perm], seq: Seq[T])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): Representatives[CC[T], Perm, T, PermAlgebra.type] =
       unordered[CC, Perm, T](grp, Perm.algebra, seq)
 
-    def unordered[CC[T] <: SeqLike[T, CC[T]], T](grp: Grp[Perm], seq: Seq[T], symGrpOpt: Opt[Grp[Perm]])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): Representatives[CC[T], Perm, T, Perm.algebra.type] =
+    def unordered[CC[T] <: SeqLike[T, CC[T]], T](grp: Grp[Perm], seq: Seq[T], symGrpOpt: Opt[Grp[Perm]])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): Representatives[CC[T], Perm, T, PermAlgebra.type] =
       unordered[CC, Perm, T](grp, Perm.algebra, seq, symGrpOpt)
 
 
@@ -147,10 +147,10 @@ object Seqs {
       UnorderedRepresentatives[CC[T], G, T, action.type](grpInAction, symGrp, action, distinctElements, indexMap, seqElements)
     }
 
-    def ordered[CC[T] <: SeqLike[T, CC[T]], T:ClassTag:Order](grp: Grp[Perm], seq: Seq[T])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): OrderedRepresentatives[CC[T], Perm, T, Perm.algebra.type] =
+    def ordered[CC[T] <: SeqLike[T, CC[T]], T:ClassTag:Order](grp: Grp[Perm], seq: Seq[T])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): OrderedRepresentatives[CC[T], Perm, T, PermAlgebra.type] =
       ordered[CC, Perm, T](grp, Perm.algebra, seq)
 
-    def ordered[CC[T] <: SeqLike[T, CC[T]], T:ClassTag:Order](grp: Grp[Perm], seq: Seq[T], symGrpOpt: Opt[Grp[Perm]])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): OrderedRepresentatives[CC[T], Perm, T, Perm.algebra.type] =
+    def ordered[CC[T] <: SeqLike[T, CC[T]], T:ClassTag:Order](grp: Grp[Perm], seq: Seq[T], symGrpOpt: Opt[Grp[Perm]])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]], gcpa: GrpChainPermutationAction[Perm]): OrderedRepresentatives[CC[T], Perm, T, PermAlgebra.type] =
       ordered[CC, Perm, T](grp, Perm.algebra, seq, symGrpOpt)
 
     def ordered[CC[T] <: SeqLike[T, CC[T]], G:GrpChainPermutationAction, T:ClassTag:Order](grp: Grp[G], action: PermutationAction[G], seq: Seq[T])(implicit cbf: CanBuildFrom[Nothing, T, CC[T]]): OrderedRepresentatives[CC[T], G, T, action.type] =

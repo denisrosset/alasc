@@ -1,5 +1,7 @@
 package net.alasc.laws
 
+import scala.reflect.ClassTag
+
 import spire.algebra._
 import spire.math.SafeLong
 
@@ -23,7 +25,8 @@ import net.alasc.syntax.all._
 
 object GrpLaws {
 
-  def apply[G:Arbitrary:Eq:Group](implicit gg: Arbitrary[Grp[G]]) = new GrpLaws[G] {
+  def apply[G:Arbitrary:ClassTag:Eq:Group](implicit gg: Arbitrary[Grp[G]]) = new GrpLaws[G] {
+    def classTag = implicitly
     def equ = implicitly
     def group = implicitly
     def arbG = implicitly
@@ -35,12 +38,13 @@ object GrpLaws {
 
 trait GrpLaws[G] extends Laws {
 
+  implicit def classTag: ClassTag[G]
   implicit def equ: Eq[G]
   implicit def group: Group[G]
   implicit def arbG: Arbitrary[G]
   implicit def arbGrpG: Arbitrary[Grp[G]]
 
-  def grpWithoutHashCodeEquals(implicit builder: GrpGroup[G]) =
+  def grpWithoutHashCodeEquals(implicit grpGroup: GrpGroup[G], grpStructure: GrpStructure[G]) =
     new GrpProperties(
       name = "grpBase",
       parent = None,
@@ -94,25 +98,25 @@ trait GrpLaws[G] extends Laws {
         newGrp === grp
       }
 
-
     )
 
   val smallGrpOrder = 32678 // maximal size of a group whose elements can be all enumerated by brute force in reasonable time
 
   def smallGrp(implicit ev: GrpGroup[G]): Gen[Grp[G]] =
-    arbGrpG.arbitrary.flatMap(grp => Grps.forceSmallGroup(grp, smallGrpOrder))
+    arbGrpG.arbitrary.flatMap { grp => Grps.forceSmallGroup(grp, smallGrpOrder) }
 
-  def grp(implicit builder: GrpGroup[G]) =
+  def grp(implicit grpGroup: GrpGroup[G], grpStructure: GrpStructure[G]) =
     new GrpProperties(
       name = "grp",
       parent = Some(grpWithoutHashCodeEquals),
 
       "intersect" -> forAll { (grp1: Grp[G], grp2: Grp[G]) =>
         val int = grp1 intersect grp2
-        /*val e1 = grp1.iterator.toSet
-        val e2 = grp2.iterator.toSet
-        val ei = int.iterator.toSet*/
-        int.isSubgroupOf(grp1) && int.isSubgroupOf(grp2) //&& ((e1 intersect e2) == ei)
+        int.isSubgroupOf(grp1) && int.isSubgroupOf(grp2)
+      },
+
+      "intersect (bb)" -> forAll(smallGrp, smallGrp) { (grp1, grp2) =>
+        testBBEquals[Set[G], GrpGroup[G]]( _.intersect(grp1, grp2).iterator.toSet )
       },
 
       // add BB intersect
@@ -138,28 +142,26 @@ trait GrpLaws[G] extends Laws {
 
     )
 
-  def testBBEquals[R](f: GrpPermutationAction[G] => R)(implicit gpa: GrpPermutationAction[G]): Boolean = true
-      //assert(f(gpa) == f(new BBGrpAlgos[G]))
+  def testBBEquals[R, GG >: BBGrpAlgos[G]](f: GG => R)(implicit gpa: GG): Boolean = (f(gpa) == f(new BBGrpAlgos[G]))
 
-  def testBBEq[R:Eq](f: GrpPermutationAction[G] => R)(implicit gpa: GrpPermutationAction[G]): Boolean = true
-//    f(gpa) === f(new BBGrpAlgos[G])
+  def testBBEq[R:Eq, GG >: BBGrpAlgos[G]](f: GG => R)(implicit gpa: GG): Boolean = (f(gpa) === f(new BBGrpAlgos[G]))
 
-  def grpPermutationAction(implicit builder: GrpGroup[G], gpa: GrpPermutationAction[G], fpab: FaithfulPermutationActionBuilder[G]) =
+  def grpPermutationAction(implicit gg: GrpGroup[G], gs: GrpStructure[G], gpa: GrpPermutationAction[G], fpab: FaithfulPermutationActionBuilder[G]) =
     new GrpProperties(
       name = "grp",
       parent = Some(grp),
-/*
+
       "kernel" -> forAll(smallGrp) { grp =>
         forAll { pab: PermutationActionBuilder[G] =>
           val action = pab(grp)
-          testBBEquals( _.kernel(grp, action).iterator.toSet )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.kernel(grp, action).iterator.toSet )
         }
       },
 
       "lexElements" -> forAll(smallGrp) { grp =>
         val action = fpab(grp) // faithful action, so lexElements always returns Opt(seq)
-        testBBEquals( _.lexElements(grp, action).get.toIndexedSeq )
-      },*/
+        testBBEquals[IndexedSeq[G], GrpPermutationAction[G]]( _.lexElements(grp, action).get.toIndexedSeq )
+      },
 
       "fixingPartition" -> forAll { (grp: Grp[G], pab: PermutationActionBuilder[G]) =>
         val action = pab(grp)
@@ -168,55 +170,55 @@ trait GrpLaws[G] extends Laws {
             .forall( g => FixingPartition.partitionInvariantUnder(partition, action, g))
         }
       },
-/*
+
       "fixingPartition bb test" -> forAll(smallGrp, Partitions.sized) { (grp, partition) =>
         forAll { pab: PermutationActionBuilder[G] =>
             val action = pab(grp)
-            testBBEquals( _.fixingPartition(grp, action, partition).iterator.toSet )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.fixingPartition(grp, action, partition).iterator.toSet )
           }
-        },*/
+        },
 
       "stabilizer(b)" -> forAll { (grp: Grp[G], b: Dom, pab: PermutationActionBuilder[G]) =>
         val action = pab(grp)
         grp.stabilizer(action, b).generators.forall(g => action.actr(b, g) === b.value)
       },
-/*
+
       "stabilizer(b) bb test" -> forAll(smallGrp) { grp =>
         forAll { (b: Dom, pab: PermutationActionBuilder[G]) =>
           val action = pab(grp)
-          testBBEquals( _.stabilizer(grp, action, b).iterator.toSet )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.stabilizer(grp, action, b).iterator.toSet )
         }
-      },*/
+      },
 
       "pointwiseStabilizer" -> forAll { (grp: Grp[G], pab: PermutationActionBuilder[G], domSet: Set[Dom]) =>
         val action = pab(grp)
         val set = domSet.map(_.value)
         grp.pointwiseStabilizer(action, set).generators.forall(g => set.forall(b => action.actr(b, g) == b))
       },
-/*
+
       "pointwiseStabilizer bb test" -> forAll(smallGrp) { grp =>
         forAll { (pab: PermutationActionBuilder[G], domSet: Set[Dom]) =>
           val action = pab(grp)
           val set = domSet.map(_.value)
-          testBBEquals( _.pointwiseStabilizer(grp, action, set) )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.pointwiseStabilizer(grp, action, set).iterator.toSet )
         }
       },
-*/
+
       "setwiseStabilizer" -> forAll { (grp: Grp[G], pab: PermutationActionBuilder[G], domSet: Set[Dom]) =>
         val action = pab(grp)
         val set = domSet.map(_.value)
         grp.setwiseStabilizer(action, set).generators.forall(g => set.map(b => action.actr(b, g)) == set)
-      }
-      //,
-/*
+      },
+
       "setwiseStabilizer bb test" -> forAll(smallGrp) { grp =>
         forAll { (pab: PermutationActionBuilder[G], domSet: Set[Dom]) =>
+          println(grp)
           val action = pab(grp)
           val set = domSet.map(_.value)
-          testBBEquals( _.setwiseStabilizer(grp, action, set) )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.setwiseStabilizer(grp, action, set).iterator.toSet )
         }
       }
-*/
+
       /* only for Chain stuff
       "stabilizerTransversal" -> forAll(smallGrp) { grp =>
         forAll { (pab: PermutationActionBuilder[G], dom: Dom) =>
@@ -275,15 +277,6 @@ trait PermGrpLaws extends GrpLaws[Perm] {
           recov === g
         }
       },*/
-
-      "lexElements" -> forAll { (grp: Grp[Perm]) =>
-        (grp.order < 65536) ==> {
-          import lexPermutationOrder._
-          val lexSeq = grp.lexElements.iterator.toSeq
-          val ordered = (lexSeq zip lexSeq.tail).forall { case (g1, g2) => g1 < g2 }
-          (lexSeq.size == grp.order) && ordered
-        }
-      },
 
 /* TODO: restore
       "someStabilizerTransversal" -> forAll { (grp: Grp[Perm]) =>

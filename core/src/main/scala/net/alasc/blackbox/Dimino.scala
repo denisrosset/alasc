@@ -1,6 +1,7 @@
 package net.alasc.blackbox
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
@@ -8,20 +9,18 @@ import spire.syntax.cfor._
 import spire.syntax.eq._
 import spire.syntax.group._
 
-import metal.syntax._
-
 /** Implementation of Dimino's algorithm to generate group elements. */
 object Dimino {
 
   /** Generates the elements of the group according to the Simple Dimino's Algorithm,
     * see page 20 of G. Butler, "Fundamental Algorithms for Permutation Groups", Springer 1991
     *
-    * @param s  Array containing the group generators
+    * @param s  Sequence containing the group generators
     * @return   An array containing the group elements
     */
-  def apply[G:ClassTag:Eq:Group](s: Array[G]): Array[G] = {
+  def apply[G:ClassTag:Eq:Group](s: IndexedSeq[G]): Array[G] = {
     // treat the special case <s1>
-    val elements = metal.mutable.Buffer(Group[G].id)
+    val elements = ArrayBuffer(Group[G].id)
 
     var g = s(0)
     while (!g.isId) {
@@ -42,7 +41,7 @@ object Dimino {
     * @param s        Generators of the group to be constructed
     * @param start    Index from which to start the induction process
     */
-  def runInduction[G:ClassTag:Eq:Group](elements: metal.mutable.Buffer[G], s: Array[G], start: Int): Unit = {
+  def runInduction[G:Eq:Group](elements: ArrayBuffer[G], s: IndexedSeq[G], start: Int): Unit = {
     @inline def order: Int = elements.length
     @tailrec @inline def contained(el: G, j: Int, n: Int): Boolean =
       if (j >= n) false

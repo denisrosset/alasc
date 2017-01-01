@@ -12,7 +12,6 @@ import net.alasc.domains.Domain
 import net.alasc.finite.{FaithfulPermutationActionBuilder, Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._
-import net.alasc.rep.FaithfulPermRepBuilder
 
 class PermPermSuite extends AlascSuite {
 
@@ -30,29 +29,24 @@ class PermPermSuite extends AlascSuite {
     implicit val permPermAction: PermutationAction[(Perm, Perm)] = FaithfulPermutationActionBuilder[(Perm, Perm)].apply(Seq(coveringDomain))
 
     checkAll("(Perm, Perm)", PermutationActionLaws[(Perm, Perm)].faithfulPermutationAction)
+
   }
-/* TODO
   {
-    import net.alasc.perms.default._
     import Grps.arbGrp
-    import net.alasc.finite.Rep.algebra._
+    import net.alasc.perms.default._
+    val size = 6
+    val leftSize = 3
+    val rightSize = 3
 
-    val domain1 = Domain(3)
-    val domain2 = Domain(3)
-    val coveringDomain = (Perm(0,1,2), Perm(0,1,2))
-
-    val rep: FaithfulPermRep[(Perm, Perm), SafeLong] = FaithfulPermRepBuilder[(Perm, Perm)].build[SafeLong](Seq(coveringDomain))
-
-    type R = Rep.Of[(Perm, Perm), rep.type]
-
-    implicit val permTupleArbitrary: Arbitrary[R] =
+    implicit val permTupleArbitrary: Arbitrary[(Perm, Perm)] =
       Arbitrary(for {
-        g1 <- Permutations.forDomain[Perm](domain1)
-        g2 <- Permutations.forDomain[Perm](domain2)
-      } yield Rep.Of((g1, g2), rep))
+        g1 <- Permutations.permForSize(leftSize)
+        g2 <- Permutations.permForSize(rightSize)
+      } yield (g1, g2))
 
-    checkAll("Group laws", GrpLaws[R].grp)
-    checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[R]].boundedBelowLatticePartialOrder)
-  }*/
+    checkAll("Group laws", GrpLaws[(Perm, Perm)].grp)
+    checkAll("Group lattice laws", LatticePartialOrderLaws[Grp[(Perm, Perm)]].boundedBelowLatticePartialOrder)
+
+  }
 
 }

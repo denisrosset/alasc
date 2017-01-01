@@ -1,9 +1,12 @@
 package net.alasc.blackbox
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group, Order}
 import spire.math.SafeLong
+import spire.syntax.cfor._
 import spire.syntax.group._
 import spire.util.Opt
 
@@ -14,31 +17,35 @@ import net.alasc.finite._
 import net.alasc.perms.Perm
 
 class BBGrpAlgos[G](implicit
+                    val classTag: ClassTag[G],
                     val group: Group[G],
                     val equ: Eq[G]
-  ) extends GrpGroup[G] with GrpPermutationAction[G] {
+  ) extends GrpGroup[G] with GrpPermutationAction[G] with GrpStructure[G] {
 
   type GG = BBGrp[G]
 
+  def grpGroup = this
+
   def trivial: GG = new BBGrp(IndexedSeq.empty[G], Set(group.id))
 
-  def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = fromElements(grp.iterator.toSet).generators.toIndexedSeq
+  override def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = {
+    def computeOrder(gens: IndexedSeq[G]): SafeLong = SafeLong(Dimino[G](gens).length)
+    GrpStructure.deterministicReduceGenerators(grp.generators, grp.order, computeOrder).getOrElseFast(grp.generators)
+  }
 
   def fromElements(elements: Set[G]): GG = {
-    import scala.collection.mutable.Stack
-    val order = elements.size
-    val remGenerators = (elements - Group[G].id).to[Stack]
-    var generators = Set(Group[G].id)
-    var checkElements = Set(Group[G].id)
-    while (checkElements.size < order) {
-      val g = remGenerators.pop()
-      val newElements = recElements(generators + g, checkElements)
-      if (newElements.size != checkElements.size) {
-        generators += g
-        checkElements = newElements
-      }
+    val remaining = elements.to[collection.mutable.HashSet]
+    val generators = ArrayBuffer.empty[G]
+    val reconstructed = ArrayBuffer(Group[G].id)
+    remaining -= Group[G].id
+    while (remaining.nonEmpty) {
+      val startRemove = reconstructed.length
+      val g = remaining.head
+      generators += g
+      Dimino.runInduction(reconstructed, generators, generators.length - 1)
+      cforRange(startRemove until reconstructed.length) { i => remaining -= reconstructed(i) }
     }
-    new BBGrp(generators.toIndexedSeq, elements)
+    new BBGrp[G](generators, elements)
   }
 
   @tailrec final protected def recElements(generatorsAndId: Set[G], elements: Set[G]): Set[G] = {
@@ -46,10 +53,8 @@ class BBGrpAlgos[G](implicit
     if (newElements.size == elements.size) elements else recElements(generatorsAndId, newElements)
   }
 
-  def generateElements(generators: Iterable[G]): Set[G] = {
-    val genAndId = generators.toSet + Group[G].id
-    recElements(genAndId, genAndId)
-  }
+  def generateElements(generators: Iterable[G]): Set[G] =
+    Dimino[G](generators.toIndexedSeq).toSet
 
   def fromGenerators(generators: IndexedSeq[G]): GG = {
     new BBGrp(generators, generateElements(generators))
@@ -114,7 +119,7 @@ class BBGrpAlgos[G](implicit
     filter(grp, g => !action.movesAnyPoint(g))
 
   def lexElements(grp: Grp[G], action: PermutationAction[G]): Opt[BigIndexedSeq[G]] =
-    if (kernel(grp, action).order == 1) Opt.empty[BigIndexedSeq[G]] else {
+    if (!kernel(grp, action).isTrivial) Opt.empty[BigIndexedSeq[G]] else {
       val orderTC = net.alasc.lexico.lexPermutationOrder.LexPermutationOrder[G](implicitly, action)
       val ordering = Order.ordering(orderTC)
       val sortedElements = fromGrp(grp).elements.toIndexedSeq.sorted(ordering)
@@ -151,7 +156,5 @@ class BBGrpAlgos[G](implicit
 
   def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit algos: GrpGroup[Perm]): Grp[Perm] =
     algos.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
-
-  def conjugatedBy(grp: Grp[G], h: G): Grp[G] = GrpGroup.defaultConjugatedBy(grp, h)
 
 }

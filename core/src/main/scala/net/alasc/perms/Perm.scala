@@ -59,7 +59,7 @@ object Perm extends PermCompanion {
 
   def movedPointsUpperBound = PermArray.movedPointsUpperBound
 
-  implicit val algebra: Eq[Perm] with Group[Perm] with PermutationAction[Perm] = new PermAlgebra
+  implicit def algebra: PermAlgebra.type = PermAlgebra
 
   implicit object faithfulPermutationActionBuilder extends FaithfulPermutationActionBuilder[Perm] {
     override def toString = "Perm.faithfulPAB"

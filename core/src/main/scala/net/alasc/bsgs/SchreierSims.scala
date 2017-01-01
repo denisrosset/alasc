@@ -7,107 +7,17 @@ import scala.util.Random
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.action._
-import spire.syntax.group._
+import spire.syntax.cfor._
 import spire.syntax.eq._
+import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.finite.Grp
-import net.alasc.perms.Perm
+import net.alasc.blackbox.RandomBag
+import net.alasc.finite.{Grp, GrpStructure}
+import net.alasc.perms.{FilterOrders, Perm}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util.NNOption
-
-/** Data structure to store the mutable chain of the kb of a group.
-  * The mutable chain is constructed lazily. */
-abstract class KernelBuilder[G] {
-
-  private[this] var _opt: Opt[MutableChain.Generic[G]] = Opt.empty[MutableChain.Generic[G]]
-
-  def order: SafeLong = _opt match {
-    case Opt(mc) => mc.start.next.order
-    case _ => SafeLong.one
-  }
-
-  protected def makeMutableChain(): MutableChain.Generic[G]
-
-  def replaceChain(chain: Chain.Generic[G]): Unit = chain match {
-    case _: Term[G, _] => _opt = Opt.empty[MutableChain.Generic[G]]
-    case node1: Node[G, _] =>
-      val action = node1.action
-      implicit def ia: action.type = action
-      val node: Node[G, action.type] = node1.asInstanceOf[Node[G, action.type]]
-      val mc = MutableChain.empty[G, action.type]
-      mc.start.next = node
-      _opt = Opt(mc)
-  }
-
-  def mutableChain: MutableChain.Generic[G] = _opt match {
-    case Opt(mc) => mc
-    case _ =>
-      val mc = makeMutableChain()
-      _opt = Opt(mc)
-      mc
-  }
-
-  def toChain(): Chain.Generic[G] = _opt match {
-    case Opt(mc) => mc.toChain()
-    case _ => Term.generic[G]
-  }
-
-}
-
-object KernelBuilder {
-
-  private[this] val trivialInstance = new KernelBuilder[AnyRef] {
-    override def order = SafeLong.one
-    protected def makeMutableChain() = sys.error("This kb should be trivial")
-    override def toChain(): Chain.Generic[AnyRef] = Term.generic[AnyRef]
-  }
-
-  def trivial[G]: KernelBuilder[G] = trivialInstance.asInstanceOf[KernelBuilder[G]]
-
-  class Prepared[G](mc: MutableChain.Generic[G]) extends KernelBuilder[G] {
-    def makeMutableChain() = mc
-  }
-
-  def fromChain[G:ClassTag:Eq:Group](chain: Chain.Generic[G]) = chain match {
-    case _: Term.Generic[G] => trivial[G]
-    case node: Node.Generic[G] =>
-      val action: PermutationAction[G] = node.action
-      implicit def ia: action.type = action
-      val mc = node.asInstanceOf[Node[G, action.type]].mutableChain
-      new Prepared[G](mc)
-  }
-
-}
-
-/** Result of a sifting operation. */
-sealed abstract class SiftResult[G, A <: PermutationAction[G] with Singleton]
-
-object SiftResult {
-
-  /** Represents the result of a completely sifted element equal to the identity. */
-  final class Id[G, A <: PermutationAction[G] with Singleton] private[SiftResult]() extends SiftResult[G, A]
-
-  object Id {
-
-    private[this] val instance: Id[Perm, Perm.algebra.type] = new Id[Perm, Perm.algebra.type]
-
-    def apply[G, A <: PermutationAction[G] with Singleton] = instance.asInstanceOf[Id[G, A]]
-
-  }
-
-  /** Represents the result of a completely sifted element not equal to the identity, thus
-    * part of the kb of the action. */
-  case class NotId[G, A <: PermutationAction[G] with Singleton](remainder: G) extends SiftResult[G, A]
-
-  /** Represents the result of an incomplete sift, with
-    * implicitly[A].movesAnyPoint(remainder) true. The returned mutableNode `stop` is where
-    * the remainder should be inserted as a strong generator.
-    */
-  case class Stop[G, A <:PermutationAction[G] with Singleton](remainder: G, node: MutableNode[G, A]) extends SiftResult[G, A]
-
-}
 
 /** Methods that construct a BSGS chain from generators and optional additional information. */
 trait SchreierSims {
@@ -121,6 +31,16 @@ trait SchreierSims {
 
   def mutableChain[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
   (generators: Iterable[G], randomElement: Random => G, order: SafeLong, kb: KernelBuilder[G], baseStart: Seq[Int])(implicit action: A): MutableChain[G, A]
+
+  /** Try to reduce the number of generators of a group described by a chain given a faithful action.
+    *
+    * @param node       Chain
+    * @param generators Generators
+    * @param min        Minimal number of generators
+    * @tparam F         Faithful action type
+    * @return a list of generators of size smaller than `generators`, otherwise Opt.empty.
+    */
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]]
 
 }
 
@@ -261,23 +181,35 @@ final class SchreierSimsDeterministic extends SchreierSims {
   (generators: Iterable[G], randomElement: (Random) => G, order: SafeLong, kb: KernelBuilder[G], baseStart: Seq[Int])(implicit action: A): MutableChain[G, A] =
     mutableChain(generators, order, kb, baseStart)
 
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]] = {
+    implicit def f: F = node.action
+    def computeOrder(gens: IndexedSeq[G]): SafeLong = mutableChain[G, F](gens, KernelBuilder.trivial[G], Seq.empty[Int]).start.next.order
+    GrpStructure.deterministicReduceGenerators(generators, node.order, computeOrder)
+  }
+
 }
 
 final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
 
+  /** Sifts the given element through the given mutable chain and kernel builder. If the element
+    * cannot be completely sifted, add the sifted result as a strong generator.
+    *
+    * Returns whether a new strong generator has been added either to the coset chain or the kernel.
+    */
   def siftAndAddStrongGenerator[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
-  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G])(implicit action: A): Unit = {
+  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G])(implicit action: A): Boolean = {
     SchreierSims.siftAndUpdateBaseFrom(mutableChain, mutableChain.start, element) match {
       case SiftResult.Stop(generator, node) =>
         mutableChain.addStrongGeneratorHere(node, generator, generator.inverse)
+        true
       case SiftResult.NotId(kernelElement) =>
         val kmc_ = kb.mutableChain // type juggling
-      val faithfulAction = kmc_.start.action
+        val faithfulAction = kmc_.start.action
         type F = faithfulAction.type
         implicit def ifa: F = faithfulAction
         val kmc: MutableChain[G, F] = kmc_.asInstanceOf[MutableChain[G, F]]
         siftAndAddStrongGenerator(kmc, kernelElement, KernelBuilder.trivial[G])
-      case _: SiftResult.Id[G, A] => // do nothing
+      case _: SiftResult.Id[G, A] => false // the element sifts, so no new strong generator
     }
   }
 
@@ -305,6 +237,52 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
       siftAndAddStrongGenerator(mutableChain, randomElement(random), kb)
     }
     mutableChain
+  }
+
+  def fastOrderCheck[G:ClassTag:Eq:Group](generators: IndexedSeq[G], order: SafeLong, faithfulAction: PermutationAction[G], numSuccTries: Int = 4): Boolean = {
+    implicit def ia: faithfulAction.type = faithfulAction
+    val randomBag = RandomBag(generators, random)
+    val mutableChain = MutableChain.empty[G, faithfulAction.type]
+    var succTries = 0
+    while (mutableChain.start.next.order < order && succTries < numSuccTries) {
+      if (siftAndAddStrongGenerator[G, faithfulAction.type](mutableChain, randomBag(random), KernelBuilder.trivial[G]))
+        succTries = 0
+      else
+        succTries += 1
+    }
+    val c = mutableChain.start.next.order.compare(order)
+    require(c <= 0)
+    c == 0
+  }
+
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]] = {
+    // taken from GAP SmallGeneratingSet, the part after the order filtering
+    val order = node.order
+    var gens = generators
+    var i: Int = 0
+    if (gens.length > 2) {
+      i = spire.math.max(2, min)
+      while (i <= min + 1 && i < gens.length) {
+        var j = 1
+        while (j <= 5 && i < gens.length) {
+          val testGens = IndexedSeq.fill(i)(node.randomElement(random)).filterNot(_.isId)
+          if (fastOrderCheck(testGens, order, node.action))
+            gens = testGens
+          j += 1
+        }
+        i += 1
+      }
+    }
+    i = if (GrpStructure.isCommutativeFromGenerators(gens)) 1 else 2
+    while (i <= gens.length && gens.length > min) {
+      // random did not improve much, try subsets
+      val testGens = gens.patch(i, Nil, 1)
+      if (fastOrderCheck(testGens, order, node.action))
+        gens = testGens
+      else
+        i += 1
+    }
+    if (gens.length < generators.length) Opt(gens) else Opt.empty[IndexedSeq[G]]
   }
 
 }

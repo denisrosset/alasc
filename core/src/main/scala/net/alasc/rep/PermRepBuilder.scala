@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 import spire.algebra.Ring
 
-import net.alasc.perms.Perm
+import net.alasc.perms.{Perm, PermAlgebra}
 
 trait FaithfulPermRepBuilder[G] {
 
@@ -18,7 +18,7 @@ object FaithfulPermRepBuilder {
 
     final class MyRep[K](val dimension: Int)(implicit val scalar: Ring[K]) extends FaithfulPermRep[Perm, K] {
 
-      type F = Perm.algebra.type
+      type F = PermAlgebra.type
       val permutationAction: F = Perm.algebra
 
       def represents(g: Perm) = permutationAction.largestMovedPoint(g).getOrElseFast(-1) < dimension
