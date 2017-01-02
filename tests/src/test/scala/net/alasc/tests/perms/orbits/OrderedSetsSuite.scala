@@ -11,22 +11,21 @@ import org.scalacheck.Gen
 import net.alasc.algebra.PermutationAction
 import net.alasc.domains.Domain
 import net.alasc.laws.{Grps, Permutations, SetInts}
-import net.alasc.perms.Perm
+import net.alasc.perms.{Perm, PermAlgebra}
 import net.alasc.perms.orbits.Sets
 import net.alasc.perms.default._
 import spire.std.int._
 
 import net.alasc.lexico.lexSetIntOrder._
 import spire.compat._
+
 import net.alasc.std.set._
 import spire.std.boolean._
 
-/* TODO
+
 class OrderedSetsSuite extends AlascSuite {
 
-  import Permutations.permutationGrp
-
-  val domain = Domain(12)
+  val grpGen = Grps.conjugatedFromElements(Permutations.permForSize(8), Permutations.permForSize(200))
 
   @tailrec final def slowOrbit[G:Group:PermutationAction](set: Set[Set[Int]], generators: Iterable[G]): Set[Set[Int]] = {
     val newSet = collection.mutable.Set.empty[Set[Int]].empty ++ set
@@ -37,18 +36,18 @@ class OrderedSetsSuite extends AlascSuite {
     }
     if (newSet.size > set.size) slowOrbit(newSet.to[Set], generators) else set
   }
+
     test("Compute smallest") {
-      forAll(SetInts.inDomain(domain), permutationGrp[Perm](domain)) { (set, grp) =>
-        val g = Sets.toSmallest(set, grp)
+      forAll(SetInts.forSize(200), grpGen) { (set, grp) =>
+        val g = Sets.toSmallest(grp, PermAlgebra, set)
         (set <|+| g) should === (slowOrbit(Set(set), grp.generators).min)
       }
     }
 
     test("isSmallest") {
-      forAll(SetInts.inDomain(domain), permutationGrp[Perm](domain)) { (set, grp) =>
-        Sets.isSmallestInOrbit(set, grp) should === (set === slowOrbit(Set(set), grp.generators).min)
+      forAll(SetInts.forSize(200), grpGen) { (set, grp) =>
+        Sets.isSmallestInOrbit(grp, PermAlgebra, set) should === (set === slowOrbit(Set(set), grp.generators).min)
       }
     }
 
 }
-*/

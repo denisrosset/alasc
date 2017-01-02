@@ -16,12 +16,12 @@ import spire.std.int._
 import net.alasc.lexico.lexSetIntOrder._
 import spire.std.boolean._
 
-/* TODO
+
 class PointsSuite extends AlascSuite {
 
   import Permutations.permutationGrp
 
-  val domain = Domain(20)
+  val grpGen = Grps.conjugatedFromElements(Permutations.permForSize(20), Permutations.permForSize(200))
 
   @tailrec final def slowOrbit[G:PermutationAction](set: Set[Int], generators: Iterable[G]): Set[Int] = {
     val newSet = collection.mutable.BitSet.empty ++ set
@@ -34,16 +34,15 @@ class PointsSuite extends AlascSuite {
   }
 
   test("Compute orbit of points") {
-    forAll(Doms.inDomain(domain), permutationGrp(domain)) { (point, grp) =>
-      Points(point.value, grp.generators) should === (slowOrbit(Set(point.value), grp.generators))
+    forAll(Gen.choose(0, 200), grpGen) { (point, grp) =>
+      Points(point, grp.generators) should === (slowOrbit(Set(point), grp.generators))
     }
   }
 
   test("isSmallest") {
-    forAll(Doms.inDomain(domain), permutationGrp(domain)) { (point, grp) =>
-      Points.isSmallestInOrbit(point.value, grp.generators) should === (point.value === slowOrbit(Set(point.value), grp.generators).min)
+    forAll(Gen.choose(0, 200), grpGen) { (point, grp) =>
+      Points.isSmallestInOrbit(point, grp.generators) should === (point === slowOrbit(Set(point), grp.generators).min)
     }
   }
 
 }
-*/

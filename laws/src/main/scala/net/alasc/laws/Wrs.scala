@@ -12,28 +12,7 @@ import net.alasc.rep.FaithfulPermRep
 import net.alasc.syntax.permutationAction._
 import net.alasc.wreath._
 
-case class WrSize(a: Int, h: Int) {
-
-  def aPerm = Perm(0, a - 1)
-
-  def faithfulAction: PermutationAction[Wr[Perm]] = new WrFaithfulPermutationAction[Perm](h, a)
-
-}
-
-object WrSize {
-
-  implicit val arbWrSize: Arbitrary[WrSize] =
-    Arbitrary(for {
-      a <- Gen.choose(1, 3)
-      h <- Gen.choose(1, 3)
-    } yield WrSize(a, h))
-
-}
-
 object Wrs {
-
-  implicit def arbWr(implicit wrSize: WrSize): Arbitrary[Wr[Perm]] =
-    Arbitrary(forSize(wrSize.a, wrSize.h))
 
   def forSize(aSize: Int, hSize: Int) = for {
     aSeq <- Gen.containerOfN[Seq, Perm](hSize, Permutations.permForSize(aSize))

@@ -94,9 +94,9 @@ class WrFaithfulPermutationActionBuilder[A:Eq:FaithfulPermutationActionBuilder:G
   def apply(generators: Iterable[Wr[A]]) = {
     import MaxHelpers._
     val aGenerators = generators.flatMap(_.aMap.values)
-    val n = generators.mapMax(0)(_.n)
+    val n = generators.mapMax(1)(_.n)
     implicit val actionA = FaithfulPermutationActionBuilder[A].apply(aGenerators)
-    val aSize = aGenerators.mapMax(0)(a => a.largestMovedPoint.getOrElseFast(-1) + 1)
+    val aSize = aGenerators.mapMax(1)(a => a.largestMovedPoint.getOrElseFast(-1) + 1)
     new WrFaithfulPermutationAction[A](n, aSize)
   }
 

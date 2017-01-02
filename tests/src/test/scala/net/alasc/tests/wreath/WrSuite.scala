@@ -3,34 +3,35 @@ package net.alasc.tests.wreath
 import spire.laws.{Perm => _}
 import spire.math.SafeLong
 
+import org.scalacheck.Arbitrary
+
 import net.alasc.domains.Domain
 import net.alasc.finite.Grp
 import net.alasc.laws._
 import net.alasc.perms.Perm
 import net.alasc.tests.AlascSuite
-import net.alasc.wreath.Wr
+import net.alasc.wreath.{Wr, WrFaithfulPermutationAction}
+import net.alasc.perms.default._
 
 class WrSuite extends AlascSuite {
 
   import Permutations.arbPerm
-  import Wrs.arbWr
+
 
   implicit val wrNoShrink = noShrink[Wr[Perm]]
-/*
-  val domain = Domain(100)
 
-  nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
-    implicit def action = wrSize.representation[SafeLong].permutationAction
-    PermutationActionLaws[Wr[Perm]](domain).faithfulPermutationAction
-  }*/
+  {
+    implicit val arbWr: Arbitrary[Wr[Perm]] = Arbitrary(Wrs.forSize(5, 5))
+    implicit val action = new WrFaithfulPermutationAction[Perm](5, 5)
+    checkAll("PermutationAction[Wr[Perm]]", PermutationActionLaws[Wr[Perm]].faithfulPermutationAction)
+  }
 
-  import net.alasc.perms.default._
-
-  import Grps.arbGrp
-/*
-  nestedCheckAll[WrSize]("Wr[Perm,Perm]", WrSize(1, 1)) { implicit wrSize =>
-    GrpLaws[Wr[Perm]].grpWithoutHashCodeEquals
-  }*/
+  {
+    val genWr = Wrs.forSize(3, 3)
+    implicit val arbWr: Arbitrary[Wr[Perm]] = Arbitrary(genWr)
+    implicit val arbGrp = Arbitrary(Grps.fromElements(genWr))
+    checkAll("Grp[Wr[Perm]]", GrpLaws[Wr[Perm]].grpPermutationAction)
+  }
 
   test("Bug discovered by random testing") {
     val arg1 = Grp(Wr[Perm]()())

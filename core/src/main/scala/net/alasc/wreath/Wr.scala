@@ -47,7 +47,7 @@ object Wr {
     new Wr(aMap, perm)
   }
 
-  implicit def wrFaithfulPermutationActoinBuilder[A:Eq:Group:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[Wr[A]] =
+  implicit def wrFaithfulPermutationActionBuilder[A:Eq:Group:FaithfulPermutationActionBuilder]: FaithfulPermutationActionBuilder[Wr[A]] =
     new WrFaithfulPermutationActionBuilder[A]
 
   class WrEqGroup[A:Eq:Group] extends Eq[Wr[A]] with Group[Wr[A]] {

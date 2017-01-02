@@ -4,19 +4,19 @@ import spire.algebra.Order
 import spire.util.Opt
 
 import org.scalacheck._
-/* TODO
-import net.alasc.bsgs.{BaseGuideLex, GrpPermAlgorithms}
+
+import net.alasc.bsgs.{BaseGuideLex, GrpChainPermutationAction}
 import net.alasc.domains.{Domain, Partition}
 import net.alasc.finite._
 import net.alasc.laws._
-import net.alasc.perms.orbits.RepresentativesArrayInt$
 import net.alasc.perms._
+import net.alasc.perms.orbits.RepresentativesArrayInt
 import net.alasc.tests.AlascSuite
 import net.alasc.tests.perms.PermSuite
 
-abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends AlascSuite {
+abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Perm]) extends AlascSuite {
 
-  import builder.{baseChange, baseSwap, schreierSims}
+  import gcpa.{baseChange, baseSwap, schreierSims}
 
   def genSizedArrayInt(size: Int): Gen[Array[Int]] = Gen.containerOfN[Array, Int](size, Gen.choose(0, 3))
 
@@ -27,7 +27,7 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
 
   def genSetInt: Gen[Set[Int]] = Gen.containerOfN[Set, Int](10, Gen.choose(0, 10))
 
-  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.permForDomain(Domain(size)))
+  def genSizedGrp(size: Int): Gen[Grp[Perm]] = Grps.fromElements(Permutations.permForSize(size))
 
   implicit val noShrinkArrayInt = noShrink[Array[Int]]
   implicit val noShrinkPerm = noShrink[Perm]
@@ -37,9 +37,9 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
       val n = array.length
       forAll(genSizedGrp(n)) { grp =>
         val bruteForceMinimal: Array[Int] = grp.iterator.map(g => (array <|+|? g).get).min(Order.ordering(spire.std.array.ArrayOrder[Int]))
-        val grpChn = builder.fromGrp(grp, Perm.algebra, Opt(BaseGuideLex(n)))
-        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, builder.fixingPartition(grpChn, Perm.algebra, Partition.fromSeq(array))) //RepresentativesArrayInt.ordered(seq, grp).head.get
-      val cleverMinimal: Array[Int] = (array <|+|? minG).get
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
+        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array))) //RepresentativesArrayInt.ordered(seq, grp).head.get
+        val cleverMinimal: Array[Int] = (array <|+| minG).toArray
         cleverMinimal should ===(bruteForceMinimal)
       }
     }
@@ -49,12 +49,12 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
     forAll(genArrayInt) { array =>
       val n = array.length
       forAll(genSizedGrp(n)) { grp =>
-        val grpChn = builder.fromGrp(grp, Perm.algebra, Opt(BaseGuideLex(n)))
-        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, builder.fixingPartition(grpChn, Perm.algebra, Partition.fromSeq(array)))
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
+        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array)))
         forAll(Grps.genRandomElement(grp)) { g =>
-          val array1 = (array <|+|? g).get
-          val minG1: Perm = RepresentativesArrayInt.findPermutationToMinimal(array1, grpChn, builder.fixingPartition(grpChn, Perm.algebra, Partition.fromSeq(array1)))
-          (array <|+|? minG).get should ===((array1 <|+|? minG1).get)
+          val array1 = array <|+| g
+          val minG1: Perm = RepresentativesArrayInt.findPermutationToMinimal(array1, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array1)))
+          (array <|+| minG) should ===((array1 <|+| minG1))
         }
       }
     }
@@ -64,13 +64,13 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
     forAll(genArrayInt) { seq =>
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
-        val grpChn = builder.fromGrp(grp)
-        val symgrp = builder.fixingPartition(grpChn, Perm.algebra, Partition.fromSeq(seq))
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra)
+        val symgrp = gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq))
         forAll(Grps.genRandomElement(grp)) { g =>
-          val repr = (seq <|+|? g).get
+          val repr = seq <|+| g
           RepresentativesArrayInt.permutationTo(seq, repr, grpChn, symgrp) match {
             case Opt(g1) =>
-              val newRepr = (seq <|+|? g1).get
+              val newRepr = seq <|+| g1
               repr should ===(newRepr)
             case _ => assert(false)
           }
@@ -83,12 +83,12 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
     forAll(genArrayInt) { seq =>
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
-        val grpChn = builder.fromGrp(grp, Opt(BaseGuideLex(n)))
-        val symgrp = builder.fixingPartition(grpChn, Perm.algebra, Partition.fromSeq(seq))
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra)
+        val symgrp = gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq))
         forAll(genSizedArrayInt(n)) { repr =>
           RepresentativesArrayInt.permutationTo(seq, repr, grpChn, symgrp) match {
             case Opt(g) =>
-              val newRepr = (seq <|+|? g).get
+              val newRepr = seq <|+| g
               repr should ===(newRepr)
             case _ =>
               grp.iterator.exists(g => (repr <|+|? g).get.sameElements(seq)) shouldBe false
@@ -102,8 +102,8 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
     forAll(genArrayInt) { seq =>
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
-        val grpChn = builder.fromGrp(grp, Perm.algebra, Opt(BaseGuideLex(n)))
-        val reps = RepresentativesArrayInt(seq, grpChn, builder.fixingPartition(grpChn, Partition.fromSeq(seq)))
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
+        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq)))
         val iteratorEls = reps.orderedIterator.map(block => (seq <|+|? block.element).get.toVector)
         val indexEls = (0 until reps.size.toInt).iterator.map(i => (seq <|+|? reps(i).element).get.toVector)
         iteratorEls.toSeq shouldBe indexEls.toSeq
@@ -116,18 +116,19 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
     forAll(genArrayInt) { seq =>
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
-        val grpChn = builder.fromGrp(grp, Perm.algebra, Opt(BaseGuideLex(n)))
-        val reps = RepresentativesArrayInt(seq, grpChn, builder.fixingPartition(grpChn, Partition.fromSeq(seq)))
+        val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
+        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq)))
         val it = reps.orderedIterator
-        var prev = (seq <|+|? it.next.element).get
+        var prev = seq <|+| it.next.element
         while (it.hasNext) {
-          val current = (seq <|+|? it.next.element).get
+          val current = seq <|+| it.next.element
           current shouldBe > (prev)
           prev = current
         }
       }
     }
   }
+
 /*
   test("Minimal representative is found for sets") {
     forAll(genSetInt) { set =>
@@ -146,4 +147,3 @@ abstract class RepresentativesSuite(implicit builder: GrpPermAlgorithms) extends
 final class RepresentativesSuiteDeterministic extends RepresentativesSuite()(PermSuite.deterministic)
 
 final class RepresentativesSuiteRandomized extends RepresentativesSuite()(PermSuite.randomized)
-*/
