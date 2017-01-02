@@ -1,11 +1,11 @@
 package net.alasc.laws
 
-import spire.algebra.{Group, Order}
+import spire.algebra.{Action, Group, Order}
 import spire.util.Opt
 
 import org.scalacheck.Gen
 import org.scalatest.matchers.{MatchResult, Matcher}
-import spire.syntax.partialAction._
+import spire.syntax.action._
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{Chain, Node, Term}
@@ -29,7 +29,7 @@ object BSGSs {
       Gen.choose(0, chain.length - 2).map(i => Opt(i))
 
   def genSwappedSeq[A](seq: Seq[A]): Gen[Seq[A]] =
-    Permutations.permForSize(seq.size).map( perm => (seq <|+|? perm).get )
+    Permutations.permForSize(seq.size).map( perm => (seq <|+| perm) )
 
   def genNewBase[G, F <: PermutationAction[G] with Singleton](chain: Chain[G, F]): Gen[Seq[Int]] = chain match {
     case _: Term[G, F] => Gen.const(Seq.empty[Int])

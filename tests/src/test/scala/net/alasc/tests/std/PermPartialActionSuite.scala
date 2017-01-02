@@ -1,6 +1,6 @@
 package net.alasc.tests.std
 
-import spire.laws.PartialActionLaws
+import spire.laws.{ActionLaws, PartialActionLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -18,22 +18,13 @@ class PermPartialActionSuite extends AlascSuite {
     } yield perm
   }
 
-  implicit def arbArrayInt: Arbitrary[Array[Int]] = Arbitrary {
-    for {
-      n <- Gen.choose(1,20)
-      array <- Gen.containerOfN[Array, Int](n, Gen.choose(0, 10))
-    } yield array
-  }
-
   implicit def arbSeqInt: Arbitrary[Seq[Int]] = Arbitrary {
     for {
-      n <- Gen.choose(1,20)
+      n <- Gen.choose(10,20)
       array <- Gen.containerOfN[Seq, Int](n, Gen.choose(0, 10))
     } yield array
   }
 
-  checkAll("PartialAction[Perm, Array[Int]]", PartialActionLaws[Perm, Array[Int]].groupPartialAction)
-
-  checkAll("PartialAction[Perm, Seq[Int]]", PartialActionLaws[Perm, Seq[Int]].groupPartialAction)
+  checkAll("Action[Perm, Seq[Int]]", ActionLaws[Perm, Seq[Int]].groupAction)
 
 }
