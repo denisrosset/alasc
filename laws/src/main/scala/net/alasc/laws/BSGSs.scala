@@ -1,9 +1,12 @@
 package net.alasc.laws
 
+import scala.util.Random
+
 import spire.algebra.{Action, Group, Order}
 import spire.util.Opt
 
 import org.scalacheck.Gen
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.matchers.{MatchResult, Matcher}
 import spire.syntax.action._
 
@@ -39,7 +42,7 @@ object BSGSs {
   }
 
   def genRandomElement[G:Group](chain: Chain[G, _]): Gen[G] =
-    Gen.parameterized( p => chain.randomElement(p.rng) )
+    arbitrary[Long].map( seed => chain.randomElement(new Random(seed)))
 
   def beWeaklyIncreasing[A:Order] = new Matcher[Seq[A]] {
 

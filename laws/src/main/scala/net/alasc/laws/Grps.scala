@@ -1,6 +1,7 @@
 package net.alasc.laws
 
 import scala.annotation.tailrec
+import scala.util.Random
 
 import spire.algebra.{Eq, Group}
 
@@ -14,7 +15,8 @@ import Arbitrary.arbitrary
 
 object Grps {
 
-  def genRandomElement[G](grp: Grp[G]): Gen[G] = Gen.parameterized { params => grp.randomElement(params.rng) }
+  def genRandomElement[G](grp: Grp[G]): Gen[G] =
+    arbitrary[Long].map( seed => grp.randomElement(new Random(seed)))
 
   def genSubgrp[G:Eq:Group:GrpGroup](grp: Grp[G]): Gen[Grp[G]] =
     fromElements(genRandomElement(grp))

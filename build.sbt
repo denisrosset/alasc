@@ -1,15 +1,15 @@
 // inspired by Spire build.sbt file
 
 val attributesVersion = "0.30"
-val disciplineVersion = "0.4"
-val cycloVersion = "0.11.0.4"
-val metalVersion = "0.11.0.9"
-val scalaCheckVersion = "1.12.4"
-val scalaTestVersion = "3.0.0-M7"
-val scalinVersion = "0.11.0.8"
-val shapelessVersion = "2.2.5"
-val spireVersion = "0.11.0"
-val fastParseVersion = "0.3.7"
+val disciplineVersion = "0.7.2"
+val cycloVersion = "0.13.0-SNAPSHOT"
+val metalVersion = "0.13.0-SNAPSHOT"
+val scalaCheckVersion = "1.13.4"
+val scalaTestVersion = "3.0.1"
+val scalinVersion = "0.13.0-SNAPSHOT"
+val shapelessVersion = "2.3.2"
+val spireVersion = "0.13.0"
+val fastParseVersion = "0.4.2"
 
 lazy val alasc = (project in file("."))
   .settings(moduleName := "alasc")
@@ -70,8 +70,8 @@ lazy val alascSettings = buildSettings ++ commonSettings ++ publishSettings
 
 lazy val buildSettings = Seq(
   organization := "net.alasc",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8")
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.11.8", "2.12.1")
 )
 
 lazy val commonSettings = Seq(
@@ -124,7 +124,6 @@ lazy val commonScalacOptions = Seq(
   "-unchecked",
   "-Xfatal-warnings",
   "-Xlint",
-  "-Yinline-warnings",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
@@ -142,10 +141,10 @@ lazy val commonJvmSettings = Seq(
 lazy val selectiveOptimize = 
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 10)) =>
-        Seq()
-      case Some((2, n)) if n >= 11 =>
-        Seq("-optimize")
+      case Some((2, 10)) => Seq()
+      case Some((2, 11)) => Seq("-optimize")
+      case Some((2, 12)) => Seq()
+      case _ => sys.error("Unknown Scala version")
     }
   }
 

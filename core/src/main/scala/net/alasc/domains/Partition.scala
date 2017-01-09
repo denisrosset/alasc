@@ -6,6 +6,7 @@ import scala.collection.immutable
 
 import spire.algebra.PartialOrder
 import spire.algebra.lattice._
+import spire.syntax.cfor._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
@@ -214,7 +215,7 @@ object Partition extends PartitionLowPriority {
     require(seq.size == domain.size)
     val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]
     val blockMap = mutable.HashMap.empty[Any, Int]
-    seq.indices.foreach { i =>
+    cforRange(0 until seq.length) { i =>
       blockMap.get(seq(i)) match {
         case Some(b) => blocks(b) += i
         case None =>
