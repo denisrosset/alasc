@@ -2,13 +2,13 @@
 
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
-val cycloVersion = "0.13.1-SNAPSHOT"
-val metalVersion = "0.13.0-SNAPSHOT"
+val cycloVersion = "0.13.1.0"
+val metalVersion = "0.13.1.0"
 val scalaCheckVersion = "1.13.4"
 val scalaTestVersion = "3.0.1"
 val scalinVersion = "0.13.1.1"
 val shapelessVersion = "2.3.2"
-val spireVersion = "0.13.0"
+val spireVersion = "0.13.1-SNAPSHOT"
 val fastParseVersion = "0.4.2"
 
 lazy val alasc = (project in file("."))
