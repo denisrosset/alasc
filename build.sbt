@@ -2,11 +2,11 @@
 
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
-val cycloVersion = "0.13.0-SNAPSHOT"
+val cycloVersion = "0.13.1-SNAPSHOT"
 val metalVersion = "0.13.0-SNAPSHOT"
 val scalaCheckVersion = "1.13.4"
 val scalaTestVersion = "3.0.1"
-val scalinVersion = "0.13.0-SNAPSHOT"
+val scalinVersion = "0.13.1-SNAPSHOT"
 val shapelessVersion = "2.3.2"
 val spireVersion = "0.13.0"
 val fastParseVersion = "0.4.2"
@@ -82,6 +82,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-value-discard"
   )),
   resolvers ++= Seq(
+    Resolver.url("spirejars", url(file("spirejars").toURI.toASCIIString))(Resolver.ivyStylePatterns),
     "bintray/non" at "http://dl.bintray.com/non/maven",
     "bintray/denisrosset/maven" at "https://dl.bintray.com/denisrosset/maven",
     Resolver.sonatypeRepo("snapshots"),

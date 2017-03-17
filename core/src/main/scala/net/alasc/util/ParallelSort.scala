@@ -5,27 +5,11 @@ import scala.reflect.ClassTag
 import spire.algebra.Order
 
 /**
-  *  Interface for a sorting strategy object. Named ParallelSort as swaps are also performed in parallel
-  *  on an external array.
-  */
-trait ParSort extends Any {
-
-  // WARNING: not tested
-
-  def sort[@specialized A:Order:ClassTag, B:ClassTag](data: Array[A], external: Array[B]): Unit
-
-}
-
-object ParSort {
-
-}
-
-/**
   * Simple implementation of insertion sort, lifted from spire.math.
   *
   * Works for small arrays but due to O(n^2) complexity is not generally good.
   */
-object ParInsertionSort extends ParSort {
+object ParInsertionSort {
 
   final def sort[@specialized A:Order:ClassTag, B:ClassTag](data: Array[A], external: Array[B]): Unit =
     sort(data, external, 0, data.length)
@@ -52,7 +36,7 @@ object ParInsertionSort extends ParSort {
 
 /**
   * In-place quicksort implementation. It is not stable, but does not allocate
-  * extra space (other than stack). Lifted from spire.math, adapted from parallel sorting.
+  * extra space (other than stack). Lifted from spire.math, adapted to parallel sorting.
   */
 object ParQuickSort {
   @inline final def limit: Int = 16
