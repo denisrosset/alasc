@@ -13,6 +13,7 @@ import metal.syntax._
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.util._
+import net.alasc.syntax.group._
 
 /** Defines a subgroup (in the sense of the coset group obtained from the action kernel). */
 trait SubgroupDefinition[G, A <: PermutationAction[G] with Singleton] {
@@ -89,7 +90,7 @@ object SubgroupSearch {
     val firstTest = definition.firstLevelTest(guidedChain)
     def rec(currentChain: Chain[G, A], currentG: G, currentTest: SubgroupTest[G, A]): Iterator[G] = currentChain match {
       case node: Node[G, A] =>
-        val sortedOrbit = node.orbit.toSeq.sorted(Order.ordering(ImageOrder(bo, currentG)))
+        val sortedOrbit = node.orbit.toSeq.sorted(ImageOrder(bo, currentG).toOrdering)
         for {
           b <- sortedOrbit.iterator
           orbitImage = b <|+| currentG

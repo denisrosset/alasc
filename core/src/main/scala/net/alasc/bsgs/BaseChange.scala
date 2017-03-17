@@ -9,6 +9,7 @@ import spire.syntax.action._
 import spire.syntax.group._
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.syntax.group._
 
 abstract class BaseChange {
 

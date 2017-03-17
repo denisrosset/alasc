@@ -14,6 +14,7 @@ import net.alasc.perms.MutableOrbit
 import metal.syntax._
 
 import net.alasc.perms.orbits
+import net.alasc.syntax.group._
 
 abstract class BaseSwap {
 

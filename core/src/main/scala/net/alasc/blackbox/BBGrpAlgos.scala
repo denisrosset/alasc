@@ -15,6 +15,7 @@ import net.alasc.bsgs.{FixingPartition, Transversal}
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.Perm
+import net.alasc.syntax.group._
 
 class BBGrpAlgos[G](implicit
                     val classTag: ClassTag[G],
@@ -121,7 +122,7 @@ class BBGrpAlgos[G](implicit
   def lexElements(grp: Grp[G], action: PermutationAction[G]): Opt[BigIndexedSeq[G]] =
     if (!kernel(grp, action).isTrivial) Opt.empty[BigIndexedSeq[G]] else {
       val orderTC = net.alasc.lexico.lexPermutationOrder.LexPermutationOrder[G](implicitly, action)
-      val ordering = Order.ordering(orderTC)
+      val ordering = orderTC.toOrdering
       val sortedElements = fromGrp(grp).elements.toIndexedSeq.sorted(ordering)
       Opt(BigIndexedSeq.wrap(sortedElements))
     }

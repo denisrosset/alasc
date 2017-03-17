@@ -9,7 +9,7 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
-import scalin.algebra.MatField
+import scalin.MatEngine
 
 import net.alasc.algebra.{PermutationAction}
 import net.alasc.bsgs.{BaseChange, BuildChain, SchreierSims}
@@ -27,7 +27,7 @@ trait Rep[G, K] {
   /** Tests whether this representation can represent the element `g`. */
   def represents(g: G): Boolean
 
-  def widen[L](f: K => L)(implicit L: MatField[L, _ <: scalin.immutable.Mat[L]]): Rep[G, L] = new Rep[G, L] {
+  def widen[L](f: K => L)(implicit L: MatEngine[L, _ <: scalin.immutable.Mat[L]]): Rep[G, L] = new Rep[G, L] {
     def dimension = self.dimension
     def represents(g: G) = self.represents(g)
     def apply(g: G): scalin.immutable.Mat[L] = self.apply(g).map(f(_))

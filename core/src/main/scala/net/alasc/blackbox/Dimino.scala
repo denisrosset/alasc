@@ -9,6 +9,8 @@ import spire.syntax.cfor._
 import spire.syntax.eq._
 import spire.syntax.group._
 
+import net.alasc.syntax.group._
+
 /** Implementation of Dimino's algorithm to generate group elements. */
 object Dimino {
 

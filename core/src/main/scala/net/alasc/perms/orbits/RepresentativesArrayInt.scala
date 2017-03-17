@@ -16,6 +16,7 @@ import metal.syntax._
 import net.alasc.algebra._
 import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseOrder, BaseSwap, BuildChain, Chain, ChainRec, GrpChain, KernelBuilder, Node, SchreierSims, SubgroupSearch, Term}
 import net.alasc.perms.{MutableOrbit, orbits}
+import net.alasc.syntax.group._
 import net.alasc.util._
 
 final case class RepresentativesArrayInt[G, A <: PermutationAction[G] with Singleton]

@@ -6,6 +6,7 @@ import scala.util.Random
 import spire.algebra.Group
 
 import net.alasc.algebra._
+import net.alasc.syntax.group._
 
 case class TrivialNode[G:ClassTag:Group, A <: PermutationAction[G] with Singleton](beta: Int, next: Chain[G, A])
                                                             (implicit val action: A) extends Node[G, A] {

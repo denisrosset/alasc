@@ -14,6 +14,7 @@ import net.alasc.bsgs.MutableChain.Generic
 import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.{FilterOrders, Perm}
+import net.alasc.syntax.group._
 
 /** Algorithms for groups for which faithful permutation actions can be obtained. */
 abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutationAction[G] with GrpStructure[G] {

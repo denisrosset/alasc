@@ -7,7 +7,7 @@ import spire.util.Opt
 
 import cyclo.Cyclo
 import scalin.{Mat, Vec}
-import scalin.algebra.VecEngine
+import scalin.VecEngine
 
 
 /** Prints objects of type `A` into the internal representation of the specified format.

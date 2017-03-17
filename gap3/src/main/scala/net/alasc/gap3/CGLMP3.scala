@@ -4,7 +4,7 @@ import spire.algebra.Order
 import spire.math.SafeLong
 
 import cyclo.Cyclo
-import scalin.algebra.MatEngine
+import scalin.MatEngine
 
 import net.alasc.finite.{Grp, Rep}
 import net.alasc.perms.Perm

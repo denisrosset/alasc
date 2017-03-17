@@ -2,12 +2,12 @@ package net.alasc.gap3
 
 import spire.algebra.Ring
 
-import scalin.algebra.MatRing
+import scalin.MatEngine
 import scalin.immutable.Mat
 
 import scalin.syntax.all._
 
-class RingOfMat[K, MK <: Mat[K]](val d: Int)(implicit MK: MatRing[K, MK]) extends Ring[MK] {
+class RingOfMat[K, MK <: Mat[K]](val d: Int)(implicit MK: MatEngine[K, MK], K: Ring[K]) extends Ring[MK] {
 
   override def one: MK = MK.eye(d)
 
@@ -19,7 +19,7 @@ class RingOfMat[K, MK <: Mat[K]](val d: Int)(implicit MK: MatRing[K, MK]) extend
 
   override def plus(x: MK, y: MK): MK = MK.plus(x, y)
 
-  override def fromInt(n: Int): MK = MK.times(MK.eye(d), MK.scalar.fromInt(n))
+  override def fromInt(n: Int): MK = MK.times(MK.eye(d), K.fromInt(n))
 
   override def minus(x: MK, y: MK): MK = MK.minus(x, y)
 

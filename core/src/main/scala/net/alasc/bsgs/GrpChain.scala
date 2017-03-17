@@ -14,6 +14,7 @@ import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.perms.orbits
 import net.alasc.perms.MutableOrbit
+import net.alasc.syntax.group._
 
 /** Group described a BSGS chain of elements of type G using the permutation action F.
   *
@@ -373,7 +374,7 @@ object GrpChain {
         import grp.{action, classTag, group}
         val myBase = grp.chain.base
         val bo = BaseOrder[G, F](myBase)
-        val bordering = Order.ordering(bo)
+        val bordering = bo.toOrdering
         val orbit = MutableOrbit.empty
         import spire.std.int.IntAlgebra
         def rec(g: G, chain: Chain[G, F], subSubgrp: GrpChain[G, F]): Iterator[LeftCoset[G, subgrp0.type]] = chain match {

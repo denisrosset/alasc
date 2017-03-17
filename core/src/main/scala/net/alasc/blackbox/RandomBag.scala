@@ -6,6 +6,8 @@ import scala.collection.mutable.ArraySeq
 import spire.algebra.Group
 import spire.syntax.group._
 
+import net.alasc.syntax.group._
+
 /** Generator of random elements from generators of a group.
   * 
   * A random bag is a set of random group elements that always generates

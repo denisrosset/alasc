@@ -8,6 +8,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.syntax.group._
 
 /** Defines the subgroup which intersect `chain2`, given in action `action` (not necessarily faithful). */
 case class Intersection[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]

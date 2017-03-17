@@ -10,10 +10,11 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra._
+import net.alasc.syntax.group._
 
 class SeqEqGroup[SG <: SeqLike[G, SG], G:Eq:Group](implicit cbf: CanBuildFrom[Nothing, G, SG]) extends Eq[SG] with Group[SG] {
 
-  def id: SG = cbf().result
+  def empty: SG = cbf().result
   def eqv(x: SG, y: SG): Boolean = {
     val xs = x.size
     val ys = y.size
@@ -40,7 +41,7 @@ class SeqEqGroup[SG <: SeqLike[G, SG], G:Eq:Group](implicit cbf: CanBuildFrom[No
     sg.foreach { g => b += g.inverse }
     b.result
   }
-  def op(x: SG, y: SG): SG = {
+  def combine(x: SG, y: SG): SG = {
     val b = cbf()
     b.sizeHint(x.size.max(y.size))
     val xi = x.iterator

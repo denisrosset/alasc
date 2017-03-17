@@ -29,7 +29,7 @@ object PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm
     }
   }
 
-  def op(x: Perm, y: Perm): Perm = x match {
+  def combine(x: Perm, y: Perm): Perm = x match {
     case lhs16: Perm16 => y match {
       case rhs16: Perm16 => new Perm16(Perm16Encoding.op(lhs16.encoding, rhs16.encoding))
       case rhs32: Perm32 => Perm32Encoding.op1632(lhs16, rhs32)
@@ -68,7 +68,7 @@ object PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm
 
   def inverse(p: Perm): Perm = p.inverse
 
-  val id = Perm16Encoding.id
+  val empty = Perm16Encoding.id
 
   def movedPointsUpperBound(p: Perm) = largestMovedPoint(p)
 

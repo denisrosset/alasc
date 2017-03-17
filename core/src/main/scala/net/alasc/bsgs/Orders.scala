@@ -7,6 +7,7 @@ import spire.syntax.group._
 import metal.syntax._
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.syntax.group._
 
 trait BaseOrder[G, A <: PermutationAction[G] with Singleton] extends Order[Int] {
 
@@ -54,7 +55,7 @@ object BaseOrder {
       case node: Node[G, A] =>
         val io = ImageOrder(bo, gPrev)
         for {
-          b <- node.orbit.toSeq.sorted(Order.ordering(io)).toIterator
+          b <- node.orbit.toSeq.sorted(io.toOrdering).toIterator
           gThis = node.u(b) |+| gPrev
           g <- rec(node.next, gThis)
         } yield g

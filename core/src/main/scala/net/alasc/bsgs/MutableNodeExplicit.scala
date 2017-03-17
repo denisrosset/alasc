@@ -14,6 +14,7 @@ import metal.syntax._
 
 import net.alasc.algebra._
 import net.alasc.util._
+import net.alasc.syntax.group._
 
 final class MutableNodeExplicit[G, A <: PermutationAction[G] with Singleton](
   var beta: Int,

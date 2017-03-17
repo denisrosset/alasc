@@ -5,9 +5,10 @@ import spire.algebra.partial.PartialAction
 import spire.util.Opt
 
 import scalin.Vec
-import scalin.algebra.VecEngine
+import scalin.VecEngine
 
 import net.alasc.algebra._
+import net.alasc.syntax.group._
 
 final class VecPermutation[A, V <: Vec[A], G:PermutationAction:Group](implicit V: VecEngine[A, V]) extends PartialAction[V, G] {
 

@@ -18,6 +18,7 @@ import net.alasc.finite.{Grp, GrpStructure}
 import net.alasc.perms.{FilterOrders, Perm}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util.NNOption
+import net.alasc.syntax.group._
 
 /** Methods that construct a BSGS chain from generators and optional additional information. */
 trait SchreierSims {

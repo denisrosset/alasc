@@ -9,6 +9,7 @@ import spire.syntax.group._
 import metal.syntax._
 
 import net.alasc.algebra._
+import net.alasc.syntax.group._
 
 /** Contains information about a transversal in a BSGS chain. */  
 trait Transversal[G, A <: PermutationAction[G] with Singleton] extends net.alasc.finite.Transversal[G] {

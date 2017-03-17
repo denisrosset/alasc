@@ -13,6 +13,7 @@ import net.alasc.finite._
 import net.alasc.perms.{Cycle, Perm}
 import net.alasc.rep.FaithfulPermRepBuilder
 import net.alasc.syntax.permutationAction._
+import net.alasc.syntax.group._
 
 /** Describes the wreath product of two objects. */
 class Wr[A] protected[wreath] (val aMap: SortedMap[Int, A], val h: Perm) {
@@ -55,13 +56,13 @@ object Wr {
     val aMapEq = spire.std.map.MapEq[Int, A]
 
     def eqv(x: Wr[A], y: Wr[A]): Boolean = (x.h === y.h) && aMapEq.eqv(x.aMap, y.aMap)
-    def id = Wr[A]()()
+    def empty = Wr[A]()()
     def inverse(w: Wr[A]): Wr[A] = {
       val hInv = w.h.inverse
       val n = w.aMap.keys.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
       Wr.fromPerm(w.aMap.toSeq.map { case (i, a) => (i <|+| w.h, a.inverse) }: _*)(hInv)
     }
-    def op(x: Wr[A], y: Wr[A]): Wr[A] = {
+    def combine(x: Wr[A], y: Wr[A]): Wr[A] = {
       val newH = x.h |+| y.h
       val n = spire.math.max(x.n, y.n)
       Wr.fromPerm(Seq.tabulate(n)( i => (i, x.a(i) |+| y.a(i <|+| x.h) )): _*)(newH)

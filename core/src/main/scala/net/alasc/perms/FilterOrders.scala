@@ -50,9 +50,9 @@ object FilterOrders {
     bi.reset()
     bj.reset()
     if (!isSub) return false // has not a compatible orbit
-    val a = Group[G].combinen(gi, oi/oj)
+    val a = Group[G].combineN(gi, oi/oj)
     cforRange(1 until oj) { z =>
-      if (spire.math.gcd(z, oj) == 1 && Group[G].combinen(a, z) === gj) return true
+      if (spire.math.gcd(z, oj) == 1 && Group[G].combineN(a, z) === gj) return true
     }
     false
   }

@@ -3,6 +3,7 @@ package net.alasc.perms.orbits
 import spire.algebra.Group
 import spire.syntax.action._
 import spire.syntax.cfor._
+import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
@@ -10,9 +11,9 @@ import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSw
 import net.alasc.finite.Grp
 import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.syntax.permutationAction._
-import spire.syntax.group._
-
+import net.alasc.syntax.group._
 import net.alasc.util.NNOption
+
 import metal.syntax._
 
 object Sets {

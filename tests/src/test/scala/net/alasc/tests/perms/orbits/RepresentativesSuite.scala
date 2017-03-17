@@ -36,7 +36,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
     forAll(genArrayInt) { array =>
       val n = array.length
       forAll(genSizedGrp(n)) { grp =>
-        val bruteForceMinimal: Array[Int] = grp.iterator.map(g => (array <|+|? g).get).min(Order.ordering(spire.std.array.ArrayOrder[Int]))
+        val bruteForceMinimal: Array[Int] = grp.iterator.map(g => (array <|+|? g).get).min(spire.std.array.ArrayOrder[Int].toOrdering)
         val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
         val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array))) //RepresentativesArrayInt.ordered(seq, grp).head.get
         val cleverMinimal: Array[Int] = (array <|+| minG).toArray
@@ -112,7 +112,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
   }
 
   test("RepresentativesArrayInt are lexicographically ordered") {
-    implicit val ordering = Order.ordering(spire.std.array.ArrayOrder[Int])
+    implicit val ordering = spire.std.array.ArrayOrder[Int].toOrdering
     forAll(genArrayInt) { seq =>
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>

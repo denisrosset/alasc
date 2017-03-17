@@ -10,6 +10,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra._
+import net.alasc.syntax.group._
 
 /** Generic element to describe BSGS data.
   * @tparam G Group element type

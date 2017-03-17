@@ -5,6 +5,7 @@ import scala.language.experimental.macros
 
 import spire.algebra.Group
 import spire.macros.Ops
+import spire.algebra.Eq
 import spire.math.SafeLong
 
 import net.alasc.algebra._
@@ -46,5 +47,17 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 
   def toPerm: Perm = ev.toPerm(lhs)
+
+}
+
+final class GroupOps[A](lhs: A)(implicit ev: Group[A]) {
+
+  def isId(implicit equ: Eq[A]): Boolean = ev.isEmpty(lhs)
+
+}
+
+final class RichGroupOps[A](lhs: Group[A]) {
+
+  def id: A = lhs.empty
 
 }

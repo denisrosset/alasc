@@ -35,7 +35,7 @@ class Cycles private[alasc](val seq: Seq[Cycle]) {
   def stringUsing(symbols: Int => String): String =
     seq.map(_.stringUsing(symbols(_))).mkString
 
-  def apply(cycle: Int*) = Cycles.algebra.op(this, Cycles(cycle: _*))
+  def apply(cycle: Int*) = Cycles.algebra.combine(this, Cycles(cycle: _*))
 
   def apply(cycle: String): Cycles = apply(cycle.map(Domain.alphabetMap(_)): _*)
 
@@ -51,9 +51,9 @@ class CyclesAlgebra extends PermutationAction[Cycles] with Group[Cycles] with Eq
 
   def eqv(x: Cycles, y: Cycles) = x.seq === y.seq
 
-  def id = Cycles.id
+  def empty = Cycles.id
 
-  def op(x: Cycles, y: Cycles) = 
+  def combine(x: Cycles, y: Cycles) = 
     Cycles.fromSupportAndImageFun(movedPoints(x) ++ movedPoints(y), (i: Int) => actr(actr(i, x), y))
 
   def inverse(a: Cycles) = Cycles.fromDisjointCycles(a.seq.map(_.inverse))

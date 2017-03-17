@@ -10,6 +10,8 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
+import net.alasc.syntax.group._
+
 trait GrpStructure[G] {
 
   implicit def grpGroup: GrpGroup[G]

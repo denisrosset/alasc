@@ -1,7 +1,11 @@
 package net.alasc.syntax
 
-import net.alasc.algebra._
 import scala.language.implicitConversions
+
+import spire.algebra.Group
+
+import net.alasc.algebra._
+
 
 trait CheckSyntax {
 
@@ -15,6 +19,15 @@ trait PermutationActionSyntax {
 
 }
 
+trait GroupSyntax {
+
+  implicit def groupSyntax[A: Group](a: A) = new GroupOps(a)
+
+  implicit def richGroupSyntax[A](ev: Group[A]) = new RichGroupOps(ev)
+
+}
+
 trait AllSyntax
     extends CheckSyntax
+    with GroupSyntax
     with PermutationActionSyntax
