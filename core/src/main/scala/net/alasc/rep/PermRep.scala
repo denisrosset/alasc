@@ -4,6 +4,8 @@ import spire.algebra.Ring
 import spire.syntax.action._
 import spire.syntax.cfor._
 
+import scalin.immutable.Mat
+
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.Rep
 
@@ -13,14 +15,14 @@ trait PermRep[G, K] extends Rep[G, K] {
 
   implicit def permutationAction: PermutationAction[G]
 
-  def apply(g: G): scalin.immutable.Mat[K] = {
-    import scalin.mutable.dense._
+  def apply(g: G): Mat[K] = {
+    import scalin.immutable.dense._
     import scalin.syntax.all._
-    val mat = zeros[K](dimension, dimension)
-    cforRange(0 until dimension) { i =>
-      mat(i, i <|+| g) := scalar.one
+    Mat.fromMutable[K](dimension, dimension, scalar.zero) { mat =>
+      cforRange(0 until dimension) { i =>
+        mat(i, i <|+| g) := scalar.one
+      }
     }
-    mat.result()
   }
 
 }

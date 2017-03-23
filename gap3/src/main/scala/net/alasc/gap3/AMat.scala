@@ -34,17 +34,17 @@ trait AMatPermType extends AMat {
 
 trait AMatMonType extends AMat {
   def mon: Mon
-  def value = mon.mat
+  def value: Mat[Cyclo] = mon.mat
 }
 
 case class IdentityPermAMat(dimension: Int) extends AMatPermType {
   def p = Perm.id
-  override def value = eye[Cyclo](dimension)
+  override def value = Mat.eye[Cyclo](dimension)
 }
 
 case class IdentityMonAMat(dimension: Int) extends AMatMonType {
-  def mon = Mon(Perm.id, ones[Cyclo](dimension))
-  override def value = eye[Cyclo](dimension)
+  def mon = Mon(Perm.id, Vec.ones[Cyclo](dimension))
+  override def value = Mat.eye[Cyclo](dimension)
 }
 
 case class AMatMat(val mat: Mat[Cyclo]) extends AMat {
@@ -59,25 +59,25 @@ case class AMatMon(mon: Mon) extends AMatMonType {
 }
 
 case class AllOneAMat(dimension: Int) extends AMat {
-  def value = ones[Cyclo](dimension, dimension)
+  def value = Mat.ones[Cyclo](dimension, dimension)
 }
 
 case class NullAMat(dimension: Int) extends AMat {
-  def value = zeros[Cyclo](dimension, dimension)
+  def value = Mat.zeros[Cyclo](dimension, dimension)
 }
 
 case class DiagonalAMat(vec: Vec[Cyclo]) extends AMat {
   def dimension = vec.length
 
-  def value = DenseMat.tabulate(vec.length, vec.length) { (i, j) => if (i === j) vec(i) else Cyclo.zero }
+  def value = Mat.tabulate(vec.length, vec.length) { (i, j) => if (i === j) vec(i) else Cyclo.zero }
 }
 
 case class DFTAMat(dimension: Int) extends AMat {
-  def value = DenseMat.tabulate(dimension, dimension) { (i, j) => Cyclo.e(dimension).pow(i * j) }
+  def value = Mat.tabulate(dimension, dimension) { (i, j) => Cyclo.e(dimension).pow(i * j) }
 }
 
 case class SORAMat(dimension: Int) extends AMat {
-  def value = DenseMat.tabulate(dimension, dimension) { (i, j) =>
+  def value = Mat.tabulate(dimension, dimension) { (i, j) =>
     if (i === 0 || j === 0) Cyclo.one
     else if (i === j) -Cyclo.one // TODO: have Cyclo.minusOne
     else Cyclo.zero
@@ -98,7 +98,7 @@ case class PowerAMat(a: AMat, n: Int) extends AMat {
 
   protected def pow(m: Mat[Cyclo], k: Int): Mat[Cyclo] =
     if (k < 0) pow(m, -k).inverse
-    else if (k === 0) eye[Cyclo](dimension)
+    else if (k === 0) Mat.eye[Cyclo](dimension)
     else if (k === 1) m
     else m * pow(m, k - 1)
 }
@@ -112,14 +112,13 @@ case class ConjugateAMat(a: AMat, b: AMat) extends AMat {
 
 case class DirectSumAMat(a: AMat*) extends AMat {
   def dimension = a.foldLeft(0) { (d, aa) => d + aa.dimension }
-  import scalin.immutable.dense._
-  def value = a.map(_.value).foldLeft(zeros[Cyclo](0, 0): Mat[Cyclo]) { case (lhs, rhs) => directSum(lhs, rhs) }
+  def value = a.map(_.value).foldLeft(Mat.zeros[Cyclo](0, 0): Mat[Cyclo]) { case (lhs, rhs) => directSum(lhs, rhs) }
 }
 
 case class TensorProductAMat(a: AMat*) extends AMat {
   def dimension = a.foldLeft(1) { (d, aa) => d * aa.dimension }
 
-  def value = a.foldLeft(eye[Cyclo](1): Mat[Cyclo]) { case (lhs, rhs) => lhs kron rhs.value }
+  def value = a.foldLeft(Mat.eye[Cyclo](1): Mat[Cyclo]) { case (lhs, rhs) => lhs kron rhs.value }
 
 }
 

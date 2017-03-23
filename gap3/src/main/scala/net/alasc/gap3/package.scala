@@ -3,7 +3,8 @@ package net.alasc
 import spire.algebra.{Eq, Ring}
 
 import cyclo.Cyclo
-import scalin.{MatEngine, Pivot}
+import scalin.Pivot
+import scalin.immutable.{Mat, MatEngine}
 import scalin.syntax.all._
 
 import spire.syntax.action._
@@ -21,10 +22,9 @@ package object gap3 {
     def optionalExactEq = Opt(Eq[Cyclo])
   }
 
-  def directSum[A, MA <: scalin.Mat[A]](lhs: scalin.Mat[A], rhs: scalin.Mat[A])(implicit A: Ring[A], MA: MatEngine[A, MA]): MA = {
-    import scalin.syntax.all._
-    (lhs horzcat zeros[A](lhs.nRows, rhs.nCols)) vertcat
-      (zeros[A](rhs.nRows, lhs.nCols) horzcat rhs)
+  def directSum[A:MatEngine:Ring](lhs: scalin.Mat[A], rhs: scalin.Mat[A]): Mat[A] = {
+    (lhs horzcat Mat.zeros[A](lhs.nRows, rhs.nCols)) vertcat
+    (Mat.zeros[A](rhs.nRows, lhs.nCols) horzcat rhs)
   }
 
   def iverson[A:Ring](predicate: Boolean) =
@@ -32,8 +32,8 @@ package object gap3 {
 
   class PermMatOps[A](val param: Null) extends AnyVal {
 
-    def apply[G:PermutationAction, MA <: scalin.Mat[A]](g: G, n: Int)(implicit A: Ring[A], MA: MatEngine[A, MA]): MA = {
-      tabulate[A](n, n)( (i, j) => iverson[A]((i <|+| g) === j) )
+    def apply[G:PermutationAction](g: G, n: Int)(implicit A: Ring[A], MA: MatEngine[A]): Mat[A] = {
+      Mat.tabulate[A](n, n)( (i, j) => iverson[A]((i <|+| g) === j) )
     }
 
   }

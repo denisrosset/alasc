@@ -1,12 +1,16 @@
 // inspired by Spire build.sbt file
 
+val scala210Version = "2.10.6"
+val scala211Version = "2.11.8"
+val scala212Version = "2.12.1"
+
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
-val cycloVersion = "0.13.1.0"
+val cycloVersion = "0.13.1.1"
 val metalVersion = "0.13.1.0"
 val scalaCheckVersion = "1.13.4"
 val scalaTestVersion = "3.0.1"
-val scalinVersion = "0.13.1.1"
+val scalinVersion = "0.13.1.3"
 val shapelessVersion = "2.3.2"
 val spireVersion = "0.13.1-SNAPSHOT"
 val fastParseVersion = "0.4.2"
@@ -70,8 +74,8 @@ lazy val alascSettings = buildSettings ++ commonSettings ++ publishSettings
 
 lazy val buildSettings = Seq(
   organization := "net.alasc",
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.11.8", "2.12.1")
+  scalaVersion := scala212Version,
+  crossScalaVersions := Seq(scala211Version, scala210Version)
 )
 
 lazy val commonSettings = Seq(
@@ -102,8 +106,21 @@ lazy val commonSettings = Seq(
 ) ++ scalaMacroDependencies ++ warnUnusedImport
 
 lazy val publishSettings = Seq(
-  homepage := Some(url("https://github.com/denisrosset/alasc")),
-  licenses += ("GPL-3.0", url("http://opensource.org/licenses/GPL-3.0")),
+  homepage := Some(url("https://github.com/denisrosset/unparsing")),
+  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+  pomExtra := (
+    <scm>
+      <url>git@github.com:denisrosset/unparsing.git</url>
+      <connection>scm:git:git@github.com:denisrosset/unparsing.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>denisrosset</id>
+        <name>Denis Rosset</name>
+        <url>http://github.com/denisrosset/</url>
+      </developer>
+    </developers>
+  ),
   bintrayRepository := "maven",
   publishArtifact in Test := false
 )
