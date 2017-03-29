@@ -17,9 +17,6 @@ import metal.mutable.FixedBitSet
 import net.alasc.util.ParQuickSort
 import net.alasc.syntax.permutationAction._
 
-/**
-  * Created by rossetd0 on 2016/12/30.
-  */
 object FilterOrders {
 
   def orbit[G:PermutationAction](p: Int, g: G, bitset: FixedBitSet): Unit = {

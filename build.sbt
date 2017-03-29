@@ -6,13 +6,13 @@ val scala212Version = "2.12.1"
 
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
-val cycloVersion = "0.13.1.1"
-val metalVersion = "0.13.1.0"
+val cycloVersion = "0.14.1.0"
+val metalVersion = "0.14.1.0"
 val scalaCheckVersion = "1.13.4"
 val scalaTestVersion = "3.0.1"
-val scalinVersion = "0.13.1.3"
+val scalinVersion = "0.14.1.0"
 val shapelessVersion = "2.3.2"
-val spireVersion = "0.13.1-SNAPSHOT"
+val spireVersion = "0.14.1"
 val fastParseVersion = "0.4.2"
 
 lazy val alasc = (project in file("."))
@@ -86,8 +86,6 @@ lazy val commonSettings = Seq(
     "-Ywarn-value-discard"
   )),
   resolvers ++= Seq(
-    Resolver.url("spirejars", url(file("spirejars").toURI.toASCIIString))(Resolver.ivyStylePatterns),
-    "bintray/non" at "http://dl.bintray.com/non/maven",
     "bintray/denisrosset/maven" at "https://dl.bintray.com/denisrosset/maven",
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases")
@@ -95,8 +93,8 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "net.alasc" %% "attributes" % attributesVersion,
     "net.alasc" %% "spire-cyclo" % cycloVersion,
-    "org.spire-math" %% "spire" % spireVersion,
-    "org.spire-math" %% "spire-laws" % spireVersion,
+    "org.typelevel" %% "spire" % spireVersion,
+    "org.typelevel" %% "spire-laws" % spireVersion,
     "net.alasc" %% "scalin-core" % scalinVersion,
     "com.chuusai" %% "shapeless" % shapelessVersion,
     "org.scala-metal" %% "metal-core" % metalVersion,
