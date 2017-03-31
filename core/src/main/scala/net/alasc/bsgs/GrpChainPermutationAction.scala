@@ -121,8 +121,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       case _ => fromGeneratorsAndOrder(grp.generators, grp.order, action, baseGuideHintOpt)
     }
 
-  override def conjugatedBy(grp: Grp[G], h: G): GenericGC =
-    if (grp.contains(h)) fromGrp(grp) else {
+  override def conjugatedBy(grp: Grp[G], h: G): GenericGC = {
       val action: PermutationAction[G] = faithfulAction(grp.generators :+ h)
       implicit val ia: action.type = action
       extractGrpChain(grp, action) match {
