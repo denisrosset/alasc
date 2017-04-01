@@ -48,6 +48,28 @@ trait SchreierSims {
 /** Common subroutines for all Schreier-Sims variants. */
 object SchreierSims {
 
+  /** Sifts the given element through the given mutable chain and kernel builder. If the element
+    * cannot be completely sifted, add the sifted result as a strong generator.
+    *
+    * Returns whether a new strong generator has been added either to the coset chain or the kernel.
+    */
+  def siftAndAddStrongGenerator[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
+  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G])(implicit action: A): Boolean = {
+    SchreierSims.siftAndUpdateBaseFrom(mutableChain, mutableChain.start, element) match {
+      case SiftResult.Stop(generator, node) =>
+        mutableChain.addStrongGeneratorHere(node, generator, generator.inverse)
+        true
+      case SiftResult.NotId(kernelElement) =>
+        val kmc_ = kb.mutableChain // type juggling
+      val faithfulAction = kmc_.start.action
+        type F = faithfulAction.type
+        implicit def ifa: F = faithfulAction
+        val kmc: MutableChain[G, F] = kmc_.asInstanceOf[MutableChain[G, F]]
+        siftAndAddStrongGenerator(kmc, kernelElement, KernelBuilder.trivial[G])
+      case _: SiftResult.Id[G, A] => false // the element sifts, so no new strong generator
+    }
+  }
+
   /** Returns an element obtained by sifting `g` through the BSGS chain starting at `elem`,
     * inserting new base points as required, returns a [[SiftResult]].
     *
@@ -192,28 +214,6 @@ final class SchreierSimsDeterministic extends SchreierSims {
 
 final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
 
-  /** Sifts the given element through the given mutable chain and kernel builder. If the element
-    * cannot be completely sifted, add the sifted result as a strong generator.
-    *
-    * Returns whether a new strong generator has been added either to the coset chain or the kernel.
-    */
-  def siftAndAddStrongGenerator[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
-  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G])(implicit action: A): Boolean = {
-    SchreierSims.siftAndUpdateBaseFrom(mutableChain, mutableChain.start, element) match {
-      case SiftResult.Stop(generator, node) =>
-        mutableChain.addStrongGeneratorHere(node, generator, generator.inverse)
-        true
-      case SiftResult.NotId(kernelElement) =>
-        val kmc_ = kb.mutableChain // type juggling
-        val faithfulAction = kmc_.start.action
-        type F = faithfulAction.type
-        implicit def ifa: F = faithfulAction
-        val kmc: MutableChain[G, F] = kmc_.asInstanceOf[MutableChain[G, F]]
-        siftAndAddStrongGenerator(kmc, kernelElement, KernelBuilder.trivial[G])
-      case _: SiftResult.Id[G, A] => false // the element sifts, so no new strong generator
-    }
-  }
-
   def mutableChain[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
   (generators: Iterable[G], order: SafeLong, kb: KernelBuilder[G], baseStart: Seq[Int])(implicit action: A): MutableChain[G, A] = {
     import net.alasc.blackbox.RandomBag
@@ -235,7 +235,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
   (randomElement: Random => G, order: SafeLong, kb: KernelBuilder[G], baseStart: Seq[Int] = Seq.empty)(implicit action: A): MutableChain[G, A] = {
     val mutableChain = MutableChain.emptyWithBase[G, A](baseStart)
     while (mutableChain.start.next.order * kb.order < order) {
-      siftAndAddStrongGenerator(mutableChain, randomElement(random), kb)
+      SchreierSims.siftAndAddStrongGenerator(mutableChain, randomElement(random), kb)
     }
     mutableChain
   }
@@ -246,7 +246,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
     val mutableChain = MutableChain.empty[G, faithfulAction.type]
     var succTries = 0
     while (mutableChain.start.next.order < order && succTries < numSuccTries) {
-      if (siftAndAddStrongGenerator[G, faithfulAction.type](mutableChain, randomBag(random), KernelBuilder.trivial[G]))
+      if (SchreierSims.siftAndAddStrongGenerator[G, faithfulAction.type](mutableChain, randomBag(random), KernelBuilder.trivial[G]))
         succTries = 0
       else
         succTries += 1
