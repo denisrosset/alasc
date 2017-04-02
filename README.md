@@ -1,6 +1,8 @@
 AlaSc, it's Scala permuted!
 ===========================
 
+[![Join the chat at https://gitter.im/denisrosset-alasc/Lobby](https://badges.gitter.im/denisrosset-alasc/Lobby.svg)](https://gitter.im/denisrosset-alasc/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 AlaSc is a Computational Group Theory library aiming to implement
 permutation group algorithms in Scala. The library implements the
 deterministic and randomized Schreier-Sims algorithms using
