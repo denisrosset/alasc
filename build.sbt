@@ -19,41 +19,14 @@ lazy val alasc = (project in file("."))
   .settings(moduleName := "alasc")
   .settings(alascSettings: _*)
   .settings(noPublishSettings)
-  .aggregate(core, gap3, laws, tests)
-  .dependsOn(core, gap3, laws, tests)
+  .aggregate(core, laws, tests)
+  .dependsOn(core, laws, tests)
 
 lazy val core = (project in file("core"))
   .settings(moduleName := "alasc-core")
   .settings(alascSettings: _*)
   .settings(commonJvmSettings: _*)
 
-lazy val gap3 = (project in file("gap3"))
-  .settings(moduleName := "alasc-gap3")
-  .settings(alascSettings: _*)
-  .settings(commonJvmSettings: _*)
-    .settings(initialCommands in console :=
-      """
-        |import net.alasc.perms._
-        |import net.alasc.finite._
-        |import net.alasc.perms.default._
-        |import spire.implicits._
-        |import net.alasc.syntax.all._
-        |import net.alasc.enum._
-        |import net.alasc.domains._
-        |import net.alasc.std.any._
-        |import net.alasc.wreath._
-        |import net.alasc.algebra._
-        |import scalin.syntax.all._
-        |import scalin.immutable.dense._
-        |import spire.math._
-        |import net.alasc.finite.Rep.syntax._
-        |import scalin.immutable.{Mat,Vec}
-        |import net.alasc.gap3._
-        |import cyclo.Cyclo
-        |import net.alasc.print._
-        |import CGLMP3._
-      """.stripMargin)
-  .dependsOn(core, laws)
 
 lazy val laws = (project in file("laws"))
   .settings(moduleName := "alasc-laws")
@@ -68,7 +41,7 @@ lazy val tests = (project in file("tests"))
   .settings(testSettings:_*)
   .settings(noPublishSettings:_*)
   .settings(commonJvmSettings: _*)
-  .dependsOn(core, gap3, laws)
+  .dependsOn(core, laws)
 
 lazy val alascSettings = buildSettings ++ commonSettings ++ publishSettings
 
