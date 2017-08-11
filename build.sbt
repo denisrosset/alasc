@@ -1,8 +1,8 @@
 // inspired by Spire build.sbt file
 
 val scala210Version = "2.10.6"
-val scala211Version = "2.11.8"
-val scala212Version = "2.12.1"
+val scala211Version = "2.11.11"
+val scala212Version = "2.12.3"
 
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
