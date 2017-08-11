@@ -4,22 +4,15 @@ import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.domains._
 
-abstract class PartitionsLowerPriority {
+object Partitions {
+
+  def forSize(size: Int): Gen[Partition] =
+    Gen.containerOfN[Seq, Int](size, Gen.choose(0, 3))
+      .map( seq => Partition.fromSeq(seq) )
+
+  def sized: Gen[Partition] = Gen.posNum[Int].flatMap(forSize)
 
   implicit def arbPartition: Arbitrary[Partition] = Arbitrary(Partitions.sized)
-
-}
-
-object Partitions extends PartitionsLowerPriority {
-
-  def forDomain(domain: Domain): Gen[Partition.In[domain.type]] =
-    Gen.containerOfN[Seq, Int](domain.size, Gen.choose(0, 3))
-      .map( seq => Partition.fromSeq(domain)(seq) )
-
-  def sized: Gen[Partition] = Domains.sized.flatMap[Partition](forDomain(_))
-
-  implicit def arbPartitionIn[D <: Domain with Singleton](implicit witness: shapeless.Witness.Aux[D]): Arbitrary[Partition.In[D]] =
-    Arbitrary(forDomain(witness.value: D))
 
   implicit val partitionInstances: Instances[Partition] = Instances(Seq(
     Partition.fromSeq(Seq(0,1,1)),

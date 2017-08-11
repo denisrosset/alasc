@@ -31,9 +31,9 @@ class DisjointSetForest(val parent: Array[Int]) {
       parent(xRoot) = yRoot
   }
 
-  def partition(domain: Domain): Partition.In[domain.type] = {
+  def toPartition: Partition = {
     (0 until size).foreach(find(_))
-    Partition.fromSeq(domain)(parent)
+    Partition.fromSeq(parent)
   }
 
 }

@@ -16,23 +16,20 @@ import algos._
 
 /** Represents an union of disjoint subsets. The subsets are internally
   * stored in an array, sorted by their minimal element.
+  *
+  * @param linkArray Linked list encoded in array; `linkArray(i)` gives the next element in the
+  *                  block of `i`, with `linkArray(i) > i`, or `-1` if at the end of the block.
+  *
+  * @param indexArray Index of the block in which `i` is contained
+  *
+  * @param startArray Minimal element of the `k`-th block
   */
-abstract class Partition extends InDomain {
-
-  type InAnother[D0 <: Domain with Singleton] = Partition.In[D0]
-
-  /** Linked list encoded in array; `linkArray(i)` gives the next element in the
-    * block of `i`, with `linkArray(i) > i`, or `-1` if at the end of the block. */
-  val linkArray: Array[Int]
-
-  /** Index of the block in which `i` is contained */
-  val indexArray: Array[Int]
-
-  /** Minimal element of the `k`-th block */
-  val startArray: Array[Int]
+class Partition(val linkArray: Array[Int],
+                val indexArray: Array[Int],
+                val startArray: Array[Int]) {
 
   /** Returns the minimal representative of the block in which `k` is contained.
-    * Must have `0 <= k`, for `k >= size` returns size.
+    * Must have `0 <= k`. For `k >= size` returns size.
     */
   def representative(k: Int): Int = if (k < size) startArray(indexArray(k)) else size
 
@@ -45,7 +42,7 @@ abstract class Partition extends InDomain {
     case _ => false
   }
 
-  def size: Int = domain.size
+  def size: Int = indexArray.length
 
   /** Returns the number of blocks. */
   def nBlocks = startArray.length
@@ -79,7 +76,7 @@ abstract class Partition extends InDomain {
       if (n == -1) Iterator.empty.next
       n
     }
-    def contains(l: Int) = if (l < domain.size) indexArray(l) == index else false
+    def contains(l: Int) = if (l < Partition.this.size) indexArray(l) == index else false
   }
 
   /** Returns the block in which `k` is contained. Must have `0 <= k < size`. */
@@ -108,18 +105,18 @@ abstract class Partition extends InDomain {
   }
 
   /** Returns the partition in a domain of possibly a different size. The resized part, to be
-    * added or removed, is composed of single points. Returns RefNone if the resizing is not possible,
+    * added or removed, is composed of single points. Returns Opt.empty if the resizing is not possible,
     * e.g. because the removed last points are not single in a partition.
     */
-  def inDomain(newDomain: Domain): Opt[Partition.In[newDomain.type]] =
-    if (domain eq newDomain)
-      Opt(Partition.this.asInstanceOf[Partition.In[newDomain.type]])
-    else if (newDomain.size > size)
-      Opt(Partition.fromSeq(newDomain)(indexArray ++ (nBlocks until nBlocks + (newDomain.size - size))))
-    else { // newDomain.size < size
-      for (k <- newDomain.size until size)
-        if (blockFor(k).size > 1) return Opt.empty[Partition.In[newDomain.type]]
-      Opt(Partition.fromSeq(newDomain)(indexArray.take(newDomain.size)))
+  def resize(newSize: Int): Opt[Partition] =
+    if (size == newSize) Opt(this)
+    else if (newSize > size)
+      Opt(Partition.fromSeq(indexArray ++ (nBlocks until nBlocks + (newSize - size))))
+    else { // newSize < size
+      cforRange(newSize until size) { k =>
+        if (blockFor(k).size > 1) return Opt.empty[Partition]
+      }
+      Opt(Partition.fromSeq(indexArray.take(newSize)))
     }
 
 }
@@ -134,33 +131,25 @@ abstract class PartitionLowPriority {
 
 object Partition extends PartitionLowPriority {
 
-  type In[D0 <: Domain with Singleton] = Partition { type D = D0 }
-
+  /*
   implicit def boundedLatticeIn[D <: Domain with Singleton]
   (implicit witness: shapeless.Witness.Aux[D]): BoundedLattice[Partition.In[D]] =
     new PartitionBoundedLatticeIn[D](witness.value)
 
   implicit def partialOrderIn[D <: Domain with Singleton]
   (implicit witness: shapeless.Witness.Aux[D]): PartialOrder[Partition.In[D]] =
-    new PartitionPartialOrderIn[D](witness.value)
-
-  val empty: Partition.In[Domain.empty.type] = Partition(Domain.empty)()
+    new PartitionPartialOrderIn[D](witness.value)*/
 
   def apply(sets: Set[Int]*): Partition = {
-    val domain = Domain((0 /: sets) { case (mx, set) => mx.max(set.max + 1) } )
-    Partition(domain)(sets:_*)
-  }
-
-  def apply(domain: Domain)(sets: Set[Int]*): Partition.In[domain.type] = {
     val cumSizes = (0 /: sets.map(_.size))(_+_)
     val setOfSets = sets.flatten.toSet
-    if (setOfSets.isEmpty) return fromSortedBlocks(domain)(Seq.empty[SortedSet[Int]])
+    if (setOfSets.isEmpty) return fromSortedBlocks(Seq.empty[SortedSet[Int]])
     val minP = setOfSets.min
     val maxP = setOfSets.max
     assert(setOfSets.size == cumSizes)
     assert(cumSizes == maxP - minP + 1)
     val sortedBlocks = sets.map(setToSortedSet(_)).sortBy(_.min)
-    fromSortedBlocks(domain)(sortedBlocks)
+    fromSortedBlocks(sortedBlocks)
   }
 
   def setToSortedSet(set: Set[Int]): SortedSet[Int] = set match {
@@ -171,8 +160,8 @@ object Partition extends PartitionLowPriority {
       b.result
   }
 
-  def fromSortedBlocks(domain0: Domain)(blocks: Seq[scala.collection.SortedSet[Int]]): Partition.In[domain0.type] = {
-    val n = domain0.size
+  def fromSortedBlocks(blocks: Seq[scala.collection.SortedSet[Int]]): Partition = {
+    val n = blocks.foldLeft(0)( (mx, set) => mx.max(set.max + 1) )
     val la = new Array[Int](n)
     val ia = new Array[Int](n)
     val sa = new Array[Int](blocks.size)
@@ -188,17 +177,11 @@ object Partition extends PartitionLowPriority {
         prev = k
       }
     }
-    new Partition {
-      type D = domain0.type
-      val domain: D = domain0
-      val linkArray = la
-      val indexArray = ia
-      val startArray = sa
-    }
+    new Partition(la, ia, sa)
   }
 
-  def fromPermutation[P: PermutationAction](domain: Domain)(p: P): Partition.In[domain.type] = {
-    val rem = mutable.BitSet.empty ++= (0 until domain.size)
+  def fromPermutation[P: PermutationAction](n: Int, p: P): Partition = {
+    val rem = mutable.BitSet.empty ++= (0 until n)
     var blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
     while (rem.nonEmpty) {
       val m = rem.min
@@ -206,13 +189,10 @@ object Partition extends PartitionLowPriority {
       blocks += orbit
       rem --= orbit
     }
-    fromSortedBlocks(domain)(blocks)
+    fromSortedBlocks(blocks)
   }
 
-  def fromSeq(seq: Seq[Any]): Partition = fromSeq(Domain(seq.size))(seq)
-
-  def fromSeq(domain: Domain)(seq: Seq[Any]): Partition.In[domain.type] = {
-    require(seq.size == domain.size)
+  def fromSeq(seq: Seq[Any]): Partition = {
     val blocks = mutable.ArrayBuffer.empty[mutable.BitSet]
     val blockMap = mutable.HashMap.empty[Any, Int]
     cforRange(0 until seq.length) { i =>
@@ -223,11 +203,12 @@ object Partition extends PartitionLowPriority {
           blocks += mutable.BitSet(i)
       }
     }
-    fromSortedBlocks(domain)(blocks)
+    fromSortedBlocks(blocks)
   }
 
 }
 
+/*
 class PartitionPartialOrderIn[D <: Domain with Singleton](val domain: D)
     extends PartialOrder[Partition.In[D]]
     with InDomain.Of[D] {
@@ -299,6 +280,7 @@ class PartitionBoundedLatticeIn[D <: Domain with Singleton](val domain: D)
   }
 
 }
+*/
 
 final class PartitionPartialOrder extends PartialOrder[Partition] {
 
@@ -339,7 +321,7 @@ final class PartitionLattice
     extends Lattice[Partition]
     with BoundedJoinSemilattice[Partition] {
 
-  def zero: Partition = Partition.fromSortedBlocks(Domain(0))(Seq.empty)
+  def zero: Partition = Partition.fromSortedBlocks(Seq.empty)
 
   // union
   def join(x: Partition, y: Partition): Partition =
@@ -353,7 +335,7 @@ final class PartitionLattice
           forest.union(el1, el2)
         }
       }
-      forest.partition(x.domain)
+      forest.toPartition
     }
 
   // refinement
@@ -361,7 +343,7 @@ final class PartitionLattice
     if (x.size > y.size) meet(y, x) else {
       val refinement = PartitionRefinement(x)
       y.blocks.foreach( block => refinement.refine(block.filter(_ < x.size)) )
-      refinement.partition(x.domain)
+      refinement.toPartition
     }
 
 }

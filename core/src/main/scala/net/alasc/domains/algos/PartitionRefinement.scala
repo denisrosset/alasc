@@ -23,7 +23,7 @@ class PartitionRefinement(val blocks: metal.mutable.Buffer[mutable.BitSet], val 
     blocks.sort()(Order.from[mutable.BitSet]( (x, y) => (x.min - y.min).signum ) )
   }
 
-  def partition(domain: Domain): Partition.In[domain.type] = Partition.fromSortedBlocks(domain)(blocks.toArray)
+  def toPartition: Partition = Partition.fromSortedBlocks(blocks.toArray)
 
 }
 

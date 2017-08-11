@@ -9,18 +9,10 @@ import spire.syntax.lattice._
 import spire.util.Opt
 
 /** Describes a partition of the domain with a value `V` associated to each block. */
-trait PartitionMap[V] extends InDomain {
-
-  type InAnother[D0 <: Domain with Singleton] = PartitionMap.In[D0, V]
-
-  implicit def classTag: ClassTag[V]
-
-  val partition: Partition.In[D]
-
-  protected val values: Array[V]
+class PartitionMap[V](val partition: Partition, val values: Array[V])(implicit classTag: ClassTag[V]) {
 
   /** Returns the size of the underlying domain. */
-  def size = domain.size
+  def size = partition.size
 
   def blocks: Seq[(Set[Int], V)] = partition.blocks.map(block => (block -> PartitionMap.this(block)))
   override def equals(other: Any) = other match {
@@ -59,21 +51,21 @@ trait PartitionMap[V] extends InDomain {
   /** Returns a resized partition map, using `defaultValue` when expanding, and testing whether
     * elements can be removed using `removedSatisfy`. 
     * Returns `Opt.empty` if the resizing is not possible. */
-  def forDomain(newDomain: Domain, defaultValue: => V, removedSatisfy: V => Boolean): Opt[PartitionMap.In[newDomain.type, V]] =
-    if (newDomain.size == size)
-      Opt(this.asInstanceOf[PartitionMap.In[newDomain.type, V]])
-    else if (newDomain.size > size) {
-      val newPartition = partition.inDomain(newDomain).get
+  def resize(newSize: Int, defaultValue: => V, removedSatisfy: V => Boolean): Opt[PartitionMap[V]] =
+    if (newSize == size)
+      Opt(this)
+    else if (newSize > size) {
+      val newPartition = partition.resize(newSize).get
       val newValues = values ++ Array.fill(newPartition.nBlocks - partition.nBlocks)(defaultValue)
-      Opt(PartitionMap.build[V](newDomain)(newPartition, newValues))
+      Opt(new PartitionMap(newPartition, newValues))
     } else // newSize < partition.size
-      partition.inDomain(newDomain) match {
+      partition.resize(newSize) match {
         case Opt(newPartition) =>
-          if ((newDomain.size until size).forall( i => removedSatisfy(apply(i)) ))
-            Opt(PartitionMap.build[V](newDomain)(newPartition, values.take(values.length - (size - newDomain.size))))
+          if ((newSize until size).forall( i => removedSatisfy(apply(i)) ))
+            Opt(new PartitionMap(newPartition, values.take(values.length - (size - newSize))))
           else
-            Opt.empty[PartitionMap.In[newDomain.type, V]]
-        case _ => Opt.empty[PartitionMap.In[newDomain.type, V]]
+            Opt.empty[PartitionMap[V]]
+        case _ => Opt.empty[PartitionMap[V]]
       }
 
 }
@@ -128,35 +120,20 @@ abstract class PartitionMapLowerPriority {
 
 object PartitionMap extends PartitionMapLowerPriority {
 
-  type In[D0 <: Domain with Singleton, V] = PartitionMap[V] { type D = D0 }
-
-  protected def build[V:ClassTag](domain0: Domain)(partition0: Partition.In[domain0.type], values0: Array[V]): PartitionMap.In[domain0.type, V] = new PartitionMap[V] {
-    type D = domain0.type
-    val domain: D = domain0
-    val classTag: ClassTag[V] = implicitly[ClassTag[V]]
-    val partition = partition0
-    val values = values0
-  }
-
   def empty[V:ClassTag]: PartitionMap[V] = apply[V]()
 
   def apply[V:ClassTag](blocks: (Set[Int], V)*): PartitionMap[V] = {
-    val domain = Domain((0 /: blocks) { case (acc, block) => acc.max(block._1.max + 1) })
-    apply[V](domain)(blocks: _*)
-  }
-
-  def apply[V:ClassTag](domain: Domain)(blocks: (Set[Int], V)*): PartitionMap.In[domain.type, V] = {
     val map = blocks.toMap
-    val partition = Partition(domain)(blocks.map(_._1):_*)
+    val partition = Partition(blocks.map(_._1):_*)
     tabulate(partition)(map(_))
   }
 
-  def tabulate[V:ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap.In[partition.D, V] =
-    build(partition.domain: partition.D)(partition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
+  def tabulate[V:ClassTag](partition: Partition)(f: Set[Int] => V): PartitionMap[V] =
+    new PartitionMap(partition, Array.tabulate(partition.nBlocks)(i => f(partition.blocks(i))))
 
-  def fill[V:ClassTag](partition: Partition)(elem: => V): PartitionMap.In[partition.D, V] =
-    tabulate(partition)(block => elem)
+  def fill[V:ClassTag](partition: Partition)(elem: => V): PartitionMap[V] = tabulate(partition)(block => elem)
 
+  /*
   implicit def partialOrderIn[D <: Domain with Singleton, V:PartialOrder](implicit witness: shapeless.Witness.Aux[D]): PartialOrder[PartitionMap.In[D, V]] = {
     val domain0: D = witness.value
     new PartitionMapPartialOrderIn[D, V](domain0)
@@ -216,7 +193,7 @@ object PartitionMap extends PartitionMapLowerPriority {
       def classTag = implicitly[ClassTag[V]]
       def lattice = implicitly[BoundedLattice[V]]
     }
-  }
+  }*/
 
 }
 
@@ -241,7 +218,7 @@ final class PartitionMapPartialOrder[V](implicit val partialOrder: PartialOrder[
     }
 
 }
-
+/*
 final class PartitionMapPartialOrderIn[D <: Domain with Singleton, V](val domain: D)(implicit val partialOrder: PartialOrder[V])
     extends PartialOrder[PartitionMap.In[D, V]]
     with InDomain.Of[D] {
@@ -272,7 +249,7 @@ final class PartitionMapPartialOrderIn[D <: Domain with Singleton, V](val domain
     }
 
 }
-
+*/
 trait PartitionMapJoinSemilattice[V]
     extends JoinSemilattice[PartitionMap[V]] {
 
@@ -362,6 +339,8 @@ trait PartitionMapBoundedBelowLatticeNonEmpty[V]
 
 }
 
+/*
+
 trait PartitionMapJoinSemilatticeIn[D <: Domain with Singleton, V]
     extends JoinSemilattice[PartitionMap.In[D, V]]
     with InDomain.Of[D] {
@@ -447,3 +426,4 @@ trait PartitionMapBoundedLatticeIn[D <: Domain with Singleton, V]
   implicit def lattice: BoundedLattice[V]
 
 }
+*/
