@@ -75,6 +75,8 @@ class CycleOrder extends Order[Cycle] {
 
 object Cycle {
 
+  val alphabetMap = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".zipWithIndex.toMap
+
   implicit final val permutationAction: PermutationAction[Cycle] = new CyclePermutationAction
 
   implicit final val order: Order[Cycle] = new CycleOrder

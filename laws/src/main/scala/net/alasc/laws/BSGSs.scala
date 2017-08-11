@@ -15,7 +15,6 @@ import net.alasc.bsgs.{Chain, Node, Term}
 import net.alasc.std.seq._
 import spire.syntax.order._
 
-import net.alasc.domains.Domain
 import net.alasc.perms.Perm
 
 object BSGSs {

@@ -3,8 +3,6 @@ package net.alasc.laws
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 
-import net.alasc.domains.Domain
-
 object SetInts {
 
   @inline def rightFillMask(n: Int): Long = ((1L << n) - 1) - ((n & 64) >> 6)

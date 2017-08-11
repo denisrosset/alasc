@@ -4,7 +4,6 @@ import spire.laws.{ActionLaws, PartialActionLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.domains.Domain
 import net.alasc.laws.Permutations
 import net.alasc.perms.Perm
 import net.alasc.tests.AlascSuite

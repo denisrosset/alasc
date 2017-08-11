@@ -6,7 +6,7 @@ import spire.util.Opt
 import org.scalacheck._
 
 import net.alasc.bsgs.{BaseGuideLex, GrpChainPermutationAction}
-import net.alasc.domains.{Domain, Partition}
+import net.alasc.domains.Partition
 import net.alasc.finite._
 import net.alasc.laws._
 import net.alasc.perms._

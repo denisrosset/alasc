@@ -6,7 +6,6 @@ import scala.annotation.tailrec
 import org.scalacheck.Gen
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.domains.Domain
 import net.alasc.laws.{Grps, Permutations}
 import net.alasc.perms.Perm
 import net.alasc.perms.orbits.Points

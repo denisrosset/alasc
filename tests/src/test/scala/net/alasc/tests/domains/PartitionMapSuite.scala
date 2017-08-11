@@ -6,7 +6,7 @@ import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.domains.{Domain, PartitionMap}
+import net.alasc.domains.PartitionMap
 import net.alasc.laws.{AnyRefLaws, PartitionMaps}
 
 class PartitionMapSuite extends AlascSuite {

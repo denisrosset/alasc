@@ -9,7 +9,6 @@ import net.alasc.algebra._
 import net.alasc.syntax.permutationAction._
 import net.alasc.util._
 import internal._
-import net.alasc.domains.Domain
 import net.alasc.finite.FaithfulPermutationActionBuilder
 
 /** Universal trait at the base of explicit permutation types.
@@ -45,7 +44,7 @@ sealed trait Perm extends Any {
   def nMovedPoints: Int
 
   def apply(seq: Int*): Perm = this |+| Cycles(seq: _*).toPerm
-  def apply(cycle: String): Perm = apply(cycle.map(Domain.alphabetMap(_)): _*)
+  def apply(cycle: String): Perm = apply(cycle.map(Cycle.alphabetMap(_)): _*)
 
   def isValidPerm32: Boolean
   def toPerm32: Perm32
@@ -176,7 +175,7 @@ trait PermCompanion {
 
   /** Constructs a permutation from a cycle represented as a string using the domain
     * 0..9, A..Z. */
-  def apply(cycle: String): Perm = apply(cycle.map(Domain.alphabetMap(_)): _*)
+  def apply(cycle: String): Perm = apply(cycle.map(Cycle.alphabetMap(_)): _*)
 
   /** Constructs a permutatino from a cycle given as a variable number of arguments. */
   def apply(seq: Int*): Perm = if (seq.isEmpty) Perm.id else {

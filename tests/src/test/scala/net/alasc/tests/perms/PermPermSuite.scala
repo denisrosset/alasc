@@ -8,7 +8,6 @@ import spire.math.SafeLong
 import org.scalacheck.Arbitrary
 
 import net.alasc.algebra._
-import net.alasc.domains.Domain
 import net.alasc.finite.{FaithfulPermutationActionBuilder, Grp, Rep}
 import net.alasc.laws._
 import net.alasc.perms._

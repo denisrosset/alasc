@@ -6,9 +6,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 
 import net.alasc.algebra._
-import net.alasc.domains.Domain
 import net.alasc.perms._
-import net.alasc.rep.FaithfulPermRep
 import net.alasc.syntax.permutationAction._
 import net.alasc.wreath._
 

@@ -2,7 +2,6 @@ package net.alasc.tests
 package perms
 
 import net.alasc.bsgs.{GrpChainPermutationAction}
-import net.alasc.domains.Domain
 import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
 import net.alasc.perms.{Cycle, Cycles, Perm}
 

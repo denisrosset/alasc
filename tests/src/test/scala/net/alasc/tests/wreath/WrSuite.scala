@@ -5,7 +5,6 @@ import spire.math.SafeLong
 
 import org.scalacheck.Arbitrary
 
-import net.alasc.domains.Domain
 import net.alasc.finite.Grp
 import net.alasc.laws._
 import net.alasc.perms.Perm
