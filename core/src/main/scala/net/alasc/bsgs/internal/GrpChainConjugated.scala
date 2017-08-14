@@ -1,14 +1,14 @@
-package net.alasc.bsgs
+package net.alasc.bsgs.internal
 
-import scala.reflect.ClassTag
-import scala.util.Random
-
+import net.alasc.algebra.PermutationAction
+import net.alasc.bsgs.{Chain, GrpChain, MutableChain, Node, Term}
+import net.alasc.syntax.group._
 import spire.algebra.{Eq, Group}
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.PermutationAction
-import net.alasc.syntax.group._
+import scala.reflect.ClassTag
+import scala.util.Random
 
 /** Represents a conjugated group from an original group G (represented by "originalChain")
   * conjugated by g (with gInv == g.inverse).

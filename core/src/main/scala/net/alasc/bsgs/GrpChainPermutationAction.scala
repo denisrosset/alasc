@@ -1,16 +1,15 @@
 package net.alasc.bsgs
 
 import scala.reflect.ClassTag
-
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.util.Opt
 import spire.syntax.action._
 import spire.syntax.group._
 import spire.syntax.eq._
-
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
+import net.alasc.bsgs.internal.{GrpChainConjugated, GrpChainExplicit}
 import net.alasc.partitions.Partition
 import net.alasc.finite._
 import net.alasc.perms.{FilterOrders, Perm}

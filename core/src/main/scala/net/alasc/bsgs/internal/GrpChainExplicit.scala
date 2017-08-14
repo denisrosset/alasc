@@ -1,17 +1,14 @@
-package net.alasc.bsgs
+package net.alasc.bsgs.internal
 
-import scala.reflect.ClassTag
-import scala.util.Random
-
+import net.alasc.algebra.PermutationAction
+import net.alasc.bsgs.{Chain, GrpChain, Node, Term}
+import net.alasc.syntax.group._
 import spire.algebra.{Eq, Group}
-import spire.math.SafeLong
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra.PermutationAction
-import net.alasc.finite.Grp
-import net.alasc.rep.FaithfulPermRep
-import net.alasc.syntax.group._
+import scala.reflect.ClassTag
+import scala.util.Random
 
 final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
   (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])

@@ -1,10 +1,10 @@
-package net.alasc.bsgs
-
-import scala.annotation.tailrec
-
-import spire.syntax.cfor._
+package net.alasc.bsgs.internal
 
 import net.alasc.algebra.PermutationAction
+import net.alasc.bsgs.{Chain, ChainRec, Node, Term}
+import spire.syntax.cfor._
+
+import scala.annotation.tailrec
 
 /** Iterable through the strong generators of a BSGS chain. */
 final class StrongGeneratingSetIndexedSeq[G](val chain: Chain[G, _ <: PermutationAction[G] with Singleton]) extends IndexedSeq[G] {
