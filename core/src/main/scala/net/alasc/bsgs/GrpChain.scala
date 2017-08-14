@@ -18,10 +18,14 @@ import net.alasc.syntax.group._
 
 /** Group described a BSGS chain of elements of type G using the permutation action F.
   *
-  * If the action is faithful for the current group, then the group is fully described by the chain and kernelOpt is empty.
-  * If the action is not faithful, then kb contains the nontrivial kb normal subgroup K,
-  * and the chain describes the quotient Group/K.
+  * If the action is faithful for the current group:
+  * - The group is fully described by the chain.
+  * - kernelOpt is empty.
   *
+  * If the action is not faithful:
+  * - kb contains the nontrivial kb normal subgroup K,
+  * - The chain describes the quotient group.
+  * - The group is described by all c |+| k where c in chain and k in kernel.
   */
 abstract class GrpChain[G, A <: PermutationAction[G] with Singleton] extends Grp[G] { lhs =>
 

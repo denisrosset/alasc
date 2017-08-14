@@ -10,22 +10,20 @@ import spire.util.Opt
 import net.alasc.algebra.PermutationAction
 import net.alasc.syntax.group._
 
-/** Represents a conjugated group from an original group G (represented by `originalChain`)
+/** Represents a conjugated group from an original group G (represented by "originalChain")
   * conjugated by g (with gInv == g.inverse).
-  * The represented group is `H = gInv G g`.
+  * The represented group is "H = gInv G g".
+  *
+  * The conjugating element "g" must satisfy:
+  * - "g" can be represented by the permutation action "A",
+  * - "g" commutes with the kernel: "g K = K g".
+  *
+  * For efficiency, only the chain is conjugated by g, while the kernel is left unchanged.
   */
 final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
 (val originalChain: Chain[G, A], val g: G, val gInv: G,
- originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
+ val originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
 (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: A) extends GrpChain[G, A] {
-
-  def originalGenerators = originalGeneratorsOpt match {
-    case Opt(gen) => gen
-    case _ => kernel match {
-      case _: Term[_, _] => originalChain.strongGeneratingSet
-      case _: Node[_, _] => originalChain.strongGeneratingSet ++ kernel.strongGeneratingSet
-    }
-  }
 
   /** Number of group generators. */
   def nGenerators = originalGeneratorsOpt match {
@@ -37,20 +35,22 @@ final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
   }
 
   /** Returns the i-th generator. */
-  def generator(i: Int) = {
-    val originalGenerator = originalGeneratorsOpt match {
-      case Opt(g) => g(i)
-      case _ =>
-        val nChainGenerators = originalChain.nStrongGenerators
-        kernel match {
-          case node: Node[G, _] if i >= nChainGenerators => kernel.kthStrongGenerator(i - nChainGenerators)
-          case _ => originalChain.kthStrongGenerator(i)
-        }
-    }
-    gInv |+| originalGenerator |+| g
+  def generator(i: Int) = originalGeneratorsOpt match {
+    case Opt(og) => gInv |+| og(i) |+| g
+    case _ =>
+      val nChainGenerators = originalChain.nStrongGenerators
+      kernel match {
+        case node: Node[G, _] if i >= nChainGenerators => kernel.kthStrongGenerator(i - nChainGenerators)
+        case _ => gInv |+| originalChain.kthStrongGenerator(i) |+| g
+      }
   }
 
-  def generators = originalGenerators.map(h => gInv |+| h |+| g)
+  def generatorsOpt = originalGeneratorsOpt.map(_.map(h => gInv |+| h |+| g))
+
+  def generators = new IndexedSeq[G] {
+    def apply(i: Int) = generator(i)
+    def length = nGenerators
+  }
 
   private[this] var _chainOpt: Opt[Chain[G, A]] = Opt.empty[Chain[G, A]]
 
@@ -102,6 +102,6 @@ final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
     case _: Node[G, _] => gInv |+| originalChain.randomElement(random) |+| kernel.randomElement(random) |+| g
   }
 
-  def enlargeKernel(newKernel: Chain.Generic[G]) = new GrpChainConjugated(originalChain, g, gInv, originalGeneratorsOpt, newKernel)
+  def enlargeKernel(newKernel: Chain.Generic[G]) = new GrpChainExplicit(chain, generatorsOpt, newKernel)
 
 }

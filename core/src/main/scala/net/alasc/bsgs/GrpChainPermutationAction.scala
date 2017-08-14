@@ -127,7 +127,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       extractGrpChain(grp, action) match {
         case Opt(conj: GrpChainConjugated[G, action.type]) =>
           assert(conj.kernel.isTrivial) // action is faithful
-          new GrpChainConjugated[G, action.type](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv, Opt(conj.originalGenerators), conj.kernel)
+          new GrpChainConjugated[G, action.type](conj.originalChain, conj.g |+| h, h.inverse |+| conj.gInv, conj.originalGeneratorsOpt, conj.kernel)
         case Opt(cg: GrpChain[G, action.type]) =>
           assert(cg.kernel.isTrivial)
           new GrpChainConjugated[G, action.type](cg.chain, h, h.inverse, Opt(cg.generators), cg.kernel)
