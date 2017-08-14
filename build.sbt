@@ -24,7 +24,6 @@ lazy val core = (project in file("core"))
   .settings(alascSettings: _*)
   .settings(commonJvmSettings: _*)
 
-
 lazy val laws = (project in file("laws"))
   .settings(moduleName := "alasc-laws")
   .settings(alascSettings: _*)
