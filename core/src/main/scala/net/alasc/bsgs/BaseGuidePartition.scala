@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 import metal.syntax._
 
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.util._
 
 case class BaseGuidePartition(partition: Partition) extends BaseGuide {

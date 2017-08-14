@@ -13,7 +13,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{BaseGuideLex, GrpChain, GrpChainPermutationAction}
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite.Grp
 import net.alasc.perms.{Perm, PermAlgebra}
 import net.alasc.util.{NNNone, NNOption}

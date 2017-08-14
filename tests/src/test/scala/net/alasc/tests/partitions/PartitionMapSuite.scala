@@ -1,12 +1,12 @@
 package net.alasc.tests
-package domains
+package partitions
 
 import spire.algebra.lattice.{BoundedLattice, MinMaxLattice}
 import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.domains.PartitionMap
+import net.alasc.partitions.PartitionMap
 import net.alasc.laws.{AnyRefLaws, PartitionMaps}
 
 class PartitionMapSuite extends AlascSuite {

@@ -72,7 +72,7 @@ object Wr {
 
   implicit def wrEqGroup[A:Eq:Group]: Eq[Wr[A]] with Group[Wr[A]] = new WrEqGroup[A]
 
-  def grpDef[A:Eq:Group:FaithfulPermRepBuilder](n: Int, ga: Grp[A], gh: Grp[Perm]): GrpDef[Wr[A]] = {
+  def grpDef[A:Eq:Group](n: Int, ga: Grp[A], gh: Grp[Perm]): GrpDef[Wr[A]] = {
     val aGenerators = for {
       k <- 0 until n
       a <- ga.generators

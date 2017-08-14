@@ -5,7 +5,7 @@ import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.laws._
 import net.alasc.perms.Perm

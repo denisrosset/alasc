@@ -1,7 +1,7 @@
 package net.alasc.tests
 package perms
 
-import net.alasc.domains._
+import net.alasc.partitions._
 import net.alasc.finite.{GrpGroup, GrpPermutationAction}
 import net.alasc.named.RubikCube
 import net.alasc.perms.Perm

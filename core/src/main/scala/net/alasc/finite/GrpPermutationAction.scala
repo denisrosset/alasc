@@ -5,7 +5,7 @@ import spire.syntax.action._
 import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
 import net.alasc.syntax.permutationAction._
 import net.alasc.util.{NNNone, NNOption}

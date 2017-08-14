@@ -2,7 +2,7 @@ package net.alasc.laws
 
 import org.scalacheck.{Arbitrary, Gen}
 
-import net.alasc.domains._
+import net.alasc.partitions._
 
 object Partitions {
 

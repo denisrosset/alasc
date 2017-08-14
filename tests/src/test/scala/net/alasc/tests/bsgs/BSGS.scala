@@ -6,7 +6,7 @@ import spire.util.Opt
 
 import net.alasc.algebra._
 import net.alasc.bsgs.{BuildChain, Chain}
-import net.alasc.domains._
+import net.alasc.partitions._
 import net.alasc.laws.{BSGSs, Partitions}
 import net.alasc.named._
 import net.alasc.perms.{_}

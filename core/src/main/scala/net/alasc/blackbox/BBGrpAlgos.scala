@@ -12,7 +12,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.{FixingPartition, Transversal}
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite._
 import net.alasc.perms.Perm
 import net.alasc.syntax.group._

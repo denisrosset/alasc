@@ -104,6 +104,10 @@ sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, 
     */
   def strongGeneratingSet: IndexedSeq[G] = new StrongGeneratingSetIndexedSeq[G](chain)
 
+  def nStrongGenerators: Int = ChainRec.nStrongGenerators(chain)
+
+  def kthStrongGenerator(k: Int): G = ChainRec.kthStrongGenerator(chain, k)
+
   def elementsIterator(implicit group: Group[G]): Iterator[G]
 
   def order: SafeLong = ChainRec.order(chain, SafeLong(1))

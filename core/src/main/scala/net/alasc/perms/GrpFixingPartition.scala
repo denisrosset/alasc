@@ -2,7 +2,7 @@ package net.alasc.perms
 
 import spire.math.SafeLong
 import net.alasc.algebra._
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.named.Symmetric
 

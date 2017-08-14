@@ -1,4 +1,4 @@
-package net.alasc.domains
+package net.alasc.partitions
 package algos
 
 /** Implementation of a disjoint-set data structure, using forests.

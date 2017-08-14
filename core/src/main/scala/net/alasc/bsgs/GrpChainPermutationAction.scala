@@ -11,7 +11,7 @@ import spire.syntax.eq._
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite._
 import net.alasc.perms.{FilterOrders, Perm}
 import net.alasc.syntax.group._

@@ -27,6 +27,29 @@ final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
     }
   }
 
+  /** Number of group generators. */
+  def nGenerators = originalGeneratorsOpt match {
+    case Opt(g) => g.size
+    case _ => kernel match {
+      case _: Term[G, _] => originalChain.nStrongGenerators
+      case _: Node[G, _] => originalChain.nStrongGenerators + kernel.nStrongGenerators
+    }
+  }
+
+  /** Returns the i-th generator. */
+  def generator(i: Int) = {
+    val originalGenerator = originalGeneratorsOpt match {
+      case Opt(g) => g(i)
+      case _ =>
+        val nChainGenerators = originalChain.nStrongGenerators
+        kernel match {
+          case node: Node[G, _] if i >= nChainGenerators => kernel.kthStrongGenerator(i - nChainGenerators)
+          case _ => originalChain.kthStrongGenerator(i)
+        }
+    }
+    gInv |+| originalGenerator |+| g
+  }
+
   def generators = originalGenerators.map(h => gInv |+| h |+| g)
 
   private[this] var _chainOpt: Opt[Chain[G, A]] = Opt.empty[Chain[G, A]]

@@ -10,7 +10,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.finite._
 import net.alasc.perms.orbits
 import net.alasc.perms.MutableOrbit

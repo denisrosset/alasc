@@ -4,7 +4,7 @@ import scala.reflect.ClassTag
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 
-import net.alasc.domains._
+import net.alasc.partitions._
 
 object PartitionMaps {
 

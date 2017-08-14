@@ -6,7 +6,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 
 case class FixingPartition[G:Group, A <: PermutationAction[G] with Singleton]
   (partition: Partition)(implicit val action: A) extends SubgroupDefinition[G, A] {

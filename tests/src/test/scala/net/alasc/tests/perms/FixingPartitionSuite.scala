@@ -3,7 +3,7 @@ package perms
 
 import org.scalacheck._
 
-import net.alasc.domains._
+import net.alasc.partitions._
 import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
 import net.alasc.perms.{GrpFixingPartition, Perm}

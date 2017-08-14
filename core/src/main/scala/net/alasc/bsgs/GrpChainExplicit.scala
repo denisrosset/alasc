@@ -19,6 +19,26 @@ final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
 
   def chainOpt = Opt(chain)
 
+  /** Number of group generators. */
+  def nGenerators = generatorsOpt match {
+    case Opt(g) => g.size
+    case _ => kernel match {
+      case _: Term[G, _] => chain.nStrongGenerators
+      case _: Node[G, _] => chain.nStrongGenerators + kernel.nStrongGenerators
+    }
+  }
+
+  /** Returns the i-th generator. */
+  def generator(i: Int) = generatorsOpt match {
+    case Opt(g) => g(i)
+    case _ =>
+      val nChainGenerators = chain.nStrongGenerators
+      kernel match {
+        case node: Node[G, _] if i >= nChainGenerators => kernel.kthStrongGenerator(i - nChainGenerators)
+        case _ => chain.kthStrongGenerator(i)
+      }
+  }
+
   def generators = generatorsOpt match {
     case Opt(g) => g
     case _ => kernel match {

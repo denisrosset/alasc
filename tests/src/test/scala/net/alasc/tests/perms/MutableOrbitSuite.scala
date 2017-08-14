@@ -1,7 +1,7 @@
-package net.alasc.tests
-package domains
+package net.alasc.tests.perms
 
 import net.alasc.perms.MutableOrbit
+import net.alasc.tests.AlascSuite
 
 class MutableOrbitSuite extends AlascSuite {
 

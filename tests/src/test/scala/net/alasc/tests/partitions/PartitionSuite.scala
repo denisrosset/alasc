@@ -1,5 +1,5 @@
 package net.alasc
-package domains
+package partitions
 
 import scala.collection.SortedSet
 

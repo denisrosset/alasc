@@ -11,7 +11,7 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.domains.Partition
+import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
 import net.alasc.syntax.all._
 import net.alasc.util.{NNOption, _}
@@ -44,6 +44,12 @@ abstract class Grp[G] extends Attributable { lhs =>
 
   /** Generators of the group, does not contain the identity. */
   def generators: IndexedSeq[G]
+
+  /** Number of group generators. */
+  def nGenerators: Int
+
+  /** Returns the i-th generator. */
+  def generator(i: Int): G
 
   /** Group order. */
   def order: SafeLong
@@ -122,6 +128,10 @@ case class GrpTrivial[G]()(implicit val equ: Eq[G], val group: Group[G]) extends
   def contains(g: G): Boolean = g.isId
 
   def generators: IndexedSeq[G] = IndexedSeq.empty
+
+  def nGenerators = 0
+
+  def generator(i: Int) = throw new ArrayIndexOutOfBoundsException("The group has no generators")
 
   def order: SafeLong = SafeLong.one
 

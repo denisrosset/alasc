@@ -1,4 +1,4 @@
-package net.alasc.domains
+package net.alasc.partitions
 
 import scala.collection.{BitSet, SortedSet}
 import scala.collection.mutable

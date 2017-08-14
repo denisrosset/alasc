@@ -14,6 +14,10 @@ class BBGrp[G](
     val group: Group[G]
 ) extends Grp[G] {
 
+  def nGenerators = generators.size
+
+  def generator(i: Int) = generators(i)
+
   def iterator = elements.iterator
 
   def contains(g: G) = elements.contains(g)
