@@ -11,7 +11,6 @@ import spire.util.Opt
 import net.alasc.algebra._
 import net.alasc.finite._
 import net.alasc.perms.{Cycle, Perm}
-import net.alasc.rep.FaithfulPermRepBuilder
 import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.group._
 

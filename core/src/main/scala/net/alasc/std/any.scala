@@ -5,5 +5,4 @@ trait AnyInstances extends
     SetInstances with
     SeqInstances with
     ProductInstances with
-    UnitInstances with
-    VecInstances
+    UnitInstances

@@ -49,9 +49,6 @@ object Grps {
   implicit def arbGrp[G:Arbitrary:Eq:Group:GrpGroup](implicit arbSmallG: Arbitrary[Small[G]]): Arbitrary[Grp[G]] =
     Arbitrary(conjugatedFromElements(arbSmallG.arbitrary.map(_.underlying), arbitrary[G]))
 
-  def arbSubgrp[GG <: Grp[G] with Singleton, G:Eq:Group:GrpGroup](implicit witness: shapeless.Witness.Aux[GG]): Arbitrary[Grp[G]] =
-    Arbitrary(genSubgrp(witness.value: GG))
-
   implicit def instances[G:Instances:Eq:Group:GrpGroup]: Instances[Grp[G]] =
     Instances[G].map(Grp(_))
 

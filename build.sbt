@@ -6,14 +6,11 @@ val scala212Version = "2.12.3"
 
 val attributesVersion = "0.30"
 val disciplineVersion = "0.7.2"
-val cycloVersion = "0.14.1.0"
+val fastParseVersion = "0.4.2"
 val metalVersion = "0.14.1.0"
 val scalaCheckVersion = "1.13.4"
 val scalaTestVersion = "3.0.1"
-val scalinVersion = "0.14.1.0"
-val shapelessVersion = "2.3.2"
 val spireVersion = "0.14.1"
-val fastParseVersion = "0.4.2"
 
 lazy val alasc = (project in file("."))
   .settings(moduleName := "alasc")
@@ -65,24 +62,21 @@ lazy val commonSettings = Seq(
   ),
   libraryDependencies ++= Seq(
     "net.alasc" %% "attributes" % attributesVersion,
-    "net.alasc" %% "spire-cyclo" % cycloVersion,
     "org.typelevel" %% "spire" % spireVersion,
     "org.typelevel" %% "spire-laws" % spireVersion,
-    "net.alasc" %% "scalin-core" % scalinVersion,
-    "com.chuusai" %% "shapeless" % shapelessVersion,
     "org.scala-metal" %% "metal-core" % metalVersion,
     "org.scala-metal" %% "metal-library" % metalVersion,
     "com.lihaoyi" %% "fastparse" % fastParseVersion
-  )    
+  )
 ) ++ scalaMacroDependencies ++ warnUnusedImport
 
 lazy val publishSettings = Seq(
-  homepage := Some(url("https://github.com/denisrosset/unparsing")),
+  homepage := Some(url("https://github.com/denisrosset/alasc")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
   pomExtra := (
     <scm>
-      <url>git@github.com:denisrosset/unparsing.git</url>
-      <connection>scm:git:git@github.com:denisrosset/unparsing.git</connection>
+      <url>git@github.com:denisrosset/alasc.git</url>
+      <connection>scm:git:git@github.com:denisrosset/alasc.git</connection>
     </scm>
     <developers>
       <developer>

@@ -9,6 +9,5 @@ package object std {
   object seq extends SeqInstances
   object set extends SetInstances
   object unit extends UnitInstances
-  object vec extends VecInstances
 
 }
