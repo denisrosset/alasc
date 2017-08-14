@@ -142,14 +142,11 @@ trait GrpLaws[G] extends Laws {
 
   class BB[GG](val gg: GG)
 
-  implicit def BBGrpGroup[G:ClassTag:Eq:Group]: BB[GrpGroup[G]] =
-    new BB(new BBGrpGroup[G])
+  implicit val bbGrpGroup: BB[GrpGroup[G]] = new BB(new BBGrpGroup[G])
 
-  implicit def BBGrpPermutationAction[G:ClassTag:Eq:Group]: BB[GrpPermutationAction[G]] =
-    new BB(new BBGrpPermutationAction[G])
+  implicit val bbGrpPermutationAction: BB[GrpPermutationAction[G]] = new BB(new BBGrpPermutationAction[G])
 
-  implicit def BBGrpStructure[G:ClassTag:Eq:Group]: BB[GrpStructure[G]] =
-    new BB(new BBGrpStructure[G]()(implicitly, implicitly, new BBGrpGroup[G], implicitly))
+  implicit val bbGrpStructure: BB[GrpStructure[G]] = new BB(new BBGrpStructure[G]()(implicitly, implicitly, new BBGrpGroup[G], implicitly))
 
   def testBBEquals[R, GG](f: GG => R)(implicit gg: GG, bb: BB[GG]): Boolean = (f(gg) == f(bb.gg))
 
