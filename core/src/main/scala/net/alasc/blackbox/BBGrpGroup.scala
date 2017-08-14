@@ -1,0 +1,81 @@
+package net.alasc.blackbox
+
+import net.alasc.finite._
+import spire.algebra.{Eq, Group}
+import spire.math.SafeLong
+import spire.syntax.group._
+import net.alasc.syntax.group._
+
+import scala.annotation.tailrec
+import scala.reflect.ClassTag
+
+class BBGrpGroup[G](implicit
+                    val classTag: ClassTag[G],
+                    val group: Group[G],
+                    val equ: Eq[G]
+                   ) extends GrpGroup[G] {
+
+  type GG = BBGrp[G]
+
+  def trivial: GG = new BBGrp(IndexedSeq.empty[G], Set(group.id))
+
+  def generateElements(generators: Iterable[G]): Set[G] =
+    Dimino[G](generators.toIndexedSeq).toSet
+
+  def fromGenerators(generators: IndexedSeq[G]): GG = {
+    new BBGrp(generators, generateElements(generators))
+  }
+
+  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG =
+    fromGenerators(generators)
+
+  def fromGrp(grp: Grp[G]): GG = BBGrp.fromGrp(grp)
+
+  def union(x: Grp[G], y: Grp[G]): GG = fromGenerators(x.generators ++ y.generators)
+
+  def intersect(x: Grp[G], y: Grp[G]): GG = {
+    val newElements = fromGrp(x).elements intersect fromGrp(y).elements
+    new BBGrp[G](newElements.filterNot(_.isId).toIndexedSeq, newElements)
+  }
+
+  def leftCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): LeftCosets[G, subgrp0.type] = {
+    @tailrec def rec(remaining: Set[G], transversal: Set[G]): Set[G] =
+      if (remaining.isEmpty) transversal else {
+        val g = remaining.head
+        val cosetElements = subgrp0.iterator.map( h => g |+| h )
+        rec(remaining diff cosetElements.toSet, transversal + g)
+      }
+    val elements = grp0 match {
+      case bb: BBGrp[G] => bb.elements
+      case _ => grp0.iterator.toSet
+    }
+    val transversal = rec(elements diff subgrp0.iterator.toSet, subgrp0.iterator.toSet)
+    new LeftCosets[G, subgrp0.type] {
+      val grp = grp0
+      val subgrp: subgrp0.type = subgrp0
+      def iterator = transversal.iterator.map( g => new LeftCoset(g, subgrp0) )
+      def inverse = rightCosetsBy(grp, subgrp)
+    }
+  }
+
+  def rightCosetsBy(grp0: Grp[G], subgrp0: Grp[G]): RightCosets[G, subgrp0.type] = {
+    @tailrec def rec(remaining: Set[G], transversal: Set[G]): Set[G] =
+      if (remaining.isEmpty) transversal else {
+        val g = remaining.head
+        val cosetElements = subgrp0.iterator.map( h => h |+| g )
+        rec(remaining diff cosetElements.toSet, transversal + g)
+      }
+    val elements = grp0 match {
+      case bb: BBGrp[G] => bb.elements
+      case _ => grp0.iterator.toSet
+    }
+    val transversal = rec(elements diff subgrp0.iterator.toSet, subgrp0.iterator.toSet)
+    new RightCosets[G, subgrp0.type] {
+      val grp = grp0
+      val subgrp : subgrp0.type = subgrp0
+      def iterator = transversal.iterator.map( g => new RightCoset(g, subgrp0) )
+      def inverse = leftCosetsBy(grp, subgrp)
+    }
+  }
+
+}

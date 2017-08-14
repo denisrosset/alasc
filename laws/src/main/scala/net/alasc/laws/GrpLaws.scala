@@ -1,10 +1,8 @@
 package net.alasc.laws
 
 import scala.reflect.ClassTag
-
 import spire.algebra._
 import spire.math.SafeLong
-
 import org.typelevel.discipline.Laws
 import org.scalacheck.{Arbitrary, Gen, Prop}
 import Arbitrary.arbitrary
@@ -14,14 +12,14 @@ import spire.syntax.order._
 import spire.syntax.group._
 import spire.std.int._
 import spire.util.Opt
-
 import net.alasc.algebra._
-import net.alasc.blackbox.BBGrpAlgos
+import net.alasc.blackbox.{BBGrpGroup, BBGrpPermutationAction, BBGrpStructure}
 import net.alasc.bsgs.FixingPartition
 import net.alasc.finite._
 import net.alasc.lexico.lexPermutationOrder
 import net.alasc.perms.Perm
 import net.alasc.syntax.all._
+import spire.NoImplicit
 
 object GrpLaws {
 
@@ -142,9 +140,20 @@ trait GrpLaws[G] extends Laws {
 
     )
 
-  def testBBEquals[R, GG >: BBGrpAlgos[G]](f: GG => R)(implicit gpa: GG): Boolean = (f(gpa) == f(new BBGrpAlgos[G]))
+  class BB[GG](val gg: GG)
 
-  def testBBEq[R:Eq, GG >: BBGrpAlgos[G]](f: GG => R)(implicit gpa: GG): Boolean = (f(gpa) === f(new BBGrpAlgos[G]))
+  implicit def BBGrpGroup[G:ClassTag:Eq:Group]: BB[GrpGroup[G]] =
+    new BB(new BBGrpGroup[G])
+
+  implicit def BBGrpPermutationAction[G:ClassTag:Eq:Group]: BB[GrpPermutationAction[G]] =
+    new BB(new BBGrpPermutationAction[G])
+
+  implicit def BBGrpStructure[G:ClassTag:Eq:Group]: BB[GrpStructure[G]] =
+    new BB(new BBGrpStructure[G]()(implicitly, implicitly, new BBGrpGroup[G], implicitly))
+
+  def testBBEquals[R, GG](f: GG => R)(implicit gg: GG, bb: BB[GG]): Boolean = (f(gg) == f(bb.gg))
+
+  def testBBEq[R:Eq, GG](f: GG => R)(implicit gg: GG, bb: BB[GG]): Boolean = (f(gg) === f(bb.gg))
 
   def grpPermutationAction(implicit gg: GrpGroup[G], gs: GrpStructure[G], gpa: GrpPermutationAction[G], fpab: FaithfulPermutationActionBuilder[G]) =
     new GrpProperties(

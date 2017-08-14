@@ -42,10 +42,6 @@ class Algorithms(
       BaseChange.swapConjugation
     else
       BaseChange.swap
-/*
-  implicit def permGrpChainAlgos: GrpPermAlgorithms =
-    new GrpPermAlgorithms
-*/
 
   class PRGB[G:FaithfulPermutationActionBuilder](implicit val baseChange: BaseChange, val baseSwap: BaseSwap, val equ: Eq[G],
                                                  val classTag: ClassTag[G], val group: Group[G], val schreierSims: SchreierSims) extends GrpChainPermutationAction[G] {
