@@ -5,9 +5,9 @@ import scala.annotation.tailrec
 import spire.algebra._
 import spire.math.SafeLong
 import spire.std.int._
+import spire.syntax.cfor.cforRange
 
 import metal.syntax._
-
 import net.alasc.perms.Perm
 import net.alasc.util._
 
@@ -108,7 +108,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     sign
   }
 
-  /** Returns the cycle structure of the permutation `g`. */
+  /** Returns the cycle structure of the permutation g. */
   def cycleStructure(g: G): Map[Int, Int] = {
     val rest = metal.mutable.FixedBitSet.fromIterable(movedPoints(g))
     val cs = metal.mutable.HashMap.empty[Int, Int]
@@ -144,9 +144,9 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
     mut.toScala
   }
 
-  /** Returns the images of `g` on the domain (0 until n).
+  /** Returns the images of g on the domain (0 until n).
     *
-    * Requires that `n > supportMax(g)`.*/
+    * Requires that n > supportMax(g).*/
   def images(g: G, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
     require(largestMovedPoint(g).getOrElseFast(-1) < n)
     def length = n
@@ -156,6 +156,24 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   /** Returns a permutation with the same images as the action of `g`. */
   def toPerm(g: G): Perm =
     Perm.fromSupportAndImageFun(movedPoints(g), k => actr(k, g))
+
+  /** Returns whether g as the same permutation action as the given q. */
+  def hasSameAction[Q](g: G, q: Q)(implicit Q:PermutationAction[Q]): Boolean = {
+    val gIdAction = !movesAnyPoint(g)
+    val qIdAction = !Q.movesAnyPoint(q)
+    if (gIdAction || qIdAction) return gIdAction && qIdAction
+    // at this point, both g and q have nontrivial action
+    val gmin = smallestMovedPoint(g).get
+    val gmax = largestMovedPoint(g).get
+    val qmin = Q.smallestMovedPoint(q).get
+    val qmax = Q.largestMovedPoint(q).get
+    if (gmin != qmin || gmax != qmax) return false
+    cforRange(gmin to gmax) { i =>
+      if (actr(i, g) != Q.actr(i, q))
+        return false
+    }
+    true
+  }
 
   /** Return the smallest element of the domain moved by the given generators, or [[NNNone]]. */
   def smallestMovedPoint(generators: Iterable[G]): NNOption = {

@@ -177,7 +177,7 @@ trait PermCompanion {
     * 0..9, A..Z. */
   def apply(cycle: String): Perm = apply(cycle.map(Cycle.alphabetMap(_)): _*)
 
-  /** Constructs a permutatino from a cycle given as a variable number of arguments. */
+  /** Constructs a permutation from a cycle given as a variable number of arguments. */
   def apply(seq: Int*): Perm = if (seq.isEmpty) Perm.id else {
     val map: Map[Int, Int] = (seq zip (seq.tail :+ seq.head)).toMap
     val support = immutable.BitSet.empty ++ seq

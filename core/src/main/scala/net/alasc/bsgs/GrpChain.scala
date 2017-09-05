@@ -2,6 +2,7 @@ package net.alasc.bsgs
 
 import scala.reflect.ClassTag
 import scala.annotation.tailrec
+
 import spire.algebra.{Eq, Group, Order}
 import spire.math.SafeLong
 import spire.syntax.action._
@@ -11,9 +12,9 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.internal.{GrpChainConjugated, GrpChainExplicit}
 import net.alasc.partitions.Partition
 import net.alasc.finite._
-import net.alasc.perms.orbits
-import net.alasc.perms.MutableOrbit
+import net.alasc.perms.{MutableOrbit, Perm, orbits}
 import net.alasc.syntax.group._
+import net.alasc.syntax.permutationAction._
 
 /** Group described a BSGS chain of elements of type G using the permutation action F.
   *

@@ -15,6 +15,8 @@ import metal.syntax._
 /** Group methods that depend on a PermutationAction. */
 trait GrpPermutationAction[G] extends GrpAction[G, Int, PermutationAction[G]] {
 
+  def findSameAction[Q:PermutationAction](grp: Grp[G], action: PermutationAction[G], q: Q): Opt[G]
+
   def lexElements(grp: Grp[G], action: PermutationAction[G]): Opt[BigIndexedSeq[G]]
 
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): Grp[G]
@@ -102,6 +104,10 @@ object GrpPermutationAction {
 }
 
 class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
+
+  /** Find a group element whose permutation action is the same as the given element, if it exists, or returns Opt.empty. */
+  def findSameAction[Q:PermutationAction](action: PermutationAction[G], q: Q)(implicit algos: GrpPermutationAction[G]): Opt[G]
+  = algos.findSameAction(lhs, action, q)
 
   /** Find the kb of the given action, as a normal subgroup of this group. */
   def kernel(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): Grp[G]

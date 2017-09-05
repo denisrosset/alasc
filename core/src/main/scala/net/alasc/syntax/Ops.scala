@@ -46,6 +46,8 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
 
+  def hasSameAction[Q](rhs: Q)(implicit ev1: PermutationAction[Q]): Boolean = macro Ops.binopWithEv2[Q, PermutationAction[Q], Boolean]
+
   def toPerm: Perm = ev.toPerm(lhs)
 
 }

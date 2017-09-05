@@ -242,6 +242,8 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
 
   // GrpPermutationAction
 
+  def findSameAction[Q:PermutationAction](grp: Grp[G], action: PermutationAction[G], q: Q) =
+    ChainRec.findSameAction[G, action.type, Q](fromGrp(grp, action).chain, q, group.id)(grp.equ, grp.group, implicitly, action)
 
   def subgroupFor[A <: PermutationAction[G] with Singleton](grp: Grp[G], action: A, definition: SubgroupDefinition[G, A]): GC[A] = {
     implicit def ia: A = action

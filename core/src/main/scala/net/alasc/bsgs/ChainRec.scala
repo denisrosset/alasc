@@ -140,22 +140,19 @@ object ChainRec {
     case _: Term[G, A] => Opt(remaining)
   }
 
-  /*
-  @tailrec def siftOther[G:Eq:Group, A <: PermutationAction[G] with Singleton, Q:Eq:Group:PermutationAction]
-    (chain: Chain[G, A], gInv: G, q: Q)(implicit action: A): Opt[G] =
+  @tailrec def findSameAction[G:Eq:Group, A <: PermutationAction[G] with Singleton, Q:PermutationAction]
+    (chain: Chain[G, A], q: Q, gInv: G)(implicit action: A): Opt[G] =
     chain match {
       case node: Node[G, A] =>
         val b = (node.beta <|+| q) <|+| gInv
         if (!node.inOrbit(b))
           Opt.empty[G]
         else
-          siftOther(node.next, gInv |+| node.uInv(b), q)
+          findSameAction(node.next, q, gInv |+| node.uInv(b))
       case _: Term[G, A] =>
         val g = gInv.inverse
-        val gPerm = PermutationAction[G].toPerm(g)
-        val qPerm = PermutationAction[Q].toPerm(q)
-        if (gPerm === qPerm) Opt(g) else Opt.empty[G]
-    }*/
+        if (action.hasSameAction(g, q)) Opt(g) else Opt.empty[G]
+    }
 
   @tailrec def basicSift[G:Group, A <: PermutationAction[G] with Singleton]
     (chain: Chain[G, A], remaining: G,

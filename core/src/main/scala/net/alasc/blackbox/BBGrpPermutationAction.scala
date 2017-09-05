@@ -5,8 +5,10 @@ import net.alasc.bsgs.FixingPartition
 import net.alasc.finite._
 import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
+import net.alasc.syntax.group._
 import spire.algebra.{Eq, Group}
 import spire.util.Opt
+import spire.syntax.cfor._
 import spire.syntax.action._
 import net.alasc.util.NNOption
 
@@ -19,6 +21,12 @@ class BBGrpPermutationAction[G](implicit
                                ) extends GrpPermutationAction[G] {
 
   type GG = BBGrp[G]
+
+  def findSameAction[Q:PermutationAction](grp: Grp[G], action: PermutationAction[G], q: Q): Opt[G] =
+    grp.iterator.find( g => action.hasSameAction(g, q) ) match {
+      case Some(g) => Opt(g)
+      case _ => Opt.empty[G]
+    }
 
   def filter(grp: Grp[G], predicate: G => Boolean): GG =
     BBGrp.fromElements(BBGrp.fromGrp(grp).elements.filter(predicate))
@@ -34,7 +42,7 @@ class BBGrpPermutationAction[G](implicit
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
     filter(grp, g => FixingPartition.partitionInvariantUnder(partition, action, g))
 
-  def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ???
+  def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ??? //TODO implement
 
   def subgroupFor(grp: Grp[G], action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: (Perm) => Boolean): GG =
     filter(grp, g => predicate(action.toPerm(g)))
