@@ -5,11 +5,8 @@ import net.alasc.bsgs.FixingPartition
 import net.alasc.finite._
 import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
-import net.alasc.syntax.group._
 import spire.algebra.{Eq, Group}
 import spire.util.Opt
-import spire.syntax.cfor._
-import spire.syntax.action._
 import net.alasc.util.NNOption
 
 import scala.reflect.ClassTag
@@ -28,9 +25,6 @@ class BBGrpPermutationAction[G](implicit
       case _ => Opt.empty[G]
     }
 
-  def filter(grp: Grp[G], predicate: G => Boolean): GG =
-    BBGrp.fromElements(BBGrp.fromGrp(grp).elements.filter(predicate))
-
   def lexElements(grp: Grp[G], action: PermutationAction[G]): Opt[BigIndexedSeq[G]] =
     if (!kernel(grp, action).isTrivial) Opt.empty[BigIndexedSeq[G]] else {
       val orderTC = net.alasc.lexico.lexPermutationOrder.LexPermutationOrder[G](implicitly, action)
@@ -40,21 +34,21 @@ class BBGrpPermutationAction[G](implicit
     }
 
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
-    filter(grp, g => FixingPartition.partitionInvariantUnder(partition, action, g))
+    BBGrp.filter(grp, g => FixingPartition.partitionInvariantUnder(partition, action, g))
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ??? //TODO implement
 
   def subgroupFor(grp: Grp[G], action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: (Perm) => Boolean): GG =
-    filter(grp, g => predicate(action.toPerm(g)))
+    BBGrp.filter(grp, g => predicate(action.toPerm(g)))
 
   def toPerm(grp: Grp[G], action: PermutationAction[G])(implicit algos: GrpGroup[Perm]): Grp[Perm] =
     algos.fromGenerators(grp.generators.map(g => action.toPerm(g)).toSet.toIndexedSeq)
 
   def kernel(grp: Grp[G], action: PermutationAction[G]): GG =
-    filter(grp, g => !action.movesAnyPoint(g))
+    BBGrp.filter(grp, g => !action.movesAnyPoint(g))
 
   def stabilizer(grp: Grp[G], action: PermutationAction[G], b: Int): GG =
-    filter(grp, g => (action.actr(b, g) == b))
+    BBGrp.filter(grp, g => (action.actr(b, g) == b))
 
   def stabilizerTransversal(grp: Grp[G], action: PermutationAction[G], p: Int) = {
     val cosets = BBGrp.fromGrp(grp).elements.groupBy(g => action.actr(p, g))
@@ -76,9 +70,9 @@ class BBGrpPermutationAction[G](implicit
   }
 
   def pointwiseStabilizer(grp: Grp[G], action: PermutationAction[G], set: Set[Int]): GG =
-    filter(grp, g => set.forall(b => (action.actr(b, g) == b)))
+    BBGrp.filter(grp, g => set.forall(b => (action.actr(b, g) == b)))
 
   def setwiseStabilizer(grp: Grp[G], action: PermutationAction[G], set: Set[Int]): GG =
-    filter(grp, g => (set.map(b => action.actr(b, g)) == set))
+    BBGrp.filter(grp, g => (set.map(b => action.actr(b, g)) == set))
 
 }

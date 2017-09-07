@@ -52,4 +52,8 @@ object BBGrp {
     new BBGrp[G](generators, elements)
   }
 
+  def filter[G:Eq:Group](grp: Grp[G], predicate: G => Boolean): BBGrp[G] =
+    BBGrp.fromElements(BBGrp.fromGrp(grp).elements.filter(predicate))
+
+
 }
