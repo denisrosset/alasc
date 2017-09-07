@@ -5,8 +5,6 @@ import scala.collection.{SeqLike, SetLike}
 
 import spire.algebra.Order
 import spire.std.int._
-import spire.math.min
-import spire.syntax.cfor._
 import spire.math.ULong
 import scala.collection.immutable.{BitSet, SortedSet}
 

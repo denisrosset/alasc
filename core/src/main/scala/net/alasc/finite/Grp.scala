@@ -5,22 +5,15 @@ import scala.util.Random
 import spire.algebra.{Action, Eq, Group, PartialOrder}
 import spire.algebra.lattice.{BoundedJoinSemilattice, Lattice}
 import spire.math.SafeLong
-import spire.syntax.action._
-import spire.syntax.cfor._
 import spire.syntax.group._
-import spire.util.Opt
 
-import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
 import net.alasc.syntax.all._
-import net.alasc.util.{NNOption, _}
-import metal.syntax._
 
 import net.alasc.attributes.{Attributable, Attributes}
 
 /** Finite group base class. */
-abstract class Grp[G] extends Attributable { lhs =>
+abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>
 
   def ===(rhs: Grp[G])(implicit equ1: Eq[Grp[G]]): Boolean = equ1.eqv(lhs, rhs)
 
@@ -42,20 +35,8 @@ abstract class Grp[G] extends Attributable { lhs =>
   /** Returns whether `g` is contained in this group. */
   def contains(g: G): Boolean
 
-  /** Generators of the group, does not contain the identity. */
-  def generators: IndexedSeq[G]
-
-  /** Number of group generators. */
-  def nGenerators: Int
-
-  /** Returns the i-th generator. */
-  def generator(i: Int): G
-
   /** Group order. */
   def order: SafeLong
-
-  /** Returns whether this is the trivial group with a single identity element. */
-  def isTrivial: Boolean = generators.isEmpty
 
   /** Generates a random element. */
   def randomElement(random: Random): G

@@ -4,9 +4,7 @@ import scala.reflect.ClassTag
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.util.Opt
-import spire.syntax.action._
 import spire.syntax.group._
-import spire.syntax.eq._
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
 import net.alasc.bsgs.internal.{GrpChainConjugated, GrpChainExplicit}
@@ -32,6 +30,14 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
 
   /** Returns a faithful permutation action for the group expressed by the given generators. */
   def faithfulAction(generators: Iterable[G]): PermutationAction[G]
+
+  /** Returns a faithful permutation action for the given group; if the group is already represented
+    * by a BSGS chain with a faithful action, returns this action.
+    */
+  def faithfulAction(grp: Grp[G]): PermutationAction[G] = grp match {
+    case gc: GrpChain[G, _] if gc.action.isFaithful => gc.action
+    case _ => faithfulAction(grp.generators)
+  }
 
   final class MyKernelBuilder(private[this] val generators: Iterable[G]) extends KernelBuilder[G] {
 
@@ -184,7 +190,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
           GrpChain.unionComputeKernel(fromGrp(lhs, action), rhs.generators, KernelBuilder.trivial[G])
       }
 
-  /** Checks whether the group described by the chain `lhs` is a subgroup of the group described by the chain `rhsGenerators`,
+  /** Checks whether the group described by the chain lhsis a subgroup of the group described by the chain rhsGenerators,
     * where both chains are equipped with a faithful action.
     */
   protected def isFaithfulChainSubsetOf(lhs: Chain.Generic[G], rhs: Chain.Generic[G]): Boolean =
@@ -241,6 +247,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
     }
 
   // GrpPermutationAction
+
 
   def findSameAction[Q:PermutationAction](grp: Grp[G], action: PermutationAction[G], q: Q) =
     ChainRec.findSameAction[G, action.type, Q](fromGrp(grp, action).chain, q, group.id)(grp.equ, grp.group, implicitly, action)

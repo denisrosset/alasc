@@ -1,12 +1,8 @@
 package net.alasc.finite
 
-import scala.util.Random
-
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
-import spire.syntax.eq._
 import spire.syntax.group._
-import spire.util.Opt
 
 /** Methods for groups composed of elements of type `G`, which only depend on the group standard operations.
   *

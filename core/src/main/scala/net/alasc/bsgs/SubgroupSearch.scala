@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, Group, Order}
+import spire.algebra.{Eq, Group}
 import spire.math.Sorting
 import spire.syntax.action._
 import spire.syntax.group._
@@ -127,7 +127,7 @@ object SubgroupSearch {
         val orbit = orbits(level)
         Sorting.sort(orbit)(ImageOrder(bo, currentG), implicitly[ClassTag[Int]])
         var sPrune = orbit.length
-        var n = orbit.length
+        val n = orbit.length
         var i = 0
         while (i < n) {
           val deltaP = orbit(i)

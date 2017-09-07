@@ -1,7 +1,6 @@
 package net.alasc.finite
 
 import scala.annotation.tailrec
-import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group, Semigroup}
 import spire.math.SafeLong
@@ -44,7 +43,7 @@ trait GrpStructure[G] {
   def isAbelian(grp: Grp[G]): Boolean = Attributes.IsAbelian(grp) {
     GrpStructure.isCommutativeFromGenerators[G](grp.generators)
   }
-
+  
 }
 
 object GrpStructure {

@@ -4,7 +4,7 @@ import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
-import spire.util.{Opt, OptVersions}
+import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 

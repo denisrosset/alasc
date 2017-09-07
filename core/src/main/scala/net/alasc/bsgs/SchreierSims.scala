@@ -7,7 +7,6 @@ import scala.util.Random
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.action._
-import spire.syntax.cfor._
 import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
@@ -15,7 +14,6 @@ import spire.util.Opt
 import net.alasc.algebra.PermutationAction
 import net.alasc.blackbox.RandomBag
 import net.alasc.finite.{Grp, GrpStructure}
-import net.alasc.perms.{FilterOrders, Perm}
 import net.alasc.syntax.permutationAction._
 import net.alasc.util.NNOption
 import net.alasc.syntax.group._
