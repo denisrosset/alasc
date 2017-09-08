@@ -248,6 +248,9 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
 
   def areConjugate(grp: Grp[G], g1: G, g2: G) = findConjugation(grp, g1, g2).nonEmpty
 
+  def areConjugate(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]) =
+    findConjugation(grp, g1, g2, g2CentralizerSubgroup).nonEmpty
+
   def findConjugation(grp: Grp[G], g1: G, g2: G): Opt[G] =
     findConjugation(grp, g1, g2, Opt.empty[Grp[G]])
 

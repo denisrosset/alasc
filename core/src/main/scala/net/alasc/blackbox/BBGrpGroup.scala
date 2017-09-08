@@ -5,9 +5,11 @@ import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.group._
 import net.alasc.syntax.group._
-
 import scala.annotation.tailrec
+import spire.syntax.eq._
 import scala.reflect.ClassTag
+
+import spire.util.Opt
 
 class BBGrpGroup[G](implicit
                     val classTag: ClassTag[G],
@@ -78,10 +80,20 @@ class BBGrpGroup[G](implicit
     }
   }
 
-   def areConjugate(grp: net.alasc.finite.Grp[G],g1: G,g2: G): Boolean = ???
-       def centralizer(grp: net.alasc.finite.Grp[G],g: G): net.alasc.finite.Grp[G] = ???
-       def findConjugation(grp: net.alasc.finite.Grp[G],g1: G,g2: G,g2CentralizerSubgroup: spire.util.Opt[net.alasc.finite.Grp[G]]): spire.util.Opt[G] = ???
-       def findConjugation(grp: net.alasc.finite.Grp[G],g1: G,g2: G): spire.util.Opt[G] = ???
+  def areConjugate(grp: Grp[G], g1: G, g2: G): Boolean =
+    fromGrp(grp).elements.exists(g => (g1 |+| g) === (g |+| g2))
 
+  def areConjugate(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]) = areConjugate(grp, g1, g2)
+
+  def findConjugation(grp: Grp[G], g1: G, g2: G) =
+    fromGrp(grp).elements.find(g => (g1 |+| g) === (g |+| g2)) match {
+      case Some(g) => Opt(g)
+      case None => Opt.empty[G]
+    }
+
+  def findConjugation(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]) = findConjugation(grp, g1, g2)
+
+  def centralizer(grp: Grp[G], g: G) =
+    BBGrp.fromElements(fromGrp(grp).elements.filter(h => (g |+| h) === (h |+| g)))
 
 }

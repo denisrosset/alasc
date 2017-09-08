@@ -33,6 +33,11 @@ trait GrpGroup[G] {
   /** Returns whether g1 and g2 are part of the same conjugacy class of G. */
   def areConjugate(grp: Grp[G], g1: G, g2: G): Boolean
 
+  /** Returns whether g1 and g2 are part of the same conjugacy class of G.
+    * @param g2CentralizerSubgroup Subgroup of the centralizer of g2 in grp
+    */
+  def areConjugate(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]): Boolean
+
   /** Returns, if it exists, g such that g1 g = g g2. */
   def findConjugation(grp: Grp[G], g1: G, g2: G): Opt[G]
 
@@ -72,6 +77,9 @@ class GrpGroupSyntax[G](val lhs: Grp[G]) extends AnyVal {
   def conjugatedBy(h: G)(implicit ev: GrpGroup[G]): Grp[G] = ev.conjugatedBy(lhs, h)
 
   def areConjugate(g1: G, g2: G)(implicit ev: GrpGroup[G]): Boolean = ev.areConjugate(lhs, g1, g2)
+
+  def areConjugate(g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]])(implicit ev: GrpGroup[G]): Boolean =
+    ev.areConjugate(lhs, g1, g2, g2CentralizerSubgroup)
 
   /** Returns, if it exists, g such that g1 g = g g2. */
   def findConjugation(g1: G, g2: G)(implicit ev: GrpGroup[G]): Opt[G] =
