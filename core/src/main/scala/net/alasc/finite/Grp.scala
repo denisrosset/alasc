@@ -60,6 +60,9 @@ abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>
 object Grp {
 
   object Attributes extends Attributes("Grp") {
+    object ConjugacyClasses extends Attribute("ConjugacyClasses") {
+      implicit def forGrp[G]: For[Grp[G], ConjugacyClasses[G]] = For
+    }
     object DerivedSubgroup extends Attribute("DerivedSubgroup") {
       implicit def forGrp[G]: For[Grp[G], Grp[G]] = For
     }

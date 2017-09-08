@@ -22,6 +22,10 @@ import net.alasc.syntax.group._
 
 object Conjugation {
 
+  /** A base guide that has beta_n = beta_(n-1) <|+| g whenever possible (without, however, introducing redundant
+    * base points.
+    * @param g Group element guiding the base
+    */
   case class BaseGuideOrbits[G, A <: PermutationAction[G] with Singleton](g: G)(implicit A: A) extends BaseGuide {
 
     class Iter(var orbitStart: Int = -1, var prevPoint: Int = -1) extends BaseGuideIterator {
@@ -35,7 +39,9 @@ object Conjugation {
           prevPoint = beta
           beta
         } else {
+          // computes next point in current orbit
           var next = prevPoint <|+| g
+          // however, does not introduce
           while (isFixed(next) && next != orbitStart)
             next = next <|+| g
           if (next == orbitStart) {
@@ -50,6 +56,7 @@ object Conjugation {
     def iterator: BaseGuideIterator = new Iter
 
     def fullBase: Seq[Int] = {
+      // groups points by orbits of g
       val movedPoints = metal.mutable.FixedBitSet.fromIterable(A.movedPoints(g))
       val base = metal.mutable.Buffer.empty[Int]
       while (movedPoints.nonEmpty) {
@@ -75,13 +82,14 @@ object Conjugation {
 
     class Test(sizes: Array[Int], prevBeta: Int, prevImage: Int) extends SubgroupTest[G, A] {
       def test(b: Int, orbitImage: Int, currentG: G, node: Node[G, A]): Opt[Test] =
-        if (prevBeta != -1 && node.beta == prevBeta <|+| f) {
-          if (orbitImage == prevImage <|+| f)
+      // implements the test of Butler, 1982
+        if (prevBeta != -1 && node.beta == prevBeta <|+| f) { // subsequent base points are in the same orbit
+          if (orbitImage == prevImage <|+| f) // so images should be in the same orbit
             Opt(new Test(sizes, node.beta, orbitImage))
           else
             Opt.empty[Test]
         } else {
-          if (sizes(node.beta) == sizes(orbitImage))
+          if (sizes(node.beta) == sizes(orbitImage)) // otherwise, we just test that orbits have the same size
             Opt(new Test(sizes, node.beta, orbitImage))
           else
             Opt.empty[Test]
