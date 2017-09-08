@@ -20,7 +20,7 @@ object Dimino {
     * @param s  Sequence containing the group generators
     * @return   An array containing the group elements
     */
-  def apply[G:ClassTag:Eq:Group](s: IndexedSeq[G]): Array[G] = {
+  def apply[G:ClassTag:Eq:Group](s: Seq[G]): Array[G] = {
     // treat the special case <s1>
     val elements = ArrayBuffer(Group[G].id)
 
@@ -43,7 +43,7 @@ object Dimino {
     * @param s        Generators of the group to be constructed
     * @param start    Index from which to start the induction process
     */
-  def runInduction[G:Eq:Group](elements: ArrayBuffer[G], s: IndexedSeq[G], start: Int): Unit = {
+  def runInduction[G:Eq:Group](elements: ArrayBuffer[G], s: Seq[G], start: Int): Unit = {
     @inline def order: Int = elements.length
     @tailrec @inline def contained(el: G, j: Int, n: Int): Boolean =
       if (j >= n) false

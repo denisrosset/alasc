@@ -18,9 +18,9 @@ trait GrpGroup[G] {
 
   def trivial: Grp[G]
 
-  def fromGenerators(generators: IndexedSeq[G]): Grp[G]
+  def fromGenerators(generators: Seq[G]): Grp[G]
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): Grp[G]
+  def fromGeneratorsAndOrder(generators: Seq[G], order: SafeLong): Grp[G]
 
   // with a single Grp[G] argument
 

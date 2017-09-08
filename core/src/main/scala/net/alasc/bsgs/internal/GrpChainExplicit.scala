@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 final class GrpChainExplicit[G, F <: PermutationAction[G] with Singleton]
-  (val chain: Chain[G, F], generatorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
+  (val chain: Chain[G, F], generatorsOpt: Opt[Seq[G]], val kernel: Chain.Generic[G])
   (implicit val classTag: ClassTag[G], val equ: Eq[G], val group: Group[G], val action: F) extends GrpChain[G, F] {
 
   def chainOpt = Opt(chain)

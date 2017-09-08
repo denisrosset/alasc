@@ -22,8 +22,8 @@ class BBGrpStructure[G](implicit
     case _ => new BBGrp(grp.generators, grp.iterator.toSet)
   }
 
-  override def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] = {
-    def computeOrder(gens: IndexedSeq[G]): SafeLong = SafeLong(Dimino[G](gens).length)
+  override def smallGeneratingSet(grp: Grp[G]): Seq[G] = {
+    def computeOrder(gens: Seq[G]): SafeLong = SafeLong(Dimino[G](gens).length)
     GrpStructure.deterministicReduceGenerators(grp.generators, grp.order, computeOrder).getOrElseFast(grp.generators)
   }
 

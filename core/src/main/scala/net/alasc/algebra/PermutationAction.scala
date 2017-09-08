@@ -147,7 +147,7 @@ trait PermutationAction[G] extends Action[Int, G] { self =>
   /** Returns the images of g on the domain (0 until n).
     *
     * Requires that n > supportMax(g).*/
-  def images(g: G, n: Int): IndexedSeq[Int] = new IndexedSeq[Int] {
+  def images(g: G, n: Int): Seq[Int] = new IndexedSeq[Int] {
     require(largestMovedPoint(g).getOrElseFast(-1) < n)
     def length = n
     def apply(idx: Int) = actr(idx, g)
@@ -227,7 +227,7 @@ object PermutationAction {
     override def cycleStructure(b: B): Map[Int, Int] = fa.cycleStructure(f(b))
     override def permutationOrder(b: B): SafeLong = fa.permutationOrder(f(b))
     override def orbit(b: B, i: Int): Set[Int] = fa.orbit(f(b), i)
-    override def images(b: B, n: Int): IndexedSeq[Int] = fa.images(f(b), n)
+    override def images(b: B, n: Int): Seq[Int] = fa.images(f(b), n)
     override def toPerm(b: B): Perm = fa.toPerm(f(b))
     override def smallestMovedPoint(generators: Iterable[B]): NNOption = super.smallestMovedPoint(generators)
     override def largestMovedPoint(generators: Iterable[B]): NNOption = super.largestMovedPoint(generators)

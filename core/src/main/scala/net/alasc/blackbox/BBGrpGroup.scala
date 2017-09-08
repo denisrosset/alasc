@@ -22,11 +22,11 @@ class BBGrpGroup[G](implicit
   def generateElements(generators: Iterable[G]): Set[G] =
     Dimino[G](generators.toIndexedSeq).toSet
 
-  def fromGenerators(generators: IndexedSeq[G]): GG = {
+  def fromGenerators(generators: Seq[G]): GG = {
     new BBGrp(generators, generateElements(generators))
   }
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GG =
+  def fromGeneratorsAndOrder(generators: Seq[G], order: SafeLong): GG =
     fromGenerators(generators)
 
   def fromGrp(grp: Grp[G]): GG = BBGrp.fromGrp(grp)

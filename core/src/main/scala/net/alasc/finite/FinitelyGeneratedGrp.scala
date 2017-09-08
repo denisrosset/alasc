@@ -5,7 +5,7 @@ import net.alasc.attributes.Attributable
 abstract class FinitelyGeneratedGrp[G] extends Attributable {
 
   /** Generators of the group, does not contain the identity. */
-  def generators: IndexedSeq[G]
+  def generators: Seq[G]
 
   /** Number of group generators. */
   def nGenerators: Int

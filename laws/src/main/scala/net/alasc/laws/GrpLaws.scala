@@ -166,7 +166,7 @@ trait GrpLaws[G] extends Laws {
 
       "lexElements" -> forAll(smallGrp) { grp =>
         val action = fpab(grp) // faithful action, so lexElements always returns Opt(seq)
-        testBBEquals[IndexedSeq[G], GrpPermutationAction[G]]( _.lexElements(grp, action).get.toIndexedSeq )
+        testBBEquals[Seq[G], GrpPermutationAction[G]]( _.lexElements(grp, action).get.toIndexedSeq )
       },
 
       "fixingPartition" -> forAll { (grp: Grp[G], pab: PermutationActionBuilder[G]) =>

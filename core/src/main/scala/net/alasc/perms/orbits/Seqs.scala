@@ -71,7 +71,7 @@ object Seqs {
   }
 
   final case class UnorderedRepresentatives[ST <: SeqLike[T, ST], G, T, A <: PermutationAction[G] with Singleton]
-    (grp: GrpChain[G, A], symGrp: GrpChain[G, A], action: A, distinctElements: IndexedSeq[T], indexMap: Map[T, Int], intLabels: Array[Int])
+    (grp: GrpChain[G, A], symGrp: GrpChain[G, A], action: A, distinctElements: Seq[T], indexMap: Map[T, Int], intLabels: Array[Int])
     (implicit val cbf: CanBuildFrom[Nothing, T, ST], val gcpa: GrpChainPermutationAction[G]) extends Representatives[ST, G, T, A] {
 
     def iterator = grp.rightCosetsBy(symGrp).representativesIterator

@@ -59,24 +59,24 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
     new GrpChainExplicit[G, action.type](Term[G, action.type], Opt(IndexedSeq.empty[G]), Term[G, action.type])
   }
 
-  def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
+  def fromGenerators(generators: Seq[G], action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
     val kb = kernelBuilder(generators)
     val chain = BuildChain[G, action.type](generators, kb, baseGuideOpt)
     new GrpChainExplicit[G, action.type](chain, Opt(generators), kb.toChain())
   }
 
-  def fromGenerators(generators: IndexedSeq[G], action: PermutationAction[G]): GC[action.type] =
+  def fromGenerators(generators: Seq[G], action: PermutationAction[G]): GC[action.type] =
     fromGenerators(generators, action, Opt.empty[BaseGuide])
 
-  def fromGenerators(generators: IndexedSeq[G]): GenericGC = {
+  def fromGenerators(generators: Seq[G]): GenericGC = {
     val action = faithfulAction(generators)
     fromGenerators(generators, action)
   }
 
   // fromGeneratorsAndOrder
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong,
+  def fromGeneratorsAndOrder(generators: Seq[G], order: SafeLong,
                              action: PermutationAction[G], baseGuideOpt: Opt[BaseGuide]): GC[action.type] = {
     implicit def ia: action.type = action
     val kb = kernelBuilder(generators)
@@ -84,10 +84,10 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
     new GrpChainExplicit[G, action.type](chain, Opt(generators), kb.toChain())
   }
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong, action: PermutationAction[G]): GC[action.type] =
+  def fromGeneratorsAndOrder(generators: Seq[G], order: SafeLong, action: PermutationAction[G]): GC[action.type] =
     fromGeneratorsAndOrder(generators, order, action, Opt.empty[BaseGuide])
 
-  def fromGeneratorsAndOrder(generators: IndexedSeq[G], order: SafeLong): GenericGC = {
+  def fromGeneratorsAndOrder(generators: Seq[G], order: SafeLong): GenericGC = {
     val action = faithfulAction(generators)
     fromGeneratorsAndOrder(generators, order, action)
   }
@@ -224,7 +224,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
 
   implicit def grpGroup: GrpGroup[G] = this
 
-  override def smallGeneratingSet(grp: Grp[G]): IndexedSeq[G] =
+  override def smallGeneratingSet(grp: Grp[G]): Seq[G] =
     if (grp.isTrivial) IndexedSeq.empty[G] else {
       val grpChain = fromGrp(grp)
       val fAction = if (grpChain.kernel.isTrivial)
@@ -275,7 +275,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
         (chain, kb.toChain())
     }
     val subChain = SubgroupSearch.subgroupSearch(definition, guidedChain, kernel).toChain()
-    new GrpChainExplicit[G, A](subChain, Opt.empty[IndexedSeq[G]], kernel)
+    new GrpChainExplicit[G, A](subChain, Opt.empty[Seq[G]], kernel)
   }
 
   def someStabilizerTransversal(grp: Grp[G], action: PermutationAction[G]): Opt[(GrpChain[G, action.type], Transversal[G, action.type])] =
@@ -339,11 +339,11 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
         val action = node.action
         implicit def ia: action.type = action
         val nodeInAction = Node.inActionUnsafe(node, action)
-        new GrpChainExplicit(nodeInAction, Opt.empty[IndexedSeq[G]], Term[G, action.type])
+        new GrpChainExplicit(nodeInAction, Opt.empty[Seq[G]], Term[G, action.type])
       case _ =>
-        val action = faithfulAction(IndexedSeq.empty[G])
+        val action = faithfulAction(Seq.empty[G])
         implicit def ia: action.type = action
-        new GrpChainExplicit(Term[G, action.type], Opt(IndexedSeq.empty[G]), Term[G, action.type])
+        new GrpChainExplicit(Term[G, action.type], Opt(Seq.empty[G]), Term[G, action.type])
     }
 
 }

@@ -54,7 +54,7 @@ object FilterOrders {
     false
   }
 
-  def apply[G:Eq:Group](generators: IndexedSeq[G], faithfulAction: PermutationAction[G]): IndexedSeq[G] = {
+  def apply[G:Eq:Group](generators: Seq[G], faithfulAction: PermutationAction[G]): Seq[G] = {
     implicit def fa: PermutationAction[G] = faithfulAction
     @inline def asInt(s: SafeLong): Int = {
       require(s.isValidInt)

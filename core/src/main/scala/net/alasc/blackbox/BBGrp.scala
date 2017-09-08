@@ -9,7 +9,7 @@ import net.alasc.syntax.group._
 import scala.collection.mutable.ArrayBuffer
 
 class BBGrp[G](
-    val generators: IndexedSeq[G],
+    val generators: Seq[G],
     val elements: Set[G]
   )(implicit
     val equ: Eq[G],

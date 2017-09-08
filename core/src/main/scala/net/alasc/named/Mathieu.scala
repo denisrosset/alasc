@@ -8,7 +8,7 @@ import net.alasc.perms._
 
 object Mathieu {
 
-  val generatorsAndOrders: Map[Int, (IndexedSeq[Perm], SafeLong)] =
+  val generatorsAndOrders: Map[Int, (Seq[Perm], SafeLong)] =
     Map(
       10 -> ((IndexedSeq(Perm(1,2)(3,4), Perm(1,2,3,5)(4,6)), 360)),
       11 -> ((IndexedSeq(Perm(1,2,3,4,5,6,7,8,9,10,11), Perm(3,7,11,8)(4,10,5,6)), 7920)),

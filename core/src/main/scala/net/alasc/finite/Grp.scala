@@ -64,7 +64,7 @@ object Grp {
       implicit def forGrp[G]: For[Grp[G], Grp[G]] = For
     }
     object SmallGeneratingSet extends Attribute("SmallGeneratingSet") {
-      implicit def forGrp[G]: For[Grp[G], IndexedSeq[G]] = For
+      implicit def forGrp[G]: For[Grp[G], Seq[G]] = For
     }
     object IsAbelian extends Attribute.Property("IsAbelian")
     object IsCyclic extends Attribute.Property("IsCyclic")
@@ -79,10 +79,10 @@ object Grp {
 
   def trivial[G:Eq:Group]: Grp[G] = GrpTrivial[G]()
 
-  def fromGenerators[G](generators: IndexedSeq[G])(implicit ev: GrpGroup[G]): Grp[G] =
+  def fromGenerators[G](generators: Seq[G])(implicit ev: GrpGroup[G]): Grp[G] =
     ev.fromGenerators(generators)
 
-  def fromGeneratorsAndOrder[G](generators: IndexedSeq[G], order: SafeLong)(implicit ev: GrpGroup[G]): Grp[G] =
+  def fromGeneratorsAndOrder[G](generators: Seq[G], order: SafeLong)(implicit ev: GrpGroup[G]): Grp[G] =
     ev.fromGeneratorsAndOrder(generators, order)
 
   implicit def permGrpSyntax(pg: Grp[Perm]): GrpPermSyntax = new GrpPermSyntax(pg)
@@ -108,7 +108,7 @@ case class GrpTrivial[G]()(implicit val equ: Eq[G], val group: Group[G]) extends
 
   def contains(g: G): Boolean = g.isId
 
-  def generators: IndexedSeq[G] = IndexedSeq.empty
+  def generators: Seq[G] = Seq.empty
 
   def nGenerators = 0
 

@@ -10,7 +10,7 @@ object lexSeqOrder {
   // TODO: port to Spire and link implementation
 
   class LexSeqOrder[A:Order] extends Order[Seq[A]] {
-    protected def indexedCompare(x: IndexedSeq[A], y: IndexedSeq[A]): Int = {
+    protected def indexedCompare(x: Seq[A], y: Seq[A]): Int = {
       val n = spire.math.min(x.size, y.size)
       var i = 0
       var c = 0

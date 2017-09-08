@@ -44,7 +44,7 @@ final class PermutationActionOps[A](lhs: A)(implicit ev: PermutationAction[A]) {
 
   def orbit(rhs: Int): Set[Int] = macro Ops.binop[Int, Set[Int]]
 
-  def images(rhs: Int): IndexedSeq[Int] = macro Ops.binop[Int, IndexedSeq[Int]]
+  def images(rhs: Int): Seq[Int] = macro Ops.binop[Int, Seq[Int]]
 
   def hasSameAction[Q](rhs: Q)(implicit ev1: PermutationAction[Q]): Boolean = macro Ops.binopWithEv2[Q, PermutationAction[Q], Boolean]
 

@@ -22,7 +22,7 @@ import scala.util.Random
   */
 final class GrpChainConjugated[G, A <: PermutationAction[G] with Singleton]
 (val originalChain: Chain[G, A], val g: G, val gInv: G,
- val originalGeneratorsOpt: Opt[IndexedSeq[G]], val kernel: Chain.Generic[G])
+ val originalGeneratorsOpt: Opt[Seq[G]], val kernel: Chain.Generic[G])
 (implicit val classTag: ClassTag[G], val group: Group[G], val equ: Eq[G], val action: A) extends GrpChain[G, A] {
 
   /** Number of group generators. */

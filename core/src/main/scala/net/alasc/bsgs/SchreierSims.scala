@@ -39,7 +39,7 @@ trait SchreierSims {
     * @tparam F         Faithful action type
     * @return a list of generators of size smaller than `generators`, otherwise Opt.empty.
     */
-  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]]
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: Seq[G], min: Int): Opt[Seq[G]]
 
 }
 
@@ -202,9 +202,9 @@ final class SchreierSimsDeterministic extends SchreierSims {
   (generators: Iterable[G], randomElement: (Random) => G, order: SafeLong, kb: KernelBuilder[G], baseStart: Seq[Int])(implicit action: A): MutableChain[G, A] =
     mutableChain(generators, order, kb, baseStart)
 
-  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]] = {
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: Seq[G], min: Int): Opt[Seq[G]] = {
     implicit def f: F = node.action
-    def computeOrder(gens: IndexedSeq[G]): SafeLong = mutableChain[G, F](gens, KernelBuilder.trivial[G], Seq.empty[Int]).start.next.order
+    def computeOrder(gens: Seq[G]): SafeLong = mutableChain[G, F](gens, KernelBuilder.trivial[G], Seq.empty[Int]).start.next.order
     GrpStructure.deterministicReduceGenerators(generators, node.order, computeOrder)
   }
 
@@ -238,7 +238,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
     mutableChain
   }
 
-  def fastOrderCheck[G:ClassTag:Eq:Group](generators: IndexedSeq[G], order: SafeLong, faithfulAction: PermutationAction[G], numSuccTries: Int = 4): Boolean = {
+  def fastOrderCheck[G:ClassTag:Eq:Group](generators: Seq[G], order: SafeLong, faithfulAction: PermutationAction[G], numSuccTries: Int = 4): Boolean = {
     implicit def ia: faithfulAction.type = faithfulAction
     val randomBag = RandomBag(generators, random)
     val mutableChain = MutableChain.empty[G, faithfulAction.type]
@@ -254,7 +254,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
     c == 0
   }
 
-  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: IndexedSeq[G], min: Int): Opt[IndexedSeq[G]] = {
+  def reduceGenerators[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singleton](node: Node[G, F], generators: Seq[G], min: Int): Opt[Seq[G]] = {
     // taken from GAP SmallGeneratingSet, the part after the order filtering
     val order = node.order
     var gens = generators
@@ -281,7 +281,7 @@ final class SchreierSimsRandomized(val random: Random) extends SchreierSims {
       else
         i += 1
     }
-    if (gens.length < generators.length) Opt(gens) else Opt.empty[IndexedSeq[G]]
+    if (gens.length < generators.length) Opt(gens) else Opt.empty[Seq[G]]
   }
 
 }
