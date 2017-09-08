@@ -11,7 +11,7 @@ class DisjointSetForest(val parent: Array[Int]) {
 
   def size = parent.length
 
-  /** Finds the representative of the set in which `x` is contained. */
+  /** Finds the representative of the set in which x is contained. */
   def find(x: Int): Int =
     if (parent(x) != x) {
       val res = find(parent(x))
@@ -19,8 +19,8 @@ class DisjointSetForest(val parent: Array[Int]) {
       res
     } else x
 
-  /** Combines the trees containing `x` and `y`. The representative of the union is chosen as the 
-    * minimal representative of `x` and `y`.
+  /** Combines the trees containing x and y. The representative of the union is chosen as the
+    * minimal representative of x and y.
     */
   def union(x: Int, y: Int): Unit = {
     val xRoot = find(x)
