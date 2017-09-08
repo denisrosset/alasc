@@ -78,4 +78,10 @@ class BBGrpGroup[G](implicit
     }
   }
 
+   def areConjugate(grp: net.alasc.finite.Grp[G],g1: G,g2: G): Boolean = ???
+       def centralizer(grp: net.alasc.finite.Grp[G],g: G): net.alasc.finite.Grp[G] = ???
+       def findConjugation(grp: net.alasc.finite.Grp[G],g1: G,g2: G,g2CentralizerSubgroup: spire.util.Opt[net.alasc.finite.Grp[G]]): spire.util.Opt[G] = ???
+       def findConjugation(grp: net.alasc.finite.Grp[G],g1: G,g2: G): spire.util.Opt[G] = ???
+
+
 }

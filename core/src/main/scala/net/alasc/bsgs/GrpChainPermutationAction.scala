@@ -1,13 +1,14 @@
 package net.alasc.bsgs
 
 import scala.reflect.ClassTag
+
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.util.Opt
 import spire.syntax.group._
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.MutableChain.Generic
-import net.alasc.bsgs.internal.{GrpChainConjugated, GrpChainExplicit}
+import net.alasc.bsgs.internal.{Conjugation, GrpChainConjugated, GrpChainExplicit}
 import net.alasc.partitions.Partition
 import net.alasc.finite._
 import net.alasc.perms.{FilterOrders, Perm}
@@ -245,8 +246,31 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       }
     }
 
-  // GrpPermutationAction
+  def areConjugate(grp: Grp[G], g1: G, g2: G) = findConjugation(grp, g1, g2).nonEmpty
 
+  def findConjugation(grp: Grp[G], g1: G, g2: G): Opt[G] =
+    findConjugation(grp, g1, g2, Opt.empty[Grp[G]])
+
+  def findConjugation(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]): Opt[G] = {
+    if (g2.isId) {
+      if (g1.isId) return Opt(grp.group.id) else return Opt.empty[G]
+    }
+    if (g1.isId) return Opt.empty[G] // we know g2 is not identity
+    val action = faithfulAction(grp)
+    val sub = g2CentralizerSubgroup match {
+      case Opt(s) => fromGrp(s, action)
+      case _ => fromGenerators(Seq(g2), action)
+    }
+    Conjugation.findConjugation(fromGrp(grp, action), g1, g2, sub)
+  }
+
+  def centralizer(grp: Grp[G], g: G): Grp[G] = {
+    val action = faithfulAction(grp)
+    val definition = Conjugation.Centralizer[G, action.type](g)(implicitly, implicitly, action)
+    subgroupFor[action.type](grp, action, definition)
+  }
+
+  // GrpPermutationAction
 
   def findSameAction[Q:PermutationAction](grp: Grp[G], action: PermutationAction[G], q: Q) =
     ChainRec.findSameAction[G, action.type, Q](fromGrp(grp, action).chain, q, group.id)(grp.equ, grp.group, implicitly, action)

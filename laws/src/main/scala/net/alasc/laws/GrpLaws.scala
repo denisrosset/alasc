@@ -125,6 +125,13 @@ trait GrpLaws[G] extends Laws {
           val union = setOfSets.flatten
           (sumSizes == grp.order) && (union == grp.iterator.toSet)
         }
+      },
+
+      "findConjugation" -> forAll(smallGrp) { grp =>
+        forAll(Grps.genRandomElement(grp), Grps.genRandomElement(grp)) { (g1, h) =>
+          val g2 = h.inverse |+| g1 |+| h
+          grp.findConjugation(g1, g2).nonEmpty == true
+        }
       }
 
     )
