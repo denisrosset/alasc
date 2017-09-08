@@ -1,6 +1,5 @@
 package net.alasc.named
 
-import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms.Perm
 

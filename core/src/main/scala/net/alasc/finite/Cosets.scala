@@ -1,7 +1,5 @@
 package net.alasc.finite
 
-import spire.algebra.Group
-
 import spire.math.SafeLong
 
 trait Cosets[G, Subgrp <: Grp[G] with Singleton] {
@@ -30,7 +28,7 @@ trait LeftCosets[G, Subgrp <: Grp[G] with Singleton] extends Cosets[G, Subgrp] {
 
 }
 
-abstract class LeftCosetsImpl[G:Group, Subgrp <: Grp[G] with Singleton] extends LeftCosets[G, Subgrp] { lhs =>
+abstract class LeftCosetsImpl[G, Subgrp <: Grp[G] with Singleton] extends LeftCosets[G, Subgrp] { lhs =>
 
   def inverse: RightCosets[G, Subgrp] = new RightCosets[G, Subgrp] {
 

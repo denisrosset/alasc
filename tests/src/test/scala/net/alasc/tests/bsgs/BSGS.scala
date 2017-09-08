@@ -1,6 +1,7 @@
 package net.alasc.tests
 package bsgs
 
+/*
 import org.scalacheck._
 import spire.util.Opt
 
@@ -13,6 +14,7 @@ import net.alasc.perms.{_}
 import net.alasc.bsgs.{FixingPartition => FixingPartitionDef, _}
 import net.alasc.finite.Grp
 import net.alasc.tests.perms.PermSuite
+*/
 /* TODO
 abstract class BSGSSuite(implicit val gcpa: GrpChainPermutationAction[Perm]) extends AlascSuite {
 

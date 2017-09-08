@@ -182,7 +182,7 @@ final class MutableNodeExplicit[G, A <: PermutationAction[G] with Singleton](
     ownGeneratorsInv.reduceToSize(ogpLength)
   }*/
 
-  protected[bsgs] def bulkAdd(beta: metal.generic.Buffer[Int], u: metal.mutable.Buffer[G], uInv: metal.mutable.Buffer[G])(implicit group: Group[G]) = {
+  protected[bsgs] def bulkAdd(beta: metal.generic.Buffer[Int], u: metal.mutable.Buffer[G], uInv: metal.mutable.Buffer[G]) = {
     cforRange(0 until beta.length.toInt) { i =>
       addTransversalElement(beta(i), u(i), uInv(i))
     }

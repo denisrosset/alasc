@@ -2,7 +2,7 @@ package net.alasc.laws
 
 import scala.util.Random
 
-import spire.algebra.{Action, Group, Order}
+import spire.algebra.{Group, Order}
 import spire.util.Opt
 
 import org.scalacheck.Gen
@@ -14,8 +14,6 @@ import net.alasc.algebra.PermutationAction
 import net.alasc.bsgs.{Chain, Node, Term}
 import net.alasc.std.seq._
 import spire.syntax.order._
-
-import net.alasc.perms.Perm
 
 object BSGSs {
 

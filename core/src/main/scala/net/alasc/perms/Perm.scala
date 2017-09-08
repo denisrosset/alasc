@@ -2,7 +2,7 @@ package net.alasc.perms
 
 import scala.collection.immutable
 
-import spire.algebra.{Eq, Group, Order}
+import spire.algebra.Order
 import spire.syntax.group._
 
 import net.alasc.algebra._

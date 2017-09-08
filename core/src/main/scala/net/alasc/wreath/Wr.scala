@@ -8,10 +8,8 @@ import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
-import net.alasc.algebra._
 import net.alasc.finite._
-import net.alasc.perms.{Cycle, Perm}
-import net.alasc.syntax.permutationAction._
+import net.alasc.perms.Perm
 import net.alasc.syntax.group._
 
 /** Describes the wreath product of two objects. */
@@ -58,7 +56,6 @@ object Wr {
     def empty = Wr[A]()()
     def inverse(w: Wr[A]): Wr[A] = {
       val hInv = w.h.inverse
-      val n = w.aMap.keys.size.max(w.h.largestMovedPoint.getOrElseFast(-1) + 1)
       Wr.fromPerm(w.aMap.toSeq.map { case (i, a) => (i <|+| w.h, a.inverse) }: _*)(hInv)
     }
     def combine(x: Wr[A], y: Wr[A]): Wr[A] = {

@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
-import spire.algebra.{Eq, Group}
+import spire.algebra.Group
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
@@ -17,7 +17,7 @@ final class RichChain[G, A <: PermutationAction[G] with Singleton](val chain: Ch
     * 
     * The provided `action` is used only if the given `chain` is a terminal.
     */
-  def mutableChain(implicit action: A, classTag: ClassTag[G], equ: Eq[G], group: Group[G]): MutableChain[G, A] = {
+  def mutableChain(implicit action: A, classTag: ClassTag[G], group: Group[G]): MutableChain[G, A] = {
     chain.mapOrElse(node => require(node.action == PermutationAction[G]), ())
     val mutableChain = MutableChain.empty[G, A]
     @tailrec def rec(after: MutableStartOrNode[G, A], toInsert: Chain[G, A]): Unit = toInsert match {
@@ -47,8 +47,7 @@ final class RichChain[G, A <: PermutationAction[G] with Singleton](val chain: Ch
 
   /** Returns a chain with the (possibly new) base point `b` in front. */
   def withFirstBasePoint(b: Int)
-                        (implicit action: A, baseSwap: BaseSwap, classTag: ClassTag[G],
-                         equ: Eq[G], group: Group[G]): Chain[G, A] = {
+                        (implicit action: A, baseSwap: BaseSwap, classTag: ClassTag[G], group: Group[G]): Chain[G, A] = {
     val mutableChain = chain.mutableChain
     mutableChain.changeBasePointAfter(mutableChain.start, b)
     mutableChain.toChain()

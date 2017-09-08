@@ -38,7 +38,7 @@ abstract class HoltSuite(implicit builder: GrpChainPermutationAction[Perm]) exte
     }
     val printed = List("123456", "123465", "321456", "321465")
     val images = SubgroupSearch.generalSearch(Definition, mchain.start.next).map(g => (1 to 6).map( k => k <|+| g).mkString).toSeq
-    images should equal(Seq("123456", "123465", "321456", "321465"))
+    images should equal(printed)
   }
 
   test("Example 4.6") {

@@ -3,7 +3,7 @@ package net.alasc.bsgs
 import scala.reflect.ClassTag
 import scala.annotation.tailrec
 
-import spire.algebra.{Eq, Group, Order}
+import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.group._
@@ -12,9 +12,8 @@ import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
 import net.alasc.bsgs.internal.{GrpChainConjugated, GrpChainExplicit}
 import net.alasc.partitions.Partition
 import net.alasc.finite._
-import net.alasc.perms.{MutableOrbit, Perm, orbits}
+import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.syntax.group._
-import net.alasc.syntax.permutationAction._
 
 /** Group described a BSGS chain of elements of type G using the permutation action F.
   *
@@ -158,7 +157,7 @@ object GrpChain {
     * @return the intersection
     */
   def intersect[G, A <: PermutationAction[G] with Singleton](lhs: GrpChain[G, A], rhs: Chain[G, A])
-  (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, A] = {
+  (implicit baseChange: BaseChange): GrpChain[G, A] = {
     import lhs.{action, classTag, equ, group}
     subgroupFor(lhs, Intersection[G, A](rhs, lhs.kernel))
   }
@@ -169,7 +168,7 @@ object GrpChain {
     * action is not faithful.
     */
   def subgroupFor[G, A <: PermutationAction[G] with Singleton](grp: GrpChain[G, A], definition: SubgroupDefinition[G, A])
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, A] = {
+    (implicit baseChange: BaseChange): GrpChain[G, A] = {
     import grp.{action, classTag, equ, group}
     val guidedChain = grp match {
       case lhs: GrpChainConjugated[G, A] =>
@@ -197,7 +196,7 @@ object GrpChain {
 
   /** Returns the subgroup of `grp` that fixes the partition `partition`. */
   def fixingPartition[G, A <: PermutationAction[G] with Singleton](grp: GrpChain[G, A], partition: Partition)
-    (implicit baseChange: BaseChange, schreierSims: SchreierSims): GrpChain[G, A] = {
+    (implicit baseChange: BaseChange): GrpChain[G, A] = {
     import grp.{action, group}
     subgroupFor(grp, FixingPartition[G, A](partition))
   }
@@ -220,7 +219,7 @@ object GrpChain {
   }
 
   def stabilizerTransversal[G, F <: PermutationAction[G] with Singleton](grp: GrpChain[G, F], b: Int)
-    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): (GrpChain[G, F], Transversal[G, F]) = {
+    (implicit baseSwap: BaseSwap): (GrpChain[G, F], Transversal[G, F]) = {
     // duplicated code with stabilizer below
     import grp.{action, classTag, equ, group}
     grp match {
@@ -286,7 +285,7 @@ object GrpChain {
   }
 
   def stabilizer[G, F <: PermutationAction[G] with Singleton](grp: GrpChain[G, F], b: Int)
-  (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): GrpChain[G, F] = {
+  (implicit baseSwap: BaseSwap): GrpChain[G, F] = {
     // duplicated code with stabilizerTransversal above
     import grp.{action, classTag, equ, group}
     grp match {
@@ -363,8 +362,7 @@ object GrpChain {
   }
 
   def leftCosetsByFaithfulAction[G, F <: PermutationAction[G] with Singleton](grp0: GrpChain[G, F], subgrp0: Grp[G], chainSubgrp0: GrpChain[G, F])
-    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): LeftCosets[G, subgrp0.type] = {
-    import grp0.{action, group}
+    (implicit baseSwap: BaseSwap): LeftCosets[G, subgrp0.type] = {
     require(grp0.hasSubgroup(subgrp0)) // TODO: add NC variant
     new LeftCosetsImpl[G, subgrp0.type] {
 
@@ -375,10 +373,10 @@ object GrpChain {
       val chainSubgrp = chainSubgrp0
 
       def iterator: Iterator[LeftCoset[G, subgrp0.type]] = {
-        import grp.{action, classTag, group}
-        val myBase = grp.chain.base
-        val bo = BaseOrder[G, F](myBase)
-        val bordering = bo.toOrdering
+        import grp.{action, group}
+        //val myBase = grp.chain.base
+        //val bo = BaseOrder[G, F](myBase) TODO: unused?
+        //val bordering = bo.toOrdering
         val orbit = MutableOrbit.empty
         import spire.std.int.IntAlgebra
         def rec(g: G, chain: Chain[G, F], subSubgrp: GrpChain[G, F]): Iterator[LeftCoset[G, subgrp0.type]] = chain match {
@@ -393,7 +391,7 @@ object GrpChain {
           case _: Term[G, F] =>
             Iterator(new LeftCoset(g, subgrp))
         }
-        rec(Group[G].id, grp.chain, chainSubgrp0)
+        rec(Group[G].id, grp.chain, chainSubgrp)
       }
 
     }
@@ -402,7 +400,7 @@ object GrpChain {
 
   /** Lexicographic enumeration of group elements by their images for the given action (which must be faithful). */
   final class LexElements[G, F <: PermutationAction[G] with Singleton]
-  (grp: GrpChain[G, F])(implicit baseChange: BaseChange, schreierSims: SchreierSims) extends BigIndexedSeq[G] {
+  (grp: GrpChain[G, F])(implicit baseChange: BaseChange) extends BigIndexedSeq[G] {
 
     import grp.{action, classTag, equ, group}
 

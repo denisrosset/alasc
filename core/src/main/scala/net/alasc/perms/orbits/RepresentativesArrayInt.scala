@@ -21,7 +21,7 @@ import net.alasc.util._
 
 final case class RepresentativesArrayInt[G, A <: PermutationAction[G] with Singleton]
   (val seq: Array[Int], val grp: GrpChain[G, A], val symGrp: GrpChain[G, A])
-  (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims) {
+  (implicit baseChange: BaseChange, baseSwap: BaseSwap) {
 
   import grp.{action, classTag, equ, group}
 
@@ -250,7 +250,7 @@ object RepresentativesArrayInt {
 
   def permutationTo[G, A <: PermutationAction[G] with Singleton]
     (seq: Array[Int], repr: Array[Int], grp: GrpChain[G, A], symGrp: GrpChain[G, A])
-    (implicit baseChange: BaseChange, baseSwap: BaseSwap, schreierSims: SchreierSims): Opt[G] = {
+    (implicit baseSwap: BaseSwap): Opt[G] = {
     import grp.{action, group}
     val chainGrp0 = grp.chain
     val n = seq.length

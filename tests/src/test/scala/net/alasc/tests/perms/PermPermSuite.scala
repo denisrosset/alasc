@@ -1,9 +1,7 @@
 package net.alasc.tests
 package perms
 
-import spire.algebra.Eq
 import spire.laws.{LatticePartialOrderLaws, Perm => _}
-import spire.math.SafeLong
 
 import org.scalacheck.Arbitrary
 
@@ -15,7 +13,6 @@ import net.alasc.perms._
 class PermPermSuite extends AlascSuite {
 
   {
-    val size = 21
     val leftSize = 16
     val rightSize = 5
     implicit val permTupleArbitrary: Arbitrary[(Perm, Perm)] =
@@ -33,7 +30,7 @@ class PermPermSuite extends AlascSuite {
   {
     import Grps.arbGrp
     import net.alasc.perms.default._
-    val size = 6
+    // val size = 6
     val leftSize = 3
     val rightSize = 3
 

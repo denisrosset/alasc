@@ -8,7 +8,7 @@ import spire.algebra.{Eq, Group}
 import org.scalacheck.{Arbitrary, Gen}
 
 import net.alasc.finite._
-import spire.math.{SafeLong, max}
+import spire.math.SafeLong
 import spire.util.Opt
 
 import Arbitrary.arbitrary

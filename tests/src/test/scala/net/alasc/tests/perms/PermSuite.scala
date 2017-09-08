@@ -3,7 +3,7 @@ package perms
 
 import net.alasc.bsgs.{GrpChainPermutationAction}
 import net.alasc.laws.{AnyRefLaws, PermutationActionLaws, Permutations}
-import net.alasc.perms.{Cycle, Cycles, Perm}
+import net.alasc.perms.{Cycle, Perm}
 
 class PermSuite extends AlascSuite {
 

@@ -4,7 +4,6 @@ package lexico
 import spire.algebra.Order
 
 import net.alasc.tests.AlascSuite
-import spire.syntax.cfor._
 
 import org.scalacheck.{Arbitrary, Gen}
 

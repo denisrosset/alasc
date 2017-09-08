@@ -5,7 +5,7 @@ import spire.math.SafeLong
 
 import net.alasc.lexico.lexPermutationOrder
 import net.alasc.named.Symmetric
-import net.alasc.perms.{Perm, Perms}
+import net.alasc.perms.Perms
 import net.alasc.perms.default._
 
 class PermsSuite extends AlascSuite {

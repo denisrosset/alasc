@@ -14,7 +14,7 @@ final class ChainCheck[G:ClassTag:Eq:Group, F <: PermutationAction[G] with Singl
 
   def checkBaseAndStrongGeneratingSet(chain: Chain[G, F]): Checked = chain match {
     case node: Node[G, F] =>
-      implicit def action: F = node.action
+//      implicit def action: F = node.action
 //      TODO
 /*      val alg = algorithms.BasicAlgorithms.deterministic[P] // use deterministic algorithms to avoid looping forever on bad data
       val reconstructedChain = alg.completeChainFromGenerators(chain.strongGeneratingSet, chain.base)

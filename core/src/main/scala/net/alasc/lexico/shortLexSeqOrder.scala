@@ -15,7 +15,7 @@ object shortLexSeqOrder {
         var i = 0
         var c = 0
         while (i < n && c == 0) {
-          val c = Order[A].compare(x(i), y(i))
+          c = Order[A].compare(x(i), y(i))
           i += 1
         }
         c

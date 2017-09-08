@@ -3,8 +3,6 @@ package partitions
 
 import scala.collection.SortedSet
 
-import spire.laws.LatticeLaws
-
 import net.alasc.laws.{AnyRefLaws, Partitions}
 import net.alasc.tests.AlascSuite
 

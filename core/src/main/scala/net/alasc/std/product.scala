@@ -1,8 +1,5 @@
 package net.alasc.std
 
-import spire.algebra.Ring
-import spire.util.Opt
-
 import net.alasc.algebra._
 import net.alasc.finite.{FaithfulActionBuilder, FaithfulPermutationActionBuilder}
 import net.alasc.util._

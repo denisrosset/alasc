@@ -209,7 +209,6 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       case Opt(action) if areKernelsEqual(inActionUnsafe(lhs, action).kernel, inActionUnsafe(rhs, action).kernel) =>
         val lhs1 = inActionUnsafe(lhs, action)
         val rhs1 = inActionUnsafe(rhs, action)
-        val commonKernel = lhs1.kernel
         GrpChain.intersect[G, action.type](lhs1, rhs1.chain)
       case _ =>
         val action = faithfulAction(lhs.generators ++ rhs.generators)
@@ -217,7 +216,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
         val rhs1 = fromGrp(rhs, action)
         val commonKernel = lhs1.kernel
         assert(commonKernel.isTrivial)
-        GrpChain.intersect[G, action.type](fromGrp(lhs, action), fromGrp(rhs, action).chain)
+        GrpChain.intersect[G, action.type](lhs1, rhs1.chain)
     }
 
   // GrpStructure

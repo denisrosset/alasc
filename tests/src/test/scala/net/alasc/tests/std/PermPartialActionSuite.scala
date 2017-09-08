@@ -1,6 +1,6 @@
 package net.alasc.tests.std
 
-import spire.laws.{ActionLaws, PartialActionLaws}
+import spire.laws.ActionLaws
 
 import org.scalacheck.{Arbitrary, Gen}
 

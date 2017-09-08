@@ -166,7 +166,6 @@ class MutableChain[G, F <: PermutationAction[G] with Singleton](val start: Start
     // which case they are copied to newNode2, or (newNode1.beta <|+| g) != newNode1.beta, in which case they
     // are copied to newNode1
     // first update newNode2.ownGeneratorsPairs, and keep aside the pairs for newNode1
-    var chainIt = newNode2
     @tailrec def rec(current: Chain[G, F]): Unit = current match {
       case node: Node[G, F] =>
         cforRange(0 until node.nOwnGenerators) { i =>

@@ -1,11 +1,9 @@
 package net.alasc.std
 
-import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scala.collection.{SeqLike, Set, SetLike}
+import scala.collection.{Set, SetLike}
 
 import spire.algebra._
-import spire.std.SeqVectorEq
 import spire.syntax.group._
 import spire.syntax.action._
 

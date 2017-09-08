@@ -1,7 +1,7 @@
 package net.alasc.lexico
 
 import scala.annotation.tailrec
-import scala.collection.{SeqLike, SetLike}
+import scala.collection.SetLike
 
 import spire.algebra.Order
 import spire.std.int._

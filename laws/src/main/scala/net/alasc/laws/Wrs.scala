@@ -1,13 +1,9 @@
 package net.alasc.laws
 
-import spire.algebra.{Group, Ring}
-
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
 
-import net.alasc.algebra._
 import net.alasc.perms._
-import net.alasc.syntax.permutationAction._
 import net.alasc.wreath._
 
 object Wrs {

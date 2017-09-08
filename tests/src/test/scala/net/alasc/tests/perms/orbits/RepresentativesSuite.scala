@@ -1,6 +1,5 @@
 package net.alasc.tests.perms.orbits
 
-import spire.algebra.Order
 import spire.util.Opt
 
 import org.scalacheck._

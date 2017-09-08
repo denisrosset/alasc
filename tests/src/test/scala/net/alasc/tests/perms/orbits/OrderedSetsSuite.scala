@@ -2,23 +2,18 @@ package net.alasc.tests.perms.orbits
 
 import net.alasc.tests.AlascSuite
 import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
 
 import spire.algebra.Group
 
-import org.scalacheck.Gen
-
 import net.alasc.algebra.PermutationAction
 import net.alasc.laws.{Grps, Permutations, SetInts}
-import net.alasc.perms.{Perm, PermAlgebra}
+import net.alasc.perms.PermAlgebra
 import net.alasc.perms.orbits.Sets
 import net.alasc.perms.default._
-import spire.std.int._
 
 import net.alasc.lexico.lexSetIntOrder._
 import spire.compat._
 
-import net.alasc.std.set._
 import spire.std.boolean._
 
 

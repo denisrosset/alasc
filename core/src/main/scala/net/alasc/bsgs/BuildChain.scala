@@ -5,12 +5,9 @@ import scala.util.Random
 
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
-import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.finite.Grp
-import net.alasc.syntax.group._
 
 object BuildChain {
 

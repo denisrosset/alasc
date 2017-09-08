@@ -7,14 +7,11 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.bsgs.{BaseChange, BaseGuideLex, BaseGuideSeq, BaseOrder, BaseSwap, BuildChain, Chain, GrpChain, GrpChainPermutationAction, Node, SchreierSims, SubgroupSearch, Term}
+import net.alasc.bsgs.{BaseGuideLex, Chain, GrpChain, GrpChainPermutationAction, Node, Term}
 import net.alasc.finite.Grp
 import net.alasc.perms.{MutableOrbit, orbits}
-import net.alasc.syntax.permutationAction._
 import net.alasc.syntax.group._
 import net.alasc.util.NNOption
-
-import metal.syntax._
 
 object Sets {
 
@@ -35,8 +32,7 @@ object Sets {
   def toSmallest[G](grp: Grp[G], action: PermutationAction[G], set: Set[Int], symGrpOpt: Opt[Grp[G]] = Opt.empty[Grp[G]])
                                                              (implicit gcpa: GrpChainPermutationAction[G]): G = {
     implicit def ia: action.type = action
-    import gcpa.{baseChange, baseSwap, classTag, equ, group, schreierSims}
-    import spire.std.int._
+    import gcpa.{baseSwap, group}
     val n: Int = grp.largestMovedPoint(action) match {
       case NNOption(nval) => nval + 1
       case _ => return group.id
@@ -116,9 +112,8 @@ object Sets {
     */
   def isSmallestInOrbit[G](grp: Grp[G], action: PermutationAction[G], set: Set[Int], symGrpOpt: Opt[Grp[G]] = Opt.empty[Grp[G]])
                                                               (implicit gcpa: GrpChainPermutationAction[G]): Boolean = {
-    import gcpa.{baseChange, baseSwap, classTag, equ, group, schreierSims}
+    import gcpa.{baseSwap, group}
     implicit def ia: action.type = action
-    import spire.std.int._
     val n: Int = grp.largestMovedPoint(action) match {
       case NNOption(nval) => nval + 1
       case _ => return true

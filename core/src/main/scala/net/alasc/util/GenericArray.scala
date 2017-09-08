@@ -15,7 +15,7 @@ object GenericArray {
     case _ =>
       val array = new Array[AnyRef](iterable.size)
       var i = 0
-      var it = iterable.iterator
+      val it = iterable.iterator
       while (it.hasNext) {
         array(i) = it.next.asInstanceOf[AnyRef]
         i += 1

@@ -37,7 +37,7 @@ final class Start[G, A <: PermutationAction[G] with Singleton](var next: Chain[G
   /** Pretty prints the builder, while doing basic chain consistency checks. */
   override def toString = {
     import scala.collection.mutable.StringBuilder
-    var sb = new StringBuilder
+    val sb = new StringBuilder
     sb ++= "()"
     @tailrec def rec(chain: Chain[G, A]): Unit = chain match {
       case IsMutableNode(mn) =>
@@ -126,7 +126,7 @@ sealed trait Chain[G, A <: PermutationAction[G] with Singleton] extends Elem[G, 
 
   def baseEquals(baseToCheck: Seq[Int]) = ChainRec.baseEquals(chain, baseToCheck.iterator)
 
-  def basicSift(g: G)(implicit group: Group[G], equ: Eq[G]): (Seq[Int], G) = ChainRec.basicSift(chain, g)
+  def basicSift(g: G)(implicit G: Group[G]): (Seq[Int], G) = ChainRec.basicSift(chain, g)
 
   /*
   def siftOther[Q:Eq:Group:PermutationAction](q: Q)(implicit group: Group[G], equ: Eq[G]): Opt[G] = chain match {

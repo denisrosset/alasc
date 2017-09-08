@@ -1,11 +1,7 @@
 package net.alasc.perms
 
-import spire.algebra.Order
-import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.math.{min, max}
-
-import net.alasc.algebra.PermutationAction
 
 /** Mutable BitSet-like structure to explore orbits of permutations. Every element of the domain
   * is stored with two bits:

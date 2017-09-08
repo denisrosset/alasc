@@ -2,24 +2,15 @@ package net.alasc.laws
 
 import scala.reflect.ClassTag
 import spire.algebra._
-import spire.math.SafeLong
 import org.typelevel.discipline.Laws
 import org.scalacheck.{Arbitrary, Gen, Prop}
-import Arbitrary.arbitrary
 import org.scalacheck.Prop._
-import spire.syntax.action._
 import spire.syntax.order._
 import spire.syntax.group._
 import spire.std.int._
-import spire.util.Opt
-import net.alasc.algebra._
 import net.alasc.blackbox.{BBGrpGroup, BBGrpPermutationAction, BBGrpStructure}
 import net.alasc.bsgs.FixingPartition
 import net.alasc.finite._
-import net.alasc.lexico.lexPermutationOrder
-import net.alasc.perms.Perm
-import net.alasc.syntax.all._
-import spire.NoImplicit
 
 object GrpLaws {
 
@@ -73,8 +64,6 @@ trait GrpLaws[G] extends Laws {
       },
 
       "conjugatedBy composition" -> forAll { (grp: Grp[G], h1: G, h2: G) =>
-        val hInv1 = h1.inverse
-        val hInv2 = h2.inverse
         grp.conjugatedBy(h1).conjugatedBy(h2) === grp.conjugatedBy(h1 |+| h2)
       },
 

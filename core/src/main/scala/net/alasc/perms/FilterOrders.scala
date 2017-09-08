@@ -1,6 +1,5 @@
 package net.alasc.perms
 
-import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
@@ -9,12 +8,10 @@ import net.alasc.algebra.PermutationAction
 import spire.syntax.action._
 import spire.syntax.cfor._
 import spire.syntax.eq._
-import spire.syntax.group._
 
 import metal.syntax._
 import metal.mutable.FixedBitSet
 
-import net.alasc.util.ParQuickSort
 import net.alasc.syntax.permutationAction._
 
 object FilterOrders {

@@ -13,7 +13,7 @@ import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.blackbox.RandomBag
-import net.alasc.finite.{Grp, GrpStructure}
+import net.alasc.finite.GrpStructure
 import net.alasc.syntax.permutationAction._
 import net.alasc.util.NNOption
 import net.alasc.syntax.group._
@@ -52,7 +52,7 @@ object SchreierSims {
     * Returns whether a new strong generator has been added either to the coset chain or the kernel.
     */
   def siftAndAddStrongGenerator[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
-  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G])(implicit action: A): Boolean = {
+  (mutableChain: MutableChain[G, A], element: G, kb: KernelBuilder[G]): Boolean = {
     SchreierSims.siftAndUpdateBaseFrom(mutableChain, mutableChain.start, element) match {
       case SiftResult.Stop(generator, node) =>
         mutableChain.addStrongGeneratorHere(node, generator, generator.inverse)
@@ -61,7 +61,6 @@ object SchreierSims {
         val kmc_ = kb.mutableChain // type juggling
       val faithfulAction = kmc_.start.action
         type F = faithfulAction.type
-        implicit def ifa: F = faithfulAction
         val kmc: MutableChain[G, F] = kmc_.asInstanceOf[MutableChain[G, F]]
         siftAndAddStrongGenerator(kmc, kernelElement, KernelBuilder.trivial[G])
       case _: SiftResult.Id[G, A] => false // the element sifts, so no new strong generator
@@ -125,7 +124,6 @@ object SchreierSims {
               val kmc_ = kb.mutableChain // type juggling
               val faithfulAction = kmc_.start.action
               type FA = faithfulAction.type
-              implicit def ifa: FA = faithfulAction
               val kmc: MutableChain[G, FA] = kmc_.asInstanceOf[MutableChain[G, FA]]
               siftAndUpdateBaseFrom(kmc, kmc.start, kg) match {
                 case _: SiftResult.NotId[G, FA] => sys.error("Elements are sifted completely by a faithful action")
@@ -151,7 +149,6 @@ object SchreierSims {
   findNewStrongGeneratorAt(mutableChain, mutableNode, kb) match {
     case SiftResult.Stop(newGenerator, where) =>
       // there is a new strong generator at the node `where`, add it there and restart the search there
-      implicit def action = mutableChain.start.action
       mutableChain.addStrongGeneratorHere(where, newGenerator, newGenerator.inverse)
       completeStrongGeneratorsAt(mutableChain, where, kb)
     case SiftResult.NotId(kernelGenerator) => sys.error("This case is already handled during the strong generator search")

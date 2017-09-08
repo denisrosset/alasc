@@ -10,7 +10,7 @@ import spire.syntax.group._
 import net.alasc.perms.Perm
 import net.alasc.syntax.all._
 
-import net.alasc.attributes.{Attributable, Attributes}
+import net.alasc.attributes.Attributes
 
 /** Finite group base class. */
 abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>

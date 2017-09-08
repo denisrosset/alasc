@@ -94,7 +94,7 @@ class Partition(val linkArray: Array[Int],
   /** Returns the blocks that intersect the set `points`. */
   def blocksFor(points: Set[Int]): Seq[Block] = {
     val buf = mutable.ArrayBuffer.empty[Block]
-    var remaining = mutable.BitSet.empty ++= points
+    val remaining = mutable.BitSet.empty ++= points
     while (remaining.nonEmpty && remaining.min < size) {
       val m = remaining.min
       val b = blockFor(m)
@@ -182,7 +182,7 @@ object Partition extends PartitionLowPriority {
 
   def fromPermutation[P: PermutationAction](n: Int, p: P): Partition = {
     val rem = mutable.BitSet.empty ++= (0 until n)
-    var blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
+    val blocks = mutable.ArrayBuffer.empty[immutable.BitSet]
     while (rem.nonEmpty) {
       val m = rem.min
       val orbit = immutable.BitSet.empty ++ p.orbit(m)

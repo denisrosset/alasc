@@ -8,12 +8,10 @@ import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
 import spire.syntax.action._
 import spire.syntax.cfor._
-import spire.syntax.eq._
 import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.perms.Perm
 import net.alasc.syntax.permutationAction._
 
 object MutableChainRec {

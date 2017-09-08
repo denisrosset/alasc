@@ -24,7 +24,7 @@ object Seqs {
     implicit val gcpa: GrpChainPermutationAction[G]
     implicit def cbf: CanBuildFrom[Nothing, T, ST]
 
-    import gcpa.{baseChange, baseSwap, group, schreierSims}
+    import gcpa.{baseSwap, group}
 
     def seq: Seq[T] = Seq.tabulate(n)(i => element(intLabels(i)))
     def grp: GrpChain[G, A]

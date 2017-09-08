@@ -5,7 +5,6 @@ import Arbitrary.arbitrary
 
 import spire.syntax.cfor._
 
-import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms._
 import net.alasc.syntax.permutationAction._

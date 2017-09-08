@@ -9,7 +9,6 @@ import spire.syntax.group._
 import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
-import net.alasc.finite.Grp
 
 object BuildMutableChain {
 

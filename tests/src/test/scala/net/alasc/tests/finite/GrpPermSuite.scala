@@ -1,11 +1,8 @@
 package net.alasc.tests
 package finite
 
-import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
+import spire.laws.{LatticePartialOrderLaws}
 
-import org.scalacheck.{Arbitrary, Gen}
-
-import net.alasc.partitions.Partition
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.laws._
 import net.alasc.perms.Perm

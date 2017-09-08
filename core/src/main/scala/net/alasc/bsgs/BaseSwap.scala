@@ -3,18 +3,16 @@ package net.alasc.bsgs
 import scala.reflect.ClassTag
 import scala.util.Random
 
-import spire.algebra.{Eq, Group}
+import spire.algebra.Group
 import spire.syntax.action._
 import spire.syntax.order._
 import spire.syntax.group._
-import spire.util.Opt
 
 import net.alasc.algebra.PermutationAction
 import net.alasc.perms.MutableOrbit
 import metal.syntax._
 
 import net.alasc.perms.orbits
-import net.alasc.syntax.group._
 
 abstract class BaseSwap {
 

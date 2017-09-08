@@ -44,7 +44,6 @@ final class BaseChangeFromScratch(implicit val schreierSims: SchreierSims) exten
 final class BaseChangeSwap(implicit val baseSwap: BaseSwap) extends BaseChange {
 
   def changeBase[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton](mutableChain: MutableChain[G, A], kernel: Chain.Generic[G], guide: BaseGuide): Unit = {
-    implicit def action = mutableChain.start.action
     val iter = guide.iterator
     @tailrec def rec(prev: StartOrNode[G, A], lastMutableStartOrNode: MutableStartOrNode[G, A]): Unit = {
       if (prev.next.isTrivial || !iter.hasNext)

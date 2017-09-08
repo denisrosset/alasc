@@ -2,7 +2,7 @@ package net.alasc.tests
 package partitions
 
 import spire.algebra.lattice.{BoundedLattice, MinMaxLattice}
-import spire.laws.{LatticeLaws, LatticePartialOrderLaws}
+import spire.laws.LatticePartialOrderLaws
 
 import org.scalacheck.{Arbitrary, Gen}
 

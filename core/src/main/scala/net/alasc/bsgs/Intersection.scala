@@ -13,7 +13,7 @@ import net.alasc.syntax.group._
 /** Defines the subgroup which intersect `chain2`, given in action `action` (not necessarily faithful). */
 case class Intersection[G:ClassTag:Eq:Group, A <: PermutationAction[G] with Singleton]
   (chain2: Chain[G, A], commonKernel: Chain.Generic[G])
-  (implicit val action: A, baseChange: BaseChange, schreierSims: SchreierSims) extends SubgroupDefinition[G, A] {
+  (implicit val action: A) extends SubgroupDefinition[G, A] {
 
   def baseGuideOpt = Opt(BaseGuideSeq(chain2.base))
 

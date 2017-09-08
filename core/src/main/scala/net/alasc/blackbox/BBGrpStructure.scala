@@ -4,8 +4,6 @@ import scala.reflect.ClassTag
 
 import spire.algebra.{Eq, Group}
 import spire.math.SafeLong
-import spire.syntax.eq._
-import spire.syntax.group._
 import net.alasc.finite.{Grp, GrpGroup, GrpStructure}
 
 class BBGrpStructure[G](implicit

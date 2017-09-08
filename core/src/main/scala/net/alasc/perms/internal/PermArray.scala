@@ -82,7 +82,7 @@ final class PermArray(val images: Array[Int]) extends PermBase { lhs =>
 
   def toPerm32 = {
     assert(isValidPerm32)
-    var res = new Perm32
+    val res = new Perm32
     var k = images.length - 1
     while (k >= 0) {
       Perm32Encoding.encode(res, k, image(k))

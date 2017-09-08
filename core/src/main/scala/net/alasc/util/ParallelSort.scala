@@ -14,7 +14,7 @@ object ParInsertionSort {
   final def sort[@specialized A:Order:ClassTag, B:ClassTag](data: Array[A], external: Array[B]): Unit =
     sort(data, external, 0, data.length)
 
-  final def sort[@specialized A, B](data: Array[A], external: Array[B], start: Int, end: Int)(implicit o:Order[A], ct:ClassTag[A]): Unit = {
+  final def sort[@specialized A, B](data: Array[A], external: Array[B], start: Int, end: Int)(implicit o:Order[A]): Unit = {
 
     var i = start + 1
     while (i < end) {
@@ -53,7 +53,7 @@ object ParQuickSort {
     qsort(data, external, next + 1, right)
   }
 
-  final def partition[@specialized A, B](data: Array[A], external: Array[B], left: Int, right: Int, pivot: Int)(implicit o:Order[A], ct:ClassTag[A]): Int = {
+  final def partition[@specialized A, B](data: Array[A], external: Array[B], left: Int, right: Int, pivot: Int)(implicit o:Order[A]): Int = {
 
     val value = data(pivot)
 

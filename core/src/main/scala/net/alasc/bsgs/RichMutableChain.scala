@@ -113,7 +113,6 @@ final class RichMutableChain[G, A <: PermutationAction[G] with Singleton](val st
     * this node with base point `beta`. */
   def changeBasePointAfter(afterThis: MutableStartOrNode[G, A], beta: Int)
     (implicit baseSwap: BaseSwap, classTag: ClassTag[G], group: Group[G]): Node[G, A] = {
-    implicit def action: A = start.action
     mutableChain.putExistingBasePointAfter(afterThis, beta).getOrElse {
       mutableChain.insertNewBasePointAfter(afterThis, beta)
       mutableChain.putExistingBasePointAfter(afterThis, beta).get
@@ -180,7 +179,6 @@ final class RichMutableChain[G, A <: PermutationAction[G] with Singleton](val st
     */
   def addStrongGeneratorHere(mutableNode: MutableNode[G, A], gen: G, genInv: G)
     (implicit classTag: ClassTag[G], group: Group[G]): Unit = {
-    implicit def action = mutableChain.start.action
     mutableNode.addToOwnGenerators(gen, genInv)
     updateTransversalsFrom(mutableNode, gen, genInv)
   }
@@ -198,8 +196,7 @@ final class RichMutableChain[G, A <: PermutationAction[G] with Singleton](val st
   }
 
   /** Removes redundant strong generators in the given chain. */
-  def removeRedundantGenerators()
-      (implicit group: Group[G]): Unit = {
+  def removeRedundantGenerators(): Unit = {
     @tailrec def rec(mutableNode: MutableNode[G, A]): Unit = {
       mutableNode.removeRedundantGenerators
       mutableNode.prev match {

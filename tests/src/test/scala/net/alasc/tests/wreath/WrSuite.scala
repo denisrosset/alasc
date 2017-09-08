@@ -1,7 +1,6 @@
 package net.alasc.tests.wreath
 
 import spire.laws.{Perm => _}
-import spire.math.SafeLong
 
 import org.scalacheck.Arbitrary
 
@@ -13,9 +12,6 @@ import net.alasc.wreath.{Wr, WrFaithfulPermutationAction}
 import net.alasc.perms.default._
 
 class WrSuite extends AlascSuite {
-
-  import Permutations.arbPerm
-
 
   implicit val wrNoShrink = noShrink[Wr[Perm]]
 

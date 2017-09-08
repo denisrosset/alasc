@@ -7,7 +7,6 @@ import spire.syntax.cfor._
 import metal.syntax._
 
 import net.alasc.algebra._
-import spire.syntax.group._
 
 import net.alasc.finite.FaithfulPermutationActionBuilder
 import net.alasc.syntax.permutationAction._

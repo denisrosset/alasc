@@ -1,20 +1,12 @@
 package net.alasc.std
 
-import scala.language.higherKinds
-import scala.collection.generic.CanBuildFrom
-import scala.collection.SeqLike
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.ClassTag
 
 import spire.algebra._
-import spire.algebra.partial._
 import spire.syntax.cfor._
-import spire.syntax.group._
 import spire.syntax.action._
-import spire.util.Opt
 
 import net.alasc.algebra._
-import net.alasc.syntax.permutationAction._
 
 class SeqPermutationAction[A, G:PermutationAction] extends Action[Seq[A], G] {
 

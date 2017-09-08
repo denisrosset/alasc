@@ -2,7 +2,6 @@ package net.alasc.named
 
 import spire.math.SafeLong
 
-import net.alasc.algebra._
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms._
 
