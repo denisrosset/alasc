@@ -32,7 +32,7 @@ object Mathieu {
           Perm(1,16,11,3)(2,9,21,12)(4,5,8,23)(6,22,14,18)(13,20)(15,17)),
         SafeLong(BigInt(10200960))
       )),
-      24 -> ((IndexedSeq(Perm("0123456789ABCDEFGHIJKLM")("N"),
+      24 -> ((IndexedSeq(Perm("0123456789ABCDEFGHIJKLM"),
         Perm("0N")("1M")("2B")("3F")("4H")("59")("6J")("7D")("8K")("AG")("CL")("EI"),
         Perm("2G968")("3CDI4")("7HABM")("EJLKF")),
         SafeLong(BigInt(244823040))
