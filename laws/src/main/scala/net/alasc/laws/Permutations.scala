@@ -2,12 +2,12 @@ package net.alasc.laws
 
 import org.scalacheck.{Arbitrary, Gen}
 import Arbitrary.arbitrary
-
 import spire.syntax.cfor._
-
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.perms._
+import net.alasc.perms.sized.{Perm16, Perm32}
 import net.alasc.syntax.permutationAction._
+import spire.std.int._
 
 /** Generators and arbitraries for permutations.
   * 
@@ -55,5 +55,35 @@ object Permutations {
 
   implicit def permutationGrp(size: Int)(implicit ev: GrpGroup[Perm]): Gen[Grp[Perm]] =
     Grps.fromElements(permForSize(size))
+
+  // sized
+
+
+  val genPerm32: Gen[Perm32] = for {
+    seq <- Gen.containerOfN[Seq, Int](32, Gen.choose(1, 10000))
+    res = Perm.sorting(seq)
+  } yield Perm32.fromPerm(res)
+
+  implicit val arbPerm32: Arbitrary[Perm32] = Arbitrary(genPerm32)
+
+  val genPerm16: Gen[Perm16] = for {
+    seq <- Gen.containerOfN[Seq, Int](16, Gen.choose(1, 10000))
+    res = Perm.sorting(seq)
+  } yield Perm16.fromPerm(res)
+
+  implicit val arbPerm16: Arbitrary[Perm16] = Arbitrary(genPerm16)
+
+  implicit val perm32Instances: Instances[Perm32] =
+    Instances[Perm32](Seq(Perm32(0,1), Perm32.id))
+
+  implicit val perm16Instances: Instances[Perm16] =
+    Instances[Perm16](Seq(Perm16(0,1), Perm16.id))
+
+  implicit val perm32Cloner: Cloner[Perm32] =
+    Cloner( (p: Perm32) => Perm32.fromPerm(p.toPerm) )
+
+  import net.alasc.perms.sized.implicits._
+  implicit val perm16Cloner: Cloner[Perm16] =
+    Cloner( (p: Perm16) => Perm16.fromPerm(p.toPerm) )
 
 }

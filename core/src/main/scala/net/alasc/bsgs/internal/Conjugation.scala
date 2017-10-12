@@ -1,22 +1,17 @@
 package net.alasc.bsgs.internal
 
-import scala.annotation.tailrec
-
 import spire.algebra.{Eq, Group}
 import spire.util.Opt
 import net.alasc.algebra.PermutationAction
-import net.alasc.bsgs.{BaseChange, BaseGuide, BaseGuideIterator, BaseGuideSet, BaseSwap, Chain, ChainRec, GrpChain, GrpChainPermutationAction, Node, SchreierSims, SubgroupDefinition, SubgroupSearch, SubgroupTest, Term}
+import net.alasc.bsgs.{BaseChange, BaseGuide, BaseGuideIterator, BaseSwap, Chain, GrpChain, Node, SubgroupDefinition, SubgroupTest, Term}
 
 import metal.syntax._
 import spire.std.int._
 import spire.syntax.action._
 import spire.syntax.group._
 import spire.syntax.eq._
-import spire.syntax.cfor.cforRange
-import net.alasc.finite.Grp
 import net.alasc.partitions.Partition
-import net.alasc.perms.orbits.Sets.compareBoolean
-import net.alasc.perms.{MutableOrbit, Perm, orbits}
+import net.alasc.perms.{MutableOrbit, orbits}
 import net.alasc.syntax.group._
 
 
@@ -160,7 +155,6 @@ object Conjugation {
         val newImage = prevImage <|+| g2
         val b = curG |+|> newImage
         if (node.inOrbit(b)) {
-          val bg = b <|+| curG
           rec(node.beta, newImage, node.u(b) |+| curG, node.next, GrpChain.stabilizer(curK, newImage), sOrbit)
         } else Opt.empty[G]
       case node: Node[G, A] =>

@@ -14,7 +14,7 @@ case class ConjugacyClasses[G](grp: Grp[G], classes: Seq[ConjugacyClass[G]])
 object ConjugacyClasses {
 
   def apply[G:GrpGroup](grp: Grp[G]): ConjugacyClasses[G] = {
-    import grp.{equ, group}
+    import grp.group
     val classes = scala.collection.mutable.ArrayBuffer.empty[ConjugacyClass[G]]
     classes += ConjugacyClass(grp, Group[G].id, grp)
     var size: SafeLong = SafeLong.one

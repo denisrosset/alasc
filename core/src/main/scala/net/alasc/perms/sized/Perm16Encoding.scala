@@ -1,9 +1,10 @@
-package net.alasc.perms
-package internal
+package net.alasc.perms.sized
 
 import scala.collection.immutable
 
-import net.alasc.util._
+import spire.syntax.cfor.cforRange
+import net.alasc.perms.Perm
+import net.alasc.perms.internal.Prm
 
 /** Permutation with domain in [0, 15] encoded in a Long used as a bit string.
   * 
@@ -13,6 +14,7 @@ import net.alasc.util._
   * - the value of these 4 bits do not give the image k' itself, rather the shift (k' - k)
   */
 object Perm16Encoding {
+
   import java.lang.Long.{numberOfLeadingZeros, numberOfTrailingZeros}
 
   @inline def permMask(preimage: Int): Long = (0xF.toLong << (preimage * 4))
@@ -32,8 +34,6 @@ object Perm16Encoding {
   @inline def movedPointsUpperBound = 15
 
   @inline def idEncoding: Long = 0L
-
-  @inline def id: Perm16 = new Perm16(idEncoding)
 
   def invImage(encoding: Long, i: Int): Int = {
     val low = smallestMovedPoint(encoding)
@@ -91,19 +91,6 @@ object Perm16Encoding {
     res
   }
 
-  def minus(encoding: Long, n: Int): Long = {
-    assert(n >= 0 && n <= 16)
-    assert((encoding & LongBits.rightFill(n*4)) == 0)
-    encoding >>> (n*4)
-  }
-
-  def plus(encoding: Long, n: Int): Long = {
-    assert(n >= 0 && n <= 16)
-    assert(n <= 16)
-    assert((encoding & LongBits.leftFill(n*4)) == 0)
-    encoding << (n*4)
-  }
-
   def op(lhs: Long, rhs: Long): Long = {
     // both are either identity or (0,1)
     if (lhs >= 0L && lhs <= 0xFFL && rhs >= 0L && rhs <= 0xFFL) return lhs ^ rhs
@@ -116,6 +103,39 @@ object Perm16Encoding {
       k -= 1
     }
     res
+  }
+
+  def toPerm32(encoding: Long): Perm32 = {
+    val res = new Perm32
+    var k = largestMovedPoint(encoding)
+    val low = smallestMovedPoint(encoding)
+    while (k >= low) {
+      Perm32Encoding.encode(res, k, decode(encoding, k))
+      k -= 1
+    }
+    res
+  }
+
+  def fromPrm(prm: Prm): Long = {
+    import net.alasc.perms.internal.implicits._
+    var k = prm.largestMovedPoint
+    if (k == -1) return idEncoding
+    var encoding = 0L
+    if (k >= 16) sys.error("Prm does not fit into Perm16")
+    val low = prm.smallestMovedPoint
+    while (k >= low) {
+      val i = prm.image(k)
+      encoding |= encode(k, i)
+      k -= 1
+    }
+    encoding
+  }
+
+  def toPrm(encoding: Long): Prm = {
+    val n = Perm16Encoding.largestMovedPoint(encoding) + 1
+    val images = new Array[Int](n)
+    cforRange(0 until n) { i => images(i) = image(encoding, i) }
+    images.asInstanceOf[Prm]
   }
 
   def imagesEncoding(images: Array[Int], supportMax: Int = 15): Long = {

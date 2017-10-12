@@ -1,9 +1,9 @@
-package net.alasc.perms
-package internal
+package net.alasc.perms.sized
 
 import scala.collection.immutable
 
-import net.alasc.util._
+import net.alasc.perms.internal.Prm
+import net.alasc.util.LongBits.leftFill
 
 /** 5 bits per permutation image shift * 32 images = 160 bits.
   * 
@@ -12,7 +12,6 @@ import net.alasc.util._
   * - long3 stores image shifts for indices 24...31 in bits 0...39
   */
 object Perm32Encoding {
-  import LongBits._
 
   @inline def maskWidth = 5
   //                             FEDCBA9876543210
@@ -47,9 +46,11 @@ object Perm32Encoding {
     else
       -1
 
+  @inline final def seed = 0xf444c3b3
+
   def hash(long2: Long, long1: Long, long0: Long) = {
-    import scala.util.hashing.MurmurHash3.{mix, finalizeHash}
-    var h = PermHash.seed
+    import scala.util.hashing.MurmurHash3.{finalizeHash, mix}
+    var h = seed
     h = mix(h, long0.toInt & mask6)
     h = mix(h, (long0 >> 30).toInt)
     h = mix(h, long1.toInt & mask6)
@@ -149,7 +150,7 @@ object Perm32Encoding {
       encoding += (l0 & 0xF) << (k * 4)
       l0 = l0 >> maskWidth
     }
-    new Perm16(encoding)
+    encoding.asInstanceOf[Perm16]
   }
 
   def image(long2: Long, long1: Long, long0: Long, preimage: Int): Int =
@@ -198,6 +199,20 @@ object Perm32Encoding {
     res
   }
 
+  def fromPrm(prm: Prm): Perm32 = {
+    import net.alasc.perms.internal.implicits._
+    var k = prm.largestMovedPoint
+    if (k == -1) return Perm32.id
+    val low = prm.smallestMovedPoint
+    val res = new Perm32
+    while (k >= low) {
+      val i = prm.image(k)
+      encode(res, k, i)
+      k -= 1
+    }
+    res
+  }
+
   def fromSupportAndImageFun(support: Set[Int], image: Int => Int): Perm32 = {
     val res = new Perm32
     support.foreach { k =>
@@ -207,24 +222,14 @@ object Perm32Encoding {
     res
   }
 
-  def op3232(lhs: Perm32, rhs: Perm32): Perm = {
+  def combine(lhs: Perm32, rhs: Perm32): Perm32 = {
     val low = Perm32Encoding.smallestMovedPoint(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
     var k = Perm32Encoding.largestMovedPoint(lhs.long2 | rhs.long2, lhs.long1 | rhs.long1, lhs.long0 | rhs.long0)
     var i = 0
-    assert(k > Perm16Encoding.movedPointsUpperBound)
     @inline def img(preimage: Int) = decode(rhs.long2, rhs.long1, rhs.long0, decode(lhs.long2, lhs.long1, lhs.long0, preimage))
     while (k >= low) {
       i = img(k)
       if (k != i) {
-        if (k <= Perm16Encoding.movedPointsUpperBound) {
-          var encoding = Perm16Encoding.encode(k, i)
-          k -= 1
-          while (k >= low) {
-            encoding |= Perm16Encoding.encode(k, img(k))
-            k -= 1
-          }
-          return new Perm16(encoding)
-        } else {
           val res = new Perm32
           encode(res, k, i)
           k -= 1
@@ -233,11 +238,10 @@ object Perm32Encoding {
             k -= 1
           }
           return res
-        }
       }
       k -= 1
     }
-    Perm16Encoding.id
+    Perm32.id
   }
 
   def reduceMin(i: Int, j: Int): Int =
@@ -246,79 +250,5 @@ object Perm32Encoding {
     else i.min(j)
 
   def reduceMax(i: Int, j: Int): Int = i.max(j)
-
-  def op1632(lhs: Perm16, rhs: Perm32): Perm = {
-    if (lhs.isId) return rhs
-    val low = reduceMin(Perm16Encoding.smallestMovedPoint(lhs.encoding), Perm32Encoding.smallestMovedPoint(rhs.long2, rhs.long1, rhs.long0))
-    var k = reduceMax(Perm16Encoding.largestMovedPoint(lhs.encoding), Perm32Encoding.largestMovedPoint(rhs.long2, rhs.long1, rhs.long0))
-    var i = 0
-    assert(k > Perm16Encoding.movedPointsUpperBound)
-    @inline def img(preimage: Int) = {
-      val inter = if (preimage > Perm16Encoding.movedPointsUpperBound) preimage else Perm16Encoding.decode(lhs.encoding, preimage)
-      decode(rhs.long2, rhs.long1, rhs.long0, inter)
-    }
-    while (k >= low) {
-      i = img(k)
-      if (k != i) {
-        if (k <= Perm16Encoding.movedPointsUpperBound) {
-          var encoding = Perm16Encoding.encode(k, i)
-          k -= 1
-          while (k >= low) {
-            encoding |= Perm16Encoding.encode(k, img(k))
-            k -= 1
-          }
-          return new Perm16(encoding)
-        } else {
-          val res = new Perm32
-          encode(res, k, i)
-          k -= 1
-          while (k >= low) {
-            Perm32Encoding.encode(res, k, img(k))
-            k -= 1
-          }
-          return res
-        }
-      }
-      k -= 1
-    }
-    Perm16Encoding.id
-  }
-
-  def op3216(lhs: Perm32, rhs: Perm16): Perm = {
-    if (rhs.isId) lhs
-    val low = reduceMin(Perm32Encoding.smallestMovedPoint(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.smallestMovedPoint(rhs.encoding))
-    var k = reduceMax(Perm32Encoding.largestMovedPoint(lhs.long2, lhs.long1, lhs.long0), Perm16Encoding.largestMovedPoint(rhs.encoding))
-    var i = 0
-    assert(k > Perm16Encoding.movedPointsUpperBound)
-    @inline def img(preimage: Int) = {
-      val inter = decode(lhs.long2, lhs.long1, lhs.long0, preimage)
-      if (inter > Perm16Encoding.movedPointsUpperBound) inter else Perm16Encoding.decode(rhs.encoding, inter)
-    }
-    while (k >= low) {
-      i = img(k)
-      if (k != i) {
-        if (k <= Perm16Encoding.movedPointsUpperBound) {
-          var encoding = Perm16Encoding.encode(k, i)
-          k -= 1
-          while (k >= low) {
-            encoding |= Perm16Encoding.encode(k, img(k))
-            k -= 1
-          }
-          return new Perm16(encoding)
-        } else {
-          val res = new Perm32
-          Perm32Encoding.encode(res, k, i)
-          k -= 1
-          while (k >= low) {
-            Perm32Encoding.encode(res, k, img(k))
-            k -= 1
-          }
-          return res
-        }
-      }
-      k -= 1
-    }
-    Perm16Encoding.id
-  }
 
 }

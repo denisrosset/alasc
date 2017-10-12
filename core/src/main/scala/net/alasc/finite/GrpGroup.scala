@@ -30,24 +30,42 @@ trait GrpGroup[G] {
     fromGeneratorsAndOrder(grp.generators.map(g => hInv |+| g |+| h), grp.order)
   }
 
-  /** Returns whether g1 and g2 are part of the same conjugacy class of G. */
-  def areConjugate(grp: Grp[G], g1: G, g2: G): Boolean
+  /** Returns whether g1 and g2 are part of the same conjugacy class of G.
+    * @param grp A finite group
+    * @param g1  An element of grp
+    * @param g2  Another element of grp
+    */
+  def areConjugate(grp: Grp[G], g1: G, g2: G): Boolean // TODO allow g1 and g2 to not be elements of the group
 
   /** Returns whether g1 and g2 are part of the same conjugacy class of G.
+    * @param grp A finite group
+    * @param g1  An element of grp
+    * @param g2  Another element of grp
     * @param g2CentralizerSubgroup Subgroup of the centralizer of g2 in grp
     */
   def areConjugate(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]): Boolean
 
-  /** Returns, if it exists, g such that g1 g = g g2. */
+  /** Returns, if it exists, g such that g1 g = g g2. g1 and g2 are elements of G.
+    * @param grp A finite group
+    * @param g1  An element of grp
+    * @param g2  Another element of grp
+    */
   def findConjugation(grp: Grp[G], g1: G, g2: G): Opt[G]
 
-  /** Returns, if it exists, g such that g1 g = g g2.
+  /** Returns, if it exists, g such that g1 g = g g2. g1 and
+    * @param grp A finite group
+    * @param g1  An element of grp
+    * @param g2  Another element of grp
     *
     * @param g2CentralizerSubgroup Subgroup of the centralizer of g2 in grp
     */
   def findConjugation(grp: Grp[G], g1: G, g2: G, g2CentralizerSubgroup: Opt[Grp[G]]): Opt[G]
 
-  /** Returns the centralizer of g, a subgroup of grp that satisfies H = {h | h g = g h}. */
+  /** Returns the centralizer of g, a subgroup of grp that satisfies H = {h | h g = g h}.
+    * @param grp A finite group
+    * @param g   An element of grp
+    * @return
+    */
   def centralizer(grp: Grp[G], g: G): Grp[G]
 
   // with two Grp[G] arguments
