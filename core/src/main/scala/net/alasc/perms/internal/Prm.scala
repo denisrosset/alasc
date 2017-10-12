@@ -2,12 +2,13 @@ package net.alasc.perms.internal
 
 import scala.util.Random
 
+import cats.kernel.Eq
 import spire.algebra.{Group, Order}
 import spire.syntax.cfor.cforRange
 import net.alasc.perms.Cycle
 
 final class PrmGroup extends Group[Prm] {
-  // TODO: add more
+  override def isEmpty(lhs: Prm)(implicit ev: Eq[Prm]) = new PrmOps(lhs).isId
   def inverse(lhs: Prm): Prm = new PrmOps(lhs).inverse
   def empty = Prm.id
   def combine(lhs: Prm, rhs: Prm): Prm = new PrmOps(lhs) |+| rhs

@@ -33,6 +33,8 @@ object PermAlgebra extends Eq[Perm] with Group[Perm] with PermutationAction[Perm
 
   def inverse(p: Perm): Perm = p.inverse
 
+  override def isEmpty(a: Perm)(implicit ev: Eq[Perm]) = a.isId
+
   def empty = Perm.id
 
   def movedPointsUpperBound(p: Perm) = new NNOption(p.p.length - 1)
