@@ -1,16 +1,16 @@
 // inspired by Spire build.sbt file
 
-val scala210Version = "2.10.6"
-val scala211Version = "2.11.11"
-val scala212Version = "2.12.3"
+val scala210Version = "2.10.7"
+val scala211Version = "2.11.12"
+val scala212Version = "2.12.5"
 
 val attributesVersion = "0.30"
-val disciplineVersion = "0.7.2"
-val fastParseVersion = "0.4.2"
-val metalVersion = "0.14.1.0"
-val scalaCheckVersion = "1.13.4"
-val scalaTestVersion = "3.0.1"
-val spireVersion = "0.14.1"
+val disciplineVersion = "0.8"
+val fastParseVersion = "1.0.0"
+val metalVersion = "0.15.0.0"
+val scalaCheckVersion = "1.13.5"
+val scalaTestVersion = "3.0.5"
+val spireVersion = "0.15.0"
 
 lazy val alasc = (project in file("."))
   .settings(moduleName := "alasc")
@@ -90,8 +90,8 @@ lazy val publishSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish := (),
-  publishLocal := (),
+  publish := (()),
+  publishLocal := (()),
   publishArtifact := false
 )
 
@@ -140,7 +140,7 @@ lazy val warnUnusedImport = Seq(
     }
   },
   scalacOptions in (Compile, console) ~= {_.filterNot("-Ywarn-unused-import" == _)},
-  scalacOptions in (Test, console) <<= (scalacOptions in (Compile, console))
+  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
 )
 
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
