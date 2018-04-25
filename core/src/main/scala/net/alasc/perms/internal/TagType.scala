@@ -4,8 +4,8 @@ trait TagType
 
 object TagType {
 
-  trait Immutable <: TagType
-  trait Mutable[I <: XInt] <: TagType
-  trait Scratch[I <: XInt] <: TagType
+  trait Immutable extends TagType
+  trait Mutable[I <: XInt] extends TagType
+  trait Scratch[I <: XInt] extends TagType
 
 }
