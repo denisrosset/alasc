@@ -35,4 +35,6 @@ object Perm16 {
 
   def apply(cycle: Int*): Perm16 = fromPerm(Perm(cycle: _*))
 
+  def fromEncoding(encoding: Long): Perm16 = encoding.asInstanceOf[Perm16]
+
 }
