@@ -237,7 +237,7 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
       if (filteredGenerators.length <= 1) filteredGenerators else {
         import spire.math.prime.factor
         val abelianizationOrder = grp.order / derivedSubgroup(grp).order
-        val min = factor(abelianizationOrder).factors.values.foldLeft(1)(spire.math.max)
+        val min = factor(abelianizationOrder).elements.values.foldLeft(1)(spire.math.max)
         val smallerOpt = fromGrp(grpChain, fAction).chain match {
           case node: Node[G, fAction.type] => schreierSims.reduceGenerators(node, grp.generators, min)
           case term: Term[G, fAction.type] => sys.error("Group has been verified nontrivial above")
