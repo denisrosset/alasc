@@ -9,14 +9,15 @@ import internal.syntax._
 import net.alasc.algebra.PermutationAction
 import net.alasc.finite.FaithfulPermutationActionBuilder
 
-final class Perm(val p: Prm) { lhs =>
+final class Perm(val p: Prm) extends AnyRef { lhs =>
 
   require(p.length == 0 || p(p.length-1) != p.length-1 )
 
-  override def toString =
+  override def toString: String =
     if (p.length == 0) "Perm.id" else "Perm" + p.toCycles.string
 
-  override def hashCode = GenPrm.hash(p)
+  lazy val cachedHashCode = GenPrm.hash(p)
+  override def hashCode: Int = cachedHashCode
 
   override def equals(that: Any) = that match {
     case rhs: Perm => GenPrm.equ.eqv(p, rhs.p)
