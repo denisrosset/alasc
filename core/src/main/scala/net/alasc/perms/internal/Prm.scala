@@ -36,7 +36,7 @@ object Prm {
 
   def fromImageFun(size: Int, imageFun: Int => Int): Prm = {
     var k = size - 1
-    while (imageFun(k) == k) {
+    while (k >= 0 && imageFun(k) == k) {
       k -= 1
     }
     val array = new Array[Int](k + 1)
