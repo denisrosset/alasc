@@ -21,6 +21,8 @@ trait GrpPermutationAction[G] extends GrpAction[G, Int, PermutationAction[G]] {
 
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): Grp[G]
 
+  def partitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): Grp[G]
+
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]]
 
   def subgroupFor(grp: Grp[G], action: PermutationAction[G], backtrackTest: (Int, Int) => Boolean, predicate: Perm => Boolean): Grp[G]
@@ -118,9 +120,15 @@ class GrpPermutationActionSyntax[G](val lhs: Grp[G]) extends AnyVal {
   def lexElements(action: PermutationAction[G])(implicit algos: GrpPermutationAction[G]): BigIndexedSeq[G]
   = algos.lexElements(lhs, action).get
 
-  /** Returns the subgroup that fixes the given partition under the given action. */
+  /** Returns the subgroup that fixes the given partition under the given action, i.e. that sends each block
+    * of the partition to itself. It is equivalent to repeated setwiseStabilizer computations.
+    */
   def fixingPartition(action: PermutationAction[G], partition: Partition)(implicit algos: GrpPermutationAction[G]): Grp[G]
   = algos.fixingPartition(lhs, action, partition)
+
+  /** Returns the subgroup that preserves the block structure of the given partition under the given action. */
+  def partitionStabilizer(action: PermutationAction[G], partition: Partition)(implicit algos: GrpPermutationAction[G]): Grp[G]
+  = algos.partitionStabilizer(lhs, action, partition)
 
   /** Returns the subgroup that stabilizes `b` by the given action. */
   def stabilizer(action: PermutationAction[G], b: Int)(implicit algos: GrpPermutationAction[G]): Grp[G]
@@ -211,9 +219,14 @@ class GrpPermSyntax(val lhs: Grp[Perm]) extends AnyVal {
   /** Sequence of the group elements, ordered lexicographically by their images. */
   def lexElements(implicit ev: GrpPermutationAction[Perm]): BigIndexedSeq[Perm] = ev.lexElements(lhs, Perm.algebra).get
 
-  /** Returns the subgroup that fixes the given partition. */
+  /** Returns the subgroup that fixes the given partition, i.e. that sends each block of the partition to itself.
+    * It is equivalent to repeated setwiseStabilizer computations. */
   def fixingPartition(partition: Partition)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
     ev.fixingPartition(lhs, Perm.algebra, partition)
+
+  /** Returns the subgroup that preserves the block structure of the given partition. */
+  def partitionStabilizer(partition: Partition)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =
+    ev.partitionStabilizer(lhs, Perm.algebra, partition)
 
   /** Returns the subgroup that stabilizes `b`. */
   def stabilizer(b: Int)(implicit ev: GrpPermutationAction[Perm]): Grp[Perm] =

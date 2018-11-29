@@ -319,6 +319,9 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
     subgroupFor[action.type](grp, action, net.alasc.bsgs.FixingPartition[G, action.type](partition)(implicitly, action))
 
+  def partitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
+    subgroupFor[action.type](grp, action, net.alasc.bsgs.PartitionStabilizer[G, action.type](partition)(implicitly, action))
+
   def setwiseStabilizer(grp: Grp[G], action: PermutationAction[G], set: Set[Int]): GC[action.type] =
     subgroupFor[action.type](grp, action, SetwiseStabilizer[G, action.type](set)(implicitly, action))
 

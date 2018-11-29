@@ -1,7 +1,7 @@
 package net.alasc.blackbox
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.bsgs.FixingPartition
+import net.alasc.bsgs.{FixingPartition, PartitionStabilizer}
 import net.alasc.finite._
 import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
@@ -34,7 +34,10 @@ class BBGrpPermutationAction[G](implicit
     }
 
   def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
-    BBGrp.filter(grp, g => FixingPartition.partitionInvariantUnder(partition, action, g))
+    BBGrp.filter(grp, g => FixingPartition.partitionFixedUnder(partition, action, g))
+
+  def partitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
+    BBGrp.filter(grp, g => PartitionStabilizer.partitionInvariantUnder(partition, action, g))
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ??? //TODO implement
 

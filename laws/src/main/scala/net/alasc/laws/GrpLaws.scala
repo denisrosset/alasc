@@ -97,7 +97,7 @@ trait GrpLaws[G] extends Laws {
       name = "grp",
       parent = Some(grpWithoutHashCodeEquals),
 
-      "intersect" -> forAll { (grp1: Grp[G], grp2: Grp[G]) =>
+      "intersection of group is subgroup of both operands" -> forAll { (grp1: Grp[G], grp2: Grp[G]) =>
         val int = grp1 intersect grp2
         int.isSubgroupOf(grp1) && int.isSubgroupOf(grp2)
       },
@@ -169,16 +169,23 @@ trait GrpLaws[G] extends Laws {
         val action = pab(grp)
         forAll(Partitions.sized) { partition =>
           grp.fixingPartition(action, partition).generators
-            .forall( g => FixingPartition.partitionInvariantUnder(partition, action, g))
+            .forall( g => FixingPartition.partitionFixedUnder(partition, action, g))
         }
       },
 
       "fixingPartition bb test" -> forAll(smallGrp, Partitions.sized) { (grp, partition) =>
         forAll { pab: PermutationActionBuilder[G] =>
-            val action = pab(grp)
+          val action = pab(grp)
           testBBEquals[Set[G], GrpPermutationAction[G]]( _.fixingPartition(grp, action, partition).iterator.toSet )
           }
         },
+
+      "partitionStabilizer" -> forAll(smallGrp, Partitions.sized) { (grp, partition) =>
+        forAll { pab: PermutationActionBuilder[G] =>
+          val action = pab(grp)
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.partitionStabilizer(grp, action, partition).iterator.toSet )
+        }
+      },
 
       "stabilizer(b)" -> forAll { (grp: Grp[G], b: Dom, pab: PermutationActionBuilder[G]) =>
         val action = pab(grp)

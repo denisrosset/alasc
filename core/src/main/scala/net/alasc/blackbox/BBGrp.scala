@@ -53,7 +53,7 @@ object BBGrp {
   }
 
   def filter[G:Eq:Group](grp: Grp[G], predicate: G => Boolean): BBGrp[G] =
-    BBGrp.fromElements(BBGrp.fromGrp(grp).elements.filter(predicate))
+    BBGrp.fromElements(BBGrp.fromGrp(grp).elements.filter(predicate)) // TODO: can be optimized by considering cosets
 
 
 }
