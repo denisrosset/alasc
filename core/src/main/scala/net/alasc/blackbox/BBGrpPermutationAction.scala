@@ -1,7 +1,7 @@
 package net.alasc.blackbox
 
 import net.alasc.algebra.{BigIndexedSeq, PermutationAction}
-import net.alasc.bsgs.{FixingPartition, PartitionStabilizer}
+import net.alasc.bsgs.{OrderedPartitionStabilizer, UnorderedPartitionStabilizer}
 import net.alasc.finite._
 import net.alasc.partitions.Partition
 import net.alasc.perms.Perm
@@ -33,11 +33,11 @@ class BBGrpPermutationAction[G](implicit
       Opt(BigIndexedSeq.wrap(sortedElements))
     }
 
-  def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
-    BBGrp.filter(grp, g => FixingPartition.partitionFixedUnder(partition, action, g))
+  def orderedPartitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
+    BBGrp.filter(grp, g => OrderedPartitionStabilizer.partitionFixedUnder(partition, action, g))
 
-  def partitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
-    BBGrp.filter(grp, g => PartitionStabilizer.partitionInvariantUnder(partition, action, g))
+  def unorderedPartitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GG =
+    BBGrp.filter(grp, g => UnorderedPartitionStabilizer.partitionInvariantUnder(partition, action, g))
 
   def base(grp: Grp[G], action: PermutationAction[G]): Opt[Seq[Int]] = ??? //TODO implement
 

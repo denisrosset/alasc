@@ -316,11 +316,11 @@ abstract class GrpChainPermutationAction[G] extends GrpGroup[G] with GrpPermutat
   def pointwiseStabilizer(grp: Grp[G], action: PermutationAction[G], set: Set[Int]): GC[action.type] =
     GrpChain.pointwiseStabilizer[G, action.type](fromGrpBaseHint(grp, action, Opt(BaseGuideSet(set))), set)
 
-  def fixingPartition(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
-    subgroupFor[action.type](grp, action, net.alasc.bsgs.FixingPartition[G, action.type](partition)(implicitly, action))
+  def orderedPartitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
+    subgroupFor[action.type](grp, action, net.alasc.bsgs.OrderedPartitionStabilizer[G, action.type](partition)(implicitly, action))
 
-  def partitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
-    subgroupFor[action.type](grp, action, net.alasc.bsgs.PartitionStabilizer[G, action.type](partition)(implicitly, action))
+  def unorderedPartitionStabilizer(grp: Grp[G], action: PermutationAction[G], partition: Partition): GC[action.type] =
+    subgroupFor[action.type](grp, action, net.alasc.bsgs.UnorderedPartitionStabilizer[G, action.type](partition)(implicitly, action))
 
   def setwiseStabilizer(grp: Grp[G], action: PermutationAction[G], set: Set[Int]): GC[action.type] =
     subgroupFor[action.type](grp, action, SetwiseStabilizer[G, action.type](set)(implicitly, action))

@@ -198,7 +198,7 @@ object GrpChain {
   def fixingPartition[G, A <: PermutationAction[G] with Singleton](grp: GrpChain[G, A], partition: Partition)
     (implicit baseChange: BaseChange): GrpChain[G, A] = {
     import grp.{action, group}
-    subgroupFor(grp, FixingPartition[G, A](partition))
+    subgroupFor(grp, OrderedPartitionStabilizer[G, A](partition))
   }
 
   def someStabilizerTransversal[G, F <: PermutationAction[G] with Singleton](grp: GrpChain[G, F]): Opt[(GrpChain[G, F], Transversal[G, F])] = {

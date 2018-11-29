@@ -142,7 +142,7 @@ object Seqs {
       val grpInAction = GrpChainPermutationAction[G].fromGrp(grp, action, Opt(BaseGuideLex(n)))
       val symGrp = symGrpOpt match {
         case Opt(sg) => GrpChainPermutationAction[G].fromGrp(sg, action)
-        case _ => GrpChainPermutationAction[G].fixingPartition(grpInAction, action, partition)
+        case _ => GrpChainPermutationAction[G].orderedPartitionStabilizer(grpInAction, action, partition)
       }
       UnorderedRepresentatives[CC[T], G, T, action.type](grpInAction, symGrp, action, distinctElements, indexMap, seqElements)
     }
@@ -172,7 +172,7 @@ object Seqs {
       val partition = Partition.fromSeq(seqElements)
       val symGrp = symGrpOpt match {
         case Opt(sg) => GrpChainPermutationAction[G].fromGrp(sg, action)
-        case _ => GrpChainPermutationAction[G].fixingPartition(grpInAction, action, partition)
+        case _ => GrpChainPermutationAction[G].orderedPartitionStabilizer(grpInAction, action, partition)
       }
       OrderedRepresentatives[CC[T], G, T, action.type](grpInAction, symGrp, action, sortedElements, nUnique, seqElements)
     }

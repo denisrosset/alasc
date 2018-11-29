@@ -12,12 +12,12 @@ import scala.annotation.tailrec
 
 
 
-case class FixingPartition[G:Group, A <: PermutationAction[G] with Singleton]
+case class OrderedPartitionStabilizer[G:Group, A <: PermutationAction[G] with Singleton]
   (partition: Partition)(implicit val action: A) extends SubgroupDefinition[G, A] {
 
   val n = partition.size
 
-  def inSubgroup(g: G): Boolean = FixingPartition.partitionFixedUnder(partition, action, g)
+  def inSubgroup(g: G): Boolean = OrderedPartitionStabilizer.partitionFixedUnder(partition, action, g)
 
   def baseGuideOpt = Opt(BaseGuidePartition(partition))
 
@@ -50,7 +50,7 @@ case class FixingPartition[G:Group, A <: PermutationAction[G] with Singleton]
 
 }
 
-object FixingPartition {
+object OrderedPartitionStabilizer {
 
   @inline def partitionFixedUnder[G](partition: Partition, action: PermutationAction[G], g: G): Boolean = {
     cforRange(0 until partition.size) { i =>

@@ -9,7 +9,7 @@ import spire.syntax.order._
 import spire.syntax.group._
 import spire.std.int._
 import net.alasc.blackbox.{BBGrpGroup, BBGrpPermutationAction, BBGrpStructure}
-import net.alasc.bsgs.FixingPartition
+import net.alasc.bsgs.OrderedPartitionStabilizer
 import net.alasc.finite._
 
 object GrpLaws {
@@ -168,22 +168,22 @@ trait GrpLaws[G] extends Laws {
       "fixingPartition" -> forAll { (grp: Grp[G], pab: PermutationActionBuilder[G]) =>
         val action = pab(grp)
         forAll(Partitions.sized) { partition =>
-          grp.fixingPartition(action, partition).generators
-            .forall( g => FixingPartition.partitionFixedUnder(partition, action, g))
+          grp.orderedPartitionStabilizer(action, partition).generators
+            .forall( g => OrderedPartitionStabilizer.partitionFixedUnder(partition, action, g))
         }
       },
 
       "fixingPartition bb test" -> forAll(smallGrp, Partitions.sized) { (grp, partition) =>
         forAll { pab: PermutationActionBuilder[G] =>
           val action = pab(grp)
-          testBBEquals[Set[G], GrpPermutationAction[G]]( _.fixingPartition(grp, action, partition).iterator.toSet )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.orderedPartitionStabilizer(grp, action, partition).iterator.toSet )
           }
         },
 
       "partitionStabilizer" -> forAll(smallGrp, Partitions.sized) { (grp, partition) =>
         forAll { pab: PermutationActionBuilder[G] =>
           val action = pab(grp)
-          testBBEquals[Set[G], GrpPermutationAction[G]]( _.partitionStabilizer(grp, action, partition).iterator.toSet )
+          testBBEquals[Set[G], GrpPermutationAction[G]]( _.unorderedPartitionStabilizer(grp, action, partition).iterator.toSet )
         }
       },
 

@@ -8,7 +8,7 @@ import net.alasc.finite.Grp
 import net.alasc.named.Symmetric
 import net.alasc.perms.{GrpFixingPartition, Perm}
 
-final class FixingPartitionSuite extends AlascSuite {
+final class OrderedPartitionStabilizerSuite extends AlascSuite {
 
   import net.alasc.perms.default._
 

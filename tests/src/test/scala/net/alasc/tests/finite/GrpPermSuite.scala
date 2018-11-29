@@ -1,7 +1,7 @@
 package net.alasc.tests
 package finite
 
-import net.alasc.bsgs.PartitionStabilizer
+import net.alasc.bsgs.UnorderedPartitionStabilizer
 import spire.laws.LatticePartialOrderLaws
 import net.alasc.finite.{Grp, GrpGroup}
 import net.alasc.laws._

@@ -9,13 +9,13 @@ import spire.syntax.cfor._
 
 import scala.annotation.tailrec
 
-case class PartitionStabilizer[G:Group, A <: PermutationAction[G] with Singleton]
+case class UnorderedPartitionStabilizer[G:Group, A <: PermutationAction[G] with Singleton]
   (partition: Partition)(implicit val action: A) extends SubgroupDefinition[G, A] {
   val n = partition.size
 
   @inline def block(p: Int): Int = if (p < n) partition.indexArray(p) else -1
 
-  def inSubgroup(g: G): Boolean = PartitionStabilizer.partitionInvariantUnder(partition, action, g)
+  def inSubgroup(g: G): Boolean = UnorderedPartitionStabilizer.partitionInvariantUnder(partition, action, g)
 
   def baseGuideOpt = Opt(BaseGuidePartition(partition))
 
@@ -60,7 +60,7 @@ case class PartitionStabilizer[G:Group, A <: PermutationAction[G] with Singleton
 
 }
 
-object PartitionStabilizer {
+object UnorderedPartitionStabilizer {
 
   def partitionInvariantUnder[G](partition: Partition, action: PermutationAction[G], g: G): Boolean = {
     @inline def block(p: Int): Int = if (p < partition.size) partition.indexArray(p) else -1

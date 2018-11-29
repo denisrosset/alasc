@@ -37,7 +37,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       forAll(genSizedGrp(n)) { grp =>
         val bruteForceMinimal: Array[Int] = grp.iterator.map(g => (array <|+|? g).get).min(spire.std.array.ArrayOrder[Int].toOrdering)
         val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
-        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array))) //RepresentativesArrayInt.ordered(seq, grp).head.get
+        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(array))) //RepresentativesArrayInt.ordered(seq, grp).head.get
         val cleverMinimal: Array[Int] = (array <|+| minG).toArray
         cleverMinimal should ===(bruteForceMinimal)
       }
@@ -49,10 +49,10 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       val n = array.length
       forAll(genSizedGrp(n)) { grp =>
         val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
-        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array)))
+        val minG: Perm = RepresentativesArrayInt.findPermutationToMinimal(array, grpChn, gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(array)))
         forAll(Grps.genRandomElement(grp)) { g =>
           val array1 = array <|+| g
-          val minG1: Perm = RepresentativesArrayInt.findPermutationToMinimal(array1, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(array1)))
+          val minG1: Perm = RepresentativesArrayInt.findPermutationToMinimal(array1, grpChn, gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(array1)))
           (array <|+| minG) should ===((array1 <|+| minG1))
         }
       }
@@ -64,7 +64,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
         val grpChn = gcpa.fromGrp(grp, PermAlgebra)
-        val symgrp = gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq))
+        val symgrp = gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(seq))
         forAll(Grps.genRandomElement(grp)) { g =>
           val repr = seq <|+| g
           RepresentativesArrayInt.permutationTo(seq, repr, grpChn, symgrp) match {
@@ -83,7 +83,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
         val grpChn = gcpa.fromGrp(grp, PermAlgebra)
-        val symgrp = gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq))
+        val symgrp = gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(seq))
         forAll(genSizedArrayInt(n)) { repr =>
           RepresentativesArrayInt.permutationTo(seq, repr, grpChn, symgrp) match {
             case Opt(g) =>
@@ -102,7 +102,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
         val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
-        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq)))
+        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(seq)))
         val iteratorEls = reps.orderedIterator.map(block => (seq <|+|? block.element).get.toVector)
         val indexEls = (0 until reps.size.toInt).iterator.map(i => (seq <|+|? reps(i).element).get.toVector)
         iteratorEls.toSeq shouldBe indexEls.toSeq
@@ -116,7 +116,7 @@ abstract class RepresentativesSuite(implicit gcpa: GrpChainPermutationAction[Per
       val n = seq.length
       forAll(genSizedGrp(n)) { grp =>
         val grpChn = gcpa.fromGrp(grp, PermAlgebra, Opt(BaseGuideLex(n)))
-        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.fixingPartition(grpChn, PermAlgebra, Partition.fromSeq(seq)))
+        val reps = RepresentativesArrayInt(seq, grpChn, gcpa.orderedPartitionStabilizer(grpChn, PermAlgebra, Partition.fromSeq(seq)))
         val it = reps.orderedIterator
         var prev = seq <|+| it.next.element
         while (it.hasNext) {
