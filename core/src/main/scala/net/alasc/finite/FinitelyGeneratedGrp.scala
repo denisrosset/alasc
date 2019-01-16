@@ -1,8 +1,15 @@
 package net.alasc.finite
 
 import net.alasc.attributes.Attributable
+import spire.algebra.{Eq, Group}
 
 abstract class FinitelyGeneratedGrp[G] extends Attributable {
+
+  /** Group operations on type `G`. */
+  implicit def group: Group[G]
+
+  /** Equality for type `G`. */
+  implicit def equ: Eq[G]
 
   /** Generators of the group, does not contain the identity. */
   def generators: Seq[G]

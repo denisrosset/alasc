@@ -19,15 +19,9 @@ abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>
 
   override def toString = generators.mkString("Grp(", ", ", ")")
 
-  override def hashCode = sys.error("Object.hashCode not defined for Grp")
+  override def hashCode: Int = sys.error("Object.hashCode not defined for Grp")
 
-  override def equals(that: Any) = sys.error("Object.equals not defined for Grp, use typesafe operator === instead")
-
-  /** Group operations on type `G`. */
-  implicit def group: Group[G]
-
-  /** Equality for type `G`. */
-  implicit def equ: Eq[G]
+  override def equals(that: Any): Boolean = sys.error("Object.equals not defined for Grp, use typesafe operator === instead")
 
   /** Iterator through all the group elements. */
   def iterator: Iterator[G]
