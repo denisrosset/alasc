@@ -13,9 +13,11 @@ import net.alasc.syntax.all._
 import net.alasc.attributes.Attributes
 
 /** Finite group base class. */
-abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>
+abstract class Grp[G0] extends FinitelyGeneratedGrp { lhs =>
 
-  def ===(rhs: Grp[G])(implicit equ1: Eq[Grp[G]]): Boolean = equ1.eqv(lhs, rhs)
+  type G = G0
+
+  def ===(rhs: Grp[G0])(implicit equ1: Eq[Grp[G0]]): Boolean = equ1.eqv(lhs, rhs)
 
   override def toString = generators.mkString("Grp(", ", ", ")")
 
@@ -24,27 +26,27 @@ abstract class Grp[G] extends FinitelyGeneratedGrp[G] { lhs =>
   override def equals(that: Any): Boolean = sys.error("Object.equals not defined for Grp, use typesafe operator === instead")
 
   /** Iterator through all the group elements. */
-  def iterator: Iterator[G]
+  def iterator: Iterator[G0]
 
   /** Returns whether `g` is contained in this group. */
-  def contains(g: G): Boolean
+  def contains(g: G0): Boolean
 
   /** Group order. */
   def order: SafeLong
 
   /** Generates a random element. */
-  def randomElement(random: Random): G
+  def randomElement(random: Random): G0
 
   /** Tests whether `rhsGenerators` is a subgroup of this group. */
-  def hasSubgroup(rhs: Grp[G]): Boolean = rhs.generators.forall(contains)
+  def hasSubgroup(rhs: Grp[G0]): Boolean = rhs.generators.forall(contains)
 
   /** Tests whether this group is a subgroup of `rhsGenerators`. */
-  def isSubgroupOf(rhs: Grp[G]): Boolean = generators.forall(rhs.contains)
+  def isSubgroupOf(rhs: Grp[G0]): Boolean = generators.forall(rhs.contains)
 
   /** This group `lhs` normalizes the group `rhsGenerators` if for every g in lhs and u in rhsGenerators, the element g^-1 u g is
     * a member of rhsGenerators. Note that `rhsGenerators` needs not be a subgroup of `lhs`.
     * */
-  def normalizes(rhs: Grp[G]): Boolean = generators.forall { g =>
+  def normalizes(rhs: Grp[G0]): Boolean = generators.forall { g =>
     val gInv = g.inverse
     rhs.generators.forall(u => rhs.contains(gInv |+| u |+| g))
   }
